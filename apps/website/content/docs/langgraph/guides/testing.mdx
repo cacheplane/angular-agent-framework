@@ -1,20 +1,26 @@
+---
+description: Testing LangGraph agents in Angular with provideFakeAgent, mockLangGraphAgent, and hand-scripted MockAgentTransport specs, plus pytest coverage for the graph
+---
+
 # Testing
 
 `@threadplane/langgraph` ships two purpose-built test doubles, plus an advanced manual-scripting transport for the rare cases that need it:
 
 - **`provideFakeAgent()`** — a one-call fake backend that runs the real adapter pipeline and streams canned tokens. No server, no LLM. Reach for this first.
-- **`mockLangGraphAgent()`** — a writable-signal mock for component/unit tests, where you set `messages()`, `status()`, etc. directly.
+- **`mockLangGraphAgent()`** — a writable-signal mock for component and unit tests, where you set `messages()`, `status()`, and the rest directly.
 - **`MockAgentTransport`** — an advanced escape hatch for hand-scripting exact wire event sequences (tool calls, interrupts, multi-batch lifecycles).
 
 <Callout type="tip" title="No flaky tests">
-None of these touch the network, the LLM, or server state. Every test run produces identical results. Your CI pipeline stays green.
+None of these touch the network, the LLM, or server state. Every test run produces identical results.
 </Callout>
 
 See [Choosing an adapter → Testing](/docs/choosing-an-adapter#testing) for when to use each test double.
 
+Every spec on this page is written for Vitest with `TestBed`, and each one runs as written against the adapter in this repository. Swap `describe`/`it`/`expect` for Jasmine if that is your runner — the TestBed wiring is identical.
+
 ## Fake backend: `provideFakeAgent()`
 
-`provideFakeAgent({ tokens, reasoningTokens, delayMs })` wires a fake backend into Angular DI in one call. It exercises the **real adapter pipeline** — `injectAgent()`, status transitions, message accumulation — but the wire events are canned, so there's no server and no LLM. Use it for adapter-integration tests, in-browser demos, and offline development.
+`provideFakeAgent({ tokens, reasoningTokens, delayMs })` wires a fake backend into Angular DI in one call. It exercises the **real adapter pipeline** — `injectAgent()`, status transitions, message accumulation — but the wire events are canned, so there is no server and no LLM. Use it for adapter-integration tests, in-browser demos, and offline development.
 
 It drops in exactly where `provideAgent()` would go:
 
@@ -64,13 +70,13 @@ The component is byte-identical to production — only the provider changes. `Fa
 
 ### A runnable spec
 
-Wire `provideFakeAgent()` into `TestBed`, submit, and assert the streamed tokens accumulate onto the assistant message. Set `delayMs: 0` so the stream drains synchronously:
+Wire `provideFakeAgent()` into `TestBed`, submit, and assert the streamed tokens accumulate onto the assistant message. Set `delayMs: 0` so the stream drains without wall-clock waiting, and await the promise `submit()` returns — it resolves when the run ends:
 
 ```typescript
+import { describe, it, expect, beforeEach } from 'vitest';
 import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideFakeAgent } from '@threadplane/langgraph';
-import { injectAgent } from '@threadplane/langgraph';
+import { injectAgent, provideFakeAgent } from '@threadplane/langgraph';
 
 @Component({ template: '' })
 class ChatHost {
@@ -81,9 +87,7 @@ describe('ChatHost with provideFakeAgent', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [ChatHost],
-      providers: [
-        provideFakeAgent({ tokens: ['Hello', ' world'], delayMs: 0 }),
-      ],
+      providers: [provideFakeAgent({ tokens: ['Hello', ' world'], delayMs: 0 })],
     });
   });
 
@@ -94,8 +98,7 @@ describe('ChatHost with provideFakeAgent', () => {
     await fixture.componentInstance.chat.submit({ message: 'Hi' });
     fixture.detectChanges();
 
-    const messages = fixture.componentInstance.chat.messages();
-    const assistant = messages.at(-1);
+    const assistant = fixture.componentInstance.chat.messages().at(-1);
     expect(assistant?.role).toBe('assistant');
     expect(assistant?.content).toBe('Hello world');
     expect(fixture.componentInstance.chat.status()).toBe('idle');
@@ -103,33 +106,33 @@ describe('ChatHost with provideFakeAgent', () => {
 });
 ```
 
-The assertions are framework-agnostic — swap `describe`/`it`/`expect` for your Vitest or Jasmine runner; the TestBed wiring is identical.
-
 ## Contract mock: `mockLangGraphAgent()`
 
-For component and unit tests where you don't need a streaming pipeline at all, `mockLangGraphAgent(initial)` returns a `LangGraphAgent` whose state surface is exposed as **writable signals**. Set state directly and assert your component reacts — nothing is real.
+For component and unit tests where you do not need a streaming pipeline at all, `mockLangGraphAgent(initial)` returns a `LangGraphAgent` whose state surface is exposed as **writable signals**. Set state directly and assert your component reacts — nothing is real.
+
+Every `Message` carries a `delivery` field the adapter normally owns, so build the messages you set with `staticDelivery(id)`, which marks a message complete and successful:
 
 ```typescript
+import { describe, it, expect } from 'vitest';
+import { staticDelivery } from '@threadplane/chat';
 import { mockLangGraphAgent } from '@threadplane/langgraph';
 
-const m = mockLangGraphAgent({ status: 'running' });
-m.messages.set([{ role: 'assistant', content: 'Hello!' }]);
+describe('mockLangGraphAgent', () => {
+  it('exposes the agent surface as writable signals', () => {
+    const agent = mockLangGraphAgent({ status: 'running' });
+    agent.messages.set([
+      { id: 'm1', role: 'assistant', content: 'Hello!', delivery: staticDelivery('m1') },
+    ]);
 
-expect(m.messages()[0].content).toBe('Hello!');
-expect(m.status()).toBe('running');
+    expect(agent.messages()[0].content).toBe('Hello!');
+    expect(agent.status()).toBe('running');
+  });
+});
 ```
 
-`mockLangGraphAgent()` extends the neutral [`mockAgent()`](/docs/chat/api/mock-agent) from `@threadplane/chat` — it supplies the neutral `Agent`-contract writable signals (`messages`, `status`, `isLoading`, `error`, `interrupt`, …) plus `submit`/`stop` call tracking, then layers the LangGraph-specific signals (`langGraphMessages`, `branch`, `queue`, …) on top.
+`mockLangGraphAgent()` extends the neutral [`mockAgent()`](/docs/chat/api/mock-agent) from `@threadplane/chat` — it supplies the neutral `Agent`-contract writable signals (`messages`, `status`, `isLoading`, `error`, `interrupt`, and the rest) plus `submit`/`stop` call tracking, then layers the LangGraph-specific signals (`langGraphMessages`, `branch`, `queue`, and so on) on top.
 
-## Advanced: `MockAgentTransport`
-
-Lead with `provideFakeAgent()` for the simple case. Reach for `MockAgentTransport` only when you need to hand-script exact wire event sequences — tool calls, interrupts, or multi-batch streaming lifecycles that the canned-token fake can't express.
-
-<Callout type="tip" title="No flaky tests">
-`MockAgentTransport` eliminates network dependencies, timing issues, and server state. Every test run produces identical results.
-</Callout>
-
-## Python: Testing the Agent
+## Python: testing the graph
 
 Before testing the Angular side, make sure your agent logic is correct. LangGraph agents are plain Python functions — test them directly with pytest.
 
@@ -162,487 +165,266 @@ async def test_agent_uses_tools():
 With MemorySaver and a mocked LLM, agent tests run in milliseconds. Use `langchain_core.language_models.FakeListChatModel` to remove the LLM dependency entirely.
 </Callout>
 
-## MockAgentTransport: Basic Setup
+## Advanced: `MockAgentTransport`
 
-On the Angular side, MockAgentTransport replaces the real HTTP transport. Register it through `provideAgent({ transport })` in TestBed's `providers` array, then call `injectAgent()` inside `TestBed.runInInjectionContext`.
+Lead with `provideFakeAgent()` for the simple case. Reach for `MockAgentTransport` only when you need to hand-script exact wire event sequences — tool calls, interrupts, or multi-batch streaming lifecycles that the canned-token fake cannot express.
 
-<Tabs>
-<Tab label="chat.spec.ts">
+Register it through `provideAgent({ transport })` in the TestBed `providers` array, then resolve the agent with `TestBed.runInInjectionContext(() => injectAgent())`.
+
+<Callout type="warning" title="Every emit needs a macrotask flush">
+`MockAgentTransport.stream()` is an async generator: `emit()` only wakes the suspended stream loop, so nothing has reached the signals when `emit()` returns. Await one macrotask (`await new Promise(resolve => setTimeout(resolve, 0))`) after every `emit()`, `emitError()`, and `close()` before asserting, and keep the promise `submit()` returns so the spec can await the end of the run. Specs that assert synchronously read stale signals and pass or fail for the wrong reason.
+</Callout>
+
+These examples also pass `throttle: false`. The adapter throttles signal writes by 16 ms by default, which one macrotask does not cover.
+
+### Basic setup
+
+One `messages` event carries an assistant chunk; the adapter projects it into the neutral `messages()` transcript. Message payloads use the LangChain wire shape — `{ id, type, content }`, where `type` is `'ai'`, `'human'`, `'tool'`, or `'system'`:
 
 ```typescript
+import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { MockAgentTransport, provideAgent, injectAgent } from '@threadplane/langgraph';
+import { MockAgentTransport, injectAgent, provideAgent } from '@threadplane/langgraph';
 
-describe('ChatComponent', () => {
-  it('should display agent messages', () => {
+const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+describe('basic transport', () => {
+  it('projects an emitted assistant chunk into messages()', async () => {
     const transport = new MockAgentTransport();
-
     TestBed.configureTestingModule({
       providers: [
-        provideAgent({
-          apiUrl: '',
-          assistantId: 'test_agent',
-          transport,
-        }),
+        provideAgent({ apiUrl: '', assistantId: 'test_agent', transport, throttle: false }),
       ],
     });
+    const chat = TestBed.runInInjectionContext(() => injectAgent());
 
-    TestBed.runInInjectionContext(() => {
-      const chat = injectAgent();
+    const submitted = chat.submit({ message: 'Hi' });
+    transport.emit([
+      { type: 'messages', messages: [{ id: 'ai-1', type: 'ai', content: 'Hello!' }] },
+    ]);
+    await flush();
 
-      // Emit a values event — simulates the agent responding
-      transport.emit([
-        {
-          type: 'values',
-          messages: [{ role: 'assistant', content: 'Hello!' }],
-        },
-      ]);
+    expect(chat.messages().at(-1)?.content).toBe('Hello!');
 
-      expect(chat.messages().length).toBe(1);
-      expect(chat.messages()[0].content).toBe('Hello!');
-    });
+    transport.close();
+    await submitted;
+    expect(chat.status()).toBe('idle');
   });
 });
 ```
 
-</Tab>
-<Tab label="chat.component.ts">
+### Scripted event sequences
+
+Pass event batches to the constructor for sequential playback. Each call to `nextBatch()` returns the next batch; emit it to advance what the component sees. Re-emitting the same message id replaces its content, which is how a streamed answer grows:
 
 ```typescript
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { injectAgent } from '@threadplane/langgraph';
-
-@Component({
-  selector: 'app-chat',
-  templateUrl: './chat.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-})
-export class ChatComponent {
-  protected readonly chat = injectAgent();
-
-  send(text: string) {
-    this.chat.submit({ message: text });
-  }
-}
-```
-
-</Tab>
-</Tabs>
-
-## Scripted Event Sequences
-
-Pass event batches to the constructor for sequential playback. Each call to `nextBatch()` returns one batch; emit that batch to advance what the component sees.
-
-```typescript
-const transport = new MockAgentTransport([
-  // Batch 1: Agent starts thinking
-  [{ type: 'values', messages: [{ role: 'assistant', content: 'Analyzing...' }] }],
-  // Batch 2: Agent finishes
-  [{ type: 'values', messages: [{ role: 'assistant', content: 'Here is your answer.' }] }],
-]);
-
-TestBed.configureTestingModule({
-  providers: [
-    provideAgent({ apiUrl: '', assistantId: 'test_agent', transport }),
-  ],
-});
-
-TestBed.runInInjectionContext(() => {
-  const chat = injectAgent();
-
-  chat.submit({ message: 'Explain signals' });
-
-  // Step through each batch
-  transport.emit(transport.nextBatch());
-  expect(chat.messages()[0].content).toBe('Analyzing...');
-
-  transport.emit(transport.nextBatch());
-  expect(chat.messages()[0].content).toBe('Here is your answer.');
-});
-```
-
-## Testing the Streaming Lifecycle
-
-The most common test pattern verifies the full submit-to-idle lifecycle: submit sets the agent running, values arrive, and the status settles back to idle. Let's walk it end to end.
-
-<Tabs>
-<Tab label="lifecycle.spec.ts">
-
-```typescript
+import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { MockAgentTransport, provideAgent, injectAgent } from '@threadplane/langgraph';
+import { MockAgentTransport, injectAgent, provideAgent } from '@threadplane/langgraph';
+
+const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 describe('streaming lifecycle', () => {
-  it('should transition through running → values → idle', () => {
+  it('runs from submit through two batches back to idle', async () => {
     const transport = new MockAgentTransport([
-      [{ type: 'values', messages: [{ role: 'assistant', content: 'Thinking...' }] }],
-      [{ type: 'values', messages: [{ role: 'assistant', content: 'Done!' }] }],
+      [{ type: 'messages', messages: [{ id: 'ai-1', type: 'ai', content: 'Analyzing' }] }],
+      [{ type: 'messages', messages: [{ id: 'ai-1', type: 'ai', content: 'Analyzing... done.' }] }],
     ]);
-
     TestBed.configureTestingModule({
       providers: [
-        provideAgent({ apiUrl: '', assistantId: 'test_agent', transport }),
+        provideAgent({ apiUrl: '', assistantId: 'test_agent', transport, throttle: false }),
       ],
     });
+    const chat = TestBed.runInInjectionContext(() => injectAgent());
 
-    TestBed.runInInjectionContext(() => {
-      const chat = injectAgent();
+    const submitted = chat.submit({ message: 'Explain signals' });
+    expect(chat.status()).toBe('running');
+    expect(chat.isLoading()).toBe(true);
 
-      // Initial state
-      expect(chat.status()).toBe('idle');
-      expect(chat.messages()).toEqual([]);
+    transport.emit(transport.nextBatch());
+    await flush();
+    expect(chat.messages().at(-1)?.content).toBe('Analyzing');
 
-      // Submit triggers running
-      chat.submit({ message: 'Hello' });
-      expect(chat.status()).toBe('running');
-      expect(chat.isLoading()).toBe(true);
+    transport.emit(transport.nextBatch());
+    await flush();
+    expect(chat.messages().at(-1)?.content).toBe('Analyzing... done.');
 
-      // First batch — partial response
-      transport.emit(transport.nextBatch());
-      expect(chat.messages()[0].content).toBe('Thinking...');
-      expect(chat.status()).toBe('running');
-
-      // Second batch — final response
-      transport.emit(transport.nextBatch());
-      expect(chat.messages()[0].content).toBe('Done!');
-
-      // Stream completes
-      transport.close();
-      expect(chat.status()).toBe('idle');
-      expect(chat.isLoading()).toBe(false);
-    });
+    transport.close();
+    await submitted;
+    expect(chat.status()).toBe('idle');
+    expect(chat.isLoading()).toBe(false);
   });
 });
 ```
 
-</Tab>
-<Tab label="chat.component.ts">
+### Testing interrupts
+
+An interrupt arrives as an `interrupt` event whose payload sits under an `interrupt` key — `{ type: 'interrupt', interrupt: { id, value } }`. The adapter normalizes it into the neutral `interrupt()` signal, where `value` is `unknown`, so cast it at the read site (or type it with the `BagTemplate` generic described in the [Interrupts guide](/docs/langgraph/guides/interrupts)):
 
 ```typescript
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { injectAgent } from '@threadplane/langgraph';
-
-@Component({
-  selector: 'app-chat',
-  template: `
-    @if (chat.isLoading()) {
-      <div class="spinner">Thinking...</div>
-    }
-    @for (msg of chat.messages(); track $index) {
-      <div [class]="msg.role">{{ msg.content }}</div>
-    }
-  `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
-})
-export class ChatComponent {
-  protected readonly chat = injectAgent();
-
-  send(text: string) {
-    this.chat.submit({ message: text });
-  }
-}
-```
-
-</Tab>
-</Tabs>
-
-## Testing Interrupts
-
-Script an interrupt event to test human-in-the-loop flows. Verify the interrupt signal surfaces the payload, then resume and confirm the agent continues.
-
-<Tabs>
-<Tab label="interrupt.spec.ts">
-
-```typescript
+import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { MockAgentTransport, provideAgent, injectAgent } from '@threadplane/langgraph';
+import { MockAgentTransport, injectAgent, provideAgent } from '@threadplane/langgraph';
+
+const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 describe('interrupt handling', () => {
-  it('should surface interrupt and resume on approval', () => {
+  it('surfaces the interrupt payload', async () => {
     const transport = new MockAgentTransport();
-
     TestBed.configureTestingModule({
       providers: [
-        provideAgent({ apiUrl: '', assistantId: 'approval_agent', transport }),
+        provideAgent({ apiUrl: '', assistantId: 'approval_agent', transport, throttle: false }),
       ],
     });
+    const chat = TestBed.runInInjectionContext(() => injectAgent());
 
-    TestBed.runInInjectionContext(() => {
-      const chat = injectAgent();
+    const submitted = chat.submit({ message: 'Delete my account' });
+    transport.emit([
+      {
+        type: 'interrupt',
+        interrupt: { id: 'approval', value: { action: 'delete_account', risk: 'high' } },
+      },
+    ]);
+    await flush();
+    transport.close();
+    await submitted;
 
-      // Agent hits an interrupt
-      transport.emit([
-        {
-          type: 'interrupt',
-          value: { action: 'delete_account', risk: 'high' },
-        },
-      ]);
-
-      // Verify interrupt signal
-      expect(chat.interrupt()).toBeDefined();
-      expect(chat.interrupt()?.value.action).toBe('delete_account');
-      expect(chat.interrupt()?.value.risk).toBe('high');
-
-      // User approves — resume the agent
-      chat.submit({ resume: { approved: true } });
-
-      // Agent continues after approval
-      transport.emit([
-        {
-          type: 'values',
-          messages: [{ role: 'assistant', content: 'Account deleted.' }],
-        },
-      ]);
-
-      expect(chat.interrupt()).toBeUndefined();
-      expect(chat.messages()[0].content).toBe('Account deleted.');
-    });
+    const pending = chat.interrupt?.();
+    expect(pending).toBeDefined();
+    const value = pending?.value as { action: string; risk: string };
+    expect(value.action).toBe('delete_account');
+    expect(value.risk).toBe('high');
   });
 });
 ```
 
-</Tab>
-<Tab label="approval.component.ts">
+<Callout type="info" title="Why `interrupt?.()`">
+`interrupt` is optional on the neutral `Agent` contract, because a runtime without human-in-the-loop support omits it. Under `strictNullChecks` the call site therefore needs `?.()`. The LangGraph adapter always provides it, and `langGraphInterrupts()` is a required signal carrying the raw array.
+</Callout>
+
+Resume the paused run with `chat.submit({ resume: { approved: true } })`, exactly as a component would.
+
+### Testing errors and retry
+
+`emitError()` throws from inside the stream. The adapter classifies the failure through `toAgentError()`, so `error()` holds an `AgentError` with `kind`, `retryable`, and `status` rather than the raw thrown object. Note that the promise `submit()` returned rejects, so catch it:
 
 ```typescript
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { injectAgent } from '@threadplane/langgraph';
-
-@Component({
-  selector: 'app-approval',
-  template: `
-    @if (agent.interrupt(); as interrupt) {
-      <div class="interrupt-dialog">
-        <p>Action: {{ interrupt.value.action }}</p>
-        <p>Risk: {{ interrupt.value.risk }}</p>
-        <button (click)="approve()">Approve</button>
-        <button (click)="reject()">Reject</button>
-      </div>
-    }
-  `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
-})
-export class ApprovalComponent {
-  protected readonly agent = injectAgent();
-
-  approve() {
-    this.agent.submit({ resume: { approved: true } });
-  }
-
-  reject() {
-    this.agent.submit({ resume: { approved: false } });
-  }
-}
-```
-
-</Tab>
-</Tabs>
-
-## Testing Errors
-
-Inject errors with `emitError()` to verify your component handles failures gracefully.
-
-<Tabs>
-<Tab label="error.spec.ts">
-
-```typescript
+import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { MockAgentTransport, provideAgent, injectAgent } from '@threadplane/langgraph';
+import { MockAgentTransport, injectAgent, provideAgent } from '@threadplane/langgraph';
+
+const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 describe('error handling', () => {
-  function configureWithTransport(transport: MockAgentTransport) {
-    TestBed.resetTestingModule();
+  it('classifies a transport failure', async () => {
+    const transport = new MockAgentTransport();
     TestBed.configureTestingModule({
       providers: [
-        provideAgent({ apiUrl: '', assistantId: 'test_agent', transport }),
+        provideAgent({ apiUrl: '', assistantId: 'test_agent', transport, throttle: false }),
       ],
     });
-  }
+    const chat = TestBed.runInInjectionContext(() => injectAgent());
 
-  it('should surface errors and set error status', () => {
-    const transport = new MockAgentTransport();
-    configureWithTransport(transport);
+    const submitted = chat.submit({ message: 'Hello' });
+    transport.emitError(new Error('HTTP 500: connection lost'));
+    await submitted.catch(() => undefined);
+    await flush();
 
-    TestBed.runInInjectionContext(() => {
-      const chat = injectAgent();
-
-      chat.submit({ message: 'Hello' });
-
-      // Simulate a connection failure
-      transport.emitError(new Error('Connection lost'));
-
-      expect(chat.error()).toBeDefined();
-      expect(chat.error()?.message).toBe('Connection lost');
-      expect(chat.status()).toBe('error');
-      expect(chat.isLoading()).toBe(false);
-    });
+    const err = chat.error();
+    expect(err?.kind).toBe('server');
+    expect(err?.retryable).toBe(true);
+    expect(chat.status()).toBe('error');
+    expect(chat.isLoading()).toBe(false);
   });
 
-  it('should recover from errors on retry', () => {
+  it('clears the error and starts a new run on retry()', async () => {
     const transport = new MockAgentTransport();
-    configureWithTransport(transport);
-
-    TestBed.runInInjectionContext(() => {
-      const chat = injectAgent();
-
-      // First attempt fails
-      chat.submit({ message: 'Hello' });
-      transport.emitError(new Error('Timeout'));
-      expect(chat.status()).toBe('error');
-
-      // Retry succeeds
-      chat.submit({ message: 'Hello' });
-      transport.emit([
-        {
-          type: 'values',
-          messages: [{ role: 'assistant', content: 'Sorry for the delay!' }],
-        },
-      ]);
-
-      expect(chat.status()).not.toBe('error');
-      expect(chat.messages()[0].content).toBe('Sorry for the delay!');
+    TestBed.configureTestingModule({
+      providers: [
+        provideAgent({ apiUrl: '', assistantId: 'test_agent', transport, throttle: false }),
+      ],
     });
+    const chat = TestBed.runInInjectionContext(() => injectAgent());
+
+    const submitted = chat.submit({ message: 'Hello' });
+    transport.emitError(new Error('HTTP 503: service unavailable'));
+    await submitted.catch(() => undefined);
+    await flush();
+    expect(chat.status()).toBe('error');
+
+    const retried = chat.retry();
+    expect(chat.error()).toBeUndefined();
+    expect(chat.isLoading()).toBe(true);
+
+    transport.close();
+    await retried;
   });
 });
 ```
 
-</Tab>
-<Tab label="chat.component.ts">
+`retry()` re-sends the last payload, so an error banner in a component wires straight to `agent.retry()` — no need to stash the last message yourself.
+
+### Testing thread switching
+
+`switchThread(null)` starts a fresh conversation: the transcript, the value, and any pending interrupt are cleared. Passing a thread id instead loads that thread through the transport `getHistory()` hook.
 
 ```typescript
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { injectAgent } from '@threadplane/langgraph';
+import { describe, it, expect } from 'vitest';
+import { TestBed } from '@angular/core/testing';
+import { MockAgentTransport, injectAgent, provideAgent } from '@threadplane/langgraph';
 
-@Component({
-  selector: 'app-chat',
-  template: `
-    @if (chat.error(); as err) {
-      <div class="error-banner">
-        <p>{{ err.message }}</p>
-        <button (click)="retry()">Retry</button>
-      </div>
-    }
-  `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
-})
-export class ChatComponent {
-  protected readonly chat = injectAgent();
-  private lastMessage = '';
+const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
-  send(text: string) {
-    this.lastMessage = text;
-    this.chat.submit({ message: text });
-  }
-
-  retry() {
-    this.send(this.lastMessage);
-  }
-}
-```
-
-</Tab>
-</Tabs>
-
-## Testing Thread Switching
-
-Verify that switching threads loads the correct conversation state and clears the previous thread's messages.
-
-```typescript
 describe('thread switching', () => {
-  it('should load new thread state on switch', () => {
+  it('clears the transcript when switching to a new thread', async () => {
     const transport = new MockAgentTransport();
-    const threadId = signal<string | null>('thread_A');
-
     TestBed.configureTestingModule({
       providers: [
-        provideAgent({
-          apiUrl: '',
-          assistantId: 'test_agent',
-          threadId,
-          transport,
-        }),
+        provideAgent({ apiUrl: '', assistantId: 'test_agent', transport, throttle: false }),
       ],
     });
+    const chat = TestBed.runInInjectionContext(() => injectAgent());
 
-    TestBed.runInInjectionContext(() => {
-      const chat = injectAgent();
+    const submitted = chat.submit({ message: 'Hi' });
+    transport.emit([
+      { type: 'messages', messages: [{ id: 'ai-1', type: 'ai', content: 'Thread A response' }] },
+    ]);
+    await flush();
+    transport.close();
+    await submitted;
+    expect(chat.messages().at(-1)?.content).toBe('Thread A response');
 
-      // Thread A has messages
-      transport.emit([
-        {
-          type: 'values',
-          messages: [{ role: 'assistant', content: 'Thread A response' }],
-        },
-      ]);
-      expect(chat.messages()[0].content).toBe('Thread A response');
-
-      // Switch to thread B
-      chat.switchThread('thread_B');
-
-      // Thread B loads its own state
-      transport.emit([
-        {
-          type: 'values',
-          messages: [{ role: 'assistant', content: 'Thread B response' }],
-        },
-      ]);
-      expect(chat.messages()[0].content).toBe('Thread B response');
-    });
-  });
-
-  it('should create a new thread when switching to null', () => {
-    const transport = new MockAgentTransport();
-
-    TestBed.resetTestingModule();
-    TestBed.configureTestingModule({
-      providers: [
-        provideAgent({ apiUrl: '', assistantId: 'test_agent', transport }),
-      ],
-    });
-
-    TestBed.runInInjectionContext(() => {
-      const chat = injectAgent();
-
-      // Start a conversation
-      transport.emit([
-        {
-          type: 'values',
-          messages: [{ role: 'assistant', content: 'Hello' }],
-        },
-      ]);
-
-      // Switch to new thread
-      chat.switchThread(null);
-      expect(chat.messages()).toEqual([]);
-    });
+    chat.switchThread(null);
+    await flush();
+    expect(chat.messages()).toEqual([]);
   });
 });
 ```
 
-## Test Setup Workflow
+## Test setup workflow
 
 <Steps>
 <Step title="Install dependencies">
-Make sure `@threadplane/langgraph` is available in your test environment. MockAgentTransport ships with the main package — no extra install needed.
+Make sure `@threadplane/langgraph` is available in your test environment. `MockAgentTransport` ships with the main package — no extra install is needed.
 </Step>
 <Step title="Create the transport">
 Instantiate `MockAgentTransport` with optional pre-scripted batches for sequential playback, or leave it empty for imperative `emit()` calls.
 </Step>
-<Step title="Wrap in injection context">
-Call `TestBed.runInInjectionContext(() => { ... })` so `injectAgent()` can access Angular's injector for signal creation and cleanup.
-</Step>
 <Step title="Configure the provider">
-Pass the transport into `provideAgent({ ..., transport })` in TestBed's `providers` array. All other options (assistantId, threadId, onThreadId) work identically to production code.
+Pass the transport into `provideAgent({ ..., transport })` in the TestBed `providers` array. All other options (`assistantId`, `threadId`, `onThreadId`) work identically to production code.
 </Step>
-<Step title="Script events">
-Use `transport.emit()` for ad-hoc events, `transport.nextBatch()` for pre-scripted sequences, or `transport.emitError()` for failure scenarios.
+<Step title="Resolve the agent in an injection context">
+Call `TestBed.runInInjectionContext(() => injectAgent())` so the adapter can reach Angular's injector for signal creation and cleanup.
+</Step>
+<Step title="Script events, then flush">
+Use `emit()` for ad-hoc events, `nextBatch()` for pre-scripted sequences, and `emitError()` for failures — awaiting one macrotask after each call.
 </Step>
 <Step title="Assert signal values">
-Read signals like `chat.messages()`, `chat.status()`, `chat.interrupt()`, and `chat.error()` to verify your component reacts correctly.
+Read `chat.messages()`, `chat.status()`, `chat.interrupt?.()`, and `chat.error()` to verify the agent reacted, then `close()` the stream and await the submit promise.
 </Step>
 </Steps>
 
-## Integration Testing
+## Integration testing
 
 For end-to-end confidence, run tests against a real LangGraph dev server. The LangGraph CLI starts a local server your tests can hit directly.
 
@@ -655,7 +437,7 @@ ng test --watch=false
 ```
 
 <Callout type="warning" title="Integration tests are slow">
-Integration tests hit a real server and (potentially) a real LLM. Reserve them for CI pipelines or pre-release smoke tests. Use MockAgentTransport for the vast majority of your test suite — it runs in milliseconds with zero external dependencies.
+Integration tests hit a real server and, potentially, a real LLM. Reserve them for CI pipelines or pre-release smoke tests. Use `provideFakeAgent()` or `MockAgentTransport` for the vast majority of your suite — both run in milliseconds with zero external dependencies.
 </Callout>
 
 ## What's Next
