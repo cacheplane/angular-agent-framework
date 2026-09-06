@@ -59,6 +59,7 @@ _SLOTS = {
     "friday": ["10:30"],
 }
 
+# region demo-state
 # Per-process demo state. The Strands bridge is SNAPSHOT-only: every
 # outbound state emission replaces the whole frontend state object, so each
 # ToolBehavior hook below composes and returns this COMPLETE object rather
@@ -70,8 +71,10 @@ _state: dict = {"availability": None, "booking": None}
 
 def _complete_state() -> dict:
     return {"availability": _state["availability"], "booking": _state["booking"]}
+# endregion
 
 
+# region availability-tool
 @tool
 def check_availability(day: str) -> dict:
     """Look up the open meeting slots for a weekday.
@@ -98,8 +101,10 @@ async def availability_state(context) -> dict | None:
         return None
     _state["availability"] = {"day": result.get("day"), "slots": result.get("slots", [])}
     return _complete_state()
+# endregion
 
 
+# region book-meeting
 @tool(context=True)
 def book_meeting(topic: str, slot: str, tool_context: ToolContext) -> str:
     """Book a meeting after a human approves it.
@@ -123,8 +128,10 @@ def book_meeting(topic: str, slot: str, tool_context: ToolContext) -> str:
     if not approved:
         return f"The human declined. Meeting NOT booked: {topic}"
     return f"Meeting booked for {slot}: {topic}"
+# endregion
 
 
+# region booking-state
 async def booking_state(context) -> dict | None:
     """state_from_args hook: mirror the pending booking into state as the
     tool-call arguments finish streaming (before the interrupt pauses the
@@ -143,6 +150,7 @@ async def booking_state(context) -> dict | None:
         "status": "pending",
     }
     return _complete_state()
+# endregion
 
 
 _RESEARCHER_INSTRUCTIONS = (
@@ -152,6 +160,7 @@ _RESEARCHER_INSTRUCTIONS = (
 )
 
 
+# region delegation-tool
 @tool
 async def research_availability(attendees: str, date_range: str):
     """Delegate availability research for the given attendees to a specialist.
@@ -178,6 +187,7 @@ async def research_availability(attendees: str, date_range: str):
         raise
     # Strands takes the LAST yielded value as the tool result.
     yield "".join(chunks)
+# endregion
 
 
 _INSTRUCTIONS = """You are a meeting scheduling copilot.
@@ -202,6 +212,7 @@ the `research_availability` tool before proposing meeting slots.
 """
 
 
+# region model
 def build_model() -> OpenAIModel:
     """Strands' native OpenAI provider — plain OPENAI_API_KEY, no AWS creds.
 
@@ -214,8 +225,10 @@ def build_model() -> OpenAIModel:
     if base_url:
         client_args["base_url"] = base_url
     return OpenAIModel(client_args=client_args, model_id=os.environ.get("OPENAI_CHAT_MODEL", "gpt-4o-mini"))
+# endregion
 
 
+# region specialist
 # Tool-less specialist the orchestrator delegates availability research to
 # via the `research_availability` async-generator tool above. Its streamed
 # events cross the bridge as tool_stream_events and are translated into
@@ -226,7 +239,9 @@ availability_researcher = Agent(
     name="availability_researcher",
     tools=[],
 )
+# endregion
 
+# region agent-config
 agent = StrandsAgent(
     agent=Agent(
         model=build_model(),
@@ -245,3 +260,4 @@ agent = StrandsAgent(
         },
     ),
 )
+# endregion
