@@ -1287,7 +1287,7 @@
 /* Stage — components/landing/Stage.tsx, StageStills.tsx, StageAct.tsx
  * The stills are the section's default form; the pinned act replaces them on
  * wide, motion-tolerant viewports after hydration. The stills reuse the
- * feature-block row grammar so the two forms read as one section. */
+ * rail grammar so the two forms read as one section. */
 .stage-stills {
   display: grid;
   gap: 96px;
@@ -1394,27 +1394,205 @@
   font-size: 13px;
   justify-self: end;
 }
-/* The rail beats stack in one grid cell so cues crossfade in place; the hold
- * lines share a second cell beneath. */
+/* The rail (stage-rail spec §3): the segment bar on top, then ONE cell that
+ * the cues and the closing ledger share. The cues are their own grid: the
+ * beat blocks stacked in its first row so they crossfade in place, the hold
+ * line in its second. The ledger used to span two rail rows instead, and the
+ * grid split its height across both, so the hold line was pushed ~150px
+ * below the beat block; in one cell the ledger's height sizes the cell and
+ * nothing else. No min-height: the sticky pin already centers the rail.
+ * Segment and check state arrive as attributes from the publisher; the green
+ * is the render token, the one green the site has. */
 .stage-rail {
   display: grid;
   grid-template-rows: auto auto;
   align-content: center;
-  min-height: 60vh;
+  row-gap: 20px;
+}
+.stage-rail-cues {
+  grid-area: 2 / 1;
+  align-self: start;
+  display: grid;
+  grid-template-rows: auto auto;
+  row-gap: 20px;
+}
+.stage-segs {
+  display: flex;
+  gap: 10px;
+}
+.stage-seg {
+  flex: 1;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  padding-top: 10px;
+  position: relative;
+  opacity: 0.45;
+}
+.stage-seg::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--color-border);
+}
+.stage-seg[data-beat-state='done'] {
+  opacity: 0.95;
+}
+.stage-seg[data-beat-state='done']::before {
+  background: var(--color-render-green);
+}
+.stage-seg[data-beat-state='now'] {
+  opacity: 1;
+  color: var(--color-text-primary);
+}
+.stage-seg[data-beat-state='now']::before {
+  background: var(--color-text-primary);
 }
 .stage-rail-beat {
   grid-area: 1 / 1;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.stage-check {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-border-strong);
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.stage-check[data-checked]::after {
+  content: '✓';
+  font-size: 12px;
+  font-weight: 700;
+}
+.stage-check[data-checked] {
+  background: var(--color-render-green);
+  border-color: var(--color-render-green);
+  color: #fff;
+}
+.stage-claim {
+  font-family: var(--font-garamond);
+  font-size: 30px;
+  line-height: 1.08;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+.stage-doc {
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 12px;
+  opacity: 0.72;
+  text-decoration: none;
+  border-bottom: 1px solid var(--color-border);
+  color: inherit;
+}
+.stage-doc::after {
+  content: ' →';
+}
+.stage-proof {
+  margin: 22px 0 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-render-green);
 }
 .stage-rail-hold {
   grid-area: 2 / 1;
-  margin: 24px 0 0;
+  align-self: start;
+  margin: 0;
   font-size: 15px;
   line-height: 1.5;
+  opacity: 0.7;
 }
-/* Cues start hidden; the engine drives opacity and transform per frame. */
+.stage-rail-close {
+  grid-area: 2 / 1;
+}
+.stage-ledger {
+  list-style: none;
+  margin: 0 0 22px;
+  padding: 0;
+}
+.stage-ledger li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 16px;
+}
+.stage-ledger .stage-check {
+  margin: 0;
+  width: 20px;
+  height: 20px;
+}
+/* The claim may wrap at the rail's width; the link never does. */
+.stage-ledger-claim {
+  flex: 1;
+  min-width: 0;
+}
+.stage-ledger .stage-doc {
+  margin: 0 0 0 auto;
+  white-space: nowrap;
+}
+.stage-rail-close .stage-claim {
+  font-size: 30px;
+}
+/* The install command is five packages long, so the chip wraps and the CTA
+ * drops beneath it rather than squeezing the rail. */
+.stage-install {
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.stage-install code {
+  background: var(--color-surface-dim);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.stage-install-cta {
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.stage-trust {
+  margin: 12px 0 0;
+  font-size: 12px;
+  opacity: 0.7;
+}
+/* Cues start hidden; the engine drives opacity and transform per frame. The
+ * beat blocks, the hold line and the ledger stack in one cell, so a hidden
+ * cue would still sit over the visible one and take its clicks: no cue owns
+ * the pointer until the publisher marks it the current beat or, for the
+ * ledger, active past the render settle. */
 .stage-act [data-sc-cue] {
   opacity: 0;
   will-change: opacity, transform;
+  pointer-events: none;
+}
+.stage-rail-beat[data-beat-state='now'] {
+  pointer-events: auto;
+}
+.stage-rail-close[data-active] {
+  pointer-events: auto;
 }
 /* Keyboard path: the pin holds ~six viewports of scroll with nothing to tab
  * through, so the first focusable in the act skips past it. Hidden until
@@ -1747,4 +1925,17 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--color-text-muted);
+}
+
+/* The stills form of the beat block and the ledger — StageStills.tsx. The
+ * block mirrors `.stage-rail-beat` without the grid placement; the ending
+ * reuses `.stage-rail-close` (its `grid-area` is inert outside the rail grid)
+ * and only needs room after the last still. */
+.stage-still-text {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.stage-stills-close {
+  margin-top: 64px;
 }

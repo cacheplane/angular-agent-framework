@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { STAGE_CLOSE } from '../src/lib/positioning';
 
 /** Drives the pinned act: the section is 6 viewports tall; scroll to a fraction of its travel. */
 async function scrollAct(page: Page, p: number) {
@@ -56,7 +57,7 @@ test.describe('homepage stage', () => {
     expect(Math.abs(heights.act - 6 * heights.viewport)).toBeLessThanOrEqual(4);
   });
 
-  test('scroll drives the act: progress, cues, and the declared hold', async ({
+  test('scroll drives the act: segments, checks, the hold, and the ledger', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
@@ -64,35 +65,57 @@ test.describe('homepage stage', () => {
     // With the rAF settle this takes ~1-2 s, well inside StageAct's 8 s
     // READY_TIMEOUT_MS after which the act is swapped for the stills.
     await expect(page.locator('html')).toHaveClass(/sc-ready/);
-    await scrollAct(page, 0.05);
-    expect(await progress(page)).toBeGreaterThan(0);
+    const act = page.locator('[data-stage-act]');
+    const tools = page.locator('[data-stage-segment="stream"]');
     const stream = page
       .getByTestId('stage-rail-beat')
       .and(page.locator('[data-beat="stream"]'));
+    const streamCheck = stream.locator('[data-stage-check]');
+    // Inside the Tools beat (0..0.2167): the segment is `now`, the block is
+    // the greeting cue (full from p = 0), and its check is not yet filled.
+    await scrollAct(page, 0.05);
+    expect(await progress(page)).toBeGreaterThan(0);
+    await expect(tools).toHaveAttribute('data-beat-state', 'now');
     await expect(stream).toHaveCSS('opacity', '1');
+    await expect(streamCheck).not.toHaveAttribute('data-checked', '');
+    // Past the Tools settle point (its window end): done and checked.
+    await scrollAct(page, 0.3);
+    await expect(tools).toHaveAttribute('data-beat-state', 'done');
+    await expect(streamCheck).toHaveAttribute('data-checked', '');
     // Inside the approve hold: approve spans 0.4167..0.8167 of the act and the
-    // hold is 35–70% of it (0.5567..0.6967). 0.68 also sits on the last hold
-    // line's plateau (its cue opens at 0.65, full from ~0.678).
+    // hold is 35–70% of it (0.5567..0.6967). The one hold line is cued across
+    // that range, so 0.68 sits on its plateau.
     await scrollAct(page, 0.68);
-    await expect(page.locator('[data-stage-act]')).toHaveAttribute(
-      'data-sc-verify-hold',
-      'true'
-    );
-    await expect(page.getByTestId('stage-rail-hold').last()).toHaveCSS(
+    await expect(act).toHaveAttribute('data-sc-verify-hold', 'true');
+    await expect(page.getByTestId('stage-rail-hold')).toHaveCSS(
       'opacity',
       /^(0\.[5-9]\d*|1)$/
     );
     await scrollAct(page, 0.8);
-    await expect(page.locator('[data-stage-act]')).not.toHaveAttribute(
-      'data-sc-verify-hold',
-      'true'
-    );
+    await expect(act).not.toHaveAttribute('data-sc-verify-hold', 'true');
+    // The end: the ledger is fully in, owns the pointer, every check is
+    // filled, and the install command is the one the copy declares.
     await scrollAct(page, 1);
-    await expect(
-      page
-        .getByTestId('stage-rail-beat')
-        .and(page.locator('[data-beat="render"]'))
-    ).toHaveCSS('opacity', '1');
+    const close = page.getByTestId('stage-rail-close');
+    await expect(close).toHaveCSS('opacity', '1');
+    await expect(close).toHaveAttribute('data-active', '');
+    await expect(close.locator('[data-stage-check][data-checked]')).toHaveCount(
+      4
+    );
+    await expect(close.locator('code')).toHaveText(STAGE_CLOSE.install);
+  });
+
+  test('a segment click scrolls the act to its beat', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/');
+    await expect(page.locator('html')).toHaveClass(/sc-ready/);
+    await scrollAct(page, 0.05);
+    await page.locator('[data-stage-segment="persist"]').click();
+    // Persist owns 0.2167..0.4167 of the act; the click lands 2% inside it.
+    await expect
+      .poll(() => progress(page), { timeout: 2_000 })
+      .toBeGreaterThan(0.2167);
+    expect(await progress(page)).toBeLessThan(0.4167);
   });
 
   test('the frame answers and the verify state changes between positions', async ({

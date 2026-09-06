@@ -65,9 +65,15 @@ export function beatWindows(): readonly Readonly<BeatWindow>[] {
 
 const clamp01 = (x: number) => (x < 0 ? 0 : x > 1 ? 1 : x);
 const lerp = (a: number, b: number, f: number) => a + (b - a) * f;
+/** Act-progress fraction printed for a cue: four decimals, no trailing zeros. */
+const fmt = (n: number) => String(+n.toFixed(4));
 
+/** The window that owns clamped progress `q`; the last one owns q = 1. Runs per frame, so no closure. */
 function windowAt(q: number): Readonly<BeatWindow> {
-  return WINDOWS.find((x) => q < x.to) ?? LAST_WINDOW;
+  for (let i = 0; i < WINDOWS.length; i++) {
+    if (q < WINDOWS[i].to) return WINDOWS[i];
+  }
+  return LAST_WINDOW;
 }
 
 export function beatAt(p: number): StageBeat {
@@ -136,35 +142,81 @@ export function timeAt(p: number, ready: StageReadyMessage): number {
   }
 }
 
-/**
- * `data-sc-cue` for a beat's rail block: "from to rampIn rampOut" as fractions
- * of act progress. The first beat greets (full at p = 0), the last holds to
- * the end (no leave ramp), the middle ones fade in and out inside their window.
- */
-export function cueFor(beat: StageBeat): string {
+/** Act progress at which a beat's claim is proven on screen and its check fills. */
+export function settleAt(beat: StageBeat): number {
   const w = WINDOWS[STAGE_BEATS.indexOf(beat)];
-  const fmt = (n: number) => String(+n.toFixed(4));
-  if (beat === STAGE_BEATS[0]) return `0 ${fmt(w.to)} 0 0.3`;
-  if (beat === STAGE_BEATS[STAGE_BEATS.length - 1])
-    return `${fmt(w.from)} 1 0.3 0`;
-  return `${fmt(w.from)} ${fmt(w.to)}`;
+  if (beat === 'approve') return APPROVE_THRESHOLD_P;
+  if (beat === 'render') return w.from + (w.to - w.from) * (1 - RENDER_TAIL);
+  return w.to;
+}
+
+/** Rail segment state for a beat at a progress: proven before it, being proven, or still ahead. */
+export type SegmentState = 'done' | 'now' | 'todo';
+
+/** `now` for the beat that owns `p`, `done` for the ones before it, `todo` after. */
+export function segmentState(beat: StageBeat, p: number): SegmentState {
+  const current = beatAt(p);
+  if (beat === current) return 'now';
+  return STAGE_BEATS.indexOf(beat) < STAGE_BEATS.indexOf(current)
+    ? 'done'
+    : 'todo';
 }
 
 /**
- * Cue windows for the hold lines inside the approve beat, spread across the
- * hold range. The last cue overshoots the hold by 12% of the approve span so
- * "Keep scrolling to approve" lingers past the threshold and the instruction
- * is still readable as the resume begins.
+ * True once `p` has reached the beat's settle point. Pure in `p`, so a check
+ * un-fills on rewind exactly as the frame rewinds.
  */
-export function holdLineCues(count: number): string[] {
+export function isChecked(beat: StageBeat, p: number): boolean {
+  return p >= settleAt(beat);
+}
+
+/**
+ * `data-sc-cue` for a beat's rail block: "from to rampIn rampOut" as fractions
+ * of act progress (the engine's ramps default to 0.3 of the window each). The
+ * first beat greets (full at p = 0), the middle ones fade in and out inside
+ * their window, and the last ends at its settle point so it crossfades into
+ * the closing ledger (`closeCue`). The render block arrives over the first
+ * tenth of its window: the approve block has fully left by then, so nothing
+ * crossfades, and its window is short enough that the default ramp would keep
+ * the block below full for the first third of the beat.
+ *
+ * Every cue's plateau (opacity 1) contains one of the scroll-craft harness's
+ * sample points, which the spec checks with the engine's own ramp model.
+ */
+export function cueFor(beat: StageBeat): string {
+  const w = WINDOWS[STAGE_BEATS.indexOf(beat)];
+  if (beat === STAGE_BEATS[0]) return `0 ${fmt(w.to)} 0 0.3`;
+  if (beat === STAGE_BEATS[STAGE_BEATS.length - 1])
+    return `${fmt(w.from)} ${fmt(settleAt(beat))} 0.1`;
+  return `${fmt(w.from)} ${fmt(w.to)}`;
+}
+
+/** How far past the threshold the hold line lingers, as a fraction of the approve span. */
+export const HOLD_LINE_OVERSHOOT = 0.2;
+
+/**
+ * Cue for the hold line inside the approve beat: opens where the hold starts,
+ * overshoots the threshold by `HOLD_LINE_OVERSHOOT` of the approve span so
+ * "Keep scrolling to approve" is still readable as the resume begins, and
+ * leaves over the last fifth of that so it is at full strength across the
+ * threshold itself.
+ */
+export function holdCue(): string {
   const a = APPROVE_WINDOW;
   const span = a.to - a.from;
-  const start = a.from + span * APPROVE_HOLD.from;
-  const end = APPROVE_THRESHOLD_P;
-  const slot = (end - start) / count;
-  return Array.from({ length: count }, (_, i) => {
-    const from = start + slot * i;
-    const to = i === count - 1 ? end + span * 0.12 : from + slot * 1.15;
-    return `${+from.toFixed(4)} ${+Math.min(to, 1).toFixed(4)}`;
-  });
+  const from = a.from + span * APPROVE_HOLD.from;
+  const to = Math.min(APPROVE_THRESHOLD_P + span * HOLD_LINE_OVERSHOOT, 1);
+  return `${fmt(from)} ${fmt(to)} 0.3 0.2`;
+}
+
+/**
+ * Cue for the closing ledger: fades in at the render settle and holds to the
+ * end. Its window is the render tail alone, so the ramp-in takes a fifth of
+ * it, the same beat as the last check filling — the ledger is fully in with
+ * 2% of the act's scroll still to go rather than on its last pixel.
+ */
+export function closeCue(): string {
+  // rIn 0.1: the ledger's window is short (the render tail), so a wider ramp
+  // leaves its plateau with no margin around the harness's last sample.
+  return `${fmt(settleAt('render'))} 1 0.1 0`;
 }

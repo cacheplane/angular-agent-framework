@@ -10,7 +10,13 @@ import {
   useStagePublisher,
   type StagePublisher,
 } from './use-stage-publisher';
-import { APPROVE_HOLD, beatWindows, timeAt } from '../../lib/stage-beats';
+import {
+  APPROVE_HOLD,
+  beatWindows,
+  settleAt,
+  STAGE_BEATS,
+  timeAt,
+} from '../../lib/stage-beats';
 
 const READY = {
   type: STAGE_MESSAGE_TYPE,
@@ -36,10 +42,16 @@ function fromDemo(data: unknown) {
 }
 
 function setup(
-  opts: { frameWindow?: () => Window | null; ready?: boolean } = {}
+  opts: {
+    frameWindow?: () => Window | null;
+    ready?: boolean;
+    /** Builds rail markup before construction: the publisher queries it once. */
+    rail?: (section: HTMLElement) => void;
+  } = {}
 ) {
   const section = document.createElement('section');
   document.body.appendChild(section);
+  opts.rail?.(section);
   const posted: { m: unknown; origin: string }[] = [];
   const frame = {
     postMessage: (m: unknown, origin: string) => posted.push({ m, origin }),
@@ -56,6 +68,24 @@ function setup(
   // Simulate the frame's ready message
   if (opts.ready !== false) fromDemo(READY);
   return { section, posted, track, onReady, pub, frame };
+}
+
+/** One segment, one beat block and one check per beat, plus the ledger, as the act renders them. */
+function fullRail(section: HTMLElement) {
+  for (const b of STAGE_BEATS) {
+    const seg = document.createElement('a');
+    seg.setAttribute('data-stage-segment', b);
+    section.appendChild(seg);
+    const block = document.createElement('div');
+    block.setAttribute('data-stage-beat', b);
+    section.appendChild(block);
+    const chk = document.createElement('span');
+    chk.setAttribute('data-stage-check', b);
+    section.appendChild(chk);
+  }
+  const close = document.createElement('div');
+  close.setAttribute('data-stage-close', '');
+  section.appendChild(close);
 }
 
 afterEach(() => {
@@ -185,6 +215,134 @@ describe('stage publisher', () => {
       'beat:render',
       'complete',
     ]);
+  });
+
+  it('writes segment states and check fills onto the rail as progress moves', () => {
+    const { section, pub } = setup({ rail: fullRail });
+    const seg = (b: string) =>
+      section
+        .querySelector(`[data-stage-segment="${b}"]`)
+        ?.getAttribute('data-beat-state');
+    const checked = (b: string) =>
+      section
+        .querySelector(`[data-stage-check="${b}"]`)
+        ?.hasAttribute('data-checked');
+    section.style.setProperty('--sc-p', '0.05');
+    pub.tick();
+    expect(seg('stream')).toBe('now');
+    expect(seg('persist')).toBe('todo');
+    expect(checked('stream')).toBe(false);
+    section.style.setProperty('--sc-p', String(beatWindows()[1].from + 0.01));
+    pub.tick();
+    expect(seg('stream')).toBe('done');
+    expect(checked('stream')).toBe(true);
+    section.style.setProperty('--sc-p', '1');
+    pub.tick();
+    expect(
+      section.querySelectorAll('[data-stage-check][data-checked]')
+    ).toHaveLength(4);
+  });
+
+  it('marks the current beat block `now` so the visible cue owns the pointer', () => {
+    const { section, pub } = setup({ rail: fullRail });
+    const block = (b: string) =>
+      section
+        .querySelector(`[data-stage-beat="${b}"]`)
+        ?.getAttribute('data-beat-state');
+    section.style.setProperty('--sc-p', '0.05');
+    pub.tick();
+    expect(block('stream')).toBe('now');
+    expect(block('persist')).toBe('todo');
+    section.style.setProperty('--sc-p', String(beatWindows()[1].from + 0.01));
+    pub.tick();
+    expect(block('stream')).toBe('done');
+    expect(block('persist')).toBe('now');
+  });
+
+  it('activates the closing ledger only past the render settle, and deactivates it on rewind', () => {
+    const { section, pub } = setup({ rail: fullRail });
+    const close = section.querySelector('[data-stage-close]')!;
+    const settle = settleAt('render');
+    section.style.setProperty('--sc-p', String(settle - 0.01));
+    pub.tick();
+    expect(close.hasAttribute('data-active')).toBe(false);
+    section.style.setProperty('--sc-p', String(settle));
+    pub.tick();
+    expect(close.hasAttribute('data-active')).toBe(true);
+    section.style.setProperty('--sc-p', '1');
+    pub.tick();
+    expect(close.hasAttribute('data-active')).toBe(true);
+    section.style.setProperty('--sc-p', '0.5');
+    pub.tick();
+    expect(close.hasAttribute('data-active')).toBe(false);
+  });
+
+  it('un-fills the checks and resets the segments on a rewind, as the frame rewinds', () => {
+    const { section, pub } = setup({ rail: fullRail });
+    section.style.setProperty('--sc-p', '1');
+    pub.tick();
+    expect(
+      section.querySelectorAll('[data-stage-check][data-checked]')
+    ).toHaveLength(4);
+    section.style.setProperty('--sc-p', '0.05');
+    pub.tick();
+    expect(
+      section.querySelectorAll('[data-stage-check][data-checked]')
+    ).toHaveLength(0);
+    expect(
+      section
+        .querySelector('[data-stage-segment="persist"]')
+        ?.getAttribute('data-beat-state')
+    ).toBe('todo');
+  });
+
+  it('updates every check for a beat, in the beat block and in the closing ledger', () => {
+    const { section, pub } = setup({
+      rail: (section) => {
+        for (const where of ['block', 'ledger']) {
+          const chk = document.createElement('span');
+          chk.setAttribute('data-stage-check', 'stream');
+          chk.setAttribute('data-where', where);
+          section.appendChild(chk);
+        }
+      },
+    });
+    section.style.setProperty('--sc-p', String(beatWindows()[1].from + 0.01));
+    pub.tick();
+    expect(
+      section.querySelectorAll('[data-stage-check="stream"][data-checked]')
+    ).toHaveLength(2);
+  });
+
+  it('ignores an unknown beat on a segment or check without throwing', () => {
+    const seg = document.createElement('a');
+    seg.setAttribute('data-stage-segment', 'nope');
+    const chk = document.createElement('span');
+    chk.setAttribute('data-stage-check', 'nope');
+    const { section, pub } = setup({
+      rail: (section) => section.append(seg, chk),
+    });
+    section.style.setProperty('--sc-p', '1');
+    expect(() => pub.tick()).not.toThrow();
+    expect(seg.hasAttribute('data-beat-state')).toBe(false);
+    expect(chk.hasAttribute('data-checked')).toBe(false);
+  });
+
+  it('a second tick at the same progress writes no segment or check attributes', () => {
+    const { section, pub } = setup({ rail: fullRail });
+    const els = [
+      ...section.querySelectorAll(
+        '[data-stage-segment], [data-stage-beat], [data-stage-check], [data-stage-close]'
+      ),
+    ];
+    expect(els).toHaveLength(13);
+    section.style.setProperty('--sc-p', String(beatWindows()[1].from + 0.01));
+    pub.tick();
+    const sets = els.map((el) => vi.spyOn(el, 'setAttribute'));
+    const removes = els.map((el) => vi.spyOn(el, 'removeAttribute'));
+    pub.tick();
+    for (const s of sets) expect(s).not.toHaveBeenCalled();
+    for (const r of removes) expect(r).not.toHaveBeenCalled();
   });
 
   it('dispose removes the listener and stops posting', () => {

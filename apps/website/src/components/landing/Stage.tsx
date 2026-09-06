@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { StageStills } from './StageStills';
 import { StageAct } from './StageAct';
+import type { StageBeat } from '../../lib/stage-beats';
 
 export const STAGE_MIN_WIDTH = 1024;
 type Mode = 'stills' | 'act';
@@ -10,6 +11,11 @@ function actAllowed(): boolean {
   if (typeof window === 'undefined') return false;
   if (window.innerWidth < STAGE_MIN_WIDTH) return false;
   return !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+interface Props {
+  /** One proof line per beat (`STAGE_PROOF`): derived on the server, handed down as a plain object. */
+  proof: Record<StageBeat, string>;
 }
 
 /**
@@ -24,15 +30,15 @@ function actAllowed(): boolean {
  * visitor has scrolled far. `#stage-end` is the skip-link target rendered in
  * act mode only: the stills have no hidden focusables to skip.
  */
-export function Stage() {
+export function Stage({ proof }: Props) {
   const [mode, setMode] = useState<Mode>('stills');
   useEffect(() => {
     if (actAllowed()) setMode('act');
   }, []);
-  if (mode === 'stills') return <StageStills />;
+  if (mode === 'stills') return <StageStills proof={proof} />;
   return (
     <>
-      <StageAct onFallback={() => setMode('stills')} />
+      <StageAct onFallback={() => setMode('stills')} proof={proof} />
       <span id="stage-end" tabIndex={-1} className="sr-only" />
     </>
   );
