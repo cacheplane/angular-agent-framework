@@ -49,6 +49,7 @@ const SUGGESTIONS = [
           }
         </div>
       </chat>
+      <!-- #region sidebar-panel -->
       <div sidebar class="panel">
         <h3 class="cap">Dispatches</h3>
         <p class="count" data-testid="dispatch-count">
@@ -60,6 +61,7 @@ const SUGGESTIONS = [
           <li><span class="roster__name">weather-analyst</span> — conditions and operational impact</li>
         </ul>
       </div>
+      <!-- #endregion -->
     </example-chat-layout>
   `,
   styles: [
@@ -114,6 +116,7 @@ export class SubagentsComponent {
 
   protected readonly suggestions = SUGGESTIONS;
 
+  // #region dispatch-signals
   private readonly dispatches = computed(() => [...this.agent.subagents().values()]);
 
   protected readonly dispatchCount = computed(() => this.dispatches().length);
@@ -121,6 +124,7 @@ export class SubagentsComponent {
   protected readonly runningCount = computed(
     () => this.dispatches().filter((subagent) => subagent.status() === 'running').length,
   );
+  // #endregion
 
   protected send(text: string): void {
     void this.agent.submit({ message: text });

@@ -1,86 +1,110 @@
 ---
 title: Subagents
-description: SubAgentMiddleware dispatches child graphs through a task tool, which the Threadplane subagent tracker recognizes by default with no client configuration.
+description: Passing subagents to create_deep_agent installs a task tool, and every dispatch runs as a real child graph that renders as its own card.
 ---
 
 # Subagents
 
-`SubAgentMiddleware` gives an orchestrator a single tool, `task`, taking `{ description, subagent_type }`. Each dispatch runs a real child graph in its own `tools:<call_id>` namespace, and the child is seeded with the orchestrator's `description` before it emits its first token.
+Delegation in Deep Agents is one tool. `SubAgentMiddleware` registers a tool named `task` taking `{ description, subagent_type }`, and each call runs a real child graph with its own system prompt, its own tools, and its own transcript. Nothing about that is special on the wire — it is an ordinary tool call — and yet the browser renders it as a child agent, because `task` is the name the subagent tracker already watches for. The running example is an aviation dispatch desk, and this page walks the three files behind it.
 
-```python
-from deepagents import SubAgent, create_deep_agent
+## What the demo does
 
-FIELD_RESEARCHER: SubAgent = {
-    "name": "field-researcher",
-    "description": "Gathers field elevation and runway length for one airport.",
-    "system_prompt": "You research airport field data for a dispatch desk. ...",
-    "tools": [lookup_field_elevation, lookup_runway_length],
-}
+The Run tab shows the prebuilt `<chat>` composition beside a sidebar holding the specialist roster and a live dispatch count. The first welcome suggestion asks for a brief on KASE and KDEN, covering field data and weather at both, and the orchestrator answers by dispatching four specialists in a single turn: four cards appear in the conversation at once, each expanded while its child works and collapsed to a status pill when it reports. The second suggestion asks for the field data at KSFO alone, which is one dispatch and one card, so the two suggestions are the fan-out and the single case side by side. The orchestrator has no lookup tools of its own, so there is no run in which it answers without delegating.
 
-graph = create_deep_agent(
-    model=ChatOpenAI(model="gpt-4.1", temperature=0),
-    system_prompt=(PROMPTS_DIR / "subagents.md").read_text(),
-    subagents=[FIELD_RESEARCHER, WEATHER_ANALYST],
-)
-```
+## How it is built
 
-Passing `subagents` is what installs the middleware and, with it, the `task` tool. The demo's orchestrator is given no lookup tools of its own, so it has no way to answer a question without delegating.
+Three files carry the capability: a Python graph holding the lookup tools, the specialist specs, and the agent; an application config; and the Angular component that reads the dispatches into a sidebar. Open the Code tab to read them in place.
 
-## What the demo shows
+### The tools the specialists own
 
-Ask the dispatch desk about two airports at once and the run fans out. Two `task` calls go out in a single turn, two child agents work in parallel, and two subagent cards stream side by side in the conversation — each with its own transcript, its own tool calls, and no cross-wiring between them.
+Each lookup answers one question about one airport from a fixed table, so a recorded run stays stable. These tools belong to the children, never to the orchestrator.
 
-The fan-out needs a prompt. A model left to itself will serialize dispatches, so one line in the orchestrator's system prompt changes the shape of the run:
+<ExampleCode file="graph.py" region="lookup-tools" title="graph.py — the lookup tools" />
+
+### Declaring a specialist
+
+A `SubAgent` is a `TypedDict` with three required fields and a handful of optional ones. `name` is what the orchestrator passes as `subagent_type`, `description` is what the orchestrator reads when it decides where to send work, and `system_prompt` governs the child once it starts. Handing each spec its own `tools` is what splits the two jobs apart.
+
+<ExampleCode file="graph.py" region="specialists" title="graph.py — the specialist specs" />
+
+Omitting `tools` would inherit the main agent's tools instead, which is the opposite of what this demo wants.
+
+### Installing the task tool
+
+`create_deep_agent` assembles a middleware stack. Passing `subagents` is what puts `SubAgentMiddleware` on that stack, and the middleware is what registers `task`. The demo passes no tools of its own, so delegation is the only path to an answer.
+
+<ExampleCode file="graph.py" region="orchestrator" title="graph.py — the orchestrator" />
+
+<Callout type="note" title="A third specialist you did not declare">
+Unless it is explicitly disabled, `create_deep_agent` inserts a `general-purpose` subagent ahead of the specs you pass, with the main agent's model and tools. The `task` tool description therefore lists three agent types rather than two. The demo does not disable it; the system prompt simply names the two specialists it wants, which is enough to keep the orchestrator on them.
+</Callout>
+
+### Asking for the dispatches in one turn
+
+The middleware supplies a tool, not a policy. A model left to itself will dispatch one specialist, wait for the report, and dispatch the next, which is correct but produces a run with nothing to see. Two paragraphs in `prompts/subagents.md` change the shape of the run instead.
 
 ```markdown
+Give each dispatch a `description` that names the airport and says exactly what
+you want back. One airport per dispatch — never ask a specialist to cover two.
+
 When a request covers more than one airport or more than one kind of data,
-issue every dispatch you need in a single turn so the specialists work in
+issue every dispatch you need **in a single turn** so the specialists work in
 parallel. Do not wait for one to report before sending the next.
 ```
 
-## How it reaches the UI
+Both halves matter, and the first one matters for a reason worth reading the next section for.
 
-This is the capability that needs the least work on the client, because it needs none.
+### Providing the agent
 
-`task` is an ordinary tool call on the wire. What makes it render as a child agent is that the Threadplane subagent tracker recognizes the name — and `['task']` is the tracker's **default** `subagentToolNames`. A Deep Agents graph therefore lights the subagent cards with no configuration at all. Naming it explicitly is still worth doing as documentation, and it is required only when a dispatch tool is called something else:
+`provideAgent()` from `@threadplane/langgraph` registers the agent at the application root, and `provideChat({})` registers the chat defaults with no overrides. `subagentToolNames: ['task']` is already the default, so the line changes nothing at runtime and is there to say which tool call means that a child started. The example resolves its connection at runtime because the host that serves the demo decides which runtime is attached; your own application passes `apiUrl` and `assistantId` directly.
 
-```ts
-provideAgent({
-  apiUrl: environment.langGraphApiUrl,
-  assistantId: environment.assistantId,
-  // The default. Set it when your dispatch tool is named something else.
-  subagentToolNames: ['task'],
-});
-```
+<ExampleCode file="app.config.ts" />
 
-### Why parallel dispatches attribute cleanly
+### Reading the dispatches
 
-The tracker registers a dispatch from the `task` tool call itself — including the `subagent_type` argument, which becomes the card's name — and then matches the child's `tools:<call_id>` namespace exactly. Because the dispatch is registered before the child emits anything, attribution is structural rather than a guess from message ordering or text similarity. Two children running at the same time land in two cards because their namespaces differ, not because their output happens to look different.
+`injectAgent()` returns the agent, and `agent.subagents()` is a signal holding a map of the dispatches in the current thread. The sidebar spreads that map into an array once and derives both numbers from it, so the two counts can never disagree.
 
-Each dispatch also carries the orchestrator's `description` verbatim, and the match on it is exact. Two dispatches with identical descriptions are still distinguished by namespace, but a description that names its subject makes the card readable as well as correct.
+<ExampleCode file="subagents.component.ts" region="dispatch-signals" title="subagents.component.ts — the dispatch signals" />
 
-### What to put in the sidebar
+`status` is itself a signal on each record, so it is called rather than read.
 
-The `<chat>` composition already renders each dispatch as a `<chat-subagent-card>` inline and keeps it, collapsed, after completion. A separate tray of active subagents would duplicate that. The demo spends the sidebar on the one thing the cards do not show, which is how wide the fan-out went:
+### The sidebar
 
-```ts
-private readonly dispatches = computed(() => [...this.agent.subagents().values()]);
+The `<chat>` composition already renders every dispatch as a card inside the conversation, so a second tray of the same cards would only duplicate it. The sidebar spends its space on the two things the cards do not show: how wide the fan-out went, and who the specialists are.
 
-protected readonly dispatchCount = computed(() => this.dispatches().length);
+<ExampleCode file="subagents.component.ts" region="sidebar-panel" title="subagents.component.ts — the sidebar" />
 
-protected readonly runningCount = computed(
-  () => this.dispatches().filter((subagent) => subagent.status() === 'running').length,
-);
-```
+## How a dispatch becomes a card
 
-Note that `status` is itself a signal on the `Subagent` record, so it is called rather than read.
+Two independent things have to happen for a `task` call to render as a child agent, and they come from opposite ends of the run.
 
-<Callout type="tip" title="The description is doing two jobs">
-A dispatch `description` is both the child's opening instruction and the label a reader sees on the card. A vague description costs twice: the child starts with less to go on, and the card says less about what is happening.
+The first is registration. When the orchestrator's message carries a `task` tool call, the tracker records a dispatch keyed by the tool-call id, reading `subagent_type` out of the arguments. That name becomes the card's label, and a call with no usable `subagent_type` is ignored rather than tracked. Registration is also what makes the card its own thing in the transcript: `<chat-tool-calls>` groups adjacent calls of the same name into one collapsed strip, but a call that spawned a subagent is always its own group, so four `task` calls in one turn stay four cards instead of collapsing into a single grouped strip.
+
+The second is attribution: deciding which child stream belongs to which dispatch. This is the part that is not free. A child runs under a `tools:<id>` namespace whose id is a checkpoint identifier assigned independently of the parent's tool-call id, and the two are not linked anywhere on the wire. So the adapter matches on content instead. `SubAgentMiddleware` seeds each child with a single human message whose content is the dispatch `description`, verbatim, and the adapter matches that first message against the `description` argument of each unclaimed dispatch — exactly first, then by containment either way.
+
+<Callout type="warning" title="Why the prompt insists on one airport per dispatch">
+The description match is the only signal that survives parallel fan-out. With one child outstanding the adapter can fall back to claiming the single unmatched dispatch, but with four outstanding at once there is nothing positional to fall back on: arrival order is not dispatch order, and guessing would put one specialist's transcript in another specialist's card. Descriptions that name their airport keep the four apart. Two dispatches whose descriptions are identical give the ladder nothing to tell them apart.
 </Callout>
 
-## Next steps
+Until a stream is attributed its chunks are held rather than dropped, and they are replayed into the card the moment the match lands. A dispatch that never matches shows an empty card, which is a worse card but never a wrong one.
 
-- [Planning](/docs/deep-agents/capabilities/planning) — the orchestrator's own todo list, which pairs naturally with delegation.
-- [Chat subagent card](/docs/chat/components/chat-subagent-card) — the card component on its own.
-- [Subgraphs](/docs/langgraph/guides/subgraphs) — how namespaced child execution is attributed underneath the tracker.
+<Callout type="tip" title="The description is doing two jobs">
+A dispatch `description` is both the child's opening instruction and the key the adapter attributes its output by. A vague description costs twice: the child starts with less to go on, and its stream is harder to tell from its siblings.
+</Callout>
+
+## What's Next
+
+<CardGroup cols={2}>
+  <Card title="Planning" href="/docs/deep-agents/capabilities/planning">
+    The orchestrator's own todo list, which pairs naturally with delegation.
+  </Card>
+  <Card title="Chat subagent card" href="/docs/chat/components/chat-subagent-card">
+    The card component on its own, including what it renders for a child.
+  </Card>
+  <Card title="Subgraphs" href="/docs/langgraph/guides/subgraphs">
+    How namespaced child execution is attributed underneath the tracker.
+  </Card>
+  <Card title="Filesystem" href="/docs/deep-agents/capabilities/filesystem">
+    The workspace the agent writes into while it works.
+  </Card>
+</CardGroup>

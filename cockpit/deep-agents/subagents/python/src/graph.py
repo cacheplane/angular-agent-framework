@@ -50,6 +50,7 @@ WEATHER = {
 }
 
 
+# region lookup-tools
 @tool
 def lookup_field_elevation(airport: str) -> str:
     """Return the field elevation in feet for a four-letter ICAO airport code."""
@@ -77,6 +78,9 @@ def lookup_weather(airport: str) -> str:
     return f"{airport.upper()}: {conditions}"
 
 
+# endregion
+
+# region specialists
 FIELD_RESEARCHER: SubAgent = {
     "name": "field-researcher",
     "description": "Gathers field elevation and runway length for one airport.",
@@ -99,8 +103,10 @@ WEATHER_ANALYST: SubAgent = {
     ),
     "tools": [lookup_weather],
 }
+# endregion
 
 
+# region orchestrator
 def build_subagents_agent():
     """Build the orchestrator.
 
@@ -116,3 +122,4 @@ def build_subagents_agent():
 
 
 graph = build_subagents_agent()
+# endregion
