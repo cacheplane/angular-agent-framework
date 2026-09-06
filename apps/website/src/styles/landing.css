@@ -1294,9 +1294,14 @@
 }
 .stage-still {
   display: grid;
-  grid-template-columns: 3fr 2fr;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
   gap: 48px;
   align-items: center;
+}
+/* Even beats mirror: the still moves right AND keeps the wide track —
+   `order` alone re-sequences placement without swapping track sizes. */
+.stage-still:nth-child(even) {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
 }
 .stage-still:nth-child(even) .stage-still-visual {
   order: 2;
@@ -1315,7 +1320,8 @@
   height: auto;
 }
 @media (max-width: 900px) {
-  .stage-still {
+  .stage-still,
+  .stage-still:nth-child(even) {
     grid-template-columns: 1fr;
     gap: 24px;
   }
