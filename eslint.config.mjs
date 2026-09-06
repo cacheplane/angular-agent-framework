@@ -16,6 +16,7 @@ export default [
       '**/.install-collector/**',
       // Vendored byte-identical from upstream; its hash is pinned by a spec.
       'apps/website/src/vendor/scrollcraft/scrollcraft.js',
+      'apps/website/e2e/scroll-craft/shoot.mjs',
     ],
   },
   {
