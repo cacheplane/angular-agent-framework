@@ -20,11 +20,11 @@ Three files carry the example: the graph that produces the messages, the provide
 
 ### The graph that produces the messages
 
-The visible node is `generate`. `MessagesState` gives LangGraph a message list the SDK already understands, the model is constructed with `streaming=True`, and the node prepends a system prompt read from the capability's prompt file before it awaits the model.
+The visible node is `generate`. `MessagesState` gives LangGraph a message list the SDK already understands, the model is constructed with `streaming=True`, and the node prepends a system prompt read from the capability's prompt file before it awaits the model. A second node, `generate_title`, runs after it and writes a short thread title back through the LangGraph SDK.
 
 <ExampleCode file="graph.py" region="generate-node" title="graph.py — the generate node" />
 
-Every message the browser renders begins as an entry in that returned list. A second node, `generate_title`, runs after it and writes a short thread title back through the LangGraph SDK.
+Every message the browser renders begins as an entry in that returned list.
 
 ### The application configuration
 
@@ -36,11 +36,11 @@ Your own application does not need the factory: pass `apiUrl` and `assistantId` 
 
 ### One template per role
 
-`ChatMessageListComponent` renders nothing by itself. It iterates the agent's messages, maps each message's `role` to a template name, and looks for a projected `<ng-template chatMessageTemplate="...">` with that name. A message whose template is missing renders nothing at all, which is how the demo hides tool results: the `tool` template is deliberately empty.
+`ChatMessageListComponent` renders nothing by itself. It iterates the agent's messages, maps each message's `role` to a template name, and looks for a projected `<ng-template chatMessageTemplate="...">` with that name. A message whose template is missing renders nothing at all, which is how the demo hides tool results: the `tool` template is deliberately empty. `messageContent()` pulls the visible text out of the content, skipping reasoning and tool-use blocks so that a complex content array never lands in a bubble as raw JSON.
 
 <ExampleCode file="messages.component.ts" region="message-templates" title="messages.component.ts — the four role templates" />
 
-The template context is the message itself as `$implicit`, plus `index`. `messageContent()` pulls the visible text out of the content, skipping reasoning and tool-use blocks so that a complex content array never lands in a bubble as raw JSON.
+The template context is the message itself as `$implicit`, plus `index`.
 
 <Callout type="info" title="The composition projects these for you">
 `<chat>` provides its own default templates internally. Projecting templates by hand is the price and the point of building from primitives: nothing renders that you did not write.
@@ -61,7 +61,7 @@ The typing indicator and the input both take the agent and need nothing else. `<
 <ExampleCode file="messages.component.ts" region="input-strip" title="messages.component.ts — the input strip" />
 
 <Callout type="warning" title="Do not submit from (submitted)">
-The output fires after the message has already been sent. A handler that calls `submit()` again posts the user message twice.
+The output fires after the message has already been sent. A handler that calls `submit()` again posts the user message twice. The demo itself does this: its `(submitted)` handler submits a second time after `<chat-input>` has already submitted, which is a defect in the example. Your own application should bind `(submitted)` only for side effects such as analytics, not for submission.
 </Callout>
 
 ### The component class
@@ -164,7 +164,7 @@ type ContentBlock =
 
 Plain text is the common case, and it is the only case in the demo: the LangGraph adapter flattens LangChain content arrays down to their visible text before the message reaches a component, keeping the raw payload on `extra`. Adapters that can preserve more shape emit blocks instead.
 
-Custom templates should therefore check the type before assuming they can interpolate `content` directly. `messageContent()` does this for you, and hand-written code can do the same:
+Custom templates should therefore check the type before assuming they can interpolate `content` directly. `messageContent()` does this for you, taking a LangChain `BaseMessage` rather than the `Message` shape, and hand-written code can do the same:
 
 ```ts
 function textOf(message: Message): string {
@@ -205,11 +205,13 @@ Adapters populate `reasoning` from provider-specific reasoning or thinking block
 Tool calls have their own normalized shape, carried on `agent.toolCalls()`:
 
 ```ts
+export type ToolCallStatus = 'pending' | 'running' | 'complete' | 'error';
+
 interface ToolCall {
   id: string;
   name: string;
   args: unknown;
-  status: 'pending' | 'running' | 'complete' | 'error';
+  status: ToolCallStatus;
   result?: unknown;
   error?: unknown;
 }
@@ -247,7 +249,7 @@ Citation display derives a type badge from `sourceType`; when it is absent and `
 <chat-message [role]="'assistant'" [message]="message" />
 ```
 
-The demo passes `role` and the delivery flags but not `message`, so no citation strip appears under its answers.
+The demo passes `role`, the streaming flag read from `delivery`, and a `current` flag computed from the index, but not `message`, so no citation strip appears under its answers.
 
 The resolve path from a `[^id]` marker to a rendered citation runs through `CitationsResolverService`, exported from `@threadplane/chat`. A custom citation renderer provides the service, sets the current message, then calls `lookup(refId)`, which returns a `Signal<ResolvedCitation | null>` matching the marker id against `message.citations` and falling back to inline markdown definitions:
 
@@ -283,7 +285,7 @@ Keep citation data on the message that owns the content. Avoid a separate global
 Interrupts are not messages. They are optional agent state:
 
 ```ts
-agent.interrupt?.(); // Signal<AgentInterrupt | undefined>
+agent.interrupt?.(); // AgentInterrupt | undefined
 ```
 
 An interrupt carries an `id`, an opaque runtime-specific `value` the application renders, and `resumable`, which is true when the runtime supports resuming through `submit({ resume })`:
@@ -299,7 +301,7 @@ This matters because an interrupt is lifecycle state, not transcript content. Re
 Subagents are also optional agent state:
 
 ```ts
-agent.subagents?.(); // Signal<Map<string, Subagent>>
+agent.subagents?.(); // Map<string, Subagent>
 ```
 
 Each `Subagent` carries the tool-call id that spawned it, an optional name, and signals for status, messages, and state. An adapter that surfaces the child's own tool calls adds a `toolCalls` signal as well; consumers default to an empty list when it is absent.
@@ -314,7 +316,7 @@ Generated UI arrives through ordinary assistant content. `<chat>` classifies tha
 - A2UI when the text starts with `---a2ui_JSON---`.
 - Markdown otherwise.
 
-Classification stays pending while the text is still too short to tell those apart. json-render uses a single spec object; A2UI uses a stream of JSONL envelopes that update surfaces, data models, and rendering state.
+Classification stays pending while the content is empty or whitespace, or while a leading `-` is still a prefix of the `---a2ui_JSON---` sentinel. A leading `{` commits to a specification immediately, and any other first character commits to markdown right away. json-render uses a single spec object; A2UI uses a stream of JSONL envelopes that update surfaces, data models, and rendering state.
 
 The message remains an assistant message either way. Generated UI is an interpretation of its content, not a new role. The classifier belongs to the composition, which is why the demo, built from primitives, renders a spec as literal markdown text instead.
 
