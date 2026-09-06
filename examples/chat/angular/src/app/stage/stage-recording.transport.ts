@@ -12,9 +12,12 @@ declare global {
 /**
  * Wraps the real transport in record mode. The script announces each run's
  * action with `beginRun()` before performing it; the next `stream()` call
- * becomes that run. A reload has no stream, so the script calls `markReload()`
- * to close it as an empty run. Every `getHistory()` answer is kept with the
- * number of runs recorded so far, which is what the replay keys on.
+ * becomes that run. A reload has no stream, so the recording HOST — not the
+ * script — calls `markReload()` to close it as an empty run, and only once the
+ * adoption's history refresh has landed: a `markReload()` fired before that
+ * refresh stamps the snapshot with a run count the replay can never serve.
+ * Every `getHistory()` answer is kept with the number of runs recorded so far,
+ * which is what the replay keys on.
  */
 export class StageRecordingTransport implements AgentTransport {
   private readonly runs: StageRun[] = [];
@@ -26,6 +29,9 @@ export class StageRecordingTransport implements AgentTransport {
   constructor(private readonly inner: AgentTransport, private readonly now: () => number = () => performance.now()) {}
 
   beginRun(beat: StageBeat, action: StageAction): void {
+    // A second announcement before the first is consumed would silently
+    // relabel the run about to stream with the WRONG action.
+    if (this.pending) throw new Error('beginRun() while an action is still pending');
     this.pending = { beat, action };
   }
 
@@ -61,9 +67,10 @@ export class StageRecordingTransport implements AgentTransport {
     const start = this.now();
     for await (const event of this.inner.stream(assistantId, threadId, payload, signal, options)) {
       events.push({ tMs: Math.round(this.now() - start), event });
-      this.publish();
       yield event;
     }
+    // Once per run, not once per event: republishing a whole deep-copied
+    // recording on every token made a long run quadratic.
     this.publish();
   }
 
@@ -87,6 +94,8 @@ export class StageRecordingTransport implements AgentTransport {
   async getHistory(threadId: string, signal: AbortSignal): Promise<ThreadState[]> {
     const states = this.inner.getHistory ? await this.inner.getHistory(threadId, signal) : [];
     this.histories.push({ afterRun: this.runs.length, states });
+    // Kept (unlike the per-event publish): a snapshot can be the LAST thing
+    // recorded, so without this the window copy would be missing it.
     this.publish();
     return states;
   }

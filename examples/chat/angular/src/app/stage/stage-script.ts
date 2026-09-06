@@ -16,7 +16,13 @@ export const STAGE_PROMPTS = {
 
 export interface StageScriptHost {
   beginRun(beat: StageBeat, action: StageAction): void;
+  /**
+   * Must not resolve until the agent reports it is running: `submit()` is
+   * asynchronous, so a host that resolves early lets the script's
+   * `waitFor(!isRunning())` fall through before the run has even started.
+   */
   submit(message: string, checkpointIndex?: number): Promise<void>;
+  /** Must not resolve until the agent reports it is running (see `submit`). */
   resume(value: string): Promise<void>;
   reload(): Promise<void>;
   isRunning(): boolean;
