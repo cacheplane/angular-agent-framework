@@ -34,6 +34,40 @@ function readProgress(el: HTMLElement): number {
   return Number.isFinite(v) ? v : 0;
 }
 
+const isFiniteNumber = (v: unknown): v is number =>
+  typeof v === 'number' && Number.isFinite(v);
+
+const isRange = (v: unknown): v is { startMs: number; endMs: number } =>
+  typeof v === 'object' &&
+  v !== null &&
+  isFiniteNumber((v as Record<string, unknown>)['startMs']) &&
+  isFiniteNumber((v as Record<string, unknown>)['endMs']);
+
+/**
+ * A `ready` message the seek math can trust. `timeAt` reads `hold.startMs`
+ * and each beat's times unguarded, and a non-numeric time yields `t = NaN`,
+ * which never equals `lastT`, so a malformed message would make the
+ * publisher post every frame. Anything failing this guard is ignored.
+ */
+function isReady(
+  d: Record<string, unknown>
+): d is Record<string, unknown> & StageReadyMessage & { ready: true } {
+  if (d['ready'] !== true) return false;
+  if (!isFiniteNumber(d['totalMs'])) return false;
+  const beats = d['beats'];
+  if (!Array.isArray(beats)) return false;
+  if (
+    !beats.every(
+      (b: unknown) =>
+        isRange(b) && typeof (b as Record<string, unknown>)['beat'] === 'string'
+    )
+  )
+    return false;
+  if (!isRange(d['hold'])) return false;
+  const reloadEndMs = d['reloadEndMs'];
+  return reloadEndMs === null || isFiniteNumber(reloadEndMs);
+}
+
 export function createStagePublisher(deps: StagePublisherDeps): StagePublisher {
   let ready: StageReadyMessage | null = null;
   let lastT = -1;
@@ -48,14 +82,11 @@ export function createStagePublisher(deps: StagePublisherDeps): StagePublisher {
   const onMessage = (e: MessageEvent) => {
     if (e.origin !== STAGE_DEMO_ORIGIN) return;
     const d = e.data as Record<string, unknown> | null;
-    if (!d || d['type'] !== STAGE_MESSAGE_TYPE) return;
-    if (
-      d['ready'] === true &&
-      Array.isArray(d['beats']) &&
-      typeof d['totalMs'] === 'number'
-    ) {
+    if (!d || typeof d !== 'object' || d['type'] !== STAGE_MESSAGE_TYPE) return;
+    if (d['ready'] === true) {
+      if (!isReady(d)) return;
       const first = ready === null;
-      ready = d as unknown as StageReadyMessage;
+      ready = d;
       lastT = -1; // re-post the current t after a (re)ready
       if (first) deps.onReady?.();
       return;
@@ -120,10 +151,14 @@ export function createStagePublisher(deps: StagePublisherDeps): StagePublisher {
  * section intersects the viewport (a pinned act six viewports tall is on screen
  * for a while; nothing is posted before it arrives or after it leaves).
  *
- * The publisher is created once per (sectionRef, active) mount, but `deps`
- * are read through a ref on every tick, so a `frameWindow` that only starts
- * returning the iframe's window after its `load` event is seen by the running
- * loop without re-subscribing.
+ * The publisher is created once per (sectionRef, active) mount. `deps` are
+ * kept in a ref that is refreshed on every render and read on every tick, so
+ * the act may pass unstable callbacks (a `frameWindow` that only starts
+ * returning the iframe's window after its `load` event, an inline `track`)
+ * without the loop re-subscribing or seeing stale closures.
+ *
+ * A throw inside a tick is logged and swallowed so the loop always re-arms;
+ * one bad frame must not silence the stage for the rest of the scroll.
  */
 export function useStagePublisher(
   sectionRef: React.RefObject<HTMLElement | null>,
@@ -143,8 +178,17 @@ export function useStagePublisher(
     });
     let onScreen = false;
     let frame = 0;
+    const logged = new Set<string>();
     const loop = () => {
-      pub.tick();
+      try {
+        pub.tick();
+      } catch (err) {
+        const key = err instanceof Error ? err.message : String(err);
+        if (!logged.has(key)) {
+          logged.add(key);
+          console.error('[stage] tick failed', err);
+        }
+      }
       frame = onScreen ? requestAnimationFrame(loop) : 0;
     };
     const io = new IntersectionObserver((entries) => {

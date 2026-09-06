@@ -7,8 +7,9 @@ import {
   STAGE_DEMO_ORIGIN,
   STAGE_MESSAGE_TYPE,
   useStagePublisher,
+  type StagePublisher,
 } from './use-stage-publisher';
-import { APPROVE_HOLD, beatWindows } from '../../lib/stage-beats';
+import { APPROVE_HOLD, beatWindows, timeAt } from '../../lib/stage-beats';
 
 const READY = {
   type: STAGE_MESSAGE_TYPE,
@@ -22,30 +23,46 @@ const READY = {
   ],
   hold: { startMs: 27_000, endMs: 30_000 },
   reloadEndMs: 12_600,
-};
+} as const;
 
-function setup() {
+/** The publisher under test; `afterEach` disposes it so a failing case cannot leak a listener. */
+let current: StagePublisher | null = null;
+
+function fromDemo(data: unknown) {
+  window.dispatchEvent(
+    new MessageEvent('message', { origin: STAGE_DEMO_ORIGIN, data })
+  );
+}
+
+function setup(
+  opts: { frameWindow?: () => Window | null; ready?: boolean } = {}
+) {
   const section = document.createElement('section');
   document.body.appendChild(section);
-  const posted: unknown[] = [];
+  const posted: { m: unknown; origin: string }[] = [];
   const frame = {
     postMessage: (m: unknown, origin: string) => posted.push({ m, origin }),
   } as unknown as Window;
   const track = vi.fn();
+  const onReady = vi.fn();
   const pub = createStagePublisher({
     section,
-    frameWindow: () => frame,
+    frameWindow: opts.frameWindow ?? (() => frame),
     track,
+    onReady,
   });
+  current = pub;
   // Simulate the frame's ready message
-  window.dispatchEvent(
-    new MessageEvent('message', { origin: STAGE_DEMO_ORIGIN, data: READY })
-  );
-  return { section, posted, track, pub };
+  if (opts.ready !== false) fromDemo(READY);
+  return { section, posted, track, onReady, pub, frame };
 }
 
 afterEach(() => {
+  current?.dispose();
+  current = null;
   document.body.innerHTML = '';
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
 });
 
 describe('stage publisher', () => {
@@ -55,33 +72,28 @@ describe('stage publisher', () => {
     pub.tick();
     pub.tick();
     expect(posted).toHaveLength(1);
-    expect(posted[0]).toMatchObject({
+    expect(posted[0]).toEqual({
       origin: STAGE_DEMO_ORIGIN,
-      m: { type: STAGE_MESSAGE_TYPE, t: expect.any(Number) },
+      m: { type: STAGE_MESSAGE_TYPE, t: timeAt(0.1, READY) },
     });
     section.style.setProperty('--sc-p', '0.2');
     pub.tick();
     expect(posted).toHaveLength(2);
-    pub.dispose();
+    expect(posted[1]).toEqual({
+      origin: STAGE_DEMO_ORIGIN,
+      m: { type: STAGE_MESSAGE_TYPE, t: timeAt(0.2, READY) },
+    });
   });
 
   it('posts nothing before ready', () => {
-    const section = document.createElement('section');
-    const posted: unknown[] = [];
-    const pub = createStagePublisher({
-      section,
-      frameWindow: () =>
-        ({ postMessage: (m: unknown) => posted.push(m) } as unknown as Window),
-      track: vi.fn(),
-    });
+    const { section, posted, pub } = setup({ ready: false });
     section.style.setProperty('--sc-p', '0.3');
     pub.tick();
     expect(posted).toHaveLength(0);
-    pub.dispose();
   });
 
   it('ignores messages from other origins', () => {
-    const { section, pub } = setup();
+    const { section } = setup();
     window.dispatchEvent(
       new MessageEvent('message', {
         origin: 'https://evil.example',
@@ -89,22 +101,16 @@ describe('stage publisher', () => {
       })
     );
     expect(section.getAttribute('data-sc-verify-state')).toBeNull();
-    pub.dispose();
   });
 
   it("mirrors the frame's applied state into data-sc-verify-state and the hold into data-sc-verify-hold", () => {
     const { section, pub } = setup();
-    window.dispatchEvent(
-      new MessageEvent('message', {
-        origin: STAGE_DEMO_ORIGIN,
-        data: {
-          type: STAGE_MESSAGE_TYPE,
-          applied: 42,
-          phase: 'stream',
-          t: 900,
-        },
-      })
-    );
+    fromDemo({
+      type: STAGE_MESSAGE_TYPE,
+      applied: 42,
+      phase: 'stream',
+      t: 900,
+    });
     expect(section.getAttribute('data-sc-verify-state')).toBe('stream:42');
     const a = beatWindows()[2];
     section.style.setProperty('--sc-p', String(a.from + (a.to - a.from) * 0.5));
@@ -113,7 +119,6 @@ describe('stage publisher', () => {
     section.style.setProperty('--sc-p', String(a.from + (a.to - a.from) * 0.9));
     pub.tick();
     expect(section.getAttribute('data-sc-verify-hold')).toBeNull();
-    pub.dispose();
   });
 
   it('tracks enter once, each beat once, the threshold once, complete once', () => {
@@ -145,7 +150,6 @@ describe('stage publisher', () => {
       'beat:render',
       'complete',
     ]);
-    pub.dispose();
   });
 
   it('dispose removes the listener and stops posting', () => {
@@ -154,6 +158,74 @@ describe('stage publisher', () => {
     section.style.setProperty('--sc-p', '0.5');
     pub.tick();
     expect(posted).toHaveLength(0);
+    // The listener is gone: a state message from the demo origin no longer lands.
+    fromDemo({ type: STAGE_MESSAGE_TYPE, applied: 7, phase: 'render', t: 1 });
+    expect(section.getAttribute('data-sc-verify-state')).toBeNull();
+  });
+
+  it('a second ready re-posts the current t, and onReady fires only once', () => {
+    const { section, posted, onReady, pub } = setup();
+    expect(onReady).toHaveBeenCalledTimes(1);
+    section.style.setProperty('--sc-p', '0.1');
+    pub.tick();
+    pub.tick();
+    expect(posted).toHaveLength(1);
+    fromDemo(READY);
+    pub.tick();
+    expect(posted).toHaveLength(2);
+    expect(posted[1]).toEqual({
+      origin: STAGE_DEMO_ORIGIN,
+      m: { type: STAGE_MESSAGE_TYPE, t: timeAt(0.1, READY) },
+    });
+    expect(onReady).toHaveBeenCalledTimes(1);
+  });
+
+  it('holds the post until frameWindow returns a window, then posts the same t', () => {
+    let w: Window | null = null;
+    const { section, posted, frame, pub } = setup({ frameWindow: () => w });
+    section.style.setProperty('--sc-p', '0.1');
+    pub.tick();
+    pub.tick();
+    expect(posted).toHaveLength(0);
+    w = frame;
+    pub.tick();
+    expect(posted).toHaveLength(1);
+    expect(posted[0]).toEqual({
+      origin: STAGE_DEMO_ORIGIN,
+      m: { type: STAGE_MESSAGE_TYPE, t: timeAt(0.1, READY) },
+    });
+    pub.tick();
+    expect(posted).toHaveLength(1);
+  });
+
+  it('ignores a malformed ready: no hold, or a beat with a non-numeric time', () => {
+    const { section, posted, onReady, pub } = setup({ ready: false });
+    const { hold: _hold, ...noHold } = READY;
+    void _hold;
+    fromDemo(noHold);
+    section.style.setProperty('--sc-p', '0.1');
+    expect(() => pub.tick()).not.toThrow();
+    expect(posted).toHaveLength(0);
+    expect(onReady).not.toHaveBeenCalled();
+
+    fromDemo({
+      ...READY,
+      beats: [
+        { beat: 'stream', startMs: 'x', endMs: 12_000 },
+        ...READY.beats.slice(1),
+      ],
+    });
+    section.style.setProperty('--sc-p', '0.11');
+    expect(() => pub.tick()).not.toThrow();
+    pub.tick();
+    expect(posted).toHaveLength(0);
+    expect(onReady).not.toHaveBeenCalled();
+
+    // A well-formed ready afterwards still works.
+    fromDemo(READY);
+    pub.tick();
+    expect(posted).toHaveLength(1);
+    expect(onReady).toHaveBeenCalledTimes(1);
   });
 
   /**
@@ -198,7 +270,7 @@ describe('stage publisher', () => {
     const track = vi.fn();
     const onReady = vi.fn();
 
-    const { rerender } = renderHook(
+    const { rerender, unmount } = renderHook(
       ({ frameWindow }: { frameWindow: () => Window | null }) => {
         const ref = useRef<HTMLElement | null>(section);
         useStagePublisher(ref, true, { frameWindow, track, onReady });
@@ -206,9 +278,7 @@ describe('stage publisher', () => {
       { initialProps: { frameWindow: () => null } }
     );
     act(() => {
-      window.dispatchEvent(
-        new MessageEvent('message', { origin: STAGE_DEMO_ORIGIN, data: READY })
-      );
+      fromDemo(READY);
       ioCallback?.([{ isIntersecting: true }]);
     });
     expect(onReady).toHaveBeenCalledTimes(1);
@@ -220,6 +290,73 @@ describe('stage publisher', () => {
     act(() => pump());
     expect(posted).toHaveLength(1);
     expect(track.mock.calls[0]?.[0]).toBe('enter');
-    vi.unstubAllGlobals();
+    unmount();
+  });
+
+  it('a throwing tick does not stop the rAF loop', () => {
+    type IOCallback = (entries: { isIntersecting: boolean }[]) => void;
+    let ioCallback: IOCallback | null = null;
+    class IO {
+      constructor(cb: IOCallback) {
+        ioCallback = cb;
+      }
+      observe() {
+        /* driven by the test */
+      }
+      disconnect() {
+        /* no-op */
+      }
+    }
+    vi.stubGlobal('IntersectionObserver', IO);
+    // Synchronous rAF, bounded so a re-arming loop cannot recurse forever.
+    const MAX_FRAMES = 6;
+    let frames = 0;
+    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => {
+      frames += 1;
+      if (frames <= MAX_FRAMES) cb(0);
+      return frames;
+    });
+    vi.stubGlobal('cancelAnimationFrame', () => undefined);
+    const error = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined);
+
+    const section = document.createElement('section');
+    document.body.appendChild(section);
+    section.style.setProperty('--sc-p', '0.1');
+    const posted: unknown[] = [];
+    const frame = {
+      postMessage: (m: unknown, origin: string) => posted.push({ m, origin }),
+    } as unknown as Window;
+    let thrown = 0;
+    const track = vi.fn(() => {
+      if (thrown === 0) {
+        thrown += 1;
+        throw new Error('analytics down');
+      }
+    });
+
+    const { unmount } = renderHook(() => {
+      const ref = useRef<HTMLElement | null>(section);
+      useStagePublisher(ref, true, { frameWindow: () => frame, track });
+    });
+    act(() => {
+      fromDemo(READY);
+      ioCallback?.([{ isIntersecting: true }]);
+    });
+    // The first tick threw inside track('enter') before the seek; the loop
+    // re-armed and a later tick posted t.
+    expect(thrown).toBe(1);
+    expect(frames).toBeGreaterThan(1);
+    expect(posted).toHaveLength(1);
+    expect(posted[0]).toEqual({
+      origin: STAGE_DEMO_ORIGIN,
+      m: { type: STAGE_MESSAGE_TYPE, t: timeAt(0.1, READY) },
+    });
+    expect(error).toHaveBeenCalledWith(
+      '[stage] tick failed',
+      expect.any(Error)
+    );
+    unmount();
   });
 });
