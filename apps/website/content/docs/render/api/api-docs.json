@@ -833,7 +833,7 @@
       "description": ""
     },
     "examples": [
-      "```ts\nconst store = signalStateStore({ count: 0 });\nstore.set('count', 1);\n```"
+      "```ts\nconst store = signalStateStore({ count: 0 });\nstore.set('/count', 1);\n```"
     ]
   },
   {
