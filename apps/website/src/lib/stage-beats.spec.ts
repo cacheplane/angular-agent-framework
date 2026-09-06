@@ -164,6 +164,7 @@ describe('cueFor', () => {
     const [, to] = cueFor('render').split(' ').map(Number);
     expect(to).toBeCloseTo(settleAt('render'), 4);
     expect(to).toBeLessThan(1);
+    expect(cueFor('render').split(' ')[1]).toBe(closeCue().split(' ')[0]);
   });
 });
 
@@ -202,7 +203,7 @@ describe('holdCue / closeCue', () => {
     // The cue is printed to 4 decimals, so compare against the exact edge and
     // probe inHold on either side of that edge.
     const edge = a.from + (a.to - a.from) * APPROVE_HOLD.from;
-    expect(from).toBeCloseTo(edge, 4);
+    expect(from).toBe(Number(edge.toFixed(4)));
     expect(inHold(edge + 1e-6)).toBe(true);
     expect(inHold(edge - 1e-6)).toBe(false);
     expect(to).toBeGreaterThan(APPROVE_THRESHOLD_P);

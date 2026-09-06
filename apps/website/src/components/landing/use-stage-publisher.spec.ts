@@ -236,6 +236,25 @@ describe('stage publisher', () => {
     ).toHaveLength(4);
   });
 
+  it('un-fills the checks and resets the segments on a rewind, as the frame rewinds', () => {
+    const { section, pub } = setup({ rail: fullRail });
+    section.style.setProperty('--sc-p', '1');
+    pub.tick();
+    expect(
+      section.querySelectorAll('[data-stage-check][data-checked]')
+    ).toHaveLength(4);
+    section.style.setProperty('--sc-p', '0.05');
+    pub.tick();
+    expect(
+      section.querySelectorAll('[data-stage-check][data-checked]')
+    ).toHaveLength(0);
+    expect(
+      section
+        .querySelector('[data-stage-segment="persist"]')
+        ?.getAttribute('data-beat-state')
+    ).toBe('todo');
+  });
+
   it('updates every check for a beat, in the beat block and in the closing ledger', () => {
     const { section, pub } = setup({
       rail: (section) => {

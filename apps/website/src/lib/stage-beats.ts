@@ -65,9 +65,15 @@ export function beatWindows(): readonly Readonly<BeatWindow>[] {
 
 const clamp01 = (x: number) => (x < 0 ? 0 : x > 1 ? 1 : x);
 const lerp = (a: number, b: number, f: number) => a + (b - a) * f;
+/** Act-progress fraction printed for a cue: four decimals, no trailing zeros. */
+const fmt = (n: number) => String(+n.toFixed(4));
 
+/** The window that owns clamped progress `q`; the last one owns q = 1. Runs per frame, so no closure. */
 function windowAt(q: number): Readonly<BeatWindow> {
-  return WINDOWS.find((x) => q < x.to) ?? LAST_WINDOW;
+  for (let i = 0; i < WINDOWS.length; i++) {
+    if (q < WINDOWS[i].to) return WINDOWS[i];
+  }
+  return LAST_WINDOW;
 }
 
 export function beatAt(p: number): StageBeat {
@@ -144,6 +150,7 @@ export function settleAt(beat: StageBeat): number {
   return w.to;
 }
 
+/** Rail segment state for a beat at a progress: proven before it, being proven, or still ahead. */
 export type SegmentState = 'done' | 'now' | 'todo';
 
 /** `now` for the beat that owns `p`, `done` for the ones before it, `todo` after. */
@@ -155,11 +162,13 @@ export function segmentState(beat: StageBeat, p: number): SegmentState {
     : 'todo';
 }
 
+/**
+ * True once `p` has reached the beat's settle point. Pure in `p`, so a check
+ * un-fills on rewind exactly as the frame rewinds.
+ */
 export function isChecked(beat: StageBeat, p: number): boolean {
   return p >= settleAt(beat);
 }
-
-const fmt = (n: number) => String(+n.toFixed(4));
 
 /**
  * `data-sc-cue` for a beat's rail block: "from to rampIn rampOut" as fractions
