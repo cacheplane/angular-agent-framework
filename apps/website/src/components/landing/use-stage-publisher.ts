@@ -3,6 +3,9 @@ import {
   beatAt,
   crossedThreshold,
   inHold,
+  isChecked,
+  segmentState,
+  STAGE_BEATS,
   timeAt,
   type StageBeat,
   type StageMilestone,
@@ -36,6 +39,26 @@ export interface StagePublisher {
 function readProgress(el: HTMLElement): number {
   const v = parseFloat(el.style.getPropertyValue('--sc-p'));
   return Number.isFinite(v) ? v : 0;
+}
+
+const isStageBeat = (v: string | null): v is StageBeat =>
+  (STAGE_BEATS as readonly string[]).includes(v ?? '');
+
+/**
+ * Rail elements keyed by a known beat, read once at construction. An element
+ * whose beat attribute is not one of `STAGE_BEATS` is skipped rather than
+ * fed to the beat math (which would index it as -1).
+ */
+function railElements(
+  section: HTMLElement,
+  attr: 'data-stage-segment' | 'data-stage-check'
+): { el: Element; beat: StageBeat }[] {
+  const out: { el: Element; beat: StageBeat }[] = [];
+  for (const el of section.querySelectorAll(`[${attr}]`)) {
+    const beat = el.getAttribute(attr);
+    if (isStageBeat(beat)) out.push({ el, beat });
+  }
+  return out;
 }
 
 const isFiniteNumber = (v: unknown): v is number =>
@@ -83,6 +106,8 @@ export function createStagePublisher(deps: StagePublisherDeps): StagePublisher {
   const beatsSeen = new Set<StageBeat>();
   let disposed = false;
   let lastHello = -Infinity;
+  const segments = railElements(deps.section, 'data-stage-segment');
+  const checks = railElements(deps.section, 'data-stage-check');
 
   const onMessage = (e: MessageEvent) => {
     if (e.origin !== STAGE_DEMO_ORIGIN) return;
@@ -115,6 +140,20 @@ export function createStagePublisher(deps: StagePublisherDeps): StagePublisher {
         hold = h;
         if (h) deps.section.setAttribute('data-sc-verify-hold', 'true');
         else deps.section.removeAttribute('data-sc-verify-hold');
+      }
+      // Rail: segment states and check fills, written only on change so the
+      // harness signature and the browser's style recalc see nothing idle.
+      for (const { el, beat } of segments) {
+        const s = segmentState(beat, p);
+        if (el.getAttribute('data-beat-state') !== s)
+          el.setAttribute('data-beat-state', s);
+      }
+      for (const { el, beat } of checks) {
+        const on = isChecked(beat, p);
+        if (on !== el.hasAttribute('data-checked')) {
+          if (on) el.setAttribute('data-checked', '');
+          else el.removeAttribute('data-checked');
+        }
       }
       // Milestones.
       if (!entered && p > 0) {
