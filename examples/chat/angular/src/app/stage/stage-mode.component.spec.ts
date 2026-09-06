@@ -162,11 +162,14 @@ describe('StageMode', () => {
     await fx.componentInstance.boot(new URLSearchParams('t=0'));
     fx.detectChanges();
     const tl = buildTimeline(MINIMAL);
-    const reload = tl.runs.find((r) => r.run.action.kind === 'reload');
+    // MINIMAL's run 1 is the reload; anchor to it so the assertion cannot
+    // collapse to null === null if the fixture ever loses its reload run.
+    const reload = tl.runs[1];
+    expect(reload.run.action.kind).toBe('reload');
     expect(posted[0]).toMatchObject({
       totalMs: expect.any(Number),
       hold: tl.hold,
-      reloadEndMs: reload ? reload.endMs : null,
+      reloadEndMs: reload.endMs,
     });
     expect(posted.some((p) => (p as { phase?: string }).phase === 'stream')).toBe(true);
   });

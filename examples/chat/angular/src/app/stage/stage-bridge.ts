@@ -8,7 +8,7 @@ export interface StageReady {
   beats: readonly TimelineBeat[];
   /** The authored hold at the interrupt (timeline ms). */
   hold: { readonly startMs: number; readonly endMs: number };
-  /** End of the persist beat's reload run, or null when the recording has none. */
+  /** End of the reload run (the persist beat's, in the authored recording), or null when the recording has none. */
   reloadEndMs: number | null;
 }
 
