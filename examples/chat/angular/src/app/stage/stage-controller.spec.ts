@@ -97,6 +97,15 @@ describe('StageController against the real LangGraph agent', () => {
     expect(controller.phase()).toBe('stream');
   });
 
+  it('resolves a seek only once the events for its target are applied', async () => {
+    // No until(): resolution alone must imply the stage is showing the target.
+    // The intermediate target is coalesced into the last pass and never
+    // applied on its own, so both callers settle on the final one.
+    await Promise.all([controller.seek(10), controller.seek(tl.runs[0].endMs)]);
+    expect(agent.messages().length).toBe(2);
+    expect(controller.applied()).toBe(2);
+  });
+
   it('coalesces bursts: many seeks in one frame perform each action once', async () => {
     const submits: unknown[] = [];
     const original = agent.submit.bind(agent);

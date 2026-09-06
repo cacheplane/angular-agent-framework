@@ -99,11 +99,19 @@ export class StageReplayTransport implements AgentTransport {
    * Serving nothing leaves the streamed transcript alone. The recorder must
    * therefore capture a snapshot after every run it wants restored (the
    * reload run above all).
+   *
+   * Before the first run has streamed nothing has been replayed, so a
+   * pre-run snapshot is never answered: it would seed the transcript with a
+   * transcript the stage has not shown yet. When several snapshots share a
+   * position the LAST one wins — it is the most recently recorded.
    */
   async getHistory(_thread: string, _signal: AbortSignal): Promise<ThreadState[]> {
+    if (this.runIndex === 0) return [];
     const rec = await this.getRecording();
-    const snapshot = rec.histories.find((h) => h.afterRun === this.runIndex);
-    return (snapshot?.states ?? []) as ThreadState[];
+    for (let i = rec.histories.length - 1; i >= 0; i--) {
+      if (rec.histories[i].afterRun === this.runIndex) return rec.histories[i].states as ThreadState[];
+    }
+    return [];
   }
   async createQueuedRun(_a: string, threadId: string, payload: unknown, _s: AbortSignal, options?: LangGraphSubmitOptions): Promise<AgentQueueEntry> {
     return { id: 'stage-replay-queued-run', threadId, values: payload, options: { ...options, multitaskStrategy: 'enqueue' }, createdAt: new Date() };

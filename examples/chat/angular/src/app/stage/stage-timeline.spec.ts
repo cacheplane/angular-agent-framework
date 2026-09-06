@@ -1,7 +1,7 @@
 // examples/chat/angular/src/app/stage/stage-timeline.spec.ts
 import { describe, expect, it } from 'vitest';
-import { MINIMAL, ev } from './stage-recording.fixtures';
-import { HOLD_MS, RELOAD_MS, buildTimeline, phaseAt, runsStartedBy } from './stage-timeline';
+import { MINIMAL } from './stage-recording.fixtures';
+import { HOLD_MS, RELOAD_MS, buildTimeline, phaseAt, phaseReachedAt, runsStartedBy } from './stage-timeline';
 
 describe('buildTimeline', () => {
   const tl = buildTimeline(MINIMAL);
@@ -13,11 +13,6 @@ describe('buildTimeline', () => {
     expect(resume.startMs).toBe(approve.endMs + HOLD_MS);
     expect(tl.hold).toEqual({ startMs: approve.endMs, endMs: resume.startMs });
     expect(tl.totalMs).toBe(tl.runs[6].endMs);
-  });
-  it('floors a reload run at RELOAD_MS but never shorter than its own events', () => {
-    const withEvent = { ...MINIMAL, runs: MINIMAL.runs.map((r, i) => (i === 1 ? { ...r, events: [ev(900)] } : r)) };
-    const tlWithEvent = buildTimeline(withEvent);
-    expect(tlWithEvent.runs[1].endMs - tlWithEvent.runs[1].startMs).toBe(901);
   });
   it('derives beat boundaries from the runs', () => {
     expect(tl.beats.map((b) => b.beat)).toEqual(['stream', 'persist', 'approve', 'render']);
@@ -35,6 +30,15 @@ describe('phaseAt', () => {
     expect(phaseAt(tl, tl.hold.startMs + 1)).toBe('pause');
     expect(phaseAt(tl, tl.runs[5].startMs)).toBe('resume');
     expect(phaseAt(tl, tl.totalMs)).toBe('render');
+  });
+});
+
+describe('phaseReachedAt', () => {
+  const tl = buildTimeline(MINIMAL);
+  it('names the moment reached, so a run\'s end still belongs to that run', () => {
+    expect(phaseReachedAt(tl, tl.runs[0].endMs)).toBe('stream');
+    expect(phaseAt(tl, tl.runs[0].endMs)).toBe('persist');
+    expect(phaseReachedAt(tl, 0)).toBe('stream');
   });
 });
 

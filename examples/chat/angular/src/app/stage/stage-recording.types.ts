@@ -60,6 +60,11 @@ export function validateStageRecording(input: unknown): StageRecording {
     }
     if (!Array.isArray(run.events)) throw new Error(`run ${i} has no events`);
     if (run.events.length === 0 && run.action.kind !== 'reload') throw new Error(`run ${i} has no events`);
+    // A reload streams nothing: the transport skips reload runs, so any events
+    // on one would silently be answered to the NEXT run's stream.
+    if (run.events.length > 0 && run.action.kind === 'reload') {
+      throw new Error(`run ${i} is a reload and must have no events`);
+    }
     let prevTMs = -Infinity;
     (run.events as readonly Partial<RecordedEvent>[]).forEach((e: Partial<RecordedEvent>, j: number) => {
       if (typeof e?.tMs !== 'number' || !Number.isFinite(e.tMs)) throw new Error(`run ${i} event ${j} has no numeric tMs`);

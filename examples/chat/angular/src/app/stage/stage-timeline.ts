@@ -2,9 +2,9 @@
 import type { StageBeat, StageRecording, StageRun } from './stage-recording.types';
 
 /**
- * Floor on the recorded-time room given to a reload run, which streams
- * nothing: enough for the transcript to visibly blank and restore. A reload
- * that does carry events is never shorter than this floor.
+ * The recorded-time room given to a reload run, which streams nothing (the
+ * validator rejects a reload that carries events): enough for the transcript
+ * to visibly blank and restore.
  */
 export const RELOAD_MS = 600;
 /**
@@ -42,9 +42,7 @@ export interface StageTimeline {
 }
 
 function durationOf(run: StageRun): number {
-  if (run.action.kind === 'reload') {
-    return Math.max(RELOAD_MS, (run.events[run.events.length - 1]?.tMs ?? 0) + 1);
-  }
+  if (run.action.kind === 'reload') return RELOAD_MS;
   const last = run.events[run.events.length - 1]?.tMs ?? 0;
   return Math.max(last, 1);
 }
@@ -85,6 +83,23 @@ export function phaseAt(tl: StageTimeline, t: number): StagePhase {
   }
   if (current.run.action.kind === 'resume') return 'resume';
   return current.run.beat;
+}
+
+/**
+ * How far before a boundary the rendered moment sits. Runs are laid end to
+ * end, so a run's end is the next run's start; at that instant the outgoing
+ * run still owns the frame.
+ */
+const PHASE_EPSILON = 1e-3;
+
+/**
+ * The phase of the moment the stage has REACHED at t, not of the one about to
+ * begin — `t` minus an epsilon. This is what a consumer should render; it is
+ * NOT a report of which action has fired (see the boundary note in
+ * stage-controller.ts).
+ */
+export function phaseReachedAt(tl: StageTimeline, t: number): StagePhase {
+  return phaseAt(tl, Math.max(0, t - PHASE_EPSILON));
 }
 
 /** Every run whose start is at or before t, in order. */

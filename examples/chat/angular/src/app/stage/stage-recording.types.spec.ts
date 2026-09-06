@@ -19,6 +19,10 @@ describe('validateStageRecording', () => {
     const bad = { ...MINIMAL, runs: MINIMAL.runs.map((r, i) => (i === 0 ? { ...r, events: [] } : r)) };
     expect(() => validateStageRecording(bad)).toThrow(/run 0 has no events/);
   });
+  it('rejects a reload run that carries events', () => {
+    const bad = { ...MINIMAL, runs: MINIMAL.runs.map((r, i) => (i === 1 ? { ...r, events: [ev(900)] } : r)) };
+    expect(() => validateStageRecording(bad)).toThrow(/run 1 is a reload and must have no events/);
+  });
   it('requires a resume run to follow the approve submit', () => {
     const bad = { ...MINIMAL, runs: MINIMAL.runs.filter((r) => r.action.kind !== 'resume') };
     expect(() => validateStageRecording(bad)).toThrow(/resume/);

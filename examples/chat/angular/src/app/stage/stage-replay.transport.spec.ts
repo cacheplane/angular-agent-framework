@@ -59,6 +59,28 @@ describe('StageReplayTransport', () => {
     // snapshot from an earlier position must not be answered.
     expect(await t.getHistory('thread-1', sig)).toEqual([]);
   });
+  it('never seeds the transcript from a pre-run snapshot', async () => {
+    const one = { values: { messages: [] } } as never;
+    const withHistory = { ...MINIMAL, histories: [{ afterRun: 0, states: [one] }] };
+    const t = new StageReplayTransport(async () => withHistory);
+    await t.ready();
+    expect(t.runIndex).toBe(0);
+    expect(await t.getHistory('thread-1', new AbortController().signal)).toEqual([]);
+  });
+  it('answers the LAST snapshot recorded at this position', async () => {
+    const first = { values: { messages: [] }, checkpoint: { checkpoint_id: 'first' } } as never;
+    const last = { values: { messages: [] }, checkpoint: { checkpoint_id: 'last' } } as never;
+    const withHistory = {
+      ...MINIMAL,
+      histories: [{ afterRun: 1, states: [first] }, { afterRun: 1, states: [last] }],
+    };
+    const t = new StageReplayTransport(async () => withHistory);
+    await t.ready();
+    t.seek(buildTimeline(withHistory).totalMs);
+    const sig = new AbortController().signal;
+    await take(t.stream('chat', 'thread-1', {}, sig), 9); // run 0 → runIndex 1
+    expect(await t.getHistory('thread-1', sig)).toEqual([last]);
+  });
   it('reset() rewinds to the first run and clears applied', async () => {
     const t = new StageReplayTransport(async () => MINIMAL);
     await t.ready();
