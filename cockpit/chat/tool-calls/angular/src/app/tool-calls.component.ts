@@ -32,6 +32,7 @@ const SUGGESTIONS = [
     ExampleChatLayoutComponent,
   ],
   template: `
+    <!-- #region layout -->
     <example-chat-layout sidebarWidth="20rem">
       <chat main [agent]="agent" class="flex-1 min-w-0">
         <div chatWelcomeSuggestions>
@@ -58,6 +59,7 @@ const SUGGESTIONS = [
         </div>
       </div>
     </example-chat-layout>
+    <!-- #endregion -->
   `,
   styles: [`
     .panel {
@@ -92,6 +94,7 @@ const SUGGESTIONS = [
     }
   `],
 })
+// #region component
 export class ToolCallsComponent {
   protected readonly agent = injectAgent();
 
@@ -101,3 +104,4 @@ export class ToolCallsComponent {
     void this.agent.submit({ message: text });
   }
 }
+// #endregion
