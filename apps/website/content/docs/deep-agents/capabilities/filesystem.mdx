@@ -50,6 +50,8 @@ provideAgent({
 });
 ```
 
+`assistantId` must match the graph name in `langgraph.json`, here `da-filesystem`.
+
 ### The pending write, read off the interrupt
 
 While an approval is open the file does not exist yet. It is an argument on a paused tool call, so the only place to find it is the interrupt payload, which `injectAgent()` exposes as the `langGraphInterrupts()` Signal. The payload is `{ action_requests: [{ name, args }], review_configs: [...] }`, and for `write_file` the target path is `args.file_path`.
@@ -60,7 +62,7 @@ Reading it lets the tree show the file before it lands, so the reviewer sees whe
 
 ### The file map, projected into a tree
 
-`files` is a flat map from absolute path to contents, and `agent.value()` returns the live graph state that holds it. The projection reads that map, adds the pending path as a ghost entry when one is open, and splits each key on its last slash to derive a directory and a name.
+`files` is a flat map from absolute path to a file record; the text is on its `content` field, which is why the projection stringifies anything that is not already a string. `agent.value()` returns the live graph state that holds the map. The projection reads that map, adds the pending path as a ghost entry when one is open, and splits each key on its last slash to derive a directory and a name.
 
 <ExampleCode file="filesystem.component.ts" region="files" title="filesystem.component.ts — the file projection" />
 
@@ -72,7 +74,7 @@ A second computed groups the flat list by directory, which is all the structure 
 
 ### The panel
 
-The sidebar renders the grouped tree, a preview of the selected file, and the interrupt panel. A pending row carries `data-pending`, which is what dims it and adds the badge, and `<chat-interrupt-panel>` is the same component every other LangGraph interrupt uses. There is no Deep Agents specific approval component, because there is no Deep Agents specific interrupt.
+The sidebar renders the grouped tree, a preview of the selected file, and the interrupt panel. A pending row carries `data-pending`, which dims and italicizes it; the badge is rendered from the same `pending` flag. `<chat-interrupt-panel>` is the same component every other LangGraph interrupt uses. There is no Deep Agents specific approval component, because there is no Deep Agents specific interrupt.
 
 <ExampleCode file="filesystem.component.ts" region="workspace-panel" title="filesystem.component.ts — the workspace panel" />
 
@@ -83,6 +85,10 @@ Keeping the tree and the approval in one sidebar is the point of the layout: the
 `<chat-interrupt-panel>` emits an `InterruptAction` of `accept`, `edit`, `respond`, or `ignore`, and the component turns the two it handles into resume payloads. `HumanInTheLoopMiddleware` resumes on an object with a `decisions` list, one decision per paused tool call, each `{ "type": "approve" }`, `{ "type": "edit" }`, or `{ "type": "reject" }`.
 
 <ExampleCode file="filesystem.component.ts" region="resume" title="filesystem.component.ts — resuming the run" />
+
+The demo always sends exactly one decision, which is enough because only one write is ever paused here. The middleware rejects a resume whose decision count differs from the number of hanging tool calls, so a turn that batches two writes into one interrupt needs two decisions.
+
+The consequence is visible in the tree. On Accept the write lands, the ghost row stops being pending, and the preview shows the real file content. On Ignore the interrupt clears without a file being written, so the row that only ever existed as a projection of the pending path disappears.
 
 <Callout type="warning" title="The resume payload is an object, not a list">
 The middleware reads `interrupt(request)["decisions"]`, so a bare list or a bare string raises a `TypeError` on the server rather than a validation error the browser can show. The failure appears as a dead run rather than as a rejected submission, so the shape is worth getting right the first time.
@@ -100,7 +106,17 @@ Give the pattern a literal prefix, as `/reports/**` does. Bulk tools such as `ls
 
 ## What's Next
 
-- [Planning](/docs/deep-agents/capabilities/planning) — the todo list the agent keeps while it files.
-- [Skills](/docs/deep-agents/capabilities/skills) — the same backend machinery, mounted read-only.
-- [Interrupts](/docs/langgraph/guides/interrupts) — the interrupt lifecycle underneath the approval.
-- [Chat interrupt panel](/docs/chat/components/chat-interrupt-panel) — the component that renders the approval.
+<CardGroup cols={2}>
+  <Card title="Planning" href="/docs/deep-agents/capabilities/planning">
+    The todo list the agent keeps while it files.
+  </Card>
+  <Card title="Skills" href="/docs/deep-agents/capabilities/skills">
+    The same backend machinery, mounted read-only.
+  </Card>
+  <Card title="Interrupts" href="/docs/langgraph/guides/interrupts">
+    The interrupt lifecycle underneath the approval.
+  </Card>
+  <Card title="Chat interrupt panel" href="/docs/chat/components/chat-interrupt-panel">
+    The component that renders the approval.
+  </Card>
+</CardGroup>
