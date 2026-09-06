@@ -4,7 +4,7 @@ description: Declare a tool in the Angular app, let an AG-UI agent call it, and 
 
 # Client Tools
 
-An AG-UI agent can call tools that live in the browser. The Angular app declares the tool, the backend binds the declaration onto the model without implementing it, and the run ends when the model calls it. The browser executes the tool and submits the result back as a tool message, which starts the next turn. This guide walks the six files of the running example, from the graph to the components the model fills.
+An AG-UI agent can call tools that live in the browser. The Angular app declares the tool, the backend binds the declaration onto the model without implementing it, and the run ends when the model calls it. The browser executes the tool and submits the result back as a tool message, which starts the next turn. This guide walks the seven files of the running example, from the graph to the components the model fills.
 
 ## What the demo does
 
@@ -14,7 +14,7 @@ Ask it to *show* a weather card and the model calls `weather_card` instead, fill
 
 ## How it is built
 
-Six files carry the feature: a graph that binds the browser's tool declarations and ends its turn, the server that exposes it over AG-UI, an application config, the component that declares the registry, and the two components the model fills. Open the Code tab to read them in place.
+Seven files carry the feature: a graph that binds the browser's tool declarations and ends its turn, the server that exposes it over AG-UI, an application config, the schemas the registry and its components share, the file that declares the registry and passes it to `<chat>`, and the two components the model fills. Open the Code tab to read them in place.
 
 ### The graph binds client stubs and ends the turn
 
@@ -30,7 +30,7 @@ The browser, not the graph, produces the result. Ending the run is the signal th
 
 ### Serving the graph over AG-UI
 
-The server is a FastAPI application. `add_langgraph_fastapi_endpoint` mounts the compiled graph at `/agent` as an AG-UI event stream, and `/ok` is a plain health check.
+The server is a FastAPI application. `LangGraphAgent` wraps the compiled graph and `add_langgraph_fastapi_endpoint` mounts it at `/agent` as an AG-UI event stream, and `/ok` is a plain health check.
 
 <ExampleCode file="server.py" />
 
@@ -42,7 +42,23 @@ The server is a FastAPI application. `add_langgraph_fastapi_endpoint` mounts the
 
 ### Declaring the tool registry
 
-`tools()` builds a name-keyed registry, and each entry is one of three declarations from `@threadplane/chat`. `action()` takes an async handler, `view()` takes a component the model fills, and `ask()` takes a component that reports a value back. Every entry carries a description the model reads and a schema authored with `zod/v4`.
+`tools()` builds a name-keyed registry, and each entry is one of three declarations from `@threadplane/chat`. `action()` takes a handler that runs in the browser and may return a promise, `view()` takes a component the model fills, and `ask()` takes a component that reports a value back. Every entry carries a description the model reads and a schema authored with `zod/v4`. The `weather_card` and `confirm_booking` entries take their schemas from `schemas.ts`, the file the registry and the two components it points at all import from.
+
+```ts
+import { z } from 'zod/v4';
+
+/** Schema for the `weather_card` view tool. */
+export const weatherCardSchema = z.object({
+  location: z.string(),
+  temperatureF: z.number(),
+  conditions: z.string(),
+  humidity: z.number(),
+  windMph: z.number(),
+});
+
+/** Schema for the `confirm_booking` ask tool. */
+export const confirmBookingSchema = z.object({ summary: z.string() });
+```
 
 <ExampleCode file="client-tools.component.ts" region="tool-registry" title="client-tools.component.ts — the registry" />
 
@@ -66,7 +82,7 @@ The catalog is attached to every run the adapter starts, as the `tools` field of
 
 <ExampleCode file="weather-card.component.ts" />
 
-Inputs are optional because props arrive while the call streams, so the card reads `clientTool()?.phase` and shows a loading badge until the phase is `complete`.
+Inputs are optional because props arrive while the call streams, so the card reads `clientTool()?.phase` and shows a loading badge until the phase is `complete` and the readings have arrived.
 
 ### The ask component that resumes the run
 
@@ -120,13 +136,13 @@ Consecutive client-tool continuations are capped per user turn, at ten by defaul
 
 ## Requirements on the backend
 
-Three things must hold, and each one fails quietly rather than loudly.
+Three things must hold. The first fails silently, which makes it the one to check first.
 
 <Callout type="warning" title="Declare the tools channel">
 The catalog is merged into graph state by `ag-ui-langgraph`. If `State` does not declare a `tools` channel the merged value is dropped, `bind_client_tools` binds nothing, and the model never learns the browser has tools.
 </Callout>
 
-The graph in this example compiles with `MemorySaver()`, so the thread's messages survive between the turn that calls the tool and the turn that carries the result back. A graph embedded this way needs a checkpointer for that; use a durable one outside of development.
+The graph in this example compiles with `MemorySaver()` because `ag-ui-langgraph` reads and writes the thread's graph state through a checkpointer; a graph served this way needs one, and outside development it should be durable. The tool result itself does not depend on it: the browser adds the tool message to its own message list, and the continuation run carries the whole list back.
 
 Finally, keep the tool names in the registry and the names in the system prompt aligned. The prompt in this example tells the model which tool to call for each kind of request, and a rename on one side alone is the most common reason a demo goes quiet.
 
