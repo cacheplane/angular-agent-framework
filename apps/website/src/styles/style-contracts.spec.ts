@@ -484,5 +484,20 @@ describe('style contracts', () => {
       expect(declarationsFor(css, '.stage-pin')).toMatch(/position:\s*sticky/);
       expect(declarationsFor(css, '.stage-act [data-sc-cue]')).toMatch(/opacity:\s*0/);
     });
+
+    /**
+     * The rail's state is written as attributes by the publisher, not React,
+     * so nothing in a component test notices when the attribute has no rule
+     * behind it: the segment bar would never light and the checks never fill,
+     * and the ledger (which shares the beat blocks' cell and the hold line's)
+     * would overlap them unless it spans both rows.
+     */
+    it('the segment bar and the checks have a visible state, and the ledger spans both rows', () => {
+      expect(declarationsFor(css, ".stage-seg[data-beat-state='now']::before")).toMatch(
+        /background:/
+      );
+      expect(declarationsFor(css, '.stage-check[data-checked]')).toMatch(/background:/);
+      expect(declarationsFor(css, '.stage-rail-close')).toMatch(/grid-area:\s*2\s*\/\s*1\s*\/\s*span 2/);
+    });
   });
 });

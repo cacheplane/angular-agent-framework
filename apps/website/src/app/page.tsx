@@ -7,6 +7,7 @@ import { HomeFAQ } from '../components/landing/HomeFAQ';
 import { FinalCTA } from '../components/landing/FinalCTA';
 import { RecentArticles } from '../components/landing/RecentArticles';
 import { PROVE_IT_ROWS } from '../lib/positioning';
+import { STAGE_PROOF } from '../lib/stage-proof';
 import {
   createPageMetadata,
   HERO_SECONDARY_HREF,
@@ -35,18 +36,31 @@ export default function HomePage() {
       {/* The four capability beats (stream, persist, approve, render): stills
           by default, the pinned live act on wide, motion-tolerant viewports
           (live-stage spec §3, §8). Copy lives in STAGE_RAIL (positioning.ts). */}
-      <Stage />
+      <Stage proof={STAGE_PROOF} />
 
       <FinalCTA
         variant="dark"
         rows={PROVE_IT_ROWS}
         headline="Prove the Angular UI before you connect the backend."
         subtext="Start with a fake agent, render a real Threadplane surface, then swap in LangGraph or AG-UI when the integration is ready."
-        primary={{ label: 'Start the quickstart', href: INSTALL_OPTIONS[0].quickstartHref, ctaId: 'hero_quickstart' }}
-        secondary={{ label: 'Run live examples', href: HERO_SECONDARY_HREF, ctaId: 'hero_live_demo' }}
+        primary={{
+          label: 'Start the quickstart',
+          href: INSTALL_OPTIONS[0].quickstartHref,
+          ctaId: 'hero_quickstart',
+        }}
+        secondary={{
+          label: 'Run live examples',
+          href: HERO_SECONDARY_HREF,
+          ctaId: 'hero_live_demo',
+        }}
         caption="MIT · no account, no cloud"
         captionLink={{ label: 'Talk to an engineer', href: '/contact' }}
-        captionLinks={[{ label: 'Setup prompt for coding agents', href: '/docs/chat/getting-started/coding-agents' }]}
+        captionLinks={[
+          {
+            label: 'Setup prompt for coding agents',
+            href: '/docs/chat/getting-started/coding-agents',
+          },
+        ]}
       />
       <TeamsBlock formPolicy={formPolicy} />
       <HomeFAQ />

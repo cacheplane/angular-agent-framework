@@ -3,12 +3,19 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { BrowserFrame } from '../ui/BrowserFrame';
 import { Container } from '../ui/Container';
-import { Eyebrow } from '../ui/Eyebrow';
-import { STAGE_HOLD_LINES, STAGE_RAIL } from '../../lib/positioning';
 import {
+  HERO_TRUST_LINE,
+  STAGE_CLOSE,
+  STAGE_HOLD_LINE,
+  STAGE_RAIL,
+} from '../../lib/positioning';
+import {
+  STAGE_BEATS,
   STAGE_SPAN,
+  beatWindows,
+  closeCue,
   cueFor,
-  holdLineCues,
+  holdCue,
   type StageBeat,
 } from '../../lib/stage-beats';
 import { trackStageProgress } from '../../lib/analytics/client';
@@ -45,6 +52,8 @@ const mountedRoots = new WeakSet<Element | Document>();
 
 interface Props {
   onFallback: () => void;
+  /** One proof line per beat, derived from the recording on the server. */
+  proof: Record<StageBeat, string>;
 }
 
 /**
@@ -52,7 +61,7 @@ interface Props {
  * the publisher turns it into `t`; the iframe is the real `/stage`. Nothing in
  * here sets React state per frame.
  */
-export function StageAct({ onFallback }: Props) {
+export function StageAct({ onFallback, proof }: Props) {
   const sectionRef = useRef<HTMLElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   /**
@@ -106,7 +115,23 @@ export function StageAct({ onFallback }: Props) {
   const onReady = useCallback(() => setReady(true), []);
   useStagePublisher(sectionRef, true, { frameWindow, track, onReady });
 
-  const holdCues = holdLineCues(STAGE_HOLD_LINES.length);
+  /**
+   * A segment click scrolls to the start of that beat: the beat window's
+   * share of the act's travel (its height minus one viewport, which is what
+   * the pin scrubs across), nudged 2% in so the engine reports the beat and
+   * not the boundary. The act is only reached without reduced motion, so the
+   * smooth behaviour is unconditional.
+   */
+  const scrollToBeat = (beat: StageBeat) => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const top = el.getBoundingClientRect().top + window.scrollY;
+    const w = beatWindows()[STAGE_BEATS.indexOf(beat)];
+    window.scrollTo({
+      top: top + (el.offsetHeight - window.innerHeight) * (w.from + 0.02),
+      behavior: 'smooth',
+    });
+  };
 
   return (
     <section
@@ -159,10 +184,32 @@ export function StageAct({ onFallback }: Props) {
               Open the live demo →
             </a>
           </div>
+          {/* The rail (stage-rail spec §3): the segment bar, one beat block per
+              beat stacked in a single cell so the cues crossfade in place, the
+              hold line, and the closing ledger. Segment and check state is
+              written by the publisher, not React. */}
           <div className="stage-rail">
             <h2 id="stage-heading" className="sr-only">
-              One real run: stream, persist, approve, render
+              One real run: tools, persist, approve, render
             </h2>
+            <nav className="stage-segs" aria-label="Stage beats">
+              {STAGE_RAIL.map((b) => (
+                <a
+                  key={b.beat}
+                  href={`#stage-${b.beat}`}
+                  className="stage-seg"
+                  data-stage-segment={b.beat}
+                  data-beat-state="todo"
+                  tabIndex={-1}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    scrollToBeat(b.beat);
+                  }}
+                >
+                  {b.label}
+                </a>
+              ))}
+            </nav>
             {STAGE_RAIL.map((b) => (
               <div
                 className="stage-rail-beat"
@@ -171,46 +218,68 @@ export function StageAct({ onFallback }: Props) {
                 data-sc-cue={cueFor(b.beat)}
                 key={b.beat}
               >
-                <div className="feature-block-rail">
-                  <Eyebrow tone="accent" className="feature-block-eyebrow">
-                    {b.eyebrow}
-                  </Eyebrow>
-                  <span
-                    className="feature-block-rail-line"
-                    aria-hidden="true"
-                  />
+                <span
+                  className="stage-check"
+                  data-stage-check={b.beat}
+                  aria-hidden="true"
+                />
+                <div>
+                  <p className="stage-claim">{b.claim}</p>
+                  <Link href={b.docs.href} className="stage-doc" tabIndex={-1}>
+                    {b.docs.label}
+                  </Link>
+                  <p className="stage-proof" data-stage-proof>
+                    {proof[b.beat]}
+                  </p>
                 </div>
-                <h3 className="feature-block-heading">{b.headline}</h3>
-                <p className="feature-block-body">{b.body}</p>
-                <div className="feature-block-rows">
-                  {b.rows.map((row) => (
-                    <div className="feature-block-row" key={row.claim}>
-                      <span className="feature-block-row-claim">
-                        {row.claim}
-                      </span>
-                      <span className="feature-block-row-api">{row.api}</span>
-                    </div>
-                  ))}
-                </div>
-                <Link
-                  href={b.cta.href}
-                  className="feature-block-cta"
-                  tabIndex={-1}
-                >
-                  {b.cta.label} →
-                </Link>
               </div>
             ))}
-            {STAGE_HOLD_LINES.map((line, i) => (
-              <p
-                className="stage-rail-hold"
-                data-testid="stage-rail-hold"
-                data-sc-cue={holdCues[i]}
-                key={line}
-              >
-                {line}
+            <p
+              className="stage-rail-hold"
+              data-testid="stage-rail-hold"
+              data-sc-cue={holdCue()}
+            >
+              {STAGE_HOLD_LINE}
+            </p>
+            <div
+              className="stage-rail-close"
+              data-testid="stage-rail-close"
+              data-sc-cue={closeCue()}
+            >
+              <ul className="stage-ledger">
+                {STAGE_RAIL.map((b) => (
+                  <li key={b.beat}>
+                    <span
+                      className="stage-check"
+                      data-stage-check={b.beat}
+                      aria-hidden="true"
+                    />
+                    {b.claim}
+                    <Link
+                      href={b.docs.href}
+                      className="stage-doc"
+                      tabIndex={-1}
+                    >
+                      {b.docs.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              <p className="stage-claim">{STAGE_CLOSE.claim}</p>
+              <div className="stage-install">
+                <code>{STAGE_CLOSE.install}</code>
+                <Link
+                  href={STAGE_CLOSE.cta.href}
+                  className="stage-install-cta"
+                  tabIndex={-1}
+                >
+                  {STAGE_CLOSE.cta.label} →
+                </Link>
+              </div>
+              <p className="stage-trust">
+                {HERO_TRUST_LINE} · LangGraph and AG-UI
               </p>
-            ))}
+            </div>
           </div>
         </Container>
       </div>
