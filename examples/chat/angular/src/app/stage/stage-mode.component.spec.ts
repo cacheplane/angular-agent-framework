@@ -36,6 +36,22 @@ describe('StageMode', () => {
     expect(window.__stageApplied?.t).toBe(25);
   });
 
+  it('pins the transcript to its newest content once a seek settles', async () => {
+    // The chat shows its welcome screen until a message lands, so the scroll
+    // container only exists once the first run has been applied.
+    await fx.componentInstance.boot(new URLSearchParams('t=0'));
+    fx.detectChanges();
+    const scroller = (fx.nativeElement as HTMLElement).querySelector<HTMLElement>('chat .chat-scroll');
+    expect(scroller).toBeTruthy();
+    // jsdom lays nothing out: stand in for a transcript taller than its box.
+    Object.defineProperty(scroller, 'scrollHeight', { configurable: true, value: 2400 });
+    Object.defineProperty(scroller, 'scrollTop', { configurable: true, writable: true, value: 0 });
+    await fx.componentInstance.controller()?.seek(25);
+    fx.detectChanges();
+    await new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())));
+    expect(scroller?.scrollTop).toBe(2400);
+  });
+
   it('posts ready and state through the bridge', async () => {
     const posted: unknown[] = [];
     fx.componentInstance.bridge = {

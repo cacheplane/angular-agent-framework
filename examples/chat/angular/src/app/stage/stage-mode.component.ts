@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
+  ElementRef,
   EnvironmentInjector,
   InjectionToken,
   afterNextRender,
@@ -291,17 +292,21 @@ export class StageMode {
       ? { onSeek: () => () => undefined, postReady: () => undefined, postState: () => undefined }
       : browserStageBridge();
 
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private lastPosted = '';
   private seekTarget: number | null = null;
   private seekFrame: number | null = null;
+  private pinFrame: number | null = null;
 
   constructor() {
     this.watchDock();
     this.destroyRef.onDestroy(() => {
-      if (this.seekFrame !== null && typeof cancelAnimationFrame === 'function') {
-        cancelAnimationFrame(this.seekFrame);
+      if (typeof cancelAnimationFrame === 'function') {
+        if (this.seekFrame !== null) cancelAnimationFrame(this.seekFrame);
+        if (this.pinFrame !== null) cancelAnimationFrame(this.pinFrame);
       }
       this.seekFrame = null;
+      this.pinFrame = null;
     });
     afterNextRender(() => {
       if (StageMode.autoBoot) {
@@ -403,6 +408,32 @@ export class StageMode {
     this.lastPosted = key;
     this.bridge.postState(state);
     if (typeof window !== 'undefined') window.__stageApplied = state;
+    this.pinTranscript();
+  }
+
+  /**
+   * Pins the transcript to its newest content once a seek has settled. The
+   * chat scrolls itself on each new message and on each token while pinned,
+   * but a seek applies a whole run in one burst, so its last
+   * `scrollTop = scrollHeight` write lands BEFORE the registered tool view
+   * (the backup table), the A2UI surface, and the interrupt panel — which sits
+   * above the chat and shrinks it — have rendered, and the newest content ends
+   * up below the fold: at the hold the transcript sat ~700px above its bottom.
+   * Live token cadence hides the same gap. One frame per seek, last wins; two
+   * frames deep so the views render in the first and layout settles in the
+   * second. `.chat-scroll` is the chat's own scroll container
+   * (libs/chat/.../chat.component.ts, `#scrollContainer`); it exposes no
+   * scroll API.
+   */
+  private pinTranscript(): void {
+    if (typeof requestAnimationFrame !== 'function' || this.pinFrame !== null) return;
+    this.pinFrame = requestAnimationFrame(() => {
+      this.pinFrame = requestAnimationFrame(() => {
+        this.pinFrame = null;
+        const el = this.host.nativeElement.querySelector<HTMLElement>('chat .chat-scroll');
+        if (el) el.scrollTop = el.scrollHeight;
+      });
+    });
   }
 
   // ── Record mode ───────────────────────────────────────────────────────────
