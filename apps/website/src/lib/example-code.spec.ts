@@ -137,13 +137,7 @@ describe('sliceRegion', () => {
       '// #endregion',
     ].join('\n');
     expect(sliceRegion(source, 'outer', 'f.ts')).toBe(
-      [
-        'const a = 1;',
-        '// #region',
-        'const b = 2;',
-        '// #endregion',
-        'const c = 3;',
-      ].join('\n')
+      ['const a = 1;', 'const b = 2;', 'const c = 3;'].join('\n')
     );
   });
 
