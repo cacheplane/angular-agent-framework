@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import {
   beatAt,
   crossedThreshold,
@@ -120,18 +120,27 @@ export function createStagePublisher(deps: StagePublisherDeps): StagePublisher {
  * section intersects the viewport (a pinned act six viewports tall is on screen
  * for a while; nothing is posted before it arrives or after it leaves).
  *
- * `deps` are read once per (sectionRef, active) mount: the act passes stable
- * callbacks, so they are deliberately left out of the effect's dependencies.
+ * The publisher is created once per (sectionRef, active) mount, but `deps`
+ * are read through a ref on every tick, so a `frameWindow` that only starts
+ * returning the iframe's window after its `load` event is seen by the running
+ * loop without re-subscribing.
  */
 export function useStagePublisher(
   sectionRef: React.RefObject<HTMLElement | null>,
   active: boolean,
   deps: Omit<StagePublisherDeps, 'section'>
 ): void {
+  const depsRef = useRef(deps);
+  depsRef.current = deps;
   useEffect(() => {
     const section = sectionRef.current;
     if (!active || !section) return;
-    const pub = createStagePublisher({ section, ...deps });
+    const pub = createStagePublisher({
+      section,
+      frameWindow: () => depsRef.current.frameWindow(),
+      track: (m, b) => depsRef.current.track(m, b),
+      onReady: () => depsRef.current.onReady?.(),
+    });
     let onScreen = false;
     let frame = 0;
     const loop = () => {

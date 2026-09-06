@@ -39,3 +39,14 @@ export function trackWhitepaperDownloadClick(paper: AnalyticsProperties['paper']
     ...properties,
   });
 }
+
+export function trackStageProgress(
+  stage_event: AnalyticsProperties['stage_event'],
+  beat?: AnalyticsProperties['beat']
+) {
+  track(analyticsEvents.marketingStageProgress, {
+    surface: 'home_stage',
+    stage_event,
+    ...(beat ? { beat } : {}),
+  });
+}

@@ -1,9 +1,12 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { act, renderHook } from '@testing-library/react';
+import { useRef } from 'react';
 import {
   createStagePublisher,
   STAGE_DEMO_ORIGIN,
   STAGE_MESSAGE_TYPE,
+  useStagePublisher,
 } from './use-stage-publisher';
 import { APPROVE_HOLD, beatWindows } from '../../lib/stage-beats';
 
@@ -151,5 +154,72 @@ describe('stage publisher', () => {
     section.style.setProperty('--sc-p', '0.5');
     pub.tick();
     expect(posted).toHaveLength(0);
+  });
+
+  /**
+   * The act's `frameWindow` returns null until the iframe's `load` event and
+   * the real window after it. The loop subscribes once, so it must read the
+   * latest deps on every tick rather than the closure it was created with —
+   * otherwise the first `t` is never posted.
+   */
+  it('the hook reads the latest deps on every tick, not the ones it mounted with', () => {
+    type IOCallback = (entries: { isIntersecting: boolean }[]) => void;
+    let ioCallback: IOCallback | null = null;
+    class IO {
+      constructor(cb: IOCallback) {
+        ioCallback = cb;
+      }
+      observe() {
+        /* the test drives the callback directly */
+      }
+      disconnect() {
+        /* no-op */
+      }
+    }
+    vi.stubGlobal('IntersectionObserver', IO);
+    // One tick per request, and only when the test pumps it.
+    const pending: FrameRequestCallback[] = [];
+    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => {
+      pending.push(cb);
+      return pending.length;
+    });
+    vi.stubGlobal('cancelAnimationFrame', () => undefined);
+    const pump = () => {
+      const cbs = pending.splice(0);
+      cbs.forEach((cb) => cb(0));
+    };
+
+    const section = document.createElement('section');
+    document.body.appendChild(section);
+    const posted: unknown[] = [];
+    const frame = {
+      postMessage: (m: unknown, origin: string) => posted.push({ m, origin }),
+    } as unknown as Window;
+    const track = vi.fn();
+    const onReady = vi.fn();
+
+    const { rerender } = renderHook(
+      ({ frameWindow }: { frameWindow: () => Window | null }) => {
+        const ref = useRef<HTMLElement | null>(section);
+        useStagePublisher(ref, true, { frameWindow, track, onReady });
+      },
+      { initialProps: { frameWindow: () => null } }
+    );
+    act(() => {
+      window.dispatchEvent(
+        new MessageEvent('message', { origin: STAGE_DEMO_ORIGIN, data: READY })
+      );
+      ioCallback?.([{ isIntersecting: true }]);
+    });
+    expect(onReady).toHaveBeenCalledTimes(1);
+    section.style.setProperty('--sc-p', '0.25');
+    act(() => pump());
+    expect(posted).toHaveLength(0); // the frame has not loaded
+
+    rerender({ frameWindow: () => frame });
+    act(() => pump());
+    expect(posted).toHaveLength(1);
+    expect(track.mock.calls[0]?.[0]).toBe('enter');
+    vi.unstubAllGlobals();
   });
 });
