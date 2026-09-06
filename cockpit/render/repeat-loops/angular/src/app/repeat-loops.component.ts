@@ -356,7 +356,7 @@ class DemoCardComponent {
               <div class="list-row"><span>{{ item }}</span><button class="list-row__remove" type="button" (click)="removeItem($index)">×</button></div>
             }
           </div>
-          <p class="control-hint">Mutates the <code>/items</code> array in the state store; the rendered list reconciles by key.</p>
+          <p class="control-hint">Mutates the <code>/items</code> array in the state store.</p>
         </div>
         <!-- #endregion -->
       </div>

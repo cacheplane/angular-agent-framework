@@ -10,7 +10,11 @@ A repeat loop lets one spec element stand for a whole list. Instead of naming ev
 
 The Run tab shows a split surface. The rendered output is on the left, the JSON that produced it streams in on the right, and a transport along the bottom scrubs through the stream or replays it at 1x, 2x, or 4x. The tabs at the top switch between three list-shaped specs — Simple List, Task List, and Sections — and picking one restarts the stream against that spec.
 
-Below the JSON is a List Controls panel over the store. **Add Item** appends a new entry to the `/items` array and the small cross beside each row removes it, so the array the loop binds to changes while the surface is mounted. The three streamed specs name their rows as explicit children with literal text, which is the enumerated form a repeat replaces.
+Below the JSON is a List Controls panel over the store. **Add Item** appends a new entry to the `/items` array and the small cross beside each row removes it, so the array a repeat would bind to changes while the surface is mounted. The three streamed specs name their rows as explicit children with literal text, which is the enumerated form a repeat replaces.
+
+<Callout type="info" title="The demo ships the array half">
+The example holds the store, the `/items` path, and the immutable writes that a repeat depends on. Its streamed specs enumerate their rows as literal children, which is exactly the shape a `repeat` collapses, and the hand-written specs further down this page show the repeat half. So adding an item changes the List Controls panel, not the rendered surface. The store holds plain strings rather than objects, so `$item: ""` — the whole item — is the form that would bind them.
+</Callout>
 
 ## How it is built
 
@@ -99,16 +103,24 @@ Inside a repeat, prop expressions gain three forms that resolve against the curr
 
 `$state` still works and still reads the global model, so an element can mix per-item values with application-wide ones. `$bindItem` behaves like `$bindState`: the prop receives the resolved value, and the write-back path arrives on the component's `bindings` input as `/tasks/1/field`.
 
-The same `$item` and `$index` forms are available in a `visible` condition, so a row can hide itself based on its own data or its position:
+The same `$item` and `$index` forms are available in a `visible` condition on the **children** of a repeated element. Each mount provides its iteration context through a child injector, so a child inherits the repeat scope and its condition resolves against that mount's item:
 
 ```json
 {
-  "type": "Text",
-  "props": { "content": { "$item": "title" } },
-  "visible": { "$item": "done", "eq": false },
-  "repeat": { "statePath": "/tasks" }
+  "row": {
+    "type": "Card",
+    "children": ["label"],
+    "repeat": { "statePath": "/tasks" }
+  },
+  "label": {
+    "type": "Text",
+    "props": { "content": { "$item": "title" } },
+    "visible": { "$item": "done", "eq": false }
+  }
 }
 ```
+
+A `visible` condition on the element that carries `repeat` is a different matter: the Angular renderer does not evaluate it. That element takes the repeat branch, which mounts every item in the array, so a row cannot hide itself that way. Put the condition on a child, as above, or filter the array in the state model before it reaches the repeat path.
 
 ## Item scope in Angular
 
@@ -130,7 +142,7 @@ The token is optional because the same component class also mounts outside a rep
 
 The renderer reads the array through the store inside a computed, so a `set()` on the repeat path re-resolves the items and the mounts follow. Items are tracked by array position, which means an insertion at the front shifts every later row onto the preceding item's mount rather than moving the mounts.
 
-<Callout type="note" title="The key field is not read by the Angular renderer">
+<Callout type="info" title="The key field is not read by the Angular renderer">
 `repeat` accepts an optional `key` alongside `statePath` in the spec type. The Angular renderer does not read it: it iterates by index. Treat `key` as advisory metadata for spec producers and tools, and do not depend on it for reconciliation.
 </Callout>
 
