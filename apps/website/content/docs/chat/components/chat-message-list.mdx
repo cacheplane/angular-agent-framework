@@ -1,3 +1,7 @@
+---
+description: The ChatMessageListComponent inputs, the chatMessageTemplate directive contexts, and how to read a runtime-neutral message's content in a custom template.
+---
+
 # ChatMessageListComponent
 
 `ChatMessageListComponent` is the core primitive for rendering chat messages. It receives an `agent` input and reads `agent.messages()`, rendering each message using a matching `MessageTemplateDirective`. This gives you full control over how each message type is displayed.
@@ -114,27 +118,55 @@ const type = getMessageType(message); // 'human' | 'ai' | 'tool' | 'system' | 'f
 
 ## Working with Message Content
 
-Runtime-neutral messages have a `content` property that can be either a `string` or a structured array. The library exports a `messageContent()` utility (used internally by compositions) that handles both cases:
+Runtime-neutral messages have a `content` property that is either a `string` or a `ContentBlock[]`. The library exports a `messageContent()` utility that flattens either shape to a string:
 
 ```typescript
-// If content is a string, returns it directly
-// If content is structured, serializes to JSON
-function messageContent(message: Message): string
+import type { BaseMessage } from '@langchain/core/messages';
+
+// If content is a string, returns it directly.
+// If content is a block array, concatenates the visible text blocks
+// (`text` and `output_text`) and skips reasoning, tool-use, and image blocks.
+function messageContent(message: BaseMessage): string
 ```
 
-For custom templates, you can access `message.content` directly and handle the type yourself:
+Note the parameter type: `messageContent()` consumes the LangChain `BaseMessage` shape, not the runtime-neutral `Message` handed to a `chatMessageTemplate`. Pass it a message from a LangChain-shaped source, not one straight out of `agent.messages()`.
 
-```html
-<ng-template chatMessageTemplate="ai" let-message>
-  @if (typeof message.content === 'string') {
-    <div [innerHTML]="renderMd(message.content)"></div>
-  } @else {
-    <pre>{{ message.content | json }}</pre>
+For custom templates, access `message.content` directly and narrow the type in the component class. Angular template expressions have no `typeof` operator, so the check has to live in a method:
+
+```typescript
+import { Component } from '@angular/core';
+import { JsonPipe } from '@angular/common';
+import {
+  ChatMessageListComponent,
+  MessageTemplateDirective,
+  type Agent,
+} from '@threadplane/chat';
+
+@Component({
+  selector: 'app-my-list',
+  imports: [ChatMessageListComponent, MessageTemplateDirective, JsonPipe],
+  template: `
+    <chat-message-list [agent]="agent">
+      <ng-template chatMessageTemplate="ai" let-message>
+        @if (isText(message.content)) {
+          <p>{{ message.content }}</p>
+        } @else {
+          <pre>{{ message.content | json }}</pre>
+        }
+      </ng-template>
+    </chat-message-list>
+  `,
+})
+export class MyListComponent {
+  agent!: Agent;
+
+  isText(content: unknown): content is string {
+    return typeof content === 'string';
   }
-</ng-template>
+}
 ```
 
-`typeof message.content === 'string'` works directly in the template — `content` is `string | ContentBlock[]`, so the string branch renders markdown and the array branch falls back to serialized JSON. (If you prefer a named guard, the exported `messageContent()` utility above collapses both cases to a string for you.)
+The string branch renders markdown; the array branch falls back to serialized JSON.
 
 ## Full Example
 
