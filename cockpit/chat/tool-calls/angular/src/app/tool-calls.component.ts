@@ -52,9 +52,9 @@ const SUGGESTIONS = [
         <div>
           <h4 class="cap">Available Tools</h4>
           <ul class="info-list">
-            <li>search — Web search</li>
-            <li>calculator — Math expressions</li>
-            <li>weather — City weather</li>
+            <li>lookup_flight — Flight status and gate</li>
+            <li>get_airport_info — Airport details and weather</li>
+            <li>find_routes — Flights between two airports</li>
           </ul>
         </div>
       </div>

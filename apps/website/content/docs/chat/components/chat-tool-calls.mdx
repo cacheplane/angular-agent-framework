@@ -10,9 +10,9 @@ description: How the tool-calls example renders an aviation agent's calls in a s
 
 ## What the demo does
 
-The Run tab shows a conversation on the left and a sidebar headed "Tool Calls" on the right. One welcome suggestion, "Check a flight status", asks for the status of flight UA123.
+The Run tab shows a conversation on the left and a sidebar headed "Tool Calls" on the right, with an "Available Tools" list below it naming the three aviation tools the agent can call. One welcome suggestion, "Check a flight status", asks for the status of flight UA123.
 
-The agent answers by calling `lookup_flight`, and a card named `lookup_flight` appears in the sidebar. It expands while the call is running, and once the result arrives it prints the arguments under Inputs and the flight record under Output.
+The agent answers by calling `lookup_flight`, and a card named `lookup_flight` appears in the sidebar. It expands while the call is running and collapses once the result arrives; click it to read the arguments under Inputs and the flight record under Output.
 
 Grouping is easier to see with a second request. Ask the assistant to compare LAX and JFK: the system prompt steers it to call `get_airport_info` twice, and two consecutive calls to the same tool collapse into a single strip reading "Called get_airport_info 2 times". Click the strip to expand it and read both cards.
 
@@ -38,11 +38,11 @@ The names bound here are the names the component groups by and labels its cards 
 
 ### The agent provider
 
-`provideAgent()` registers the agent once for the whole application, and `provideChat({})` registers the chat library's configuration, here left at its defaults. The example passes a factory because it resolves its connection details at runtime from the host that serves the demo.
+`provideAgent()` registers the agent once for the whole application, and `provideChat({})` registers the chat library's configuration, here left at its defaults. The example passes a factory because it resolves its connection details at runtime from the host that serves the demo. Your own application does not need the factory.
 
 <ExampleCode file="app.config.ts" />
 
-Your own application does not need the factory. Pass the values directly:
+Pass the values directly:
 
 ```typescript
 provideAgent({
@@ -116,7 +116,7 @@ A group holding more than one call renders as a collapsible strip: a header butt
 | `list_*` | Listed N items |
 | Anything else | Called {name} N times |
 
-The nouns are singularized at a count of one, so a single grouped `search_*` call reads "Searched 1 site". The aviation tools in the example match none of these prefixes, which is why two airport lookups read "Called get_airport_info 2 times".
+The nouns are singularized at a count of one, which matters when you call the summary yourself; the default strip only appears from two calls up. The aviation tools in the example match none of these prefixes, which is why two airport lookups read "Called get_airport_info 2 times".
 
 Pass `groupSummary` to replace the whole registry for one instance:
 
@@ -125,7 +125,7 @@ Pass `groupSummary` to replace the whole registry for one instance:
 ```
 
 ```typescript
-protected summarize = (name: string, count: number): string =>
+const summarize = (name: string, count: number): string =>
   name === 'lookup_flight' ? `Looked up ${count} flights` : `${name} × ${count}`;
 ```
 
@@ -161,7 +161,7 @@ The host is a block with a 20 pixel bottom margin. The strip reads three custom 
 | `--tplane-chat-radius-card` | Strip corner radius |
 | `--tplane-chat-text` | Strip header text |
 
-Setting the variables is covered in the theming guide.
+Setting the variables is covered in the [theming guide](/docs/chat/guides/theming).
 
 ## What's Next
 
