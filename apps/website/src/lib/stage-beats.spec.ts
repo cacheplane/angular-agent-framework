@@ -2,14 +2,19 @@ import { describe, expect, it } from 'vitest';
 import {
   APPROVE_HOLD,
   APPROVE_THRESHOLD_P,
+  RENDER_TAIL,
   STAGE_BEATS,
   STAGE_SPAN,
   beatAt,
   beatWindows,
+  closeCue,
   crossedThreshold,
   cueFor,
-  holdLineCues,
+  holdCue,
   inHold,
+  isChecked,
+  segmentState,
+  settleAt,
   timeAt,
   type StageReadyMessage,
 } from './stage-beats';
@@ -150,29 +155,76 @@ describe('cueFor', () => {
     const [stream, persist, , render] = beatWindows();
     expect(cueFor('stream')).toBe(`0 ${fmt(stream.to)} 0 0.3`);
     expect(cueFor('stream')).toMatch(/^0 0\.21\d+ 0 0\.3$/);
-    expect(cueFor('render')).toBe(`${fmt(render.from)} 1 0.3 0`);
+    expect(cueFor('render')).toBe(
+      `${fmt(render.from)} ${fmt(settleAt('render'))}`
+    );
     expect(cueFor('persist')).toBe(`${fmt(persist.from)} ${fmt(persist.to)}`);
+  });
+  it('ends the render block at the render settle so it crossfades into the ledger', () => {
+    const [, to] = cueFor('render').split(' ').map(Number);
+    expect(to).toBeCloseTo(settleAt('render'), 4);
+    expect(to).toBeLessThan(1);
   });
 });
 
-describe('holdLineCues', () => {
-  it('spreads the hold lines across the approve hold, strictly forward, inside the act', () => {
-    const a = beatWindows()[2];
-    const cues = holdLineCues(3);
-    expect(cues).toHaveLength(3);
-    const parsed = cues.map((c) => c.split(' ').map(Number));
-    parsed.forEach(([from, to]) => {
-      expect(from).toBeGreaterThanOrEqual(a.from);
-      expect(to).toBeLessThanOrEqual(1);
-      expect(to).toBeGreaterThan(from);
-    });
-    parsed
-      .slice(1)
-      .forEach(([from], i) => expect(from).toBeGreaterThan(parsed[i][0]));
+describe('settleAt / segmentState', () => {
+  it('settles tools and persist at their window end, approve at the threshold, render before its tail', () => {
+    const w = beatWindows();
+    expect(settleAt('stream')).toBe(w[0].to);
+    expect(settleAt('persist')).toBe(w[1].to);
+    expect(settleAt('approve')).toBe(APPROVE_THRESHOLD_P);
+    expect(settleAt('render')).toBeCloseTo(
+      w[3].from + (w[3].to - w[3].from) * (1 - RENDER_TAIL),
+      6
+    );
   });
-  it('lets the last cue linger past the threshold by 12% of the approve span', () => {
+  it('reports done / now / todo per beat from progress', () => {
+    const w = beatWindows();
+    expect(segmentState('stream', 0.05)).toBe('now');
+    expect(segmentState('persist', 0.05)).toBe('todo');
+    expect(segmentState('stream', w[1].from + 0.01)).toBe('done');
+    expect(segmentState('approve', w[2].from + 0.01)).toBe('now');
+    expect(segmentState('render', 1)).toBe('now');
+  });
+  it('a beat is checked once progress passes its settle', () => {
+    expect(isChecked('approve', APPROVE_THRESHOLD_P - 0.001)).toBe(false);
+    expect(isChecked('approve', APPROVE_THRESHOLD_P)).toBe(true);
+    expect(isChecked('render', 0.999)).toBe(true);
+  });
+});
+
+describe('holdCue / closeCue', () => {
+  it('opens the hold line exactly where inHold starts and lingers past the threshold', () => {
+    const cue = holdCue();
+    expect(cue.split(' ')).toHaveLength(2);
+    const [from, to] = cue.split(' ').map(Number);
     const a = beatWindows()[2];
-    const [, to] = holdLineCues(3)[2].split(' ').map(Number);
+    // The cue is printed to 4 decimals, so compare against the exact edge and
+    // probe inHold on either side of that edge.
+    const edge = a.from + (a.to - a.from) * APPROVE_HOLD.from;
+    expect(from).toBeCloseTo(edge, 4);
+    expect(inHold(edge + 1e-6)).toBe(true);
+    expect(inHold(edge - 1e-6)).toBe(false);
+    expect(to).toBeGreaterThan(APPROVE_THRESHOLD_P);
     expect(to).toBeCloseTo(APPROVE_THRESHOLD_P + (a.to - a.from) * 0.12, 4);
+  });
+  it('fades the closing ledger in at the render settle and holds it to the end', () => {
+    const parts = closeCue().split(' ');
+    expect(parts).toHaveLength(4);
+    expect(Number(parts[0])).toBeCloseTo(settleAt('render'), 4);
+    expect(parts.slice(1).join(' ')).toBe('1 0.3 0');
+    expect(closeCue()).toMatch(/ 1 0\.3 0$/);
+  });
+  it('keeps every cue inside the act with from < to', () => {
+    const cues = [...STAGE_BEATS.map(cueFor), holdCue(), closeCue()];
+    for (const cue of cues) {
+      const nums = cue.split(' ').map(Number);
+      nums.forEach((n) => {
+        expect(Number.isFinite(n)).toBe(true);
+        expect(n).toBeGreaterThanOrEqual(0);
+        expect(n).toBeLessThanOrEqual(1);
+      });
+      expect(nums[0]).toBeLessThan(nums[1]);
+    }
   });
 });
