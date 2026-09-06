@@ -14,7 +14,7 @@ Three specs sit behind the tabs at the top. "Parent + Children" is a heading wit
 
 ## How it is built
 
-The example has no agent. The spec arrives from a local streaming simulator rather than a model, which keeps the moving parts down to the spec, the registry and the store. There is a `graph.py` in the capability, but this Angular application never calls it — its `app.config.ts` registers nothing but the render feature.
+The agent is not in the render path. The spec arrives from a local streaming simulator rather than a model, which keeps the moving parts down to the spec, the registry and the store. There is a `graph.py` in the capability, but this Angular application never calls it — its `app.config.ts` registers nothing but the render feature.
 
 ### The application configuration
 
