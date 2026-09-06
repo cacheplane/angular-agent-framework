@@ -14,7 +14,7 @@ Make sure you have completed the Installation guide first.
 
 The Run tab shows the prebuilt `<chat>` composition next to a thread sidebar. Send a message and the backend assigns a thread ID, which appears in the sidebar as "Thread 1". Click "+ New Thread" and send another message, and you have two conversations you can move between.
 
-Switching back to an earlier thread replays its stored history: the messages come back from the server checkpoint, not from anything the browser kept. The welcome suggestion, "Start a saved thread", asks the agent to draft a project brief you can revisit, which gives each thread enough content to recognise in the sidebar.
+Switching back to an earlier thread replays its stored history: the messages come back from the server checkpoint, not from anything the browser kept. The welcome suggestion, "Start a saved thread", asks the agent to draft a project brief you can revisit, which gives each thread enough content to recognize in the sidebar.
 
 ## How it is built
 
@@ -65,7 +65,7 @@ Module scope works here because the demo bootstraps exactly one component instan
 
 <ExampleCode file="persistence.component.ts" region="agent-provider" title="persistence.component.ts — the agent provider" />
 
-`onThreadId` fires whenever the backend assigns a thread ID. The callback records it as the active thread and appends it to the list if it is new, which is the only bookkeeping the sidebar needs.
+`onThreadId` fires when the backend creates a thread and reports its ID, which is why the callback checks whether it already knows the ID before adding it. The callback records it as the active thread and appends it to the list if it is new, which is the only bookkeeping the sidebar needs.
 
 <Callout type="warning" title="Thread IDs come from the server">
 Never generate a thread ID client-side. Always use the value handed to `onThreadId`, or a value the LangGraph Threads API returned earlier.
@@ -197,18 +197,7 @@ Use the `isThreadLoading()` signal to show a skeleton UI while `injectAgent()` f
 
 ## Forking a conversation
 
-`switchThread()` also composes into a fork, which the example does not do: start a fresh thread and resubmit the messages you already have.
-
-```typescript
-forkConversation() {
-  this.agent.switchThread(null);
-  this.agent.submit({
-    messages: this.agent.messages(),
-  });
-}
-```
-
-For a fork that branches from an earlier checkpoint rather than from the end of the conversation, see the [Time Travel guide](/docs/langgraph/guides/time-travel).
+To fork, capture `agent.messages()` first, start a fresh thread with `switchThread(null)`, and resubmit the captured history as a `state` patch. For a fork that branches from an earlier checkpoint, use the [Time Travel guide](/docs/langgraph/guides/time-travel).
 
 ## Checkpoint recovery
 
@@ -216,7 +205,7 @@ When a connection drops mid-stream, `joinStream()` reconnects to an in-progress 
 
 ```typescript
 // Rejoin a running stream after a network interruption
-await chat.joinStream(runId, lastEventId);
+await this.agent.joinStream(runId, lastEventId);
 // Picks up from the last event — no duplicate agent execution
 ```
 
