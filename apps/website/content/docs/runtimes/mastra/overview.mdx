@@ -123,7 +123,7 @@ The class supplies that payload and maps the two actions onto resume calls.
 | Tool calls | Supported | `check_conditions` executes server-side with no pause. |
 | Shared state | Supported | A working-memory packing list, over snapshots and real JSON-Patch deltas. |
 | Interrupts | Supported | `reserve_campsite` suspends the run and resumes from a persisted snapshot. |
-| Subagents | Supported | An in-tree stream tee observes the parent stream ahead of the bridge and emits the delegation tool call eagerly, `SUBAGENT_*` lifecycle, and the child's token deltas under the subagent identity. |
+| Subagents | Supported (streaming) | An in-tree stream tee observes the parent stream ahead of the bridge and emits the delegation tool call eagerly, `SUBAGENT_*` lifecycle, and the child's token deltas under the subagent identity. |
 
 ## Upstream ships no HTTP endpoint
 
@@ -163,7 +163,7 @@ The subagent capture behind the Subagents row is committed beside the example as
   <Card title="AG-UI subagents" href="/docs/ag-ui/guides/subagents">
     How attributed child runs become cards in the transcript.
   </Card>
-  <Card title="Event mapping" href="/docs/ag-ui/reference/event-mapping">
-    Every AG-UI event and the adapter state it updates.
+  <Card title="Mastra quickstart" href="/docs/runtimes/mastra/quickstart">
+    Run this backend locally and point an Angular application at it.
   </Card>
 </CardGroup>

@@ -3,7 +3,7 @@ title: Overview
 description: How the AWS Strands example books meetings over AG-UI, and why its shared-state support is measured as partial.
 ---
 
-# AWS Strands overview
+# AWS Strands Overview
 
 [AWS Strands](https://strandsagents.com) is an open-source Python agent SDK from AWS. Its AG-UI bridge, `ag-ui-strands`, turns a Strands `Agent` into an AG-UI event stream, which is all `@threadplane/ag-ui` needs in order to bind it to `<chat>`. The running example is a meeting scheduler that looks up open slots, pauses for human approval before it books anything, and delegates research to a specialist, and this page walks the files that make it work. The Angular component it renders is the same UI code the LangGraph-backed examples use; only the provider and the backend behind it differ.
 
@@ -136,8 +136,8 @@ Strands' native OpenAI provider is used on a plain `OPENAI_API_KEY`. No AWS cred
 ## What's Next
 
 <CardGroup cols={2}>
-  <Card title="Runtimes introduction" href="/docs/runtimes/getting-started/introduction">
-    The measured support matrix across every runtime behind this adapter.
+  <Card title="How it connects" href="/docs/runtimes/aws-strands/how-it-connects">
+    The measured AG-UI wire behavior for this runtime.
   </Card>
   <Card title="Choosing an adapter" href="/docs/choosing-an-adapter">
     The same matrix with the cause analysis behind each partial cell.
