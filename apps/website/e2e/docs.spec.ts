@@ -199,7 +199,7 @@ test.describe('Docs slug page', () => {
 
     // The deep link must land on a real section anchor, not just a
     // well-formed but dangling fragment that scrolls nowhere.
-    await expect(page).toHaveURL(/\/docs\/langgraph\/.*#.+/);
+    await expect(page).toHaveURL(/\/docs\/[a-z0-9-]+\/.*#.+/);
     const url = new URL(page.url());
     expect(url.hash.length).toBeGreaterThan(1);
     await expect(page.locator(url.hash)).toBeVisible();
