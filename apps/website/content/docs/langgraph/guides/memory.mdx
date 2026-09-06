@@ -89,7 +89,7 @@ No extra request is involved. The `memory` dict rides along with the state updat
 
 ### Rendering the facts
 
-The template is the prebuilt `<chat>` in the main slot and the fact list in the sidebar slot. Both read signals directly, so nothing subscribes and nothing is torn down by hand.
+Beside the prebuilt `<chat>` in the layout's main slot, the sidebar slot holds the fact list. It reads `memoryEntries()` directly, so nothing subscribes and nothing is torn down by hand.
 
 <ExampleCode file="memory.component.ts" region="memory-panel" title="memory.component.ts — the sidebar" />
 
@@ -119,7 +119,7 @@ The `Annotated[..., add]` fields append on every write; the plain fields are rep
 
 ## Short-term memory (thread-scoped)
 
-Short-term memory is the kind the demo uses: the conversation history plus the state fields accumulated inside one thread. Every message and state update is checkpointed, so reconnecting with the same `threadId` restores both the transcript and the custom fields.
+Short-term memory is the kind the demo uses: state fields accumulated inside one thread. State updates are checkpointed, so reconnecting with the same `threadId` restores the fields the graph wrote, the demo's `memory` dict among them. Declaring `messages` with the `add_messages` reducer is what makes the transcript accumulate the same way.
 
 ```python
 # Same thread, two invocations — the second one sees what the first learned
