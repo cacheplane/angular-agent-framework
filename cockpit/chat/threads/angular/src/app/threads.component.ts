@@ -56,12 +56,7 @@ export const activeThreadIdState = signal<string | null>(null);
   template: `
     <!-- #region chat-and-sidebar -->
     <example-chat-layout sidebarPosition="left" sidebarWidth="16rem">
-      <chat main
-        [agent]="agent"
-        [threads]="threadsSvc.threads()"
-        [activeThreadId]="activeThreadId() ?? ''"
-        (threadSelected)="onThreadSelected($event)"
-        class="flex-1 min-w-0" />
+      <chat main [agent]="agent" class="flex-1 min-w-0" />
       <div sidebar class="panel">
         <div class="panel-header">
           <h3 class="cap">Threads</h3>
