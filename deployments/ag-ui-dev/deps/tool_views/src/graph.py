@@ -22,6 +22,7 @@ from langgraph.checkpoint.memory import MemorySaver
 PROMPTS_DIR = Path(__file__).parent.parent / "prompts"
 
 
+# region weather-tool
 @tool
 async def weather_card(location: str) -> dict:
     """Look up the current weather for a location.
@@ -43,11 +44,13 @@ async def weather_card(location: str) -> dict:
         "humidity": 55,
         "windMph": 8,
     }
+# endregion
 
 
 _TOOLS = [weather_card]
 
 
+# region graph
 def build_tool_views_graph():
     llm = ChatOpenAI(model="gpt-5-mini", streaming=True).bind_tools(_TOOLS)
 
@@ -69,6 +72,7 @@ def build_tool_views_graph():
     graph.add_edge("tools", "agent")
 
     return graph.compile(checkpointer=MemorySaver())
+# endregion
 
 
 # The graph instance — referenced by server.py
