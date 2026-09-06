@@ -116,7 +116,7 @@ The example never touches the protocol, but it is worth knowing what crosses it.
 }
 ```
 
-Two things to note. The `ag-ui-langgraph` package serializes the payload, so `value` arrives as a JSON string rather than an object; the adapter parses a string value before it stores the interrupt, so consumers always read a structured object. And the pause is what the reducer records: it sets the `interrupt()` signal, ends the run as paused, and returns the agent to its idle status.
+Two things to note. The `ag-ui-langgraph` package serializes the payload, so `value` arrives as a JSON string rather than an object; the adapter parses a string value before it stores the interrupt, so consumers read the parsed payload rather than a JSON string. And the pause is what the reducer records: it sets the `interrupt()` signal, ends the run as paused, and returns the agent to its idle status.
 
 Resuming travels the other way. For a payload shaped like this one — an application object with no runtime-specific identifiers — `submit({ resume })` sends `forwardedProps.command.resume`, the convention `ag-ui-langgraph` reads to resume the checkpoint.
 
@@ -128,14 +128,14 @@ Other runtimes signal a pause differently, and the adapter follows them: a `RUN_
 
 ## Cross-adapter parity
 
-The consumer Angular code is the same against a LangGraph deployment except for the import:
+The component code is the same against a LangGraph deployment except for the import:
 
 ```diff
 - import { injectAgent } from '@threadplane/langgraph';
 + import { injectAgent } from '@threadplane/ag-ui';
 ```
 
-`<chat-approval-card>`, the `interrupt()` signal, and `submit({ resume })` are part of the runtime-neutral `Agent` contract, so switching adapters is a provider change rather than a component rewrite. The [LangGraph interrupts guide](/docs/langgraph/guides/interrupts) covers the parts of the pattern that live above the wire: typed payloads, multi-step approvals, and timeout strategies.
+The `interrupt()` signal and `submit({ resume })` are part of the runtime-neutral `Agent` contract, and `<chat-approval-card>` is written against it, so switching adapters is a provider change rather than a component rewrite. The [LangGraph interrupts guide](/docs/langgraph/guides/interrupts) covers the parts of the pattern that live above the wire: typed payloads, multi-step approvals, and timeout strategies.
 
 ## What's Next
 
