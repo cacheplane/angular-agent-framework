@@ -60,21 +60,25 @@ import { injectAgent } from '@threadplane/langgraph';
             </ng-template>
           </chat-message-list>
         </div>
+        <!-- #region input-strip -->
         <div class="input-strip">
           <!-- chat-input submits to [agent] itself; (submitted) is a
                notification only — re-submitting it here would double the
                user message. -->
           <chat-input [agent]="agent" placeholder="Try typing here..." />
         </div>
+        <!-- #endregion -->
       </section>
       <div sidebar class="panel">
         <h3 class="cap">Input State</h3>
+        <!-- #region state-panel -->
         <dl class="metric-list">
           <dt class="metric-label">Stream Status</dt>
           <dd class="metric-value">{{ streamStatus() }}</dd>
           <dt class="metric-label">Is Loading</dt>
           <dd class="metric-value">{{ isLoading() }}</dd>
         </dl>
+        <!-- #endregion -->
         <div>
           <h4 class="cap">Features</h4>
           <ul class="info-list">
@@ -178,10 +182,12 @@ import { injectAgent } from '@threadplane/langgraph';
   `],
 })
 export class InputComponent {
+  // #region agent-state
   protected readonly agent = injectAgent();
 
   protected readonly streamStatus = computed(() => this.agent.status());
   protected readonly isLoading = computed(() => this.agent.isLoading());
+  // #endregion
   protected readonly messageContent = messageContent;
   protected readonly markdownDocument = markdownDocument;
 }
