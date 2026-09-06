@@ -32,6 +32,7 @@ from langchain_openai import ChatOpenAI
 from langgraph.config import get_stream_writer
 from langgraph.store.memory import InMemoryStore
 
+# region skills-constants
 PROMPTS_DIR = Path(__file__).parent.parent / "prompts"
 SKILLS_DIR = Path(__file__).parent.parent / "skills"
 
@@ -42,6 +43,7 @@ SKILLS_NAMESPACE = ("cockpit", "deep-agents-skills")
 
 #: Custom stream event name the Angular panel listens for.
 SKILLS_EVENT = "deep_agents.skills"
+# endregion
 
 FIELD_ELEVATION_FT = {
     "KSFO": 13,
@@ -98,6 +100,7 @@ def lookup_weather(airport: str) -> str:
     return f"{airport.upper()}: {conditions}"
 
 
+# region seed-store
 def _seed_skills_store() -> InMemoryStore:
     """Load the bundled skill folders into a process-local store.
 
@@ -117,8 +120,10 @@ def _seed_skills_store() -> InMemoryStore:
 
 
 SKILLS_STORE = _seed_skills_store()
+# endregion
 
 
+# region visibility-middleware
 class SkillsVisibilityMiddleware(AgentMiddleware):
     """Republish `skills_metadata` as a `custom` stream event.
 
@@ -158,6 +163,10 @@ class SkillsVisibilityMiddleware(AgentMiddleware):
         return None
 
 
+# endregion
+
+
+# region skills-agent
 def build_skills_agent():
     """Build the skills agent.
 
@@ -181,6 +190,9 @@ def build_skills_agent():
         skills=[SKILLS_ROOT],
         middleware=[SkillsVisibilityMiddleware()],
     )
+
+
+# endregion
 
 
 graph = build_skills_agent()

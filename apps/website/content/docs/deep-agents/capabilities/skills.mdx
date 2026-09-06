@@ -1,13 +1,31 @@
 ---
 title: Skills
-description: SkillsMiddleware loads only SKILL.md frontmatter into the prompt and leaves the body on disk. skills_metadata is private state a panel must reach for.
+description: A skill is a folder with a SKILL.md. SkillsMiddleware puts only the frontmatter in the system prompt and leaves the body on the backend until a request matches.
 ---
 
 # Skills
 
-A skill is a folder with a `SKILL.md` whose YAML frontmatter carries a `name` and a `description`, following the [agentskills.io](https://agentskills.io) specification. `SkillsMiddleware` loads **only that frontmatter** into the system prompt — a short index the model can scan — and leaves the body on the filesystem until a request actually matches.
+A skill is a folder with a `SKILL.md` whose YAML frontmatter carries a `name` and a `description`, following the [agentskills.io](https://agentskills.io) specification. `SkillsMiddleware` scans a mount for those folders, and puts only the frontmatter into the system prompt: one line per skill giving the name, the description, and the path to read for the full instructions. The body stays on the backend until a request matches. That two-stage load is what progressive disclosure means, and the running example is built to make both stages visible.
 
-That two-stage load is what progressive disclosure means. The index costs a few tokens per skill. The procedure costs nothing until it is needed.
+## What the demo does
+
+The Run tab shows the prebuilt `<chat>` composition beside a panel titled Skill Index, which is empty until a run begins. The welcome suggestion asks whether a mid-size jet can operate out of KASE, and the panel fills in before the answer does: both skills are listed, `runway-analysis` and `weather-brief`, each with its description and a line reading "body not read", because both frontmatter blocks are in the prompt and neither body has been opened.
+
+Then exactly one skill opens. `runway-analysis` picks up an outline, the path of its `SKILL.md` appears under it, and the path of the margin table that the `SKILL.md` sends the agent to appears a step later. The weather skill stays closed for the whole run. It is in the index so that a different question, the conditions at KSFO for example, has somewhere else to route.
+
+## How it is built
+
+Three files carry the capability: a Python graph that seeds the skill mount, builds the agent, and republishes one private key, an application config, and the Angular component that renders the panel. Open the Code tab to read them in place.
+
+### The names the graph and the panel agree on
+
+The mount point, the store namespace, and the name of the custom stream event are module constants. `SkillsMiddleware` scans one level below the mount, so `/skills/runway-analysis/SKILL.md` is found and a deeper file is not.
+
+<ExampleCode file="graph.py" region="skills-constants" title="graph.py — the shared names" />
+
+### A skill on disk
+
+The frontmatter is the part the model sees first, so the `description` is written as a matching rule rather than as a summary. This is the whole of `skills/runway-analysis/SKILL.md`:
 
 ```markdown
 ---
@@ -18,94 +36,123 @@ license: MIT
 
 # Runway Analysis
 
+## When to use
+
+The user is asking whether an aircraft can safely operate from a specific
+runway, or is comparing two airports for a trip.
+
 ## Procedure
 
-1. Get the field elevation and the longest runway length.
-2. Read `/skills/runway-analysis/reference/margins.md` for the margin table.
-   Do not work from memory — the table is the authority.
-3. Compare, then state the verdict and the two numbers you compared.
+1. Get the field elevation and the longest runway length with
+   `lookup_field_elevation` and `lookup_runway_length`.
+2. Read `/skills/runway-analysis/reference/margins.md` for the required margin
+   table. Do not work from memory — the table is the authority.
+3. Compare the runway length against the required distance for the aircraft
+   class at that elevation.
+4. State the verdict in one sentence, then give the two numbers you compared.
+
+## Reporting
+
+Always name the margin you applied. A verdict without the margin is not
+reviewable.
 ```
 
-The `description` is doing the routing, so it is written as a matching rule rather than as a summary. Step 2 is the second stage of the disclosure: the reference file costs nothing until the `SKILL.md` sends the agent to it.
+Step 2 is the second stage of the disclosure: the margin table costs nothing until the `SKILL.md` sends the agent to it. The `name` must match the directory the file sits in, which is what makes the folder the unit rather than the file.
 
-## What the demo shows
+### Seeding the skill mount
 
-The dispatch desk carries two skills, runway analysis and a weather brief. The panel lists both from the moment the run starts, because both frontmatter blocks are in the prompt. Ask a runway question and exactly one skill opens: the panel marks `runway-analysis` as read, its reference file is opened a step later, and the weather skill stays closed on disk.
+`SkillsMiddleware` reads through the agent's backend, and which backend is a deployment decision. This demo runs on a shared public deployment, so a host-filesystem backend is out. The bundled folders are read once at import into a process-local `InMemoryStore`, which keeps the skill content in version control without giving the agent the host.
 
-That closed skill is the demonstration. If every skill's files are read on every request, the index is not routing anything and the descriptions need work.
+<ExampleCode file="graph.py" region="seed-store" title="graph.py — seeding the store" />
 
-The prompt has to say that the index is an index:
-
-```markdown
-Your procedures are not in this prompt — they are skills under `/skills/`.
-When a request matches a skill, read its `SKILL.md` before you start, and
-follow the procedure it gives you. If the `SKILL.md` points at another file,
-read that too — the numbers in a reference file are the authority, and your
-recollection is not.
-```
-
-## Mounting the skills
-
-`SkillsMiddleware` reads through a backend, and which backend is a deployment decision. The demo seeds a process-local store from the repository and mounts it read-only, which keeps the skill content in version control without giving the agent the host.
-
-```python
-graph = create_deep_agent(
-    model=ChatOpenAI(model="gpt-4.1", temperature=0),
-    tools=[lookup_field_elevation, lookup_runway_length, lookup_weather],
-    system_prompt=(PROMPTS_DIR / "skills.md").read_text(),
-    backend=CompositeBackend(
-        default=StateBackend(),
-        routes={"/skills/": StoreBackend(namespace=..., store=SKILLS_STORE)},
-    ),
-    skills=["/skills/"],
-)
-```
-
-`CompositeBackend` routes by path prefix, longest first. Anything outside `/skills/` falls through to `StateBackend`, so notes the agent writes stay on the thread and never touch the skill mount.
+Nothing writes to the store after import, so the agent sees `/skills/` as a stable read-only mount even though the machinery serving it is the same `StoreBackend` a writable mount would use.
 
 <Callout type="warning" title="CompositeBackend strips the route prefix">
-Seed the store at `/runway-analysis/SKILL.md`, not `/skills/runway-analysis/SKILL.md`. The composite removes the matched prefix before delegating and re-adds it to the result, so a store seeded with the prefix surfaces to the agent as `/skills/skills/runway-analysis/...` and the skill scan finds nothing.
+Seed the store at `/runway-analysis/SKILL.md`, not `/skills/runway-analysis/SKILL.md`. The composite removes the matched prefix before delegating and re-adds it to the paths it returns, so a store seeded with the prefix surfaces to the agent as `/skills/skills/runway-analysis/...` and the scan finds nothing.
 </Callout>
 
-## How it reaches the UI
+### Mounting the skills beside the thread's own files
 
-The panel has two halves, and they arrive by different routes.
+`skills=["/skills/"]` is what installs `SkillsMiddleware`, and it is installed with the agent's own backend, so where the skills live is decided by the `backend` argument rather than by the `skills` argument. `CompositeBackend` matches by path prefix, longest first: `/skills/` resolves to the seeded store, and everything else falls through to `StateBackend`, so notes the agent writes stay on the thread and never touch the skill mount.
 
-**The index is private state.** `skills_metadata` is annotated `PrivateStateAttr`, exactly as `memory_contents` is, so it is absent from the `values` stream and reaches `agent.value()` only once the run settles. A live index needs the same custom-event shim the [memory capability](/docs/deep-agents/capabilities/memory) documents: a small middleware republishes the key on the custom stream, and the client reads the custom event first and falls back to the settled state for a reopened thread.
+<ExampleCode file="graph.py" region="skills-agent" title="graph.py — building the agent" />
 
-```ts
-private readonly liveSkills = computed<SkillMetadata[] | null>(() => {
-  for (const event of [...this.agent.customEvents()].reverse()) {
-    if (event.name !== SKILLS_EVENT) continue;
-    const metadata = (event.data as { skills_metadata?: unknown } | undefined)?.[
-      'skills_metadata'
-    ];
-    if (Array.isArray(metadata)) return metadata as SkillMetadata[];
-  }
-  return null;
-});
+### Telling the model the index is an index
+
+The middleware appends its own guidance to the system message, including an instruction to read a skill's path with `read_file` before following it. The demo's own system prompt in `prompts/skills.md` says the same thing in the voice of the task, because a dispatcher that answers from recollection instead of from the margin table is the failure this example is about:
+
+```markdown
+You are a dispatcher. Your procedures are not in this prompt — they are skills on
+your filesystem under `/skills/`, and each one is a folder with a `SKILL.md`.
+
+You have been given the name and description of every skill up front. That index
+is deliberately short. When a request matches a skill, read its `SKILL.md` with
+`read_file` before you start, and follow the procedure it gives you. If the
+`SKILL.md` points at another file, read that too — the numbers in a reference
+file are the authority, and your recollection is not.
 ```
 
-As with memory, this is an application-side shim rather than a framework feature, and it is worth naming as such.
+### Announcing a private state key
 
-**What the agent opened needs no shim at all.** A skill body is read with `read_file`, which is an ordinary tool call:
+`SkillsMiddleware` declares `skills_metadata` annotated with `PrivateStateAttr`, so the loaded index is deliberately absent from the agent's declared input and output and never reaches the `values` stream. A panel bound to the settled state alone would therefore stay empty until the run finished. A small middleware announces the key on a channel the client does receive while the run is going.
 
-```ts
-private readonly openedPaths = computed<string[]>(() => {
-  const paths: string[] = [];
-  for (const call of this.agent.toolCalls()) {
-    if (call.name !== 'read_file') continue;
-    const path = (call.args as Record<string, unknown> | undefined)?.['file_path'];
-    if (typeof path === 'string' && !paths.includes(path)) paths.push(path);
-  }
-  return paths;
-});
-```
+<ExampleCode file="graph.py" region="visibility-middleware" title="graph.py — republishing skills_metadata" />
 
-Matching those paths against each skill's directory is what makes the panel show the thing worth showing: one skill opened, the rest still on disk.
+This is the same application-side shim the [memory capability](/docs/deep-agents/capabilities/memory) uses, and it is worth naming as such rather than mistaking it for a framework feature. `get_stream_writer` raises outside a streaming context, which is why the emit is guarded.
 
-## Next steps
+### Providing the agent
 
-- [Memory](/docs/deep-agents/capabilities/memory) — the same private-state visibility problem, in full.
-- [Filesystem](/docs/deep-agents/capabilities/filesystem) — the backends the skill mount is assembled from.
-- [Chat tool calls](/docs/chat/components/chat-tool-calls) — how the `read_file` calls render in the conversation.
+`provideAgent()` from `@threadplane/langgraph` registers the agent at the application root, and `provideChat({})` registers the chat defaults. The example resolves its connection at runtime because the host that serves the demo decides which runtime is attached; your own application passes `apiUrl` and `assistantId` directly.
+
+<ExampleCode file="app.config.ts" />
+
+### Two sources for one index
+
+A custom event is a live signal and is not replayed when a thread is reopened. The thread state is durable but arrives only when the client hydrates it. A panel that wants the index during the run and after a reload reads both.
+
+<ExampleCode file="skills.component.ts" region="skills-sources" title="skills.component.ts — the two readers" />
+
+`agent.customEvents()` is a Signal of every custom event received in this session, so the live reader walks it newest first and takes the most recent payload under the event name the graph emits. `agent.value()` is the agent state the adapter projects from the latest checkpoint, which carries the key even though the run stream does not. The label the panel shows distinguishes the two rather than blending them: `live` means the visibility middleware announced the index during this run, and `checkpoint` is what a reopened thread looks like.
+
+### What the agent actually opened
+
+The other half of the panel needs no shim at all. Reading a skill is a `read_file` call, an ordinary tool call on the runtime-neutral `agent.toolCalls()` Signal, so the paths are already on the client.
+
+<ExampleCode file="skills.component.ts" region="opened-paths" title="skills.component.ts — the opened paths" />
+
+Each entry of `skills_metadata` carries the `path` of its `SKILL.md`, and everything before the last slash of that path is the skill's directory. Matching the opened paths against that prefix is what attributes a read to a skill, and it is why the margin table counts as opening `runway-analysis` rather than as an unrelated file read.
+
+<ExampleCode file="skills.component.ts" region="skills-projection" title="skills.component.ts — attributing reads to skills" />
+
+### The panel
+
+The sidebar renders the source label, then one card per skill: the name, the description the model was given, and either the paths read or the words "body not read". An opened card carries `data-opened="true"`, which is what draws the outline.
+
+<ExampleCode file="skills.component.ts" region="skills-panel" title="skills.component.ts — the skill index panel" />
+
+Rendering both halves in one column is the point. The index is what the prompt paid for, and the read paths are what the request actually cost.
+
+## The skill that stays closed
+
+The strongest evidence that a skills setup is working is the skill that does not get opened. If every skill's files are read on every request, the index is not routing anything and the descriptions are doing no work. That makes the descriptions, not the procedures, the part to iterate on: they are the only text the model sees before it chooses.
+
+<Callout type="tip" title="Assert the closed skill as well as the open one">
+A test that only checks that `runway-analysis` was read passes just as happily when the agent reads everything. The example's end-to-end test asserts the negative too: `weather-brief` still carries `data-opened="false"` when the run is over.
+</Callout>
+
+## What's Next
+
+<CardGroup cols={2}>
+  <Card title="Memory" href="/docs/deep-agents/capabilities/memory">
+    The same private-state visibility problem, for `memory_contents`.
+  </Card>
+  <Card title="Filesystem" href="/docs/deep-agents/capabilities/filesystem">
+    The backends the skill mount is assembled from, and approval on writes.
+  </Card>
+  <Card title="Subagents" href="/docs/deep-agents/capabilities/subagents">
+    Delegating a procedure to a context of its own.
+  </Card>
+  <Card title="Chat tool calls" href="/docs/chat/components/chat-tool-calls">
+    How the `read_file` calls render in the conversation itself.
+  </Card>
+</CardGroup>
