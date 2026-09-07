@@ -1688,15 +1688,15 @@
 }
 .arch-figure text {
   font-family: var(--font-inter);
-  font-size: 12.5px;
+  font-size: 13.5px;
   fill: var(--color-text-primary);
 }
 .arch-figure .arch-title {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
 }
 .arch-figure .arch-title--lg {
-  font-size: 19px;
+  font-size: 20px;
 }
 .arch-figure .arch-zone-label--app {
   font-size: 10.5px;
@@ -1704,24 +1704,24 @@
 }
 .arch-figure .arch-caption--mid {
   text-anchor: middle;
-  font-size: 11.5px;
+  font-size: 12.5px;
 }
 .arch-figure .arch-body {
-  font-size: 12.5px;
+  font-size: 13.5px;
   fill: var(--color-text-secondary);
 }
 .arch-figure .arch-caption {
-  font-size: 12px;
+  font-size: 13px;
   font-style: italic;
   fill: var(--color-text-secondary);
 }
 .arch-figure .arch-mono {
   font-family: var(--font-mono);
-  font-size: 11.5px;
+  font-size: 12px;
   fill: #2a3a5c;
 }
 .arch-figure .arch-zone-label {
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.14em;
   fill: var(--color-text-secondary);
@@ -1732,7 +1732,7 @@
   fill: var(--color-text-muted, #8a8f98);
 }
 .arch-figure .arch-tag {
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-anchor: end;
@@ -1769,7 +1769,7 @@
   stroke: #c9d6ee;
 }
 .arch-figure .arch-chip text {
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 500;
   fill: #2a2f3a;
 }
@@ -1778,7 +1778,7 @@
   stroke: #e2e6ec;
 }
 .arch-figure .arch-cap text {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
   fill: var(--color-text-primary);
 }
@@ -1800,6 +1800,116 @@
   stroke-width: 0.5;
   opacity: 0.6;
 }
+/* The dot ground stays, one step fainter than the docs kit's. */
+.arch-figure .tp-diagram-dot {
+  fill: #e3e7ed;
+}
+/* Phone form: the same cards as an HTML stack, driven by the same data.
+ * The SVG is hidden here instead of scrolled sideways. */
+.arch-stack {
+  display: none;
+}
+@media (max-width: 767px) {
+  .arch-figure .tp-diagram-figure {
+    display: none;
+  }
+  .arch-stack {
+    display: grid;
+    gap: 12px;
+    margin-top: 8px;
+  }
+}
+.arch-stack-label {
+  text-align: left;
+  font-family: var(--font-inter);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  margin: 12px 0 0;
+}
+.arch-stack-card {
+  display: block;
+  text-align: left;
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid #dfe3ea;
+  border-radius: 14px;
+  background: #fff;
+  padding: 16px;
+}
+.arch-stack-card[data-highlight] {
+  background: #f2f6fd;
+  border-color: #b7c8e6;
+}
+.arch-stack-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.arch-stack-head img,
+.arch-stack-marks img {
+  width: 20px;
+  height: 20px;
+}
+.arch-stack-title {
+  font-family: var(--font-inter);
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+}
+.arch-stack-tag {
+  margin-left: auto;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  color: #2f5fa8;
+}
+.arch-stack-rows {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-inter);
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  display: grid;
+  gap: 4px;
+}
+.arch-stack-caps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-inter);
+  font-size: 13px;
+  font-weight: 500;
+}
+.arch-stack-caps li {
+  background: #e4ecfa;
+  color: #2f5fa8;
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+.arch-stack-marks {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.arch-stack-mono {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: #2a3a5c;
+  margin: 10px 0 0;
+}
+.arch-stack-arrow {
+  text-align: center;
+  color: #7d8492;
+  font-size: 16px;
+  line-height: 1;
+}
+
 
 /* HomeConceptGrid — components/landing/HomeConceptGrid.tsx */
 .home-concept {

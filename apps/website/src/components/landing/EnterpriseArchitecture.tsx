@@ -356,6 +356,99 @@ function ModelStrip() {
   );
 }
 
+const STACK_ORDER = [
+  'users',
+  'threadplane',
+  'langgraph-sdk',
+  'ag-ui',
+  'langsmith',
+  'ag-ui-servers',
+] as const;
+
+/**
+ * The phone form of the diagram: the same cards, in reading order, as an
+ * HTML stack. Shown under 768px by CSS; the SVG is hidden there.
+ */
+function ArchitectureStack() {
+  const byId = new Map(CARDS.map((c) => [c.id, c]));
+  return (
+    <div className="arch-stack" data-arch-stack>
+      {STACK_ORDER.map((id, i) => {
+        const c = byId.get(id)!;
+        const col = COLUMNS.find((col) => col.x === c.x);
+        const caps = c.rows.find((r) => r.kind === 'caps');
+        const marks = c.rows.find((r) => r.kind === 'marks');
+        const texts = c.rows.filter((r) => r.kind === 'text');
+        const mono = c.rows.find((r) => r.kind === 'mono');
+        const badges = c.rows.filter((r) => r.kind === 'badge');
+        return (
+          <div key={id}>
+            {col && (i === 0 || byId.get(STACK_ORDER[i - 1])!.x !== c.x) ? (
+              <p className="arch-stack-label">{col.label}</p>
+            ) : null}
+            <a
+              className="arch-stack-card"
+              href={c.href}
+              data-highlight={c.highlight || undefined}
+            >
+              <div className="arch-stack-head">
+                {c.mark ? <img src={LOGOS[c.mark]} alt="" /> : null}
+                {c.id === 'threadplane' ? (
+                  <img src={LOGOS.angular} alt="" />
+                ) : null}
+                <p className="arch-stack-title">
+                  {c.title}
+                  {c.title2 ? ` ${c.title2}` : ''}
+                </p>
+                {c.tag ? <span className="arch-stack-tag">{c.tag}</span> : null}
+              </div>
+              {texts.length ? (
+                <ul className="arch-stack-rows">
+                  {texts.map((r) =>
+                    r.kind === 'text' ? <li key={r.text}>{r.text}</li> : null
+                  )}
+                </ul>
+              ) : null}
+              {caps && caps.kind === 'caps' ? (
+                <ul className="arch-stack-caps">
+                  {caps.caps.map((cap) => (
+                    <li key={cap.label}>{cap.label}</li>
+                  ))}
+                  {badges.map((b) =>
+                    b.kind === 'badge' ? <li key={b.label}>{b.label}</li> : null
+                  )}
+                </ul>
+              ) : null}
+              {marks && marks.kind === 'marks' ? (
+                <div className="arch-stack-marks">
+                  {marks.marks.map((m) => (
+                    <img key={m} src={LOGOS[m]} alt="" />
+                  ))}
+                </div>
+              ) : null}
+              {mono && mono.kind === 'mono' ? (
+                <p className="arch-stack-mono">{mono.text}</p>
+              ) : null}
+            </a>
+          </div>
+        );
+      })}
+      <p className="arch-stack-label">{MODEL_STRIP.label}</p>
+      <div className="arch-stack-card">
+        <div className="arch-stack-marks">
+          {MODEL_STRIP.chips.map((chip) => (
+            <img key={chip.label} src={LOGOS[chip.mark]} alt={chip.label} />
+          ))}
+        </div>
+        <ul className="arch-stack-rows">
+          <li>{MODEL_STRIP.chips.map((c) => c.label).join(' · ')}</li>
+          <li>{MODEL_STRIP.caption}</li>
+        </ul>
+      </div>
+    </div>
+  );
+}
+
 function AlignmentGrid() {
   const lines: ReactNode[] = [];
   for (let x = 0; x <= VIEW.width; x += GRID) {
@@ -423,11 +516,11 @@ export function EnterpriseArchitecture({ grid = false }: Props) {
           <defs>
             <linearGradient id={`${SLUG}-card`} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0" stopColor="#ffffff" />
-              <stop offset="1" stopColor="#f7f9fb" />
+              <stop offset="1" stopColor="#fafbfc" />
             </linearGradient>
             <linearGradient id={`${SLUG}-tp`} x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stopColor="#f4f8ff" />
-              <stop offset="1" stopColor="#e9f0fc" />
+              <stop offset="0" stopColor="#f7faff" />
+              <stop offset="1" stopColor="#eff4fc" />
             </linearGradient>
           </defs>
           {COLUMNS.map((c) => (
@@ -469,6 +562,7 @@ export function EnterpriseArchitecture({ grid = false }: Props) {
           <ModelStrip />
           {grid ? <AlignmentGrid /> : null}
         </DiagramFrame>
+        <ArchitectureStack />
       </div>
     </DiagramSection>
   );

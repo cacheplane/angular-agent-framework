@@ -86,18 +86,19 @@ test.describe('homepage architecture', () => {
     for (const w of report.images) expect(w).toBeGreaterThan(0);
   });
 
-  test('scrolls horizontally on a phone instead of shrinking the type', async ({
+  test('stacks the same cards on a phone instead of scrolling the drawing sideways', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/');
-    const fig = page.locator(`${DIAGRAM} .tp-diagram-figure`);
-    await fig.scrollIntoViewIfNeeded();
-    const size = await fig.evaluate((el) => ({
-      scroll: el.scrollWidth,
-      client: el.clientWidth,
-    }));
-    expect(size.scroll).toBeGreaterThanOrEqual(1024);
-    expect(size.scroll).toBeGreaterThan(size.client);
+    const stack = page.locator(`${DIAGRAM} [data-arch-stack]`);
+    await stack.scrollIntoViewIfNeeded();
+    await expect(stack).toBeVisible();
+    await expect(page.locator(`${DIAGRAM} .tp-diagram-figure`)).toBeHidden();
+    await expect(stack.locator('a.arch-stack-card')).toHaveCount(CARDS.length);
+    const wide = await page.evaluate(
+      () => document.documentElement.scrollWidth > window.innerWidth
+    );
+    expect(wide, 'no horizontal page scroll on a phone').toBe(false);
   });
 });
