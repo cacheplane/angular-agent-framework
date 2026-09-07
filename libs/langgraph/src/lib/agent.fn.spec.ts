@@ -133,12 +133,11 @@ describe('agent', () => {
       );
 
       const submitted = ref.submit({ message: 'hello' });
-      transport.emit([{
+      await transport.emit([{
         type: 'messages',
         messages: [{ id: 'ai-live', type: 'ai', content: 'answer' }],
         messageMetadata: { langgraph_node: 'model' },
       }]);
-      await new Promise(resolve => setTimeout(resolve, 0));
 
       const streaming = ref.messages().find(message => message.id === 'ai-live')?.delivery;
       expect(streaming).toEqual({ generation: expect.any(String), phase: 'streaming' });
@@ -206,7 +205,7 @@ describe('agent', () => {
           ],
         }],
       }]);
-      transport.emit([{
+      await transport.emit([{
         type: 'messages|tools:call-success', namespace: ['tools:call-success'],
         messages: [{ id: 'sub-success', type: 'ai', content: 'result' }],
         messageMetadata: { checkpoint_ns: 'tools:call-success|model' },
@@ -215,7 +214,6 @@ describe('agent', () => {
         messages: [{ id: 'sub-error', type: 'ai', content: 'partial' }],
         messageMetadata: { checkpoint_ns: 'tools:call-error|model' },
       }]);
-      await new Promise(resolve => setTimeout(resolve, 0));
 
       const successStreaming = ref.subagents().get('call-success')?.messages()[0].delivery;
       const errorStreaming = ref.subagents().get('call-error')?.messages()[0].delivery;
@@ -223,14 +221,13 @@ describe('agent', () => {
       expect(errorStreaming).toMatchObject({ phase: 'streaming' });
       expect(successStreaming?.generation).not.toBe(errorStreaming?.generation);
 
-      transport.emit([{
+      await transport.emit([{
         type: 'messages',
         messages: [
           { id: 'tool-success', type: 'tool', tool_call_id: 'call-success', content: 'done', status: 'success' },
           { id: 'tool-error', type: 'tool', tool_call_id: 'call-error', content: 'failed', status: 'error' },
         ],
       }]);
-      await new Promise(resolve => setTimeout(resolve, 0));
 
       expect(ref.subagents().get('call-success')?.messages()[0].delivery).toEqual({
         generation: successStreaming?.generation,

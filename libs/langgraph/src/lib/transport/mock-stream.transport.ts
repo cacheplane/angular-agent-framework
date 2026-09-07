@@ -7,12 +7,19 @@ import type { ThreadState } from '@langchain/langgraph-sdk';
  * Script event batches upfront, then emit them manually or step through them
  * in your test specs. Supports error injection and close control.
  *
+ * `emit()`, `emitError()`, `close()` and `flush()` are awaitable: the returned
+ * promise settles once the adapter has consumed everything queued so far (and
+ * one macrotask later, so throttled signal writes have landed), which removes
+ * the hand-rolled `await new Promise(resolve => setTimeout(resolve, 0))` flush
+ * from specs.
+ *
  * @example
  * ```typescript
  * const transport = new MockAgentTransport([
  *   [{ type: 'values', messages: [aiMsg('Hello')] }],
  *   [{ type: 'values', messages: [aiMsg('Done')] }],
  * ]);
+ * await transport.emit(transport.nextBatch());
  * ```
  */
 export class MockAgentTransport implements AgentTransport {
@@ -28,8 +35,15 @@ export class MockAgentTransport implements AgentTransport {
   private eventQueue: StreamEvent[] = [];
   // Each resolver simply wakes the stream loop to re-check state.
   private resolvers: Array<() => void> = [];
+  // Awaiters registered by emit()/emitError()/close()/flush(), settled once the
+  // stream loop has drained everything queued at the time they were registered.
+  private consumers: Array<() => void> = [];
   private closed = false;
   private pendingError: Error | null = null;
+  /** True while the stream loop is suspended with an empty queue. */
+  private idle = false;
+  /** True once a stream run has ended (or before any run has started). */
+  private finished = true;
 
   /** @param script - Array of event batches. Each batch is emitted as a group. */
   constructor(script: StreamEvent[][] = []) {
@@ -42,22 +56,43 @@ export class MockAgentTransport implements AgentTransport {
     return this.script[this.scriptIndex++];
   }
 
-  /** Manually emit events into the stream. */
-  emit(events: StreamEvent[]): void {
+  /**
+   * Manually emit events into the stream.
+   *
+   * Await the returned promise: it resolves once the adapter has pulled this
+   * batch out of the stream (or the run has ended), so signals are settled and
+   * assertions read live state rather than the value from before the emit.
+   */
+  emit(events: StreamEvent[]): Promise<void> {
     this.eventQueue.push(...events);
-    this.flush();
+    this.wake();
+    return this.consumed();
   }
 
-  /** Inject an error into the stream. */
-  emitError(err: Error): void {
+  /** Inject an error into the stream. Resolves once the stream has thrown. */
+  emitError(err: Error): Promise<void> {
     this.pendingError = err;
-    this.flush();
+    this.wake();
+    return this.consumed();
   }
 
-  /** Close the stream. Remaining queued events are drained before completion. */
-  close(): void {
+  /**
+   * Close the stream. Remaining queued events are drained before completion.
+   * Resolves once the run has finished.
+   */
+  close(): Promise<void> {
     this.closed = true;
-    this.flush();
+    this.wake();
+    return this.consumed();
+  }
+
+  /**
+   * Resolve once everything emitted so far has been consumed, without emitting
+   * anything new. Useful after driving the agent by some other route (a
+   * `submit()`, a `switchThread()`) that has to reach the transport first.
+   */
+  flush(): Promise<void> {
+    return this.consumed();
   }
 
   /** Returns true if a stream is currently active. */
@@ -74,6 +109,7 @@ export class MockAgentTransport implements AgentTransport {
   ): AsyncIterable<StreamEvent> {
     this.streams.push({ threadId: _threadId, payload: _payload, options });
     this.streaming = true;
+    this.finished = false;
     try {
       while (!this.closed && !signal.aborted) {
         if (this.pendingError) throw this.pendingError;
@@ -81,11 +117,15 @@ export class MockAgentTransport implements AgentTransport {
           const event = this.eventQueue.shift();
           if (event) yield event;
         } else {
-          // Wait until flush() wakes us, then loop again to check state.
+          // The queue is drained: everything awaited so far has been consumed.
+          this.settleConsumers();
+          this.idle = true;
+          // Wait until wake() rouses us, then loop again to check state.
           await new Promise<void>((resolve) => {
             if (signal.aborted) { resolve(); return; }
             this.resolvers.push(resolve);
           });
+          this.idle = false;
         }
       }
       if (signal.aborted) return;
@@ -96,6 +136,11 @@ export class MockAgentTransport implements AgentTransport {
       }
     } finally {
       this.streaming = false;
+      this.idle = false;
+      this.finished = true;
+      // The run is over: nothing queued will ever be consumed, so release
+      // every awaiter rather than leaving a spec hanging.
+      this.settleConsumers();
     }
   }
 
@@ -141,8 +186,27 @@ export class MockAgentTransport implements AgentTransport {
     yield { type: 'values', values: { queued: true } };
   }
 
-  private flush(): void {
+  /** Rouse the suspended stream loop so it re-checks queue/error/closed state. */
+  private wake(): void {
     const resolve = this.resolvers.shift();
     if (resolve) resolve();
+  }
+
+  /**
+   * A promise for "everything queued right now has been consumed". Resolved on
+   * a macrotask so throttled signal writes inside the adapter have landed.
+   */
+  private consumed(): Promise<void> {
+    const alreadySettled =
+      this.finished ||
+      (this.idle && this.eventQueue.length === 0 && this.pendingError === null && !this.closed);
+    if (alreadySettled) return new Promise<void>((resolve) => setTimeout(resolve, 0));
+    return new Promise<void>((resolve) => { this.consumers.push(resolve); });
+  }
+
+  private settleConsumers(): void {
+    const pending = this.consumers;
+    this.consumers = [];
+    for (const resolve of pending) setTimeout(resolve, 0);
   }
 }
