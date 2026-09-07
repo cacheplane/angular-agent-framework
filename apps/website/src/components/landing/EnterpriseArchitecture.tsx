@@ -518,11 +518,33 @@ export function EnterpriseArchitecture({ grid = false }: Props) {
               <stop offset="0" stopColor="#ffffff" />
               <stop offset="1" stopColor="#fafbfc" />
             </linearGradient>
+            <radialGradient id={`${SLUG}-ground`} cx="18%" cy="20%" r="90%">
+              <stop offset="0" stopColor="#eef3fb" />
+              <stop offset="0.55" stopColor="#f8f9fb" />
+              <stop offset="1" stopColor="#f4f6f9" />
+            </radialGradient>
             <linearGradient id={`${SLUG}-tp`} x1="0" y1="0" x2="1" y2="1">
               <stop offset="0" stopColor="#f7faff" />
               <stop offset="1" stopColor="#eff4fc" />
             </linearGradient>
           </defs>
+          <rect
+            className="arch-ground"
+            x={0}
+            y={0}
+            width={VIEW.width}
+            height={VIEW.height}
+            rx={10}
+            fill={`url(#${SLUG}-ground)`}
+          />
+          <rect
+            x={0}
+            y={0}
+            width={VIEW.width}
+            height={VIEW.height}
+            rx={10}
+            fill={`url(#${SLUG}-dots)`}
+          />
           {COLUMNS.map((c) => (
             <text
               key={c.label}

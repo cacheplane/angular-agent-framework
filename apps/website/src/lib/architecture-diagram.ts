@@ -154,7 +154,7 @@ export const CARDS: readonly Card[] = [
     title: 'People',
     href: '/docs/chat/getting-started/introduction',
     icon: { name: 'users', bg: '#fff3e0', fg: '#c2410c' },
-    rows: [{ kind: 'text', y: 248, text: 'web · mobile · desktop' }],
+    rows: [{ kind: 'text', y: 248, text: 'web · mobile' }],
   },
   {
     id: 'threadplane',
@@ -199,7 +199,7 @@ export const CARDS: readonly Card[] = [
       {
         kind: 'mono',
         y: 470,
-        text: '@threadplane/chat · render · langgraph · ag-ui',
+        text: '@threadplane/chat',
       },
     ],
   },
@@ -216,11 +216,9 @@ export const CARDS: readonly Card[] = [
     tag: 'FIRST-CLASS',
     highlight: true,
     rows: [
-      { kind: 'text', y: 204, text: 'threads · checkpoints' },
-      { kind: 'text', y: 228, text: 'interrupts · streaming' },
-      { kind: 'text', y: 252, text: 'time travel · branch' },
-      { kind: 'text', y: 276, text: 'memory · subgraphs' },
-      { kind: 'text', y: 300, text: 'durable execution' },
+      { kind: 'text', y: 212, text: 'checkpoints · interrupts' },
+      { kind: 'text', y: 240, text: 'time travel · memory' },
+      { kind: 'text', y: 268, text: 'subgraphs · durable runs' },
     ],
   },
   {
@@ -233,10 +231,7 @@ export const CARDS: readonly Card[] = [
     title2: 'protocol',
     href: '/docs/ag-ui/getting-started/introduction',
     mark: 'agui',
-    rows: [
-      { kind: 'text', y: 452, text: 'events · tool calls' },
-      { kind: 'text', y: 476, text: 'state · interrupts' },
-    ],
+    rows: [{ kind: 'text', y: 460, text: 'events · tools · state' }],
   },
   {
     id: 'langsmith',
@@ -249,9 +244,8 @@ export const CARDS: readonly Card[] = [
     mark: 'langchain',
     rows: [
       { kind: 'text', y: 172, text: 'deploy · observe' },
-      { kind: 'text', y: 204, text: 'LangGraph agents' },
-      { kind: 'text', y: 228, text: 'traces · evals' },
-      { kind: 'text', y: 252, text: 'or self-hosted' },
+      { kind: 'text', y: 212, text: 'traces · evals' },
+      { kind: 'text', y: 240, text: 'or self-hosted' },
     ],
   },
   {
@@ -270,8 +264,7 @@ export const CARDS: readonly Card[] = [
         size: 30,
         step: 34,
       },
-      { kind: 'text', y: 460, text: 'CrewAI · Mastra · Microsoft' },
-      { kind: 'text', y: 482, text: 'Strands · Pydantic AI' },
+      { kind: 'text', y: 468, text: 'CrewAI · Mastra · Microsoft' },
     ],
   },
 ];
@@ -302,7 +295,7 @@ export const MODEL_STRIP = {
     { mark: 'azure', label: 'Azure OpenAI' },
     { mark: 'bedrock', label: 'Amazon Bedrock' },
   ] as readonly StripChip[],
-  caption: 'chosen by your runtime, never by the UI',
+  caption: 'your choice',
 } as const;
 
 export const STRIP_CHIP_H = 36;
