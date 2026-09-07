@@ -1,0 +1,17 @@
+{
+  "slug": "growth-runtime-surfaces",
+  "posthog_id": 11684150,
+  "kind": "trends",
+  "name": "Observed runtime requests by surface",
+  "description": "Public opt-in telemetry; includes our canonical demo. Not authenticated customer usage or install/runtime activation. Missing and unknown surfaces remain visible.",
+  "events": [
+    {
+      "event": "tplane:runtime_request_created",
+      "math": "total"
+    }
+  ],
+  "breakdown": "surface",
+  "breakdown_limit": 10,
+  "interval": "day",
+  "date_from": "-30d"
+}

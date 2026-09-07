@@ -116,6 +116,9 @@ test('formatLiveQualityReport summarizes clean coverage and warnings', () => {
   assert.match(report, /\| tplane:stream_ended \| 0 \|/);
   assert.match(report, /Warnings/);
   assert.match(report, /unexpected/);
+  assert.match(report, /Sampled observations: 1/);
+  assert.match(report, /bounded sample, not total traffic/);
+  assert.match(report, /Zero samples do not establish healthy collection/);
 });
 
 test('analyzeTelemetryCoverage flags required events with no recent samples', () => {

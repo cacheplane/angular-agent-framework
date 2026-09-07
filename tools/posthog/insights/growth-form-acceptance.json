@@ -1,0 +1,26 @@
+{
+  "slug": "growth-form-acceptance",
+  "posthog_id": 11684148,
+  "kind": "trends",
+  "name": "Form acceptance signals",
+  "description": "Client-observed successful form responses. These are submission events, not unique contacts, qualified accounts, email sends or authorization state. Neon is authoritative.",
+  "events": [
+    {
+      "event": "marketing:lead_form_success",
+      "name": "Contact request accepted",
+      "math": "total"
+    },
+    {
+      "event": "marketing:whitepaper_signup_success",
+      "name": "Guide request accepted",
+      "math": "total"
+    },
+    {
+      "event": "marketing:newsletter_signup_success",
+      "name": "Newsletter request accepted",
+      "math": "total"
+    }
+  ],
+  "interval": "day",
+  "date_from": "-30d"
+}

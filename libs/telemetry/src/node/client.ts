@@ -2,6 +2,7 @@ import { getAnonId } from '../shared/anon-id.js';
 import { isTelemetryDisabled } from '../shared/env.js';
 import { shouldSample } from '../shared/sample.js';
 import type { ThreadplaneNodeEvent } from '../shared/events.js';
+import { parseTelemetryEvent } from '../shared/ingest.js';
 import { isProgrammaticallyDisabled } from './disable.js';
 
 const DEFAULT_INGEST = 'https://threadplane.ai/api/ingest';
@@ -12,7 +13,7 @@ const PUBLIC_INGEST_KEY = 'phc_public_cacheplane_telemetry';
 
 export type CaptureResult =
   | { sent: true }
-  | { sent: false; reason: 'disabled' | 'sampled' | 'failed' };
+  | { sent: false; reason: 'disabled' | 'sampled' | 'failed' | 'invalid' };
 
 function getSampleRate(env: NodeJS.ProcessEnv = process.env): number {
   const parsed = Number(env.TPLANE_TELEMETRY_SAMPLE_RATE ?? '1');
@@ -42,18 +43,22 @@ export async function captureEvent(
 ): Promise<CaptureResult> {
   if (isTelemetryDisabled() || isProgrammaticallyDisabled())
     return { sent: false, reason: 'disabled' };
+  const parsed = parseTelemetryEvent(event, properties);
+  if (!parsed || parsed.event.startsWith('tplane:browser_')) return { sent: false, reason: 'invalid' };
   const rate = getSampleRate();
   const anonId = getAnonId();
   if (!shouldSample(rate, anonId)) return { sent: false, reason: 'sampled' };
+  const payload = parseTelemetryEvent(parsed.event, {
+    ...parsed.properties,
+    sample_weight: rate > 0 ? 1 / Math.min(1, rate) : 1,
+  });
+  if (!payload) return { sent: false, reason: 'invalid' };
   try {
     await postJson(process.env.TPLANE_TELEMETRY_INGEST_URL ?? DEFAULT_INGEST, {
       key: PUBLIC_INGEST_KEY,
       distinctId: anonId,
-      event,
-      properties: {
-        ...properties,
-        sample_weight: rate > 0 ? 1 / Math.min(1, rate) : 1,
-      },
+      event: payload.event,
+      properties: payload.properties,
     });
     return { sent: true };
   } catch {

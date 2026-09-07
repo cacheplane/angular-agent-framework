@@ -5,7 +5,7 @@ import { z } from 'zod';
 
 // Minimal remote shapes — we only read fields we use, so we keep these loose.
 export interface RemoteDashboard { id: number; name: string; tags?: string[] }
-export interface RemoteInsight { id: number; name: string; filters?: unknown }
+export interface RemoteInsight { id: number; name: string; filters?: unknown; dashboards?: number[] }
 export interface RemoteCohort { id: number; name: string }
 
 // Transport interface. The real client adapts openapi-fetch to this shape.
@@ -211,11 +211,12 @@ export function toPostHogInsight(local: any): any {
       series: (local.events ?? []).map((e: any) => ({
         kind: 'EventsNode',
         event: e.event,
-        name: e.event,
+        name: e.name ?? e.event,
+        ...(e.name ? { custom_name: e.name } : {}),
         math: e.math === 'dau' ? 'dau' : e.math === 'unique_session' ? 'unique_session' : 'total',
         properties: (e.properties ?? []).map((p: any) => ({
           key: p.key,
-          value: p.value,
+          ...(p.value !== undefined ? { value: p.value } : {}),
           operator: p.operator ?? 'exact',
           type: 'event',
         })),
@@ -264,6 +265,7 @@ export async function applyPlan(options: ApplyOptions): Promise<ApplyResult> {
   const { root, client, plan, dryRun = false, deleteOrphans = false } = options;
   const result: ApplyResult = { applied: 0, failed: 0, errors: [] };
   const insightSlugToId = new Map<string, number>();
+  const createdInsightIds = new Set<number>();
 
   // Pre-populate insight slug→id map from existing posthog_ids (for dashboards referencing already-synced insights).
   for (const item of plan.update.filter((p) => p.kind === 'insight')) {
@@ -297,7 +299,10 @@ export async function applyPlan(options: ApplyOptions): Promise<ApplyResult> {
         if (item.kind === 'cohort') created = await client.createCohort(item.local);
         else if (item.kind === 'insight') created = await client.createInsight(toPostHogInsight(item.local));
         else created = await client.createDashboard(toPostHogDashboard(item.local));
-        if (item.kind === 'insight') insightSlugToId.set(item.local.slug, created.id);
+        if (item.kind === 'insight') {
+          insightSlugToId.set(item.local.slug, created.id);
+          createdInsightIds.add(created.id);
+        }
         if (item.kind === 'dashboard') dashboardSlugToId.set(item.local.slug, created.id);
         // Writeback posthog_id into local JSON.
         if (item.path) {
@@ -333,34 +338,48 @@ export async function applyPlan(options: ApplyOptions): Promise<ApplyResult> {
     }
   }
 
-  // Wiring pass: PostHog associates insights with dashboards via the insight's
-  // `dashboards: number[]` field. PATCH each insight that any local dashboard
-  // references with its full desired dashboards list (idempotent).
-  if (!dryRun) {
-    type LocalDashboard = { slug: string; posthog_id: number | null; tiles?: Array<{ insight: string }> };
-    const localDashboards = (await loadLocalDir(root, 'dashboards', DashboardLocal)) as Array<{ data: LocalDashboard; path: string }>;
-    const insightDesiredDashboards = new Map<string, number[]>();  // insight slug → dashboard ids
-    for (const { data: d } of localDashboards) {
-      const dashId = dashboardSlugToId.get(d.slug) ?? d.posthog_id;
-      if (typeof dashId !== 'number') continue;
-      for (const tile of d.tiles ?? []) {
-        const existing = insightDesiredDashboards.get(tile.insight) ?? [];
-        if (!existing.includes(dashId)) existing.push(dashId);
-        insightDesiredDashboards.set(tile.insight, existing);
+  // Reconcile only memberships in repository-managed dashboards. Preserve every
+  // other membership, including on insights no longer tracked by the repository.
+  if (!dryRun && dashboardSlugToId.size > 0) {
+    try {
+      const localDashboards = await loadLocalDir(root, 'dashboards', DashboardLocal);
+      const managed = new Set(dashboardSlugToId.values());
+      const desired = new Map<number, number[]>();
+      for (const { data: dashboard } of localDashboards) {
+        const dashboardId = dashboardSlugToId.get(dashboard.slug);
+        if (dashboardId === undefined) continue;
+        for (const tile of dashboard.tiles) {
+          const insightId = insightSlugToId.get(tile.insight);
+          if (insightId === undefined) throw new Error(`Unknown insight ${tile.insight}`);
+          const memberships = desired.get(insightId) ?? [];
+          if (!memberships.includes(dashboardId)) memberships.push(dashboardId);
+          desired.set(insightId, memberships);
+        }
       }
-    }
-    for (const [insightSlug, dashboardIds] of insightDesiredDashboards) {
-      const insightId = insightSlugToId.get(insightSlug);
-      if (typeof insightId !== 'number') continue;
-      try {
-        await client.updateInsight(insightId, { dashboards: dashboardIds });
-      } catch (err) {
-        result.errors.push({
-          kind: 'insight',
-          slug: `${insightSlug} (wiring)`,
-          error: err instanceof Error ? err.message : String(err),
-        });
+      // Read current memberships after metadata writes rather than applying stale
+      // plan snapshots to unrelated operator-managed dashboards.
+      const current = new Map((await client.listInsights()).map(insight => [insight.id, insight]));
+      for (const id of desired.keys()) {
+        if (!current.has(id)) {
+          if (!createdInsightIds.has(id)) throw new Error(`Cannot read memberships for insight ${id}`);
+          current.set(id, { id, name: `insight ${id}`, dashboards: [] });
+        }
       }
+      for (const insight of current.values()) {
+        if (!Array.isArray(insight.dashboards)) throw new Error(`Cannot read memberships for insight ${insight.id}`);
+        const before = insight.dashboards;
+        const after = [...new Set([...before.filter(id => !managed.has(id)), ...(desired.get(insight.id) ?? [])])];
+        if (before.length === after.length && before.every(id => after.includes(id))) continue;
+        try {
+          await client.updateInsight(insight.id, { dashboards: after });
+        } catch (err) {
+          result.failed += 1;
+          result.errors.push({ kind: 'insight', slug: `${insight.name} (wiring)`, error: err instanceof Error ? err.message : String(err) });
+        }
+      }
+    } catch (err) {
+      result.failed += 1;
+      result.errors.push({ kind: 'dashboard', slug: '(wiring)', error: err instanceof Error ? err.message : String(err) });
     }
   }
 
@@ -387,6 +406,17 @@ import { fileURLToPath } from 'node:url';
 import { dirname, resolve as resolvePath } from 'node:path';
 import { ph } from './client.js';
 
+export async function fetchAllPages<T>(fetchPage: (offset: number, limit: number) => Promise<{ results: T[]; next?: string | null }>): Promise<T[]> {
+  const result: T[] = [];
+  for (;;) {
+    const page = await fetchPage(result.length, 100);
+    if (!Array.isArray(page.results)) throw new Error('Invalid PostHog list response');
+    result.push(...page.results);
+    if (!page.next) return result;
+    if (page.results.length === 0) throw new Error('PostHog pagination did not advance');
+  }
+}
+
 function makeRealClient(): SyncClient {
   const c = ph();
   const ok = <T>(r: { data?: T; error?: unknown }, op: string): T => {
@@ -395,19 +425,14 @@ function makeRealClient(): SyncClient {
     }
     return r.data;
   };
+  const listAll = async (path: string): Promise<any[]> => fetchAllPages(async (offset, limit) => {
+    const response = await c.GET(path as any, { params: { query: { limit, offset } } } as any);
+    return ok(response as any, `list ${path}`) as { results: any[]; next?: string | null };
+  });
   return {
-    listDashboards: async () => {
-      const r = await c.GET('/dashboards/' as any, { params: { query: { limit: 200 } } } as any);
-      return ((ok(r as any, 'list dashboards') as any).results ?? []) as RemoteDashboard[];
-    },
-    listInsights: async () => {
-      const r = await c.GET('/insights/' as any, { params: { query: { limit: 200 } } } as any);
-      return ((ok(r as any, 'list insights') as any).results ?? []) as RemoteInsight[];
-    },
-    listCohorts: async () => {
-      const r = await c.GET('/cohorts/' as any, { params: { query: { limit: 200 } } } as any);
-      return ((ok(r as any, 'list cohorts') as any).results ?? []) as RemoteCohort[];
-    },
+    listDashboards: () => listAll('/dashboards/'),
+    listInsights: () => listAll('/insights/'),
+    listCohorts: () => listAll('/cohorts/'),
     createDashboard: async (body) => ok(await c.POST('/dashboards/' as any, { body } as any), 'create dashboard') as RemoteDashboard,
     createInsight: async (body) => ok(await c.POST('/insights/' as any, { body } as any), 'create insight') as RemoteInsight,
     createCohort: async (body) => ok(await c.POST('/cohorts/' as any, { body } as any), 'create cohort') as RemoteCohort,

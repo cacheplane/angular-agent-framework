@@ -37,13 +37,13 @@ describe('node client', () => {
 
   test('uses the configured ingest endpoint', async () => {
     process.env.TPLANE_TELEMETRY_INGEST_URL = 'https://custom.example/api/ingest';
-    await captureEvent('tplane:stream_started', {});
+    await captureEvent('tplane:stream_started', { transport: 'custom' });
     expect(fetchMock.mock.calls[0][0]).toBe('https://custom.example/api/ingest');
   });
 
   test('defaults to the Threadplane ingest proxy', async () => {
     delete process.env.TPLANE_TELEMETRY_INGEST_URL;
-    await captureEvent('tplane:stream_started', {});
+    await captureEvent('tplane:stream_started', { transport: 'custom' });
     expect(fetchMock.mock.calls[0][0]).toBe('https://threadplane.ai/api/ingest');
   });
 
@@ -67,7 +67,7 @@ describe('node client', () => {
 
   test('reports failed sends instead of throwing', async () => {
     fetchMock.mockRejectedValueOnce(new Error('network'));
-    await expect(captureEvent('tplane:stream_errored', {})).resolves.toEqual({
+    await expect(captureEvent('tplane:stream_errored', { transport: 'custom' })).resolves.toEqual({
       sent: false,
       reason: 'failed',
     });
@@ -75,7 +75,25 @@ describe('node client', () => {
 
   test('invalid sample rate falls back to sending', async () => {
     process.env.TPLANE_TELEMETRY_SAMPLE_RATE = 'not-a-number';
-    await expect(captureEvent('tplane:stream_started', {})).resolves.toEqual({ sent: true });
+    await expect(captureEvent('tplane:stream_started', { transport: 'custom' })).resolves.toEqual({ sent: true });
     expect(fetchMock).toHaveBeenCalledOnce();
+  });
+
+  test.each([{}, null, 'secret', [], { transport: 42 }, { transport: 'custom', model: { secret: true } }])(
+    'silently rejects malformed runtime properties before sending', async (properties) => {
+      await expect(captureEvent('tplane:stream_started', properties as never)).resolves.toEqual({ sent: false, reason: 'invalid' });
+      expect(fetchMock).not.toHaveBeenCalled();
+    },
+  );
+
+  test('rejects unknown runtime event names', async () => {
+    await expect(captureEvent('tplane:invented' as never, { transport: 'custom' })).resolves.toEqual({ sent: false, reason: 'invalid' });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  test('does not forward arbitrary properties or caller-supplied sampling weight', async () => {
+    await captureEvent('tplane:stream_started', { transport: 'custom', command: 'secret', token: 'secret', sample_weight: 9 });
+    const body = JSON.parse(String(fetchMock.mock.calls[0][1].body));
+    expect(body.properties).toEqual({ transport: 'custom', sample_weight: 1 });
   });
 });

@@ -1,0 +1,23 @@
+{
+  "slug": "growth-docs-engagement",
+  "posthog_id": 11684147,
+  "kind": "trends",
+  "name": "Docs workspace engagement",
+  "description": "Workspace navigation and mode changes. Browsing examples is separate from development-runtime activation.",
+  "events": [
+    {
+      "event": "docs:workspace_navigation",
+      "name": "Example navigation",
+      "math": "total"
+    },
+    {
+      "event": "docs:workspace_mode_switched",
+      "name": "Mode changed",
+      "math": "total"
+    }
+  ],
+  "breakdown": "capability",
+  "breakdown_limit": 10,
+  "interval": "day",
+  "date_from": "-30d"
+}

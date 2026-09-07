@@ -1,4 +1,6 @@
 export type { ThreadplaneEvent, ThreadplaneNodeEvent, ThreadplaneBrowserEvent } from './events';
+export { parseTelemetryEvent } from './ingest';
+export type { ParsedTelemetryEvent } from './ingest';
 export {
   getEmailDomain,
   getSourcePage,

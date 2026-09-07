@@ -6,6 +6,29 @@ Part of [Growth architecture and operations](../../docs/growth/README.md).
 
 PostHog is configured via a Public-API-driven sync script — not through the PostHog UI. Every dashboard, insight, and cohort the GTM motion depends on is a JSON file in this directory. The sync tool reconciles JSON ↔ PostHog. Git is the source of truth.
 
+## Current Growth dashboards
+
+| Dashboard | Answers |
+| --- | --- |
+| [Growth · Quick overview](https://us.posthog.com/project/406826/dashboard/2073577) | Which acquisition, docs, demo and public runtime signals are present? Are runtime events missing transport? |
+| [Growth · Acquisition and demo engagement](https://us.posthog.com/project/406826/dashboard/1582272) | Which landing pages, install-dialog actions, forms, docs capabilities and independent demo milestones receive activity? |
+| [Growth · Runtime diagnostics](https://us.posthog.com/project/406826/dashboard/1592941) | Which transports produce runtime instances, requests, stream starts, ends and errors? |
+
+These are event counts, not a joined developer conversion funnel. Install command
+copy attempts are recorded before the clipboard operation; they are not completed
+npm installs. Form acceptance is observed by the browser, not proof of a unique,
+qualified or email-authorized contact. Runtime counts include the canonical demo
+and public, unauthenticated SDK telemetry. Missing and `unknown` transport are not
+real adapters. Historical malformed events remain visible.
+
+Install observations, development announcements, activation, enrichment, email
+eligibility and delivery outcomes remain authoritative in Neon. Use
+`npm run growth:report -- funnel --from <UTC> --to <UTC>` and
+`npm run growth:report -- journey --contact <UUID>` through the
+[Growth operations guide](../../docs/growth/README.md). No Neon export is added
+by these dashboards. The untracked legacy package dashboard uses the retired
+`tplane:postinstall` event and does not measure the current install flow.
+
 ## Directory layout
 
 ```
@@ -70,26 +93,27 @@ Env vars (see `.env.example` at repo root):
 {
   "slug": "developer-funnel", // local id, stable across syncs
   "posthog_id": null, // assigned on first sync; do not edit
-  "name": "GTM · Developer funnel",
-  "description": "Pageview → install → cockpit activation.",
-  "tags": ["gtm", "developer-track"],
+  "name": "Growth · Acquisition and demo engagement",
+  "description": "Independent acquisition and demo signals; lifecycle outcomes live in Neon.",
+  "tags": ["gtm", "growth", "acquisition"],
   "tiles": [
     { "insight": "pageviews-by-landing" },
-    { "insight": "six-signal-activation-funnel" }
+    { "insight": "growth-install-intent" }
   ]
 }
 ```
 
 ```jsonc
-// tools/posthog/insights/six-signal-activation-funnel.json
+// Example trend definition
 {
-  "slug": "six-signal-activation-funnel",
+  "slug": "install-command-clicks",
   "posthog_id": null,
-  "kind": "funnel",
-  "window_minutes": 30,
-  "steps": [
-    { "event": "cockpit:install_command_copied" },
-    { "event": "cockpit:transport_connected" }
+  "name": "Install command copy attempts",
+  "kind": "trends",
+  "interval": "day",
+  "events": [
+    { "event": "marketing:cta_click", "math": "total",
+      "properties": [{ "key": "cta_id", "value": "hero_install" }] }
   ]
 }
 ```
@@ -102,15 +126,23 @@ Event names must match [`docs/gtm/taxonomy.md`](../../docs/gtm/taxonomy.md). The
 
 - `taxonomy.spec.ts` and `telemetry-contract.spec.ts` guard committed dashboard JSON against undocumented events, unsupported breakdowns, unsupported filters, runtime dashboard coverage drift, and forbidden sensitive runtime fields.
 - `npm run posthog:quality -- --days 7 --limit-per-event 25` samples recent live PostHog events and validates observed payloads against the same contract. It exits non-zero for missing required properties or forbidden sensitive properties, and prints warnings for non-contract fields.
-- `npm run posthog:quality -- --days 7 --limit-per-event 100 --require-critical-coverage` also requires recent samples for critical install and runtime events. The scheduled `PostHog telemetry quality` workflow runs this thresholded check daily and supports manual dispatch.
-- The live workflow requires Actions secrets named `POSTHOG_PERSONAL_API_KEY` and `POSTHOG_PROJECT_ID`.
+- `npm run posthog:quality -- --days 7 --limit-per-event 100 --require-critical-coverage` also requires recent samples for critical browser and runtime events. The scheduled `PostHog telemetry quality` workflow runs this thresholded seven-day check daily and supports manual dispatch.
+- The live workflow requires Actions secrets named `POSTHOG_PERSONAL_API_KEY_READONLY` and `POSTHOG_PROJECT_ID`.
+- Counts are bounded samples per event name, not a traffic census. A zero count does not establish healthy collection. Use `--days 1` for a current-day comparison without replacing the seven-day audit. Historical malformed events can continue to fail that audit after a fix ships; do not delete them or infer a lifecycle outage from this alone.
+- Public SDK admission uses `libs/telemetry/src/shared/ingest.ts` at Node capture and website ingest: known events, required runtime transport/browser-chat surface, bounded primitive metadata, and a 16 KiB HTTP body limit. Unknown properties are dropped and malformed known values rejected. This validates shape, not caller identity. Legacy Node stream helpers report `unknown` when transport is omitted.
 
 ## Sync semantics
 
 - **`--plan`** — diff against PostHog, no writes. Outputs `[create] [update] [orphan]` per artifact. CI runs this on every PR that affects `posthog-tools`.
-- **`--apply`** — idempotent upsert via PATCH. Re-running with no JSON change is a no-op (PostHog dedupes).
+- **`--apply`** — upsert via PATCH. Re-running preserves object IDs but still writes managed metadata. Membership reconciliation detaches stale tiles from managed dashboards and preserves memberships in unrelated dashboards. Wiring failures make the command fail.
 - **`--apply --delete-orphans`** — explicit deletion of remote artifacts that have no local JSON. Never automatic.
-- **`posthog_id` writeback** — first successful create writes the assigned PostHog id back into the JSON. Commit the writeback as `chore(posthog): writeback ids for <slugs>`.
+- **`posthog_id` writeback** — first successful create writes the assigned PostHog id back into the JSON. Include these IDs with the finished dashboard change.
+
+The weekly report fetches details for repository-managed dashboards and separates
+additive daily trend series over the last 28 complete
+UTC days, excluding today's partial bucket. Funnels, unique counts,
+breakdowns and missing/stale/incomplete results render as `Unavailable` with a reason;
+they are never silently converted to zero. Inspect those insights in PostHog.
 
 ## Renaming an artifact
 
