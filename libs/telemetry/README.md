@@ -151,6 +151,25 @@ await captureEvent('tplane:runtime_instance_created', {
 The runtime adapter helpers exported from `@threadplane/telemetry/node` are
 convenience wrappers around the same explicit capture path.
 
+The Node capture path and Threadplane's public ingest endpoint validate the seven
+documented SDK event names at runtime. Runtime events require `transport`;
+`tplane:browser_chat_init` requires `surface`. Property bags must be plain objects.
+Only `transport`, `surface`, `requestType`, `provider`, `model`, `errorClass`,
+`angularVersion`, `durationMs`, and `sample_weight` are forwarded. Strings are
+nonempty labels of at most 128 characters without control characters; durations
+must be finite numbers from 0 to 86,400,000 milliseconds, and sampling weights
+must be finite numbers of at least 1, preserving reciprocal weights at low sample
+rates. Unknown properties are dropped; invalid known metadata
+rejects the event. Do not put user content or credentials in metadata labels.
+Public submissions are untrusted observations, not verified product activity.
+
+`captureEvent()` returns `{ sent: false, reason: 'invalid' }` for invalid inputs.
+The Node stream helpers accept an optional `transport`; valid legacy calls with
+provider/model but no transport report `unknown`, without guessing an adapter.
+Pass the transport explicitly for meaningful transport breakdowns. Generic
+`captureEvent()` calls do not receive this fallback. These checks do not change
+browser opt-in, custom sinks, or development-only Growth collection controls.
+
 Set `TPLANE_TELEMETRY_INGEST_URL` to route events to an endpoint you control.
 The default endpoint is `https://threadplane.ai/api/ingest`.
 

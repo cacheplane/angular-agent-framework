@@ -9,6 +9,8 @@ export interface RuntimeInstanceTelemetry {
 }
 
 export interface StreamTelemetry {
+  /** Runtime transport when known; legacy calls without it report `unknown`. */
+  transport?: string;
   provider: string;
   model: string;
   durationMs?: number;
@@ -25,6 +27,12 @@ async function safe(fn: () => Promise<unknown>): Promise<void> {
   try { await fn(); } catch { /* silent fail */ }
 }
 
+function streamProperties(input: StreamTelemetry): Record<string, unknown> | null {
+  if (!input || typeof input !== 'object' || Object.getPrototypeOf(input) !== Object.prototype) return null;
+  if (typeof input.provider !== 'string' || !input.provider.trim() || typeof input.model !== 'string' || !input.model.trim()) return null;
+  return { ...input, transport: input.transport === undefined ? 'unknown' : input.transport };
+}
+
 export async function captureRuntimeInstanceCreated(input: RuntimeInstanceTelemetry): Promise<void> {
   await safe(async () => {
     const { apiKey, ...rest } = input;
@@ -38,19 +46,27 @@ export async function captureRuntimeRequestCreated(input: RuntimeRequestTelemetr
 }
 
 export async function captureStreamStarted(input: StreamTelemetry): Promise<void> {
-  await safe(() => captureEvent('tplane:stream_started', { ...input }));
+  await safe(async () => {
+    const properties = streamProperties(input);
+    if (properties) await captureEvent('tplane:stream_started', properties);
+  });
 }
 
 export async function captureStreamEnded(input: StreamTelemetry): Promise<void> {
-  await safe(() => captureEvent('tplane:stream_ended', { ...input }));
+  await safe(async () => {
+    const properties = streamProperties(input);
+    if (properties) await captureEvent('tplane:stream_ended', properties);
+  });
 }
 
 export async function captureStreamErrored(
   input: StreamTelemetry & { error: Error | unknown },
 ): Promise<void> {
   await safe(async () => {
+    const properties = streamProperties(input);
+    if (!properties) return;
     const { error, ...rest } = input;
     const errorClass = error instanceof Error ? error.constructor.name : 'Unknown';
-    await captureEvent('tplane:stream_errored', { ...rest, errorClass });
+    await captureEvent('tplane:stream_errored', { ...rest, transport: properties['transport'], errorClass });
   });
 }

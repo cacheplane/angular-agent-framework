@@ -12,5 +12,6 @@
   "breakdown": "transport",
   "breakdown_limit": 10,
   "interval": "day",
-  "date_from": "-30d"
+  "date_from": "-30d",
+  "description": "Public runtime telemetry including canonical demo traffic. Independent event counts; not npm installs or activated developers. Missing/unknown transport is not a real adapter."
 }

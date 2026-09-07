@@ -6,6 +6,14 @@ import { DashboardLocal, InsightLocal, CohortLocal } from './schema.js';
 
 const TOOLS_POSTHOG = new URL('.', import.meta.url).pathname;
 
+test('InsightLocal retains descriptions, series labels and presence filters', () => {
+  const value = InsightLocal.parse({ slug: 'quality', posthog_id: null, kind: 'trends', name: 'Quality', description: 'Observed events only', events: [{ event: 'tplane:stream_started', name: 'Transport missing', properties: [{ key: 'transport', operator: 'is_not_set' }] }] });
+  assert.equal(value.description, 'Observed events only');
+  assert.equal(value.events?.[0].name, 'Transport missing');
+  assert.equal(value.events?.[0].properties?.[0].operator, 'is_not_set');
+  assert.equal(InsightLocal.safeParse({ ...value, events: [{ event: 'x', properties: [{ key: 'surface', operator: 'exact' }] }] }).success, false);
+});
+
 test('DashboardLocal accepts minimal valid input', () => {
   const result = DashboardLocal.safeParse({
     slug: 'developer-funnel',

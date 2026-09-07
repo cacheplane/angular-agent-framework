@@ -1,12 +1,12 @@
 {
   "slug": "runtime-telemetry",
   "posthog_id": 1592941,
-  "name": "GTM · Runtime telemetry",
-  "description": "Explicit Node runtime and opt-in browser telemetry for @threadplane/* adapters.",
+  "name": "Growth \u00b7 Runtime diagnostics",
+  "description": "Explicit runtime telemetry, including canonical demos. Counts are operational signals, not authenticated developer activation. Missing or unknown transport remains visible; see the Growth quick overview for malformed-event counts.",
   "tags": [
     "gtm",
-    "runtime-telemetry",
-    "phase-1"
+    "growth",
+    "runtime-telemetry"
   ],
   "tiles": [
     {

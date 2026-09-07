@@ -18,19 +18,21 @@ export const InsightLocal = z
     posthog_id: z.number().nullable(),
     kind: z.enum(['trends', 'funnel', 'retention']),
     name: z.string().min(1),
+    description: z.string().optional(),
     // trends-specific
     events: z
       .array(
         z.object({
           event: z.string(),
+          name: z.string().optional(),
           math: z.enum(['total', 'dau', 'unique_session']).optional(),
           properties: z
             .array(
               z.object({
                 key: z.string(),
-                value: z.union([z.string(), z.number(), z.boolean()]),
-                operator: z.enum(['exact', 'is_not', 'icontains']).default('exact'),
-              }),
+                value: z.union([z.string(), z.number(), z.boolean()]).optional(),
+                operator: z.enum(['exact', 'is_not', 'icontains', 'is_set', 'is_not_set']).default('exact'),
+              }).refine((property) => ['is_set', 'is_not_set'].includes(property.operator) || property.value !== undefined, 'comparison filters require a value'),
             )
             .optional(),
         }),
