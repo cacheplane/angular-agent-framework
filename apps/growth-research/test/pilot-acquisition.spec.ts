@@ -1,8 +1,7 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import { acquireCompanies } from '../src/pilot/acquisition.js';
 // Exercise the same internal capture dependency used by pilot acquisition.
-// eslint-disable-next-line @nx/enforce-module-boundaries
-import * as firecrawl from '../../lifecycle/src/enrichment/firecrawl.js';
+import * as firecrawl from '@threadplane-internal/growth-capture/firecrawl';
 
 afterEach(() => {
   vi.restoreAllMocks();

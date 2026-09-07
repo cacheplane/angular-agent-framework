@@ -57,6 +57,41 @@ export default [
     // Override or add rules here
     rules: {},
   },
+  // Growth libraries own shared server behavior, not application or publishing
+  // orchestration. Keep deployment-specific imports at the app boundary.
+  {
+    files: ['libs/growth/src/**/*.ts', 'libs/growth-capture/src/**/*.ts'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        patterns: [{
+          group: ['**/apps/**', '**/marketing/**', '@threadplane-internal/marketing-*'],
+          message: 'Shared Growth code must not depend on apps or publishing tools.',
+        }],
+      }],
+    },
+  },
+  {
+    files: ['apps/growth-research/src/**/*.ts', 'apps/growth-research/scripts/**/*.mts'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        patterns: [{
+          group: ['**/lifecycle/**', '**/website/**'],
+          message: 'Research must consume shared libraries rather than another app implementation.',
+        }],
+      }],
+    },
+  },
+  {
+    files: ['marketing/**/*.ts', 'marketing/**/*.tsx'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        patterns: [{
+          group: ['**/apps/**', '**/libs/growth/**', '@threadplane-internal/growth'],
+          message: 'Publishing tools must not access contact or lifecycle internals.',
+        }],
+      }],
+    },
+  },
   // Inline-style guard — apps/website migrated off static inline styles
   // (docs/superpowers/specs/2026-08-29-inline-style-substrate-migration-design.md,
   // batches #848–#857). Flags identifier-keyed members of a style object

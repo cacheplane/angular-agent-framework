@@ -6,8 +6,8 @@ import {
   drainPilotOperations,
   PilotStop,
   withPilotContext,
-} from '../pilot/context.js';
-import { validateCandidate } from '../pilot/validation.js';
+} from '../company/context.js';
+import { validateCandidate } from '../company/validation.js';
 import type { ClaimStore } from './claims.js';
 import {
   CompanyResultSchema,

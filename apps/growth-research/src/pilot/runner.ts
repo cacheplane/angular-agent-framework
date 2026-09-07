@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { validateCorpus, corpusHash } from './corpus.js';
 import type { runAgent } from './agent-runner.js';
 import { writeRecord, createReviewPacket } from './reports.js';
-import type { PilotCase } from './contracts.js';
+import type { PilotCase } from '../company/contracts.js';
 
 type Options = {
   root: string;

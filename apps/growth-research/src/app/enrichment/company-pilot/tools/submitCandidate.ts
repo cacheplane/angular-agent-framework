@@ -1,6 +1,6 @@
-import { submitCandidate, getPilotContext } from '../../../../pilot/context.js';
-import { invalidCitations } from '../../../../pilot/validation.js';
-import { CandidateSchema } from '../../../../pilot/contracts.js';
+import { submitCandidate, getPilotContext } from '../../../../company/context.js';
+import { invalidCitations } from '../../../../company/validation.js';
+import { CandidateSchema } from '../../../../company/contracts.js';
 
 // Dawn's supported authored schema export preserves nullable fields and the
 // exact same bounds used by deterministic submission validation.

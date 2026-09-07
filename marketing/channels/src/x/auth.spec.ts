@@ -62,7 +62,7 @@ describe('XAuth.refresh', () => {
     expect(auth.refreshToken).toBe('refresh-2');
   });
 
-  it('prints the new refresh token to stderr after a successful refresh', async () => {
+  it('reports successful refresh without printing credentials', async () => {
     server.use(
       mswHttp.post('https://api.x.com/2/oauth2/token', () =>
         HttpResponse.json({
@@ -78,7 +78,10 @@ describe('XAuth.refresh', () => {
     await auth.refresh();
     expect(spy).toHaveBeenCalled();
     const written = spy.mock.calls.map((c) => String(c[0])).join('');
-    expect(written).toContain('refresh-2');
+    expect(written).toContain('X refresh successful');
+    for (const secret of [...Object.values(env).slice(0, 4), 'access-2', 'refresh-2']) {
+      expect(written).not.toContain(secret);
+    }
     spy.mockRestore();
   });
 

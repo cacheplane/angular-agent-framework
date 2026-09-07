@@ -1,6 +1,6 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import tool from '../src/app/enrichment/company-pilot/tools/submitCandidate.js';
-import { createPilotContext, withPilotContext } from '../src/pilot/context.js';
+import { createPilotContext, withPilotContext } from '../src/company/context.js';
 import { syntheticCorpus } from '../src/pilot/fixtures.js';
 afterEach(() => vi.unstubAllEnvs());
 it('locates bad citations for repair while retaining the unchanged validation contract', async () => {

@@ -3,7 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "marketing/assets/src",
   "projectType": "library",
-  "tags": ["scope:marketing", "type:lib"],
+  "tags": ["scope:marketing", "scope:scripts-tests", "type:lib"],
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",

@@ -1,5 +1,5 @@
 //
-// @threadplane/marketing-channels — public API.
+// @threadplane-internal/marketing-channels — public API.
 // See docs/superpowers/specs/marketing/2026-05-17-channel-adapters-design.md
 
 export type {

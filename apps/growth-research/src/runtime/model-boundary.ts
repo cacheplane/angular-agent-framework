@@ -8,7 +8,7 @@ import {
   recordRejectedSubmission,
   trackPilotOperation,
   type PilotEvent,
-} from '../pilot/context.js';
+} from '../company/context.js';
 
 export const providerLimits = {
   maxTokens: 1024,

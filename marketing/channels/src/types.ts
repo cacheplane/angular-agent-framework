@@ -1,5 +1,5 @@
 //
-// @threadplane/marketing-channels — public types.
+// @threadplane-internal/marketing-channels — public types.
 
 export type ChannelId = 'x' | 'linkedin' | 'devto' | 'reddit';
 

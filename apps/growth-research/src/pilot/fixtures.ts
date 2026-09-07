@@ -1,5 +1,5 @@
 import { evidenceHash } from './corpus.js';
-import type { Corpus, PilotCase } from './contracts.js';
+import type { Corpus, PilotCase } from '../company/contracts.js';
 function fixture(
   id: string,
   facts: string[],

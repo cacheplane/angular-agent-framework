@@ -11,8 +11,6 @@ marketing/cowork/
 ├── README.md           # This file.
 ├── gtm/
 │   └── SKILL.md        # The GTM Cowork skill.
-├── marketing/
-│   └── SKILL.md        # The marketing pipeline Cowork skill (stub; body in sub-spec 4).
 ├── inbox/              # Drafts awaiting review.
 ├── outbox/             # Approved + posted drafts.
 └── archive/            # Rejected or expired drafts.
@@ -66,8 +64,9 @@ Edit `marketing/cowork/gtm/SKILL.md` in this repo. If you symlinked, the change 
 
 ## See also
 
-- [gtm.md](../gtm.md) — durable strategy
-- [docs/gtm/](../docs/gtm/) — operational docs (ICP, messaging, taxonomy)
-- [docs/superpowers/specs/gtm/](../docs/superpowers/specs/gtm/) — per-workstream design specs
-- [tools/posthog/README.md](../tools/posthog/README.md) — dashboards-as-code conventions
-- [libs/telemetry/README.md](../libs/telemetry/README.md) — telemetry trust contract
+- [Growth architecture and operations](../../docs/growth/README.md) — contacts, authorization, publishing, and measurement ownership
+- [gtm.md](../../gtm.md) — durable strategy
+- [docs/gtm/](../../docs/gtm/) — operational docs (ICP, messaging, taxonomy)
+- [docs/superpowers/specs/gtm/](../../docs/superpowers/specs/gtm/) — per-workstream design specs
+- [tools/posthog/README.md](../../tools/posthog/README.md) — dashboards-as-code conventions
+- [libs/telemetry/README.md](../../libs/telemetry/README.md) — telemetry trust contract

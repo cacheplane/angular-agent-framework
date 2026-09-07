@@ -1,0 +1,12 @@
+{
+  "name": "growth-capture",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/growth-capture/src",
+  "projectType": "library",
+  "tags": ["scope:internal", "scope:growth-lifecycle", "runtime:node24"],
+  "targets": {
+    "test": { "executor": "@nx/vitest:test", "options": { "configFile": "libs/growth-capture/vitest.config.ts" } },
+    "check": { "executor": "nx:run-commands", "options": { "command": "node node_modules/typescript/bin/tsc --noEmit -p libs/growth-capture/tsconfig.json" } },
+    "lint": { "executor": "@nx/eslint:lint" }
+  }
+}

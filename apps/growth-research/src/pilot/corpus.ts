@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
-import { CorpusSchema, type Corpus, type PilotCase } from './contracts.js';
-export { sourceIds } from './contracts.js';
+import { CorpusSchema, type Corpus, type PilotCase } from '../company/contracts.js';
+export { sourceIds } from '../company/contracts.js';
 export const evidenceHash = (page: { facts: string[]; snippets: string[] }) =>
   createHash('sha256')
     .update(JSON.stringify({ facts: page.facts, snippets: page.snippets }))

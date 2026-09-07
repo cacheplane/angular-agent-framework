@@ -2,7 +2,7 @@ import { createServer, type RequestListener, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { afterEach, expect, it, vi } from 'vitest';
 import { BoundedChatOpenAI } from '../src/runtime/model-boundary.js';
-import { createPilotContext, withPilotContext } from '../src/pilot/context.js';
+import { createPilotContext, withPilotContext } from '../src/company/context.js';
 import { syntheticCorpus } from '../src/pilot/fixtures.js';
 
 let server: Server | undefined;

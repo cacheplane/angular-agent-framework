@@ -12,15 +12,17 @@ beforeEach(() => {
   origCwd = process.cwd();
   cwd = fs.mkdtempSync(path.join(os.tmpdir(), 'dry-run-test-'));
   process.chdir(cwd);
+  vi.stubEnv('MARKETING_DRY_RUN_DIR', '');
 });
 
 afterEach(() => {
   process.chdir(origCwd);
+  vi.unstubAllEnvs();
   fs.rmSync(cwd, { recursive: true, force: true });
 });
 
 describe('writeDryRunResult', () => {
-  it('writes a JSON file under marketing/cowork/outbox/dry-runs and returns a synthetic PostResult', async () => {
+  it('writes a JSON file under tmp/marketing/dry-runs and returns a synthetic PostResult', async () => {
     const draft: Draft = { channel: 'x', text: 'hello' };
     const result = await writeDryRunResult(draft);
 
@@ -31,9 +33,8 @@ describe('writeDryRunResult', () => {
 
     const outFile = path.join(
       cwd,
+      'tmp',
       'marketing',
-      'cowork',
-      'outbox',
       'dry-runs',
       `${result.postId}.json`,
     );
@@ -52,14 +53,23 @@ describe('writeDryRunResult', () => {
     const result = await writeDryRunResult(draft);
     const outFile = path.join(
       cwd,
+      'tmp',
       'marketing',
-      'cowork',
-      'outbox',
       'dry-runs',
       `${result.postId}.json`,
     );
     const parsed = JSON.parse(fs.readFileSync(outFile, 'utf8'));
     expect(parsed.draft.media[0].png).toBe('aGVsbG8='); // base64('hello')
     expect(parsed.draft.media[0].alt).toBe('h');
+  });
+
+  it.each(['operator-output', 'absolute'])('supports a configured %s directory', async (directory) => {
+    const configured = directory === 'absolute' ? path.join(cwd, 'absolute-output') : directory;
+    vi.stubEnv('MARKETING_DRY_RUN_DIR', configured);
+    const draft: Draft = { channel: 'devto', text: 'hello' };
+    const result = await writeDryRunResult(draft);
+    const output = path.resolve(cwd, configured, `${result.postId}.json`);
+    expect(JSON.parse(fs.readFileSync(output, 'utf8')).draft).toEqual(draft);
+    expect(fs.existsSync(path.join(cwd, 'tmp'))).toBe(false);
   });
 });

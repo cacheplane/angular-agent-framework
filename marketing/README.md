@@ -1,29 +1,23 @@
 # marketing/
 
-Agentic marketing pipeline. Five composable subsystems that turn source content (blog posts, releases, prompts, schedules) into multi-channel posts (X, LinkedIn, Dev.to, Reddit), with Cowork as the human approval surface and PostHog as the feedback loop.
+Internal publishing tools and operator materials for Threadplane. Growth owns contacts, authorization, observations, and lifecycle outcomes; these tools render assets and publish operator-approved content. See the [Growth architecture and operations guide](../docs/growth/README.md) for ownership and commands.
 
 ## Structure
 
 ```
 marketing/
-├── assets/      # @threadplane/marketing-assets    — branded image rendering
-├── channels/    # @threadplane/marketing-channels  — X, LinkedIn, Dev.to, Reddit adapters
-├── agent/       # @threadplane/marketing-agent     — LangGraph drafting agent
-├── cowork/      # Claude skills (/gtm, /marketing) + inbox/outbox/archive
-└── metrics/     # @threadplane/marketing-metrics   — feedback ingestion → PostHog
+├── assets/      # @threadplane-internal/marketing-assets    — branded image rendering
+├── channels/    # @threadplane-internal/marketing-channels  — X and Dev.to adapters
+└── cowork/      # GTM operator skill and retained campaign drafts/assets
 ```
 
-All four packages are internal (`"private": true`). They are NOT published to npm.
+Both packages are internal (`"private": true`) and are not published to npm. There is no autonomous drafting agent, feedback worker, or campaign scheduler in this directory. LinkedIn and Reddit drafts remain available for manual publishing.
 
-## Specs
+## Operator workflow
 
-- Meta (this umbrella): `docs/superpowers/specs/marketing/2026-05-17-marketing-meta-design.md`
-- Sub-specs (when written):
-  - `brand-assets` — `docs/superpowers/specs/marketing/<date>-brand-assets-design.md`
-  - `channel-adapters` — `docs/superpowers/specs/marketing/<date>-channel-adapters-design.md`
-  - `content-agent` — `docs/superpowers/specs/marketing/<date>-content-agent-design.md`
-  - `cowork-loop` — `docs/superpowers/specs/marketing/<date>-cowork-loop-design.md`
-  - `metrics-ingest` — `docs/superpowers/specs/marketing/<date>-metrics-ingest-design.md`
+Use [assets](assets/README.md) to render cards and [channels](channels/README.md) to publish approved drafts. Set `DRY_RUN=1` to write simulated posts to `tmp/marketing/dry-runs/` relative to the working directory. Set `MARKETING_DRY_RUN_DIR` to choose a different relative or absolute directory.
+
+The [GTM skill](cowork/README.md) documents reporting and triage. PostHog measurement lives in `tools/posthog/`; Growth lifecycle state remains in Growth. Historical marketing specs under `docs/superpowers/` describe earlier proposals, not current runtime components.
 
 ## Voice + messaging source-of-truth
 
@@ -32,7 +26,3 @@ All four packages are internal (`"private": true`). They are NOT published to np
 - `docs/gtm/icp.md` — audience
 
 All in this repo. No machine-local paths in checked-in code.
-
-## Status
-
-This directory was scaffolded by the marketing-meta spec. Subsystems are skeletons. Implementation lands as each sub-spec ships.

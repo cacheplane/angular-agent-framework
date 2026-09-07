@@ -1,4 +1,4 @@
-import type { PilotEvent } from '../pilot/context.js';
+import type { PilotEvent } from '../company/context.js';
 /** Deliberately no prompt, page, candidate, identity, error object or credentials. */
 export interface CompanyTelemetry {
   attemptId: string;

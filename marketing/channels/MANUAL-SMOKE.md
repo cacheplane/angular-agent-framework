@@ -7,15 +7,15 @@ Run after the bootstrapper has populated `.env`.
 ## 1. Dry-run (no API calls)
 
 ```bash
-DRY_RUN=1 pnpm marketing:channels:x:smoke
+DRY_RUN=1 npm run marketing:channels:x:smoke
 ```
 
-Expect: a JSON `PostResult` printed with `postId` prefixed `dry-` and a file under `marketing/cowork/outbox/dry-runs/`.
+Expect: a JSON `PostResult` printed with `postId` prefixed `dry-` and a file under `tmp/marketing/dry-runs/`.
 
 ## 2. Live single tweet
 
 ```bash
-pnpm marketing:channels:x:smoke
+npm run marketing:channels:x:smoke
 ```
 
 Expect: a real `https://x.com/<handle>/status/<id>` URL. Open it; confirm the post is on the timeline. **Then delete the post from the X UI.**
@@ -23,7 +23,7 @@ Expect: a real `https://x.com/<handle>/status/<id>` URL. Open it; confirm the po
 ## 3. Live tweet with media
 
 ```bash
-SMOKE_MEDIA=1 pnpm marketing:channels:x:smoke
+SMOKE_MEDIA=1 npm run marketing:channels:x:smoke
 ```
 
 Expect: the post has a 1×1 transparent pixel attached with the alt text. Delete after verifying.
@@ -31,7 +31,7 @@ Expect: the post has a 1×1 transparent pixel attached with the alt text. Delete
 ## 4. Live thread
 
 ```bash
-SMOKE_THREAD=1 pnpm marketing:channels:x:smoke
+SMOKE_THREAD=1 npm run marketing:channels:x:smoke
 ```
 
 Expect: two tweets posted; the second is a reply to the first. Delete both.
@@ -47,15 +47,15 @@ Run after `DEVTO_API_KEY` is in `.env`.
 ## 1. Dry-run (no API calls)
 
 ```bash
-DRY_RUN=1 pnpm marketing:channels:devto:smoke
+DRY_RUN=1 npm run marketing:channels:devto:smoke
 ```
 
-Expect: a JSON `PostResult` with `postId` prefixed `dry-`, `channel: "devto"`, and a file under `marketing/cowork/outbox/dry-runs/`.
+Expect: a JSON `PostResult` with `postId` prefixed `dry-`, `channel: "devto"`, and a file under `tmp/marketing/dry-runs/`.
 
 ## 2. Live article
 
 ```bash
-pnpm marketing:channels:devto:smoke
+npm run marketing:channels:devto:smoke
 ```
 
 Expect: a real `https://dev.to/<handle>/<slug>` URL. Open it; confirm the article is published. The script also fetches metrics after a 5-second pause — expect a `Metrics:` block with near-zero counts. **Then delete the article from Dev.to** (Dashboard → ⋯ → Delete).

@@ -19,7 +19,7 @@ import {
   type GrowthAppJobHandler,
   type SqlExecutor,
 } from '../growth.js';
-import { createCompanyCapture } from './company-capture.js';
+import { createCompanyCapture } from '@threadplane-internal/growth-capture';
 import {
   createDawnResearchClient,
   type DawnResearchClient,

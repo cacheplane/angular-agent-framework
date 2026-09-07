@@ -50,7 +50,7 @@ describe('standalone LangSmith packaging', () => {
     const config = JSON.parse(await readFile(path, 'utf8'));
     config.graphs['/enrichment/company-pilot#agent'] = './.dawn/build/enrichment-company-pilot.ts:graph';
     await writeFile(path, JSON.stringify(config));
-    for (const file of ['.dawn/build/enrichment-company-pilot.ts', 'src/app/enrichment/company-pilot/index.ts', 'src/production/entry.ts', 'src/pilot/baseline.ts']) {
+    for (const file of ['.dawn/build/enrichment-company-pilot.ts', 'src/app/enrichment/company-pilot/index.ts', 'src/production/entry.ts', 'src/company/context.ts', 'src/company/contracts.ts', 'src/company/validation.ts', 'src/pilot/baseline.ts', 'src/pilot/acquisition.ts']) {
       await mkdir(dirname(join(root, file)), { recursive: true });
       await writeFile(join(root, file), 'export const privatePilot = true;');
     }
@@ -59,11 +59,27 @@ describe('standalone LangSmith packaging', () => {
     expect(await readdir(join(output, 'src/app/enrichment'))).toEqual(['company-pilot', 'research']);
     expect(JSON.parse(await readFile(join(output, 'langgraph.json'), 'utf8')).graphs).toEqual({ growth_research: graphEntry, growth_company: './src/production/entry.ts:graph' });
     await expect(readFile(join(output, 'src/pilot/baseline.ts'))).rejects.toThrow();
+    await expect(readFile(join(output, 'src/pilot/acquisition.ts'))).rejects.toThrow();
+    expect(await readdir(join(output, 'src/company'))).toEqual(['context.ts', 'contracts.ts', 'validation.ts']);
+    expect(JSON.parse(await readFile(join(output, 'package.json'), 'utf8'))).not.toHaveProperty('devDependencies');
   });
   it('normalizes Node 22 to 24 and clears environment file configuration', async () => {
     const output = await stageLangSmith(await fixture());
     const config = JSON.parse(await readFile(join(output, 'langgraph.json'), 'utf8'));
     expect(config).toEqual({ graphs: { [publicGraphId]: graphEntry }, env: {}, node_version: '24', api_version: '0.13.4', dependencies: ['.'] });
+  });
+
+  it('omits the local capture development dependency from the standalone manifest', async () => {
+    const root = await fixture();
+    const path = join(root, 'package.json');
+    const manifest = JSON.parse(await readFile(path, 'utf8'));
+    manifest.devDependencies = { '@threadplane-internal/growth-capture': '0.0.0' };
+    await writeFile(path, JSON.stringify(manifest));
+    const output = await stageLangSmith(root);
+    expect(JSON.parse(await readFile(join(output, 'package.json'), 'utf8'))).toEqual({
+      name: 'fixture', version: '0.0.0', private: true, type: 'module',
+      engines: { node: '24' }, dependencies: { '@dawn-ai/core': '0.8.26' },
+    });
   });
 
   it('accepts the explicit pinned Agent Server API version', async () => {

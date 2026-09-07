@@ -1,6 +1,6 @@
 ---
 name: gtm
-description: Threadplane GTM operator. Use to run weekly PostHog snapshots, draft the Notes section, triage inbound leads against the qualified-lead definition, scaffold new workstream specs, and answer "where are we?" questions by reading gtm.md plus the latest report. Invoke any time GTM motion work is happening or the weekly cadence fires.
+description: Threadplane GTM operator. Use to run weekly PostHog snapshots, draft the Notes section, triage inbound leads using Growth evidence and authorization, scaffold new workstream specs, and answer "where are we?" questions by reading gtm.md plus the latest report. Invoke any time GTM motion work is happening or the weekly cadence fires.
 disable-model-invocation: false
 allowed-tools: Read, Edit, Write, Bash(npm run posthog:*), Bash(npm run gtm:*), Bash(gh pr *), Bash(git *), Glob, Grep
 ---
@@ -20,6 +20,8 @@ You are the GTM operator for Threadplane. You own the operational layer of the G
 - **Telemetry library:** `libs/telemetry/`
 
 Read `gtm.md` first on any invocation. It is the source of truth for category, ICP, phases, exit gates, and non-goals.
+
+Read `docs/growth/README.md` for current architecture, lifecycle authorization, and operator commands. Growth owns contacts and lifecycle outcomes; PostHog is a measurement surface.
 
 ## When invoked, identify the intent
 
@@ -49,21 +51,17 @@ If a previous weekly PR is still unmerged, **comment on the existing PR** with t
 
 ## Lead triage procedure
 
-The qualified-lead v1 definition (canonical: `docs/gtm/icp.md` §Enterprise track):
-
-- Non-personal `email_domain` (rules out gmail/outlook/yahoo/protonmail/icloud/aol/yandex/hotmail/live).
-- Non-empty `company` field.
-- `track=enterprise` (the surface they came from).
+Use the current Growth records and evidence described in `docs/growth/README.md`. The historical qualified-lead rule (company plus non-personal email domain) is not an authorization decision, and the legacy `marketing:lead_qualified` event is not emitted by the website's current Growth form flow.
 
 For each inbound lead provided:
 
-1. Verify the three criteria. If any fail, the lead is **unqualified for v1** (still respond personally, but don't count it).
-2. For qualified leads: confirm `marketing:lead_qualified` fired in PostHog (server side). If it didn't, flag the enrichment pipeline as broken.
+1. Review the provided contact's Growth observations and company/research evidence against `docs/gtm/icp.md`. State missing evidence explicitly.
+2. Check Growth authorization and suppression state before proposing outreach. Company fit and analytics events do not grant consent or override a stop. Use Growth outcomes to verify lifecycle activity; a missing legacy PostHog event does not establish a pipeline failure.
 3. Suggest a personal reply that:
    - Names what they're building back to them (extracted from the body).
    - Offers one concrete next step: code sketch, 15-minute call, or a documented pattern that fits.
    - Avoids calendar-first responses (the contract says "code, not a calendar invite").
-4. Record the lead in `docs/gtm/reports/<date>-weekly.md` Notes if it's the first qualified lead from a new `source_page`.
+4. Record an aggregate observation in `docs/gtm/reports/<date>-weekly.md` Notes when meaningful. Keep contact identity and raw lead text in Growth; draft replies for human review and do not send them without authorization.
 
 ## New workstream procedure
 
@@ -108,10 +106,12 @@ Answer with a tight status: what phase, what's next, what's blocked.
 ## Reference
 
 - [../README.md](../README.md) — install instructions
-- [../../gtm.md](../../gtm.md) — strategy
-- [../../docs/gtm/icp.md](../../docs/gtm/icp.md) — ICP
-- [../../docs/gtm/messaging.md](../../docs/gtm/messaging.md) — positioning, hero, comparison framing
-- [../../docs/gtm/taxonomy.md](../../docs/gtm/taxonomy.md) — events, properties, CTA ids, redaction rules
-- [../../tools/posthog/README.md](../../tools/posthog/README.md) — dashboards-as-code
-- [../../libs/telemetry/README.md](../../libs/telemetry/README.md) — telemetry trust contract
-- [../../docs/superpowers/specs/gtm/2026-05-13-gtm-meta-design.md](../../docs/superpowers/specs/gtm/2026-05-13-gtm-meta-design.md) — the meta-spec this skill operates against
+- [../../../gtm.md](../../../gtm.md) — strategy
+- [../../../docs/gtm/icp.md](../../../docs/gtm/icp.md) — ICP
+- [../../../docs/gtm/messaging.md](../../../docs/gtm/messaging.md) — positioning, hero, comparison framing
+- [../../../docs/gtm/taxonomy.md](../../../docs/gtm/taxonomy.md) — events, properties, CTA ids, redaction rules
+- [../../../tools/posthog/README.md](../../../tools/posthog/README.md) — dashboards-as-code
+- [../../../libs/telemetry/README.md](../../../libs/telemetry/README.md) — telemetry trust contract
+- [../../../docs/superpowers/specs/gtm/2026-05-13-gtm-meta-design.md](../../../docs/superpowers/specs/gtm/2026-05-13-gtm-meta-design.md) — the meta-spec this skill operates against
+
+- [Growth architecture and operations](../../../docs/growth/README.md) — current ownership and operator commands

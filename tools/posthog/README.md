@@ -1,5 +1,7 @@
 # PostHog dashboards-as-code
 
+Part of [Growth architecture and operations](../../docs/growth/README.md).
+
 > Spec: [analytics-foundation-1a-dashboards-as-code](../../docs/superpowers/specs/gtm/2026-05-14-analytics-foundation-1a-dashboards-as-code-design.md).
 
 PostHog is configured via a Public-API-driven sync script — not through the PostHog UI. Every dashboard, insight, and cohort the GTM motion depends on is a JSON file in this directory. The sync tool reconciles JSON ↔ PostHog. Git is the source of truth.

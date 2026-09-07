@@ -1,14 +1,14 @@
 import { describe, expect, it, vi, afterEach } from 'vitest';
 import { syntheticCorpus } from '../src/pilot/fixtures.js';
 import { validateCorpus, corpusHash } from '../src/pilot/corpus.js';
-import { validateCandidate } from '../src/pilot/validation.js';
+import { validateCandidate } from '../src/company/validation.js';
 import {
   createPilotContext,
   withPilotContext,
   readEvidence,
   submitCandidate,
   countModelRequest,
-} from '../src/pilot/context.js';
+} from '../src/company/context.js';
 const candidate = {
   profile: { name: 'Atlas Synthetic', description: null, industry: null },
   unknowns: ['description', 'industry'],

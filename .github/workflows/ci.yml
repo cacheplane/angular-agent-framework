@@ -113,6 +113,7 @@ jobs:
       # node:test suites in scripts/ run in ci-scope and library instead —
       # see scripts/vite.config.mts for the split.
       - run: npx nx test scripts
+      - run: npx nx run-many -t lint test --projects=marketing-assets,marketing-channels --parallel=2
 
   library:
     name: Library — lint / test / build
@@ -267,6 +268,9 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx nx lint lifecycle
+      - run: npx nx lint growth-capture
+      - run: npx nx test growth-capture
+      - run: npx nx run growth-capture:check
       - run: npx nx test lifecycle
       - run: npx nx run lifecycle:check
       - run: npx nx build lifecycle

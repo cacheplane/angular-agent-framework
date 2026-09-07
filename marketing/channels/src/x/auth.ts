@@ -56,13 +56,13 @@ export class XAuth {
       });
     } catch (err) {
       throw new Error(
-        `X access token expired and refresh failed — re-run \`pnpm marketing:channels:x:auth\`. Underlying: ${(err as Error).message}`,
+        `X access token expired and refresh failed — re-run \`npm run marketing:channels:x:auth\`. Underlying: ${(err as Error).message}`,
       );
     }
     this.accessToken = tokens.access_token;
     this.refreshToken = tokens.refresh_token;
     process.stderr.write(
-      `\n✓ X refresh successful. Update your .env to keep the new refresh token across restarts:\n  X_ACCESS_TOKEN=${tokens.access_token}\n  X_REFRESH_TOKEN=${tokens.refresh_token}\n\n`,
+      '\n✓ X refresh successful. Rotated tokens are held in memory only; re-run npm run marketing:channels:x:auth if authentication fails after restart.\n',
     );
   }
 }
