@@ -1,31 +1,68 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" width="1200" height="300">
-  <rect width="1200" height="300" fill="#080B14"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" width="1200" height="300" role="img" aria-label="Threadplane — the open-source thread-plane for agents">
+  <!--
+    README banner. Kept in step with the social card (apps/website/src/app/card):
+    the same tinted ground, rail rule, mono eyebrow in accent navy, serif
+    wordmark and paper-plane mark.
 
-  <!-- Decorative left rule -->
-  <line x1="60" y1="80" x2="60" y2="220" stroke="#6C8EFF" stroke-width="1" stroke-opacity="0.35"/>
+    Fonts are generic stacks, not the site's webfonts: this file is served as a
+    bare image to GitHub, where no stylesheet of ours ever loads. Georgia
+    stands in for Garamond and is present on every mainstream platform.
+  -->
+  <rect width="1200" height="300" fill="#fbfbfb"/>
+  <rect x="0" y="0" width="1200" height="4" fill="#004090"/>
 
-  <!-- Wordmark -->
+  <!-- Rail rule, as on the card and every section header. -->
+  <rect x="72" y="86" width="92" height="3" fill="#1c1c1c"/>
+
   <text
-    x="88"
-    y="182"
-    font-family="Georgia, 'Times New Roman', serif"
-    font-size="88"
+    x="72"
+    y="122"
+    font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
+    font-size="15"
     font-weight="700"
-    letter-spacing="-2"
-    fill="#EEF1FF"
-  >threadplane</text>
+    letter-spacing="1.8"
+    fill="#004090"
+  >OPEN SOURCE · ANGULAR</text>
 
-  <!-- Tagline -->
+  <!-- Wordmark: the paper plane at the same optical weight as the card's. -->
+  <g transform="translate(72 150)">
+    <path d="M2 22.5 38 4 26 38l-7.7-11L23 14l-10.7 10.3z" fill="#1c1c1c"/>
+    <text
+      x="54"
+      y="34"
+      font-family="Georgia, 'Times New Roman', serif"
+      font-size="46"
+      font-weight="700"
+      letter-spacing="-0.8"
+      fill="#1c1c1c"
+    >Threadplane</text>
+  </g>
+
   <text
-    x="90"
-    y="228"
+    x="72"
+    y="232"
     font-family="Georgia, 'Times New Roman', serif"
-    font-size="18"
-    font-style="italic"
-    fill="#8B96C8"
-    opacity="0.9"
-  >Threadplane — Production-ready agent UI</text>
+    font-size="21"
+    fill="#464646"
+  >The open-source thread-plane for agents.</text>
 
-  <!-- Bottom horizontal rule -->
-  <line x1="60" y1="252" x2="1140" y2="252" stroke="#6C8EFF" stroke-width="1" stroke-opacity="0.18"/>
+  <!--
+    Right-aligned, on the tagline's baseline, so the band reads as a letterhead
+    rather than a left-weighted block. Deliberately carries no Angular version
+    range: this file is a static asset with no test watching it, and the
+    supported majors move (angular-support-copy.spec.ts guards the places that
+    do state them).
+  -->
+  <text
+    x="1128"
+    y="232"
+    text-anchor="end"
+    font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
+    font-size="15"
+    font-weight="700"
+    letter-spacing="1.2"
+    fill="#737373"
+  >MIT · LANGGRAPH &amp; AG-UI</text>
+
+  <line x1="72" y1="258" x2="1128" y2="258" stroke="#e5e5e5" stroke-width="1"/>
 </svg>
