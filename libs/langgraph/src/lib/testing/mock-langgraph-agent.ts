@@ -16,6 +16,7 @@ import type {
   MockAgent,
   MockAgentOptions,
   AgentError,
+  AgentErrorKind,
   AgentInterrupt,
   AgentCheckpoint,
   AgentStatus,
@@ -172,7 +173,7 @@ export function mockLangGraphAgent(
     getToolCalls: (_msg: CoreAIMessage): ToolCallWithResult[] => [],
     lifecycle: {
       streamStartedAt:     signal<number | null>(null),
-      streamErrorAt:       signal<{ at: number; classification: string } | null>(null),
+      streamErrorAt:       signal<{ at: number; kind: AgentErrorKind | string } | null>(null),
       interruptReceivedAt: signal<number | null>(null),
       interruptResolvedAt: signal<number | null>(null),
       threadCreatedAt:     signal<number | null>(null),
