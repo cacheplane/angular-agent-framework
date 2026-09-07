@@ -17,7 +17,7 @@ import {
   type Signal,
   type Type,
 } from '@angular/core';
-import { NgComponentOutlet } from '@angular/common';
+import { DOCUMENT, NgComponentOutlet } from '@angular/common';
 // eslint-disable-next-line @nx/enforce-module-boundaries -- Keep the postinstall module external through ng-packagr.
 import { installationToken } from '#development-install';
 declare const ngDevMode: boolean;
@@ -28,7 +28,13 @@ import {
   resolveBindings,
   resolveElementProps,
 } from '@json-render/core';
-import type { Spec, UIElement } from '@json-render/core';
+import type {
+  ActionConfirm,
+  ActionOnError,
+  ActionOnSuccess,
+  Spec,
+  UIElement,
+} from '@json-render/core';
 
 import { RENDER_CONTEXT } from './contexts/render-context';
 import { RENDER_HOST, type RenderHost } from './contexts/render-host';
@@ -70,6 +76,28 @@ function filterInputsForClass(
   return out;
 }
 
+/** Anything carrying a callable `preventDefault` — a DOM `Event`, or a wrapper
+ * a view component chose to hand to `emit`. */
+function isEventLike(value: unknown): value is { preventDefault: () => void } {
+  return (
+    value != null &&
+    typeof value === 'object' &&
+    typeof (value as { preventDefault?: unknown }).preventDefault === 'function'
+  );
+}
+
+/** Honors `ActionBinding.preventDefault`. The payload a component passes to
+ * `emit(event, payload)` is typed as a record, but in practice it is either
+ * the DOM event itself or a record carrying it under `event`. */
+function preventDefaultOn(payload: unknown): void {
+  if (isEventLike(payload)) {
+    payload.preventDefault();
+    return;
+  }
+  const nested = (payload as Record<string, unknown> | undefined)?.['event'];
+  if (isEventLike(nested)) nested.preventDefault();
+}
+
 /**
  * Recursive element renderer.
  *
@@ -100,9 +128,11 @@ function filterInputsForClass(
       }
     } @else {
       @for (repeatInjector of repeatInjectors(); track $index) {
-        <ng-container
-          *ngComponentOutlet="mountClass(); inputs: filteredRepeatInputs()[$index]; injector: repeatInjector"
-        />
+        @if (repeatVisible()[$index]) {
+          <ng-container
+            *ngComponentOutlet="mountClass(); inputs: filteredRepeatInputs()[$index]; injector: repeatInjector"
+          />
+        }
       }
     }
   `,
@@ -115,6 +145,7 @@ export class RenderElementComponent implements OnInit {
   private readonly repeatScope = inject(REPEAT_SCOPE, { optional: true });
   readonly parentInjector = inject(Injector);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly document = inject(DOCUMENT);
   private readonly collectionPolicy = inject(DEVELOPMENT_COLLECTION_POLICY, { optional: true });
   private readonly outlets = viewChildren(NgComponentOutlet);
   private readonly observedInstances = new WeakSet<object>();
@@ -141,7 +172,7 @@ export class RenderElementComponent implements OnInit {
     });
     this.destroyRef.onDestroy(() => {
       const el = this.element();
-      if (el && (el as any)['lifecycle'] && this.ctx.emitEvent) {
+      if (el && this.ctx.emitEvent) {
         this.ctx.emitEvent({
           type: 'lifecycle',
           event: 'destroyed',
@@ -170,7 +201,7 @@ export class RenderElementComponent implements OnInit {
 
   ngOnInit(): void {
     const el = this.element();
-    if (el && (el as any)['lifecycle'] && this.ctx.emitEvent) {
+    if (el && this.ctx.emitEvent) {
       this.ctx.emitEvent({
         type: 'lifecycle',
         event: 'mounted',
@@ -248,7 +279,10 @@ export class RenderElementComponent implements OnInit {
     return evaluateVisibility(el.visible, this.propCtx());
   });
 
-  /** Invokes the element's `on[event]` handler bindings. */
+  /** Invokes the element's `on[event]` handler bindings, honoring every field
+   *  of `ActionBinding`: `preventDefault`, `confirm`, `params` (resolved
+   *  through the same expression resolver the element props use) and the
+   *  `onSuccess` / `onError` follow-ups. */
   private invokeHandlers(event: string, payload?: Record<string, unknown>): void {
     const el = this.element();
     if (!el?.on) return;
@@ -256,12 +290,90 @@ export class RenderElementComponent implements OnInit {
     if (!binding) return;
     const bindings = Array.isArray(binding) ? binding : [binding];
     for (const b of bindings) {
+      if (b.preventDefault) preventDefaultOn(payload);
+      if (b.confirm && !this.askForConfirmation(b.confirm)) continue;
+
       const handler = this.ctx.handlers?.[b.action];
-      if (handler) {
-        const params = { ...(b.params as Record<string, unknown> ?? {}), ...(payload ?? {}) };
-        runInInjectionContext(this.parentInjector, () => handler(params));
+      if (!handler) continue;
+
+      // `params` are DynamicValues: `{ $state: '/x' }`, `{ $item: 'y' }` and
+      // friends resolve against the store and this element's repeat scope,
+      // exactly as an element prop would. The payload wins on key collisions.
+      const resolved = resolveElementProps(
+        (b.params ?? {}) as Record<string, unknown>,
+        this.propCtx(),
+      );
+      const params = { ...resolved, ...(payload ?? {}) };
+
+      let result: unknown;
+      try {
+        result = runInInjectionContext(this.parentInjector, () => handler(params));
+      } catch (error) {
+        if (!b.onError) throw error;
+        this.runOnError(b.onError, error);
+        continue;
+      }
+      if (result instanceof Promise) {
+        result.then(
+          () => this.runOnSuccess(b.onSuccess),
+          (error: unknown) => {
+            if (!b.onError) return;
+            this.runOnError(b.onError, error);
+          },
+        );
+      } else {
+        this.runOnSuccess(b.onSuccess);
       }
     }
+  }
+
+  /** Asks the user to confirm before running a binding's handler. Returns
+   *  false only when a real `window.confirm` answered no — without a
+   *  `defaultView` (server-side rendering) there is nobody to ask, so the
+   *  handler proceeds. */
+  private askForConfirmation(confirm: ActionConfirm): boolean {
+    const view = this.document.defaultView;
+    if (!view?.confirm) return true;
+    return Boolean(view.confirm(confirm.message));
+  }
+
+  /** Runs an `ActionBinding.onSuccess` follow-up. */
+  private runOnSuccess(onSuccess: ActionOnSuccess | undefined): void {
+    if (!onSuccess || this.destroyed) return;
+    if ('navigate' in onSuccess) {
+      this.document.defaultView?.location.assign(onSuccess.navigate);
+      return;
+    }
+    if ('set' in onSuccess) {
+      for (const [path, value] of Object.entries(onSuccess.set)) {
+        this.ctx.store.set(path, value);
+      }
+      return;
+    }
+    this.dispatchAction(onSuccess.action);
+  }
+
+  /** Runs an `ActionBinding.onError` follow-up. `'$error.message'` in a `set`
+   *  map is replaced by the thrown error's message, matching `executeAction`
+   *  in `@json-render/core`. */
+  private runOnError(onError: ActionOnError, error: unknown): void {
+    if (this.destroyed) return;
+    if ('set' in onError) {
+      const message = error instanceof Error ? error.message : String(error);
+      for (const [path, value] of Object.entries(onError.set)) {
+        this.ctx.store.set(path, value === '$error.message' ? message : value);
+      }
+      return;
+    }
+    this.dispatchAction(onError.action);
+  }
+
+  /** Dispatches a handler by name with no params — the follow-up form of
+   *  `onSuccess` / `onError`. */
+  private dispatchAction(name: string): void {
+    const handler = this.ctx.handlers?.[name];
+    if (!handler) return;
+    runInInjectionContext(this.parentInjector, () => handler({}));
   }
 
   /** Element-scoped host injected by mounted view components via
@@ -362,5 +474,21 @@ export class RenderElementComponent implements OnInit {
   readonly filteredRepeatInputs = computed(() => {
     const cls = this.mountClass() as Type<unknown> | null;
     return this.repeatInputs().map(inputs => filterInputsForClass(cls, inputs));
+  });
+
+  /** Per-item visibility for repeat elements. The element's own `visible`
+   *  condition is evaluated once per item, in that item's scope, so
+   *  `{ $item: … }` and `{ $index: … }` conditions can hide individual rows —
+   *  the same rule the non-repeat branch applies to a single mount. */
+  readonly repeatVisible = computed<boolean[]>(() => {
+    const el = this.element();
+    if (!el?.repeat) return [];
+    if (this.mountClass() === null) return this.repeatScopes().map(() => false);
+    return this.repeatScopes().map(scope =>
+      evaluateVisibility(
+        el.visible,
+        buildPropResolutionContext(this.ctx.store, scope, this.ctx.functions),
+      ),
+    );
   });
 }
