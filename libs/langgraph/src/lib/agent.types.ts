@@ -20,6 +20,7 @@ import type {
 } from '@langchain/langgraph-sdk/ui';
 import type { BaseMessage, AIMessage as CoreAIMessage } from '@langchain/core/messages';
 import type {
+  AgentInterrupt,
   AgentRuntimeTelemetrySink,
   AgentSubmitInput,
   AgentSubmitOptions,
@@ -347,6 +348,16 @@ export interface SubagentStreamRef {
 export interface LangGraphAgent<T = unknown, ResolvedBag extends BagTemplate = BagTemplate>
   extends AgentWithHistory<T> {
   // ── Raw LangGraph signals ────────────────────────────────────────────────
+
+  /**
+   * Current human-in-the-loop pause, or `undefined` when the run is not paused.
+   *
+   * Narrowed from the neutral `Agent` contract, where `interrupt` is optional
+   * because a runtime without human-in-the-loop support omits it. The LangGraph
+   * adapter always provides it, so `injectAgent().interrupt()` type-checks
+   * directly under `strictNullChecks` — no `?.()` needed.
+   */
+  interrupt: Signal<AgentInterrupt | undefined>;
 
   /** Raw LangChain BaseMessage list. Use `messages` for chat rendering. */
   langGraphMessages: Signal<BaseMessage[]>;
