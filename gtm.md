@@ -6,11 +6,12 @@
 
 ## 1. What we are
 
-Threadplane is the production agent UI framework for Angular teams. It turns LangGraph, AG-UI, A2UI, and custom agent streams into real Angular experiences — chat, threads, tool progress, human approvals, generative UI, fallbacks, observability, tests — without rewriting in React or adopting a proprietary cloud.
+Threadplane is the open-source thread-plane for agents, built for Angular teams. It turns LangGraph, AG-UI, A2UI, and custom agent streams into real Angular experiences — chat, threads, tool progress, human approvals, generative UI, fallbacks, observability, tests — without rewriting in React or adopting a proprietary cloud.
 
 ## 2. Category
 
 - **Primary:** Threadplane
+- **Tagline (2026-09-06):** "The open-source thread-plane for agents." The description that follows it everywhere: "The open-source thread-plane for agents: chat, durable threads, persistence, human approvals, and generative UI for Angular, on LangGraph and AG-UI."
 - **Secondary (only after "Agent UI"):** Angular Agent UI Framework
 - **Do not use:** "Threadplane" (ambiguous with backend runtimes and coding agents), "Enterprise Angular agent framework" (reads sales-first).
 

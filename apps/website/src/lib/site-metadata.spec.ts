@@ -18,8 +18,8 @@ import { resolveWebsiteDir } from './website-dir';
 
 describe('site positioning copy', () => {
   it('exports the approved primary tagline and supporting copy', () => {
-    expect(PRIMARY_TAGLINE).toBe('Threadplane — Angular AI Agent UI Framework');
-    expect(LONG_SUBHEAD).toContain('open-source Angular AI agent UI framework');
+    expect(PRIMARY_TAGLINE).toBe('Threadplane — The open-source thread-plane for agents');
+    expect(LONG_SUBHEAD).toContain('open-source thread-plane for agents');
     expect(LONG_SUBHEAD).toContain('LangGraph and AG-UI');
     expect(HERO_SUBHEAD).toBe(
       'Chat, threads, approvals, and generative UI on Signals and DI. Your backend stays where it is.',
@@ -65,7 +65,7 @@ describe('site positioning copy', () => {
       type: 'website',
     });
 
-    expect(metadata.title).toBe('Threadplane — Angular AI Agent UI Framework');
+    expect(metadata.title).toBe('Threadplane — The open-source thread-plane for agents');
     expect(metadata.description).toBe(HOME_DESCRIPTION);
   });
 });
@@ -142,7 +142,7 @@ describe('createPageMetadata article fields', () => {
     expect(openGraph.images[0].url).toBe('/opengraph-image');
     expect(openGraph.images[0].width).toBe(1200);
     expect(openGraph.images[0].height).toBe(630);
-    expect(openGraph.images[0].alt).toMatch(/agent UI framework for Angular/);
+    expect(openGraph.images[0].alt).toMatch(/open-source thread-plane for agents/);
   });
 
   it('accepts a page-specific social image', () => {

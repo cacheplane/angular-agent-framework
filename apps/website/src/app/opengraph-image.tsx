@@ -32,7 +32,7 @@
  * If either changes, re-resolve them here.
  */
 import { ImageResponse } from 'next/og';
-import { HERO_H1, HERO_SUBHEAD, POSITIONING_PROOF_POINTS, PRIMARY_TAGLINE } from '../lib/positioning';
+import { HERO_H1_LINES, HERO_SUBHEAD, POSITIONING_PROOF_POINTS, PRIMARY_TAGLINE } from '../lib/positioning';
 import { loadCardFonts } from './og-font';
 
 // Node runtime (not edge) so we can read the bundled Garamond TTF off disk.
@@ -159,6 +159,8 @@ export default async function OpenGraphImage() {
           <div
             style={{
               display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
               marginTop: 34,
               fontSize: 52,
               fontWeight: 600,
@@ -167,7 +169,9 @@ export default async function OpenGraphImage() {
               color: TOKENS.textPrimary,
             }}
           >
-            {HERO_H1}
+            {HERO_H1_LINES.map((line) => (
+              <div key={line} style={{ display: 'flex' }}>{line}</div>
+            ))}
           </div>
 
           {/* What you get. Wrapped to two lines on purpose — see the header. */}

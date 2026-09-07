@@ -2,7 +2,7 @@
 
 Explicit capture helpers and automatic development runtime collection for
 applications built with [Threadplane](https://github.com/cacheplane/angular-agent-framework),
-the AI agent UI framework for Angular. The automatic path starts only when a
+the open-source thread-plane for agents. The automatic path starts only when a
 supported development integration is used, as described below.
 
 <p align="center">

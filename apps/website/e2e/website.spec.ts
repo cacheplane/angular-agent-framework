@@ -21,9 +21,10 @@ async function expectNoHorizontalOverflow(
 test('landing page renders hero headline', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#hero-heading')).toBeVisible();
-  await expect(page.locator('#hero-heading')).toHaveText('The AI agent UI framework for Angular.');
-  const headline = await page.locator('#hero-heading').textContent();
-  expect(headline?.toLowerCase()).toContain('angular');
+  await expect(page.locator('#hero-heading')).toHaveText('The open-source thread-plane for agents.');
+  // The tagline stopped naming Angular on 2026-09-06, so the guard that the
+  // hero says which framework this is moved to the eyebrow directly above it.
+  await expect(page.locator('.hero-eyebrow')).toContainText('Angular');
 });
 
 test('landing page renders the dark proof band', async ({ page }) => {

@@ -10,6 +10,7 @@ import {
   formatAngularRange,
   HERO_EYEBROW,
   HERO_H1,
+  HERO_H1_LINES,
   HERO_PRIMARY_LABEL,
   HERO_SECONDARY_HREF,
   HERO_SECONDARY_LABEL,
@@ -46,14 +47,19 @@ function parses(code: string): boolean {
 
 describe('positioning: hero copy', () => {
   it('names the exact category in eyebrow, H1, title and description', () => {
-    expect(HERO_EYEBROW).toBe('Open-source · Angular · LangGraph & AG-UI');
-    expect(HERO_H1).toBe('The AI agent UI framework for Angular.');
+    expect(HERO_EYEBROW).toBe('Angular · LangGraph & AG-UI');
+    expect(HERO_H1).toBe('The open-source thread-plane for agents.');
     expect(HERO_SUBHEAD).toBe('Chat, threads, approvals, and generative UI on Signals and DI. Your backend stays where it is.');
-    expect(HOME_TITLE).toBe('Threadplane — Angular AI Agent UI Framework');
+    expect(HOME_TITLE).toBe('Threadplane — The open-source thread-plane for agents');
     expect(HOME_DESCRIPTION).toBe(
-      'Open-source Angular AI agent UI framework for LangGraph and AG-UI: chat, durable threads, human approvals, and generative UI with Signals and DI.',
+      'The open-source thread-plane for agents: chat, durable threads, persistence, human approvals, and generative UI for Angular, on LangGraph and AG-UI.',
     );
     expect(HOME_DESCRIPTION.length).toBeLessThanOrEqual(160);
+  });
+
+  it('H1 lines join back to HERO_H1 on three lines', () => {
+    expect(HERO_H1_LINES).toHaveLength(3);
+    expect(HERO_H1_LINES.join(' ')).toBe(HERO_H1);
   });
 
   it('subhead segments join back to HERO_SUBHEAD, with exactly one highlight', () => {

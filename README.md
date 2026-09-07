@@ -1,13 +1,13 @@
 <p align="center">
   <img
     src="https://threadplane.ai/assets/hero.svg"
-    alt="Threadplane — the AI agent UI framework for Angular"
+    alt="Threadplane — the open-source thread-plane for agents"
     width="100%"
   />
 </p>
 
 <p align="center">
-  <em>The AI agent UI framework for Angular.</em>
+  <em>The open-source thread-plane for agents.</em>
 </p>
 
 <p align="center">
@@ -33,8 +33,8 @@
 
 ---
 
-**Threadplane is the open-source Angular AI agent UI framework.** Chat, durable
-threads, human approvals, tool progress, subagents, and generative UI — built on
+**Threadplane is the open-source thread-plane for agents.** Chat, durable
+threads, persistence, human approvals, tool progress, subagents, and generative UI — built on
 Angular Signals and dependency injection, for Angular 20–22. Your backend stays
 where it is: Threadplane adapts a LangGraph or AG-UI agent into a runtime-neutral
 `Agent` contract that the UI consumes, and renders generated UI with the design

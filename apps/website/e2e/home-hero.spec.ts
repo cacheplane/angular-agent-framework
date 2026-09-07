@@ -24,6 +24,11 @@ test.describe('homepage hero', () => {
     await page.goto('/');
     const demo = page.locator('[data-hero-demo]');
     await expect(demo.locator('img')).toHaveAttribute('src', '/screenshots/hero-walkthrough-poster.webp');
+    // The frame mounts on a 25%-visibility threshold, and the three-line H1
+    // leaves the stage short of that at the default viewport. Scroll it in, as
+    // the mobile sibling below already does, so this asserts the mount and not
+    // the fold position.
+    await demo.scrollIntoViewIfNeeded();
     await expect(demo.locator('iframe')).toHaveAttribute('src', 'https://demo.threadplane.ai/hero');
   });
 

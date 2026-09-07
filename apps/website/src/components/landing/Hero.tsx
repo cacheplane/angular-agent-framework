@@ -8,7 +8,7 @@ import { Button } from '../ui/Button';
 import { trackCtaClick } from '../../lib/analytics/client';
 import {
   HERO_EYEBROW,
-  HERO_H1,
+  HERO_H1_LINES,
   HERO_PRIMARY_LABEL,
   HERO_SECONDARY_HREF,
   HERO_SECONDARY_LABEL,
@@ -31,7 +31,14 @@ export function Hero() {
       <Container>
         <div className="hero-stack">
           <Eyebrow tone="accent" className="hero-eyebrow">{HERO_EYEBROW}</Eyebrow>
-          <h1 id="hero-heading" className="hero-heading">{HERO_H1}</h1>
+          <h1 id="hero-heading" className="hero-heading">
+            {HERO_H1_LINES.map((line, i) => (
+              <React.Fragment key={line}>
+                {i > 0 ? ' ' : ''}
+                <span className="hero-heading-line">{line}</span>
+              </React.Fragment>
+            ))}
+          </h1>
           <p className="hero-subhead">
             {HERO_SUBHEAD_SEGMENTS.map((segment) =>
               segment.highlight ? (

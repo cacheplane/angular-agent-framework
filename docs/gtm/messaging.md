@@ -4,7 +4,7 @@
 
 ## Positioning statement (durable)
 
-> For Angular teams building AI agents on LangGraph, AG-UI, or custom backends, Threadplane is the open-source agent UI framework that turns streaming agent events into production-ready Angular experiences: chat, durable threads, interrupts, subagents, planning, memory, generative UI, fallbacks, observability, and tests. Unlike React-first agent UI stacks or raw streaming SDKs, Threadplane is Angular-native, DI-friendly, design-system-first, self-hostable, and built for enterprise Angular apps.
+> For Angular teams building AI agents on LangGraph, AG-UI, or custom backends, Threadplane is the open-source thread-plane for agents: it turns streaming agent events into production-ready Angular experiences: chat, durable threads, interrupts, subagents, planning, memory, generative UI, fallbacks, observability, and tests. Unlike React-first agent UI stacks or raw streaming SDKs, Threadplane is Angular-native, DI-friendly, design-system-first, self-hostable, and built for enterprise Angular apps.
 
 ## Hero (locked for Spec 2 to implement)
 
@@ -63,7 +63,7 @@ Hidden attribution fields (populated by URL params + referrer): `source_page`, `
 
 ## Launch narrative (Spec 6 spine)
 
-> Angular teams are building agents, but the last mile is still messy: streaming state, tool progress, interrupts, durable threads, subagents, planning, memory, generated UI, fallbacks, and tests. React has mature examples. Backend agent frameworks have protocols. Angular teams need something that speaks Signals, DI, templates, standalone components, and enterprise design systems. Threadplane is an MIT-licensed agent UI framework for Angular that connects LangGraph, AG-UI, A2UI, and custom backends to production-ready Angular surfaces.
+> Angular teams are building agents, but the last mile is still messy: streaming state, tool progress, interrupts, durable threads, subagents, planning, memory, generated UI, fallbacks, and tests. React has mature examples. Backend agent frameworks have protocols. Angular teams need something that speaks Signals, DI, templates, standalone components, and enterprise design systems. Threadplane is the MIT-licensed thread-plane for agents: it connects LangGraph, AG-UI, A2UI, and custom backends to production-ready Angular surfaces.
 
 ## Avoid
 
