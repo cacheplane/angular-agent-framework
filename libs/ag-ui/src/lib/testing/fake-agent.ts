@@ -7,14 +7,24 @@ import {
 } from '@ag-ui/client';
 import { Observable } from 'rxjs';
 
-type FakeAgentScriptWhen =
-  | 'initial'
-  | { toolMessageFor: string };
-
-interface FakeAgentScriptBranch {
-  when: FakeAgentScriptWhen;
+/**
+ * Deterministic event branches for {@link FakeAgent}, reachable through the
+ * constructor and through `provideFakeAgent({ script })`.
+ *
+ * Each branch supplies a raw AG-UI event sequence — tool calls, state
+ * snapshots, custom events, anything the protocol defines. `when: 'initial'`
+ * matches a turn whose history carries no tool result; `{ toolMessageFor: id }`
+ * matches the follow-up turn whose history carries a tool result for that tool
+ * call id. The first matching branch wins, and its `events` are wrapped in
+ * `RUN_STARTED` / `RUN_FINISHED`. When no branch matches, the canned token
+ * reply is streamed instead.
+ */
+export type FakeAgentScript = readonly {
+  when: 'initial' | { toolMessageFor: string };
   events: readonly BaseEvent[];
-}
+}[];
+
+type FakeAgentScriptWhen = FakeAgentScript[number]['when'];
 
 /**
  * In-process AG-UI agent that emits a canned streaming response.
@@ -38,14 +48,14 @@ export class FakeAgent extends AbstractAgent {
   private readonly delayMs: number;
 
   /** Optional deterministic event branches for tests that need exact streams. */
-  private readonly script: readonly FakeAgentScriptBranch[];
+  private readonly script: FakeAgentScript;
 
   constructor(opts: {
     tokens?: string[];
     /** Optional reasoning chunks emitted before the text reply. */
     reasoningTokens?: string[];
     delayMs?: number;
-    script?: readonly FakeAgentScriptBranch[];
+    script?: FakeAgentScript;
   } = {}) {
     super();
     this.tokens = opts.tokens ?? [

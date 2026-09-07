@@ -507,6 +507,38 @@
     "examples": []
   },
   {
+    "name": "AgUiFakeAgentConfig",
+    "kind": "interface",
+    "description": "Config accepted by provideFakeAgent: the shared `FakeAgentConfig`\n(`tokens`, `reasoningTokens`, `delayMs`) plus the AG-UI-only `script`, which\nreplaces the canned token reply with raw AG-UI events.",
+    "properties": [
+      {
+        "name": "delayMs",
+        "type": "number",
+        "description": "Milliseconds between successive token emissions.",
+        "optional": true
+      },
+      {
+        "name": "reasoningTokens",
+        "type": "string[]",
+        "description": "Optional reasoning chunks emitted before the text reply.",
+        "optional": true
+      },
+      {
+        "name": "script",
+        "type": "FakeAgentScript",
+        "description": "Deterministic event branches — see FakeAgentScript.",
+        "optional": true
+      },
+      {
+        "name": "tokens",
+        "type": "string[]",
+        "description": "Assistant reply, streamed token-by-token.",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
     "name": "CustomStreamEvent",
     "kind": "interface",
     "description": "A custom event surfaced to consumers via the agent's `customEvents` signal.\nMirrors the LangGraph adapter's CustomStreamEvent shape so the chat\na2ui partial-args bridge consumes both transports identically.",
@@ -544,6 +576,13 @@
         "optional": true
       }
     ],
+    "examples": []
+  },
+  {
+    "name": "FakeAgentScript",
+    "kind": "type",
+    "description": "Deterministic event branches for FakeAgent, reachable through the\nconstructor and through `provideFakeAgent({ script })`.\n\nEach branch supplies a raw AG-UI event sequence — tool calls, state\nsnapshots, custom events, anything the protocol defines. `when: 'initial'`\nmatches a turn whose history carries no tool result; `{ toolMessageFor: id }`\nmatches the follow-up turn whose history carries a tool result for that tool\ncall id. The first matching branch wins, and its `events` are wrapped in\n`RUN_STARTED` / `RUN_FINISHED`. When no branch matches, the canned token\nreply is streamed instead.",
+    "signature": "readonly { events: readonly BaseEvent[]; when: \"initial\" | { toolMessageFor: string } }[]",
     "examples": []
   },
   {
@@ -590,7 +629,7 @@
   {
     "name": "provideAgent",
     "kind": "function",
-    "description": "Provides an Agent instance wired through HttpAgent and toAgent.\nConstructs an HttpAgent from config and wraps it in the runtime-neutral\nAgent contract via toAgent(). Returns a provider array suitable for\nbootstrapApplication or TestBed.configureTestingModule().\n\n**Static vs factory config.** Pass a plain `AgentConfig` object when the\nconfig is known up front. Pass a `() => AgentConfig` factory when the config\ndepends on runtime/DI state — the factory runs inside an Angular injection\ncontext, so it may call `inject()` to read services or route params.\n\n**Typed state via AgentRef.** Pass a typed ref as the first argument to flow\nthe state shape from `provideAgent` to `injectAgent` without repeating the\ngeneric at every call site.\n\n**Several agents at one injector level.** Each `provideAgent(ref, …)` call\nbuilds its own agent, so two (or more) refs may be provided side by side in a\nsingle `providers` array and `injectAgent(refA)` / `injectAgent(refB)` return\ndistinct agents. The ref-less `injectAgent()` resolves a single shared token,\nwhich can only point at one of them: when more than one ref is provided at\nthe same level the **last** call wins. Always inject by ref when an injector\nprovides more than one agent.",
+    "description": "Provides an Agent instance wired through HttpAgent and toAgent.\nConstructs an HttpAgent from config and wraps it in the runtime-neutral\nAgent contract via toAgent(). Returns a provider array suitable for\nbootstrapApplication or TestBed.configureTestingModule().\n\n**Static vs factory config.** Pass a plain `AgentConfig` object when the\nconfig is known up front. Pass a `() => AgentConfig` factory when the config\ndepends on runtime/DI state — the factory runs inside an Angular injection\ncontext, so it may call `inject()` to read services or route params.\n\n**Typed state via AgentRef.** Pass a typed ref as the first argument to flow\nthe state shape from `provideAgent` to `injectAgent` without repeating the\ngeneric at every call site.\n\n**Several agents at one injector level.** Each `provideAgent(ref, …)` call\nbuilds its own agent, so two (or more) refs may be provided side by side in a\nsingle `providers` array and `injectAgent(refA)` / `injectAgent(refB)` return\ndistinct agents. The ref-less `injectAgent()` resolves a single shared token,\nwhich can only point at one of them: when more than one ref is provided at\nthe same level the **last** call wins. Always inject by ref when an injector\nprovides more than one agent. Development builds emit a one-time\n`console.warn` naming the refs involved when an injector level registers more\nthan one, so the silent last-ref-wins aliasing is visible during development.",
     "signature": "provideAgent(ref: AgentRef<T>, configOrFactory: AgentConfig | () => AgentConfig): Provider[]",
     "params": [
       {
@@ -617,12 +656,12 @@
   {
     "name": "provideFakeAgent",
     "kind": "function",
-    "description": "Registers an in-process FakeAgent under AGENT.\n\nUse for offline demos and development. Drop-in replacement for\nprovideAgent({ url }) when no real backend is available.",
-    "signature": "provideFakeAgent(config: FakeAgentConfig): Provider[]",
+    "description": "Registers an in-process FakeAgent under AGENT.\n\nUse for offline demos and development. Drop-in replacement for\nprovideAgent({ url }) when no real backend is available.\n\nPass `script` to stream exact AG-UI events instead of the canned token\nreply — the adapter reduces them into `toolCalls()`, `state()`,\n`customEvents()`, and `interrupt()` exactly as it would real wire events.",
+    "signature": "provideFakeAgent(config: AgUiFakeAgentConfig): Provider[]",
     "params": [
       {
         "name": "config",
-        "type": "FakeAgentConfig",
+        "type": "AgUiFakeAgentConfig",
         "description": "",
         "optional": true
       }
@@ -632,7 +671,8 @@
       "description": ""
     },
     "examples": [
-      "```ts\nTestBed.configureTestingModule({\n  providers: [provideFakeAgent({ tokens: ['Hello from the fake agent'] })],\n});\n```"
+      "```ts\nTestBed.configureTestingModule({\n  providers: [provideFakeAgent({ tokens: ['Hello from the fake agent'] })],\n});\n```",
+      "```ts\nTestBed.configureTestingModule({\n  providers: [provideFakeAgent({\n    delayMs: 0,\n    script: [{\n      when: 'initial',\n      events: [\n        { type: EventType.TOOL_CALL_START, toolCallId: 't1', toolCallName: 'get_weather' },\n        { type: EventType.TOOL_CALL_ARGS, toolCallId: 't1', delta: '{\"city\":\"SF\"}' },\n        { type: EventType.TOOL_CALL_END, toolCallId: 't1' },\n      ] as BaseEvent[],\n    }],\n  })],\n});\n```"
     ]
   },
   {
