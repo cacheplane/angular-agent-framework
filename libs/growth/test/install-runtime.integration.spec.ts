@@ -104,7 +104,8 @@ describe('install-runtime founder activation', () => {
     return { install, runtime };
   }
   it('resolves a runtime that arrived before install and enrolls without waiting for optional enrichment', async () => {
-    const now = new Date();
+    const now = new Date('2026-03-06T18:00:00.000Z');
+    const sendAt = new Date('2026-03-09T14:00:00.000Z');
     const { install, runtime } = fixture(now);
     await acceptObservationBatch(db, 'runtime', runtime, {
       now,
@@ -157,21 +158,41 @@ describe('install-runtime founder activation', () => {
       now,
       batchSize: 20,
     });
-    const jobs = await db.execute<{ id: string }>(
-      "select id from growth_jobs where contact_id=$1 and kind='send_step' order by payload->>'step'",
+    const jobs = await db.execute<{ id: string; available_at: Date }>(
+      "select id, available_at from growth_jobs where contact_id=$1 and kind='send_step' order by payload->>'step'",
       [contact.id]
     );
     expect(jobs.rows).toHaveLength(3);
-    const enrichment = await db.execute<{status: string; payload: Record<string,string>}>(
-      "select status,payload from growth_jobs where contact_id=$1 and kind='enrich'", [contact.id]
+    expect(
+      jobs.rows.map((job) => new Date(job.available_at).toISOString())
+    ).toEqual(Array(3).fill(sendAt.toISOString()));
+    const enrichment = await db.execute<{
+      status: string;
+      payload: Record<string, string>;
+    }>(
+      "select status,payload from growth_jobs where contact_id=$1 and kind='enrich'",
+      [contact.id]
     );
-    expect(enrichment.rows).toEqual([expect.objectContaining({status: 'pending', payload: expect.objectContaining({source: 'install_runtime'})})]);
+    expect(enrichment.rows).toEqual([
+      expect.objectContaining({
+        status: 'pending',
+        payload: expect.objectContaining({ source: 'install_runtime' }),
+      }),
+    ]);
     expect(
       await readLifecycleJobContext(db, { jobId: jobs.rows[0].id })
     ).toMatchObject({ campaignEnrollmentReason: 'install_runtime' });
-    const leased = await leaseDueJobs(db, {
+    const immediate = await leaseDueJobs(db, {
       kinds: ['send_step'],
       now,
+      batchSize: 20,
+      leaseDurationMs: 30000,
+      campaignEnabled: true,
+    });
+    expect(immediate.some((job) => job.contactId === contact.id)).toBe(false);
+    const leased = await leaseDueJobs(db, {
+      kinds: ['send_step'],
+      now: sendAt,
       batchSize: 20,
       leaseDurationMs: 30000,
       campaignEnabled: true,
@@ -183,13 +204,13 @@ describe('install-runtime founder activation', () => {
     await redactObservationEvidence(
       db,
       { email: install.events[0].identity!.gitEmail! },
-      { operationId, now, keyring: evidenceKeys }
+      { operationId, now: sendAt, keyring: evidenceKeys }
     );
     expect(
       await authorizeLeasedJobForSubmission(db, {
         jobId: job.id,
         leaseToken: job.leaseToken!,
-        now,
+        now: sendAt,
         campaignEnabled: true,
         deliveryEnabled: true,
       })
@@ -387,7 +408,8 @@ describe('install-runtime founder activation', () => {
     expect(result.enrolledContactIds).not.toContain(contact.id);
   });
   it('waits for a source-redaction transaction before final send authorization', async () => {
-    const now = new Date();
+    const now = new Date('2026-03-06T18:00:00.000Z');
+    const sendAt = new Date('2026-03-09T14:00:00.000Z');
     const { install, runtime } = fixture(now);
     await acceptObservationBatch(db, 'install', install, {
       now,
@@ -418,7 +440,7 @@ describe('install-runtime founder activation', () => {
     const job = (
       await leaseDueJobs(db, {
         kinds: ['send_step'],
-        now,
+        now: sendAt,
         batchSize: 100,
         leaseDurationMs: 30000,
         campaignEnabled: true,
@@ -437,7 +459,7 @@ describe('install-runtime founder activation', () => {
       await gate;
       await tx.execute(
         'update growth_observations set redacted_at=$2 where event_id=$1',
-        [install.events[0].eventId, now]
+        [install.events[0].eventId, sendAt]
       );
     });
     await locked;
@@ -445,7 +467,7 @@ describe('install-runtime founder activation', () => {
     const authorization = authorizeLeasedJobForSubmission(db, {
       jobId: job.id,
       leaseToken: job.leaseToken!,
-      now,
+      now: sendAt,
       campaignEnabled: true,
       deliveryEnabled: true,
     }).finally(() => {

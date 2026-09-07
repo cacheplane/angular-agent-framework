@@ -398,7 +398,8 @@ async function dispatchRecipient(
   if (result.reason === 'mailbox_recovery_required') return 'recovery_paused';
   if (
     result.reason === 'campaign_disabled' ||
-    result.reason === 'delivery_disabled'
+    result.reason === 'delivery_disabled' ||
+    result.reason === 'outside_send_window'
   ) {
     const now = dependencies.now();
     await dependencies.deferJob(executor, {

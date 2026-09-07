@@ -15,7 +15,7 @@ import {
   type RecipientResendClient,
 } from './resend.ts';
 
-const now = new Date('2026-09-01T12:00:00.000Z');
+const now = new Date('2026-09-01T14:00:00.000Z');
 const jobId = '00000000-0000-4000-8000-000000000001';
 const leaseToken = '00000000-0000-4000-8000-000000000099';
 const contactId = '00000000-0000-4000-8000-000000000002';
@@ -54,7 +54,7 @@ function job(overrides: Partial<GrowthJob> = {}): GrowthJob {
     projectId: null,
     status: 'leased',
     availableAt: now,
-    leaseUntil: new Date('2026-09-01T12:05:00.000Z'),
+    leaseUntil: new Date('2026-09-01T14:05:00.000Z'),
     leaseToken,
     attempts: 1,
     idempotencyKey: 'campaign:v1:contact:step:1',
@@ -515,9 +515,10 @@ describe('sendRecipientEmail', () => {
 
   it('records the post-submission observation time rather than the earlier authorization time', async () => {
     const test = harness();
-    const submittedAt = new Date('2026-09-01T12:00:02.000Z');
+    const submittedAt = new Date('2026-09-01T14:00:02.000Z');
     test.dependencies.now = vi
       .fn()
+      .mockReturnValue(submittedAt)
       .mockReturnValueOnce(now)
       .mockReturnValueOnce(submittedAt);
 
@@ -536,6 +537,7 @@ describe('sendRecipientEmail', () => {
         jobId,
         leaseToken,
         now,
+        currentTime: test.dependencies.now,
       }
     );
     expect(test.recordProviderAcceptance).toHaveBeenCalledWith(
@@ -545,6 +547,42 @@ describe('sendRecipientEmail', () => {
   });
 
   it('does not submit when final authorization denies the recipient', async () => {
+    const test = harness();
+    test.authorizeLeasedJobForSubmission.mockResolvedValueOnce({
+      authorized: false,
+      reason: 'outside_send_window',
+      job: job(),
+    });
+    await expect(
+      sendRecipientEmail(
+        test.database,
+        message,
+        productionPolicy(),
+        test.dependencies
+      )
+    ).resolves.toEqual({ accepted: false, reason: 'outside_send_window' });
+    expect(test.send).not.toHaveBeenCalled();
+  });
+
+  it('rechecks the clock immediately before provider submission', async () => {
+    const test = harness();
+    test.dependencies.now = vi
+      .fn()
+      .mockReturnValueOnce(new Date('2026-09-01T14:59:59Z'))
+      .mockReturnValue(new Date('2026-09-01T15:00:00Z'));
+    await expect(
+      sendRecipientEmail(
+        test.database,
+        message,
+        productionPolicy(),
+        test.dependencies
+      )
+    ).resolves.toEqual({ accepted: false, reason: 'outside_send_window' });
+    expect(test.send).not.toHaveBeenCalled();
+    expect(test.markProviderAcceptanceUnknown).not.toHaveBeenCalled();
+  });
+
+  it('does not submit when final authorization denies the recipient for a stop', async () => {
     const test = harness();
     test.authorizeLeasedJobForSubmission.mockResolvedValueOnce({
       authorized: false,

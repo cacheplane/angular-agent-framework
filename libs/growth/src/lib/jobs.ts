@@ -3,6 +3,10 @@ import { CONTACT_HARD_STOP_REASONS } from './contacts.ts';
 import { normalizeEmail } from './crypto.ts';
 import type { GrowthArtifact, GrowthJob } from './models.ts';
 import { privacyLock } from './observability/store.ts';
+import {
+  businessMorningAfter,
+  isCampaignSendWindow,
+} from './campaign-schedule.ts';
 import { installRuntimeEvidenceSql } from './observability/install-runtime-enrichment.ts';
 
 const FULFILLMENT_ALLOWED_PRIOR_STOPS = new Set([
@@ -97,6 +101,7 @@ export type FinalSendAuthorization =
         | 'contact_unapproved'
         | 'campaign_disabled'
         | 'delivery_disabled'
+        | 'outside_send_window'
         | 'mailbox_recovery_required';
       job: GrowthJob;
     };
@@ -399,7 +404,7 @@ export async function materializeCampaignEnrollment(
          select 'send_step',
                 e.contact_id,
                 'pending',
-                $2,
+                $5,
                 'campaign:v1:' || e.contact_id::text || ':step:' || step::text,
                 jsonb_build_object(
                   'campaign_version', 'v1',
@@ -418,7 +423,13 @@ export async function materializeCampaignEnrollment(
        left join inserted_jobs j on j.contact_id = e.contact_id
        group by e.contact_id
        order by e.contact_id`,
-      [enrollmentStartAt, now, batchSize, CONTACT_HARD_STOP_REASONS]
+      [
+        enrollmentStartAt,
+        now,
+        batchSize,
+        CONTACT_HARD_STOP_REASONS,
+        businessMorningAfter(now, 1),
+      ]
     );
     return {
       enrolledContactIds: result.rows.map(({ contact_id }) => contact_id),
@@ -467,8 +478,9 @@ export async function leaseDueJobs(
            from growth_activity submission_authorization
            where submission_authorization.kind =
                  'delivery.submission_authorized'
-             and submission_authorization.event_key like
-                 'job:' || interrupted.id::text || ':submission-authorized:%'
+             and submission_authorization.event_key =
+                 'job:' || interrupted.id::text || ':submission-authorized:' || interrupted.lease_token::text
+             and submission_authorization.data->>'lease_token' = interrupted.lease_token::text
          )
        order by interrupted.lease_until, interrupted.id
        for update skip locked
@@ -545,6 +557,8 @@ export async function leaseDueJobs(
            j.kind <> 'send_step'
            or (
              j.payload->>'campaign_version' = 'v1'
+             and extract(isodow from $2::timestamptz at time zone 'America/Los_Angeles') between 1 and 5
+             and extract(hour from $2::timestamptz at time zone 'America/Los_Angeles') = 7
              and (
                (
                  j.payload->>'step' = '1'
@@ -748,11 +762,12 @@ export async function authorizeLeasedJobForSubmission(
     now: Date;
     campaignEnabled: boolean;
     deliveryEnabled: boolean;
+    currentTime?: () => Date;
   }
 ): Promise<FinalSendAuthorization> {
   const jobId = requiredText('jobId', input.jobId);
   const leaseToken = requiredText('leaseToken', input.leaseToken);
-  const now = validDate('now', input.now);
+  let now = validDate('now', input.now);
   if (typeof input.campaignEnabled !== 'boolean') {
     throw new Error('campaignEnabled must be a boolean');
   }
@@ -993,6 +1008,14 @@ export async function authorizeLeasedJobForSubmission(
     }
     if (emailNormalized !== contact.email_normalized) {
       throw new JobLeaseConflictError(jobId);
+    }
+
+    // Lock waits must not carry a pre-window-boundary timestamp into a send.
+    now = validDate('now', input.currentTime?.() ?? now);
+    if (job.leaseUntil === null || job.leaseUntil.getTime() <= now.getTime())
+      throw new JobLeaseConflictError(jobId);
+    if (job.kind === 'send_step' && !isCampaignSendWindow(now)) {
+      return { authorized: false, reason: 'outside_send_window', job };
     }
 
     const inserted = await transaction.execute<{ event_key: string }>(
@@ -1679,12 +1702,12 @@ export async function recordProviderAcceptance(
          set available_at = greatest(
            later.available_at,
            case
-             when $3::integer = 1 and later.payload->>'step' = '2'
-               then $2::timestamptz + interval '72 hours'
-             when $3::integer = 1 and later.payload->>'step' = '3'
-               then $2::timestamptz + interval '192 hours'
-             when $3::integer = 2 and later.payload->>'step' = '3'
-               then $2::timestamptz + interval '120 hours'
+             when $2::integer = 1 and later.payload->>'step' = '2'
+               then $3::timestamptz
+             when $2::integer = 1 and later.payload->>'step' = '3'
+               then $4::timestamptz
+             when $2::integer = 2 and later.payload->>'step' = '3'
+               then $3::timestamptz
              else later.available_at
            end
          )
@@ -1693,10 +1716,15 @@ export async function recordProviderAcceptance(
            and later.payload->>'campaign_version' = 'v1'
            and later.status = 'pending'
            and (
-             ($3::integer = 1 and later.payload->>'step' in ('2', '3'))
-             or ($3::integer = 2 and later.payload->>'step' = '3')
+             ($2::integer = 1 and later.payload->>'step' in ('2', '3'))
+             or ($2::integer = 2 and later.payload->>'step' = '3')
            )`,
-        [job.contactId, acceptedAt, step]
+        [
+          job.contactId,
+          step,
+          businessMorningAfter(acceptedAt, step === 1 ? 3 : 5),
+          businessMorningAfter(acceptedAt, 8),
+        ]
       );
     }
 

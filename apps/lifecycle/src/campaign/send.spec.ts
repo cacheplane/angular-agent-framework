@@ -500,7 +500,11 @@ describe('dispatchLifecycleAppOwnedJob', () => {
     }
   );
 
-  it.each(['campaign_disabled', 'delivery_disabled'] as const)(
+  it.each([
+    'campaign_disabled',
+    'delivery_disabled',
+    'outside_send_window',
+  ] as const)(
     'keeps an install-runtime hello deferred while %s',
     async (reason) => {
       const deps = dependencies({

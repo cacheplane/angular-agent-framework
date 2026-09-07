@@ -76,7 +76,7 @@ function executorWith(
 }
 
 const contactId = '00000000-0000-4000-8000-000000000001';
-const now = new Date('2026-09-01T12:00:00.000Z');
+const now = new Date('2026-09-01T14:00:00.000Z');
 const validCampaignProvenance = {
   campaign_approval_valid: true,
   campaign_enrollment_valid: true,
@@ -176,7 +176,7 @@ describe('stopContact', () => {
       id: '00000000-0000-4000-8000-000000000011',
       status: 'leased',
       lease_token: '00000000-0000-4000-8000-000000000099',
-      lease_until: new Date('2026-09-01T12:05:00.000Z'),
+      lease_until: new Date('2026-09-01T14:05:00.000Z'),
       authorization_event_key:
         'job:00000000-0000-4000-8000-000000000011:submission-authorized:00000000-0000-4000-8000-000000000099',
       authorization_contact_id: contactId,
@@ -192,7 +192,7 @@ describe('stopContact', () => {
       id: '00000000-0000-4000-8000-000000000016',
       status: 'leased',
       lease_token: '00000000-0000-4000-8000-000000000097',
-      lease_until: new Date('2026-09-01T12:05:00.000Z'),
+      lease_until: new Date('2026-09-01T14:05:00.000Z'),
     });
     const legacyScheduled = jobRow({
       id: '00000000-0000-4000-8000-000000000012',
@@ -212,7 +212,7 @@ describe('stopContact', () => {
       id: '00000000-0000-4000-8000-000000000015',
       status: 'leased',
       lease_token: '00000000-0000-4000-8000-000000000098',
-      lease_until: new Date('2026-09-01T12:05:00.000Z'),
+      lease_until: new Date('2026-09-01T14:05:00.000Z'),
       provider_email_id: 'resend-submitted-race',
       delivery_status: 'submitted',
     });
@@ -517,7 +517,7 @@ describe('stopContact', () => {
     const authorized = jobRow({
       status: 'leased',
       lease_token: activeLeaseToken,
-      lease_until: new Date('2026-09-01T12:05:00.000Z'),
+      lease_until: new Date('2026-09-01T14:05:00.000Z'),
       authorization_event_key: `job:${
         jobRow().id
       }:submission-authorized:${activeLeaseToken}`,
@@ -931,7 +931,7 @@ describe('authorizeLeasedJobForSubmission', () => {
           jobRow({
             status: 'leased',
             lease_token: activeLeaseToken,
-            lease_until: new Date('2026-09-01T12:05:00.000Z'),
+            lease_until: new Date('2026-09-01T14:05:00.000Z'),
           }),
         ],
       }),
@@ -999,7 +999,7 @@ describe('authorizeLeasedJobForSubmission', () => {
           jobRow({
             status: 'leased',
             lease_token: activeLeaseToken,
-            lease_until: new Date('2026-09-01T12:05:00.000Z'),
+            lease_until: new Date('2026-09-01T14:05:00.000Z'),
           }),
         ],
       }),
@@ -1049,7 +1049,7 @@ describe('authorizeLeasedJobForSubmission', () => {
           jobRow({
             status: 'leased',
             lease_token: activeLeaseToken,
-            lease_until: new Date('2026-09-01T12:05:00.000Z'),
+            lease_until: new Date('2026-09-01T14:05:00.000Z'),
           }),
         ],
       }),
@@ -1107,7 +1107,7 @@ describe('authorizeLeasedJobForSubmission', () => {
             jobRow({
               status: 'leased',
               lease_token: activeLeaseToken,
-              lease_until: new Date('2026-09-01T12:05:00.000Z'),
+              lease_until: new Date('2026-09-01T14:05:00.000Z'),
             }),
           ],
         }),
@@ -1172,7 +1172,7 @@ describe('authorizeLeasedJobForSubmission', () => {
           jobRow({
             status: 'leased',
             lease_token: activeLeaseToken,
-            lease_until: new Date('2026-09-01T12:05:00.000Z'),
+            lease_until: new Date('2026-09-01T14:05:00.000Z'),
           }),
         ],
       }),
@@ -1207,7 +1207,7 @@ describe('authorizeLeasedJobForSubmission', () => {
 
   it.each([
     ['changed contact', { contact_id: '00000000-0000-4000-8000-000000000777' }],
-    ['changed time', { occurred_at: new Date('2026-09-01T12:00:01.000Z') }],
+    ['changed time', { occurred_at: new Date('2026-09-01T14:00:01.000Z') }],
     [
       'changed data',
       { data: { bounded_stop_race: false, lease_token: 'forged' } },
@@ -1235,7 +1235,7 @@ describe('authorizeLeasedJobForSubmission', () => {
             jobRow({
               status: 'leased',
               lease_token: activeLeaseToken,
-              lease_until: new Date('2026-09-01T12:05:00.000Z'),
+              lease_until: new Date('2026-09-01T14:05:00.000Z'),
             }),
           ],
         }),
@@ -1274,7 +1274,7 @@ describe('authorizeLeasedJobForSubmission', () => {
 
   it('reconciles provider acceptance after a bounded stop race without erasing the ledger', async () => {
     const activeLeaseToken = '00000000-0000-4000-8000-000000000099';
-    const acceptedAt = new Date('2026-09-01T12:00:01.000Z');
+    const acceptedAt = new Date('2026-09-01T14:00:01.000Z');
     const harness = executorWith({
       'discover-provider-acceptance-contact': (_parameters, sql) => {
         expect(sql).not.toMatch(/for update/u);
@@ -1403,7 +1403,7 @@ describe('authorizeLeasedJobForSubmission', () => {
       recordProviderAcceptance(harness.executor, {
         jobId: String(jobRow().id),
         leaseToken: activeLeaseToken,
-        acceptedAt: new Date('2026-09-01T12:00:01.000Z'),
+        acceptedAt: new Date('2026-09-01T14:00:01.000Z'),
         providerEmailId: 'resend-forged-race',
       })
     ).rejects.toThrow(/authorization event key conflict/u);
