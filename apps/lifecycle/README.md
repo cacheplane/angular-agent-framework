@@ -31,6 +31,23 @@ Keep `LIFECYCLE_CRON_ENABLED` unset or set to anything other than the exact valu
 
 Use [DOGFOOD.md](./DOGFOOD.md) for the provider-free setup, probe, and exact cleanup commands. The harness binds the growth target to a database-owned comment sentinel and binds each authenticated lifecycle health response to Vercel's `VERCEL_DEPLOYMENT_ID`; it also validates lifecycle origins in memory before making requests.
 
+## Founder campaign schedule
+
+Campaign email uses `America/Los_Angeles` calendar dates. Enrollment schedules
+the first email for 07:00 on the next weekday, even if enrollment happens before
+07:00 that day. The second email is due three business days after actual provider
+acceptance of the first; the third is due five business days after acceptance of
+the second. Weekends are skipped; public holidays are not excluded in V1.
+Each target date resolves its own Pacific offset, preserving 07:00 across DST.
+
+Due times are persisted in Growth jobs. The existing cron leases campaign sends
+only Monday–Friday during 07:00–08:00 Pacific; final authorization and provider
+submission recheck the window. Normal sends begin on the first successful cron
+tick after 07:00. Retries can run within that hour; missed windows wait until the
+next weekday morning. Stops, mailbox recovery and ambiguous provider acceptance
+remain authoritative. Requested fulfillment and internal notifications do not
+use this campaign window. Replayed acceptance cannot move later jobs earlier.
+
 ## Company evidence capture
 
 Company enrichment uses Dawn. Set `GROWTH_DAWN_ENRICHMENT_ENABLED=false` to pause

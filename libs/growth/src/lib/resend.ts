@@ -1,5 +1,6 @@
 import type { SqlExecutor } from './database.ts';
 import type { ErrorResponse } from 'resend';
+import { isCampaignSendWindow } from './campaign-schedule.ts';
 import {
   authorizeLeasedJobForSubmission,
   markProviderAcceptanceUnknown,
@@ -147,6 +148,7 @@ export type RecipientSendResult =
         | 'contact_unapproved'
         | 'campaign_disabled'
         | 'delivery_disabled'
+        | 'outside_send_window'
         | 'mailbox_recovery_required'
         | 'provider_rejected'
         | 'provider_outcome_unknown';
@@ -381,6 +383,7 @@ export async function sendRecipientEmail(
       jobId,
       leaseToken,
       now: authorizedAt,
+      currentTime: dependencies.now,
     }
   );
   if (!authorization.authorized) {
@@ -428,6 +431,9 @@ export async function sendRecipientEmail(
 
   input.signal?.throwIfAborted();
   let response: ResendResponse;
+  if (job.kind === 'send_step' && !isCampaignSendWindow(dependencies.now())) {
+    return { accepted: false, reason: 'outside_send_window' };
+  }
   try {
     response = await dependencies.resend.emails.send(
       {

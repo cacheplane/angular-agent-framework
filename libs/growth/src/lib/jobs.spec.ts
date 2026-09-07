@@ -75,7 +75,7 @@ function executorWith(
   };
 }
 
-const now = new Date('2026-09-01T12:00:00.000Z');
+const now = new Date('2026-09-01T14:00:00.000Z');
 const leaseToken = '00000000-0000-4000-8000-000000000099';
 
 function jobRow(overrides: TestRow = {}): TestRow {
@@ -86,7 +86,7 @@ function jobRow(overrides: TestRow = {}): TestRow {
     project_id: null,
     status: 'leased',
     available_at: now,
-    lease_until: new Date('2026-09-01T12:05:00.000Z'),
+    lease_until: new Date('2026-09-01T14:05:00.000Z'),
     lease_token: leaseToken,
     attempts: 1,
     idempotency_key: 'campaign:v1:00000000-0000-4000-8000-000000000002:step:1',
@@ -109,6 +109,48 @@ function jobRow(overrides: TestRow = {}): TestRow {
 }
 
 describe('campaign enrollment', () => {
+  it('rechecks the send window with a fresh clock after authorization locks', async () => {
+    const beforeClose = new Date('2026-09-01T14:59:59.000Z');
+    const afterClose = new Date('2026-09-01T15:00:00.000Z');
+    const harness = executorWith({
+      'acquire-google-reconcile-advisory-lock': () => ({ rows: [] }),
+      'lock-contact-for-send': () => ({
+        rows: [
+          {
+            id: jobRow().contact_id,
+            email_normalized: 'reader@acme.com',
+            outreach_approved_at: now,
+            deleted_at: null,
+            latest_hard_stop_at: null,
+            campaign_approval_valid: true,
+            campaign_enrollment_valid: true,
+          },
+        ],
+      }),
+      'lock-job-for-send': () => ({
+        rows: [jobRow({ lease_until: new Date('2026-09-01T15:01:00Z') })],
+      }),
+      'read-google-mailbox-recovery-pause': () => ({
+        rows: [{ paused: false }],
+      }),
+    });
+    await expect(
+      authorizeLeasedJobForSubmission(harness.executor, {
+        jobId: String(jobRow().id),
+        leaseToken,
+        now: beforeClose,
+        currentTime: () => afterClose,
+        campaignEnabled: true,
+        deliveryEnabled: true,
+      })
+    ).resolves.toMatchObject({
+      authorized: false,
+      reason: 'outside_send_window',
+    });
+    expect(
+      harness.calls.some((c) => c.marker === 'insert-final-send-authorization')
+    ).toBe(false);
+  });
   it('does not touch the database when enrollment is disabled', async () => {
     const harness = executorWith({});
 
@@ -137,6 +179,7 @@ describe('campaign enrollment', () => {
           now,
           25,
           CONTACT_HARD_STOP_REASONS,
+          new Date('2026-09-02T14:00:00.000Z'),
         ]);
         expect(sql).toMatch(/outreach_approved_at\s*>=\s*\$1/u);
         expect(sql).toMatch(
@@ -214,7 +257,7 @@ describe('job leasing', () => {
           ['send_step', 'fulfill', 'enrich', 'notify'],
           now,
           20,
-          new Date('2026-09-01T12:05:00.000Z'),
+          new Date('2026-09-01T14:05:00.000Z'),
           false,
         ]);
         expect(sql.match(/for update skip locked/gu)).toHaveLength(2);
@@ -291,14 +334,14 @@ describe('job leasing', () => {
           jobRow().id,
           leaseToken,
           now,
-          new Date('2026-09-01T12:10:00.000Z'),
+          new Date('2026-09-01T14:10:00.000Z'),
         ]);
         expect(sql).toMatch(/status = 'leased'/u);
         expect(sql).toMatch(/lease_token = \$2::uuid/u);
         expect(sql).toMatch(/lease_until > \$3/u);
         expect(sql).toMatch(/lease_until\s*=\s*greatest\(lease_until, \$4\)/u);
         return {
-          rows: [jobRow({ lease_until: new Date('2026-09-01T12:10:00.000Z') })],
+          rows: [jobRow({ lease_until: new Date('2026-09-01T14:10:00.000Z') })],
         };
       },
     });
@@ -310,7 +353,7 @@ describe('job leasing', () => {
       leaseDurationMs: 10 * 60_000,
     });
 
-    expect(renewed?.leaseUntil).toEqual(new Date('2026-09-01T12:10:00.000Z'));
+    expect(renewed?.leaseUntil).toEqual(new Date('2026-09-01T14:10:00.000Z'));
   });
 
   it('claims an internal notification provider attempt at most once for a live lease', async () => {
@@ -783,10 +826,10 @@ describe('final fulfillment authorization', () => {
             {
               id: fulfillJob.contact_id,
               email_normalized: 'reader@acme.com',
-              outreach_approved_at: new Date('2026-09-01T12:10:00.000Z'),
+              outreach_approved_at: new Date('2026-09-01T14:10:00.000Z'),
               deleted_at: null,
               latest_hard_stop_kind: 'complaint',
-              latest_hard_stop_at: new Date('2026-09-01T12:05:00.000Z'),
+              latest_hard_stop_at: new Date('2026-09-01T14:05:00.000Z'),
               mailbox_recovery_required: false,
               fulfillment_delivery_blocked: false,
               fulfillment_deletion_blocked: false,
@@ -820,10 +863,10 @@ describe('final fulfillment authorization', () => {
           {
             id: fulfillJob.contact_id,
             email_normalized: 'reader@acme.com',
-            outreach_approved_at: new Date('2026-09-01T12:10:00.000Z'),
+            outreach_approved_at: new Date('2026-09-01T14:10:00.000Z'),
             deleted_at: null,
             latest_hard_stop_kind: 'deletion',
-            latest_hard_stop_at: new Date('2026-09-01T12:05:00.000Z'),
+            latest_hard_stop_at: new Date('2026-09-01T14:05:00.000Z'),
             mailbox_recovery_required: false,
             fulfillment_delivery_blocked: false,
             fulfillment_deletion_blocked: true,
@@ -853,7 +896,7 @@ describe('final fulfillment authorization', () => {
       idempotency_key: 'campaign:v1:contact:step:1',
       payload: { campaign_version: 'v1', step: '1' },
     });
-    const stoppedAt = new Date('2026-09-01T12:03:00.000Z');
+    const stoppedAt = new Date('2026-09-01T14:03:00.000Z');
     const harness = executorWith({
       'acquire-google-reconcile-advisory-lock': () => ({ rows: [{}] }),
       'lock-contact-for-send': () => ({
@@ -861,7 +904,7 @@ describe('final fulfillment authorization', () => {
           {
             id: sendJob.contact_id,
             email_normalized: 'reader@acme.com',
-            outreach_approved_at: new Date('2026-09-01T12:00:00.000Z'),
+            outreach_approved_at: new Date('2026-09-01T14:00:00.000Z'),
             deleted_at: null,
             latest_hard_stop_kind: 'unsubscribe',
             latest_hard_stop_at: stoppedAt,
@@ -892,7 +935,7 @@ describe('final fulfillment authorization', () => {
 
 describe('leased transitions', () => {
   it('defers a live lease to one scheduler-owned retry time', async () => {
-    const availableAt = new Date('2026-09-01T12:01:00.000Z');
+    const availableAt = new Date('2026-09-01T14:01:00.000Z');
     const harness = executorWith({
       'defer-leased-job': (parameters, sql) => {
         expect(parameters).toEqual([
@@ -962,7 +1005,7 @@ describe('leased transitions', () => {
   });
 
   it('records provider acceptance idempotently and anchors later cadence with greatest', async () => {
-    const acceptedAt = new Date('2026-09-01T12:02:00.000Z');
+    const acceptedAt = new Date('2026-09-01T14:02:00.000Z');
     const harness = executorWith({
       'discover-provider-acceptance-contact': (_parameters, sql) => {
         expect(sql).not.toMatch(/for update/u);
@@ -984,7 +1027,7 @@ describe('leased transitions', () => {
             contact_id: jobRow().contact_id,
             project_id: null,
             kind: 'delivery.submission_authorized',
-            occurred_at: new Date('2026-09-01T12:01:00.000Z'),
+            occurred_at: new Date('2026-09-01T14:01:00.000Z'),
             data: { bounded_stop_race: true, lease_token: leaseToken },
           },
         ],
@@ -1022,11 +1065,15 @@ describe('leased transitions', () => {
         };
       },
       'anchor-campaign-cadence': (parameters, sql) => {
-        expect(parameters).toEqual([jobRow().contact_id, acceptedAt, 1]);
+        expect(parameters).toEqual([
+          jobRow().contact_id,
+          1,
+          new Date('2026-09-04T14:00:00.000Z'),
+          new Date('2026-09-11T14:00:00.000Z'),
+        ]);
         expect(sql).toMatch(/greatest/u);
-        expect(sql).toMatch(/interval '72 hours'/u);
-        expect(sql).toMatch(/interval '192 hours'/u);
-        expect(sql).toMatch(/interval '120 hours'/u);
+        expect(sql).toMatch(/\$3::timestamptz/u);
+        expect(sql).toMatch(/\$4::timestamptz/u);
         expect(sql).not.toMatch(/interval '\d+ days'/u);
         return { rows: [] };
       },
@@ -1052,7 +1099,7 @@ describe('leased transitions', () => {
   });
 
   it('upgrades only deletion-provisional unknown to known acceptance without resubmission', async () => {
-    const acceptedAt = new Date('2026-09-01T12:02:00.000Z');
+    const acceptedAt = new Date('2026-09-01T14:02:00.000Z');
     const interrupted = jobRow({
       status: 'failed',
       lease_until: null,
@@ -1076,7 +1123,7 @@ describe('leased transitions', () => {
             contact_id: interrupted.contact_id,
             project_id: null,
             kind: 'delivery.submission_authorized',
-            occurred_at: new Date('2026-09-01T12:01:00.000Z'),
+            occurred_at: new Date('2026-09-01T14:01:00.000Z'),
             data: { bounded_stop_race: true, lease_token: leaseToken },
           },
         ],
@@ -1178,7 +1225,7 @@ describe('leased transitions', () => {
             contact_id: ordinaryUnknown.contact_id,
             project_id: null,
             kind: 'delivery.submission_authorized',
-            occurred_at: new Date('2026-09-01T12:01:00.000Z'),
+            occurred_at: new Date('2026-09-01T14:01:00.000Z'),
             data: { bounded_stop_race: true, lease_token: leaseToken },
           },
         ],
@@ -1189,7 +1236,7 @@ describe('leased transitions', () => {
       recordProviderAcceptance(harness.executor, {
         jobId: String(ordinaryUnknown.id),
         leaseToken,
-        acceptedAt: new Date('2026-09-01T12:02:00.000Z'),
+        acceptedAt: new Date('2026-09-01T14:02:00.000Z'),
         providerEmailId: 'resend-email-ordinary',
       })
     ).rejects.toBeInstanceOf(JobLeaseConflictError);
@@ -1221,7 +1268,7 @@ describe('leased transitions', () => {
   ] as const)(
     'does not move cadence when the same provider acceptance is replayed after delivery becomes %s',
     async (deliveryStatus) => {
-      const acceptedAt = new Date('2026-09-01T12:02:00.000Z');
+      const acceptedAt = new Date('2026-09-01T14:02:00.000Z');
       const harness = executorWith({
         'discover-provider-acceptance-contact': () => ({
           rows: [{ contact_id: jobRow().contact_id }],
@@ -1249,7 +1296,7 @@ describe('leased transitions', () => {
               contact_id: jobRow().contact_id,
               project_id: null,
               kind: 'delivery.submission_authorized',
-              occurred_at: new Date('2026-09-01T12:01:00.000Z'),
+              occurred_at: new Date('2026-09-01T14:01:00.000Z'),
               data: { bounded_stop_race: true, lease_token: leaseToken },
             },
           ],
@@ -1292,7 +1339,7 @@ describe('leased transitions', () => {
   );
 
   it('rejects a completed replay whose immutable acceptance envelope was forged', async () => {
-    const acceptedAt = new Date('2026-09-01T12:02:00.000Z');
+    const acceptedAt = new Date('2026-09-01T14:02:00.000Z');
     const harness = executorWith({
       'discover-provider-acceptance-contact': () => ({
         rows: [{ contact_id: jobRow().contact_id }],
@@ -1318,7 +1365,7 @@ describe('leased transitions', () => {
             contact_id: jobRow().contact_id,
             project_id: null,
             kind: 'delivery.submission_authorized',
-            occurred_at: new Date('2026-09-01T12:01:00.000Z'),
+            occurred_at: new Date('2026-09-01T14:01:00.000Z'),
             data: { bounded_stop_race: true, lease_token: leaseToken },
           },
         ],
@@ -1354,7 +1401,7 @@ describe('leased transitions', () => {
   it.each(['not_submitted', 'unknown'] as const)(
     'does not treat impossible completed/%s state as an accepted replay',
     async (deliveryStatus) => {
-      const acceptedAt = new Date('2026-09-01T12:02:00.000Z');
+      const acceptedAt = new Date('2026-09-01T14:02:00.000Z');
       const harness = executorWith({
         'discover-provider-acceptance-contact': () => ({
           rows: [{ contact_id: jobRow().contact_id }],
@@ -1382,7 +1429,7 @@ describe('leased transitions', () => {
               contact_id: jobRow().contact_id,
               project_id: null,
               kind: 'delivery.submission_authorized',
-              occurred_at: new Date('2026-09-01T12:01:00.000Z'),
+              occurred_at: new Date('2026-09-01T14:01:00.000Z'),
               data: { bounded_stop_race: true, lease_token: leaseToken },
             },
           ],
@@ -1404,7 +1451,7 @@ describe('leased transitions', () => {
   );
 
   it('rejects a contact delivery when the mandatory final authorization is missing', async () => {
-    const acceptedAt = new Date('2026-09-01T12:02:00.000Z');
+    const acceptedAt = new Date('2026-09-01T14:02:00.000Z');
     const harness = executorWith({
       'discover-provider-acceptance-contact': () => ({
         rows: [{ contact_id: jobRow().contact_id }],
@@ -1444,7 +1491,7 @@ describe('leased transitions', () => {
       recordProviderAcceptance(harness.executor, {
         jobId: String(jobRow().id),
         leaseToken,
-        acceptedAt: new Date('2026-09-01T12:02:00.000Z'),
+        acceptedAt: new Date('2026-09-01T14:02:00.000Z'),
         providerEmailId: 'resend-email-1',
       })
     ).rejects.toThrow(/contact recipient/u);

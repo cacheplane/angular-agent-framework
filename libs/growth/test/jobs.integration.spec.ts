@@ -6,6 +6,7 @@ import {
   JobLeaseConflictError,
   authorizeLeasedJobForSubmission,
   createDatabaseExecutor,
+  deferLeasedJob,
   deleteContact,
   leaseDueJobs,
   markProviderAcceptanceUnknown,
@@ -214,7 +215,8 @@ describeDatabase(
       ]);
       expect(
         jobs.rows.every(
-          ({ available_at }) => +new Date(available_at) === +enrollmentAt
+          ({ available_at }) =>
+            new Date(available_at).toISOString() === '2097-09-02T14:00:00.000Z'
         )
       ).toBe(true);
     });
@@ -317,8 +319,8 @@ describeDatabase(
       expect(importedJobs.rows).toEqual([{ count: '0' }]);
     });
 
-    it('anchors fixed elapsed-hour cadence across DST and never compresses after pause', async () => {
-      const enrollmentAt = new Date('2026-03-07T19:00:00.000Z');
+    it('anchors business dates across DST and never compresses after late acceptance or pause', async () => {
+      const enrollmentAt = new Date('2026-03-05T19:00:00.000Z');
       const contactId = await createContact(enrollmentAt);
       await executor.transaction(async (transaction) => {
         await transaction.execute("set local time zone 'America/Los_Angeles'");
@@ -338,9 +340,23 @@ describeDatabase(
           batchSize: 10,
         });
 
+        for (const now of [
+          enrollmentAt,
+          new Date('2026-03-06T14:59:59.999Z'),
+        ]) {
+          expect(
+            await leaseDueJobs(sessionExecutor, {
+              kinds: ['send_step'],
+              now,
+              batchSize: 10,
+              leaseDurationMs: 60_000,
+              campaignEnabled: true,
+            })
+          ).toEqual([]);
+        }
         const beforeAcceptance = await leaseDueJobs(sessionExecutor, {
           kinds: ['send_step'],
-          now: new Date(enrollmentAt.getTime() + 5 * 60_000),
+          now: new Date('2026-03-06T15:00:00.000Z'),
           batchSize: 10,
           leaseDurationMs: 2 * 60 * 60_000,
           campaignEnabled: true,
@@ -351,14 +367,14 @@ describeDatabase(
         const step1 = beforeAcceptance[0];
         if (!step1?.leaseToken)
           throw new Error('step 1 must have a lease token');
-        const step1AcceptedAt = new Date('2026-03-07T20:00:00.000Z');
+        const step1AcceptedAt = new Date('2026-03-06T15:30:00.000Z');
         await expect(
           authorizeLeasedJobForSubmission(sessionExecutor, {
             campaignEnabled: true,
             deliveryEnabled: true,
             jobId: step1.id,
             leaseToken: step1.leaseToken,
-            now: new Date('2026-03-07T19:59:00.000Z'),
+            now: new Date('2026-03-06T15:29:00.000Z'),
           })
         ).resolves.toMatchObject({ authorized: true });
         await recordProviderAcceptance(sessionExecutor, {
@@ -369,28 +385,26 @@ describeDatabase(
         });
 
         const anchored = await transaction.execute<{
-          elapsed_hours: number;
+          available_at: Date;
           step: string;
         }>(
-          `select payload->>'step' as step,
-                  extract(epoch from (available_at - $2::timestamptz)) / 3600
-                    as elapsed_hours
+          `select payload->>'step' as step, available_at
            from growth_jobs
            where contact_id = $1 and payload->>'step' in ('2', '3')
            order by payload->>'step'`,
-          [contactId, step1AcceptedAt]
+          [contactId]
         );
         expect(
-          anchored.rows.map(({ step, elapsed_hours }) => [
+          anchored.rows.map(({ step, available_at }) => [
             step,
-            Number(elapsed_hours),
+            new Date(available_at).toISOString(),
           ])
         ).toEqual([
-          ['2', 72],
-          ['3', 192],
+          ['2', '2026-03-11T14:00:00.000Z'],
+          ['3', '2026-03-18T14:00:00.000Z'],
         ]);
 
-        const step2DueAt = new Date('2026-03-10T20:00:00.000Z');
+        const step2DueAt = new Date('2026-03-11T14:00:00.000Z');
         const earlyStep2 = await leaseDueJobs(sessionExecutor, {
           kinds: ['send_step'],
           now: new Date(step2DueAt.getTime() - 1),
@@ -401,7 +415,7 @@ describeDatabase(
         expect(earlyStep2).toEqual([]);
         const step2Lease = await leaseDueJobs(sessionExecutor, {
           kinds: ['send_step'],
-          now: step2DueAt,
+          now: new Date('2026-03-13T14:00:00.000Z'),
           batchSize: 10,
           leaseDurationMs: 2 * 60 * 60_000,
           campaignEnabled: true,
@@ -410,14 +424,14 @@ describeDatabase(
         const step2 = step2Lease[0];
         if (!step2?.leaseToken)
           throw new Error('step 2 must have a lease token');
-        const step2AcceptedAt = new Date('2026-03-10T21:00:00.000Z');
+        const step2AcceptedAt = new Date('2026-03-13T14:30:00.000Z');
         await expect(
           authorizeLeasedJobForSubmission(sessionExecutor, {
             campaignEnabled: true,
             deliveryEnabled: true,
             jobId: step2.id,
             leaseToken: step2.leaseToken,
-            now: new Date('2026-03-10T20:59:00.000Z'),
+            now: new Date('2026-03-13T14:29:00.000Z'),
           })
         ).resolves.toMatchObject({ authorized: true });
         await recordProviderAcceptance(sessionExecutor, {
@@ -427,16 +441,41 @@ describeDatabase(
           providerEmailId: `provider:${step2.id}`,
         });
 
-        const step3Row = await transaction.execute<{ elapsed_hours: number }>(
-          `select extract(epoch from (available_at - $2::timestamptz)) / 3600
-                    as elapsed_hours
+        // Replayed step 1 acceptance must not undo step 2's later anchor.
+        await recordProviderAcceptance(sessionExecutor, {
+          jobId: step1.id,
+          leaseToken: step1.leaseToken,
+          acceptedAt: step1AcceptedAt,
+          providerEmailId: `provider:${step1.id}`,
+        });
+        const step3Row = await transaction.execute<{ available_at: Date }>(
+          `select available_at
            from growth_jobs
            where idempotency_key = $1`,
-          [`campaign:v1:${contactId}:step:3`, step2AcceptedAt]
+          [`campaign:v1:${contactId}:step:3`]
         );
-        expect(Number(step3Row.rows[0]?.elapsed_hours)).toBe(120);
+        expect(new Date(step3Row.rows[0].available_at).toISOString()).toBe(
+          '2026-03-20T14:00:00.000Z'
+        );
 
-        const afterStep3Due = new Date('2026-03-16T00:00:00.000Z');
+        for (const now of [
+          new Date('2026-03-19T14:00:00.000Z'),
+          new Date('2026-03-20T15:00:00.000Z'),
+          new Date('2026-03-21T14:00:00.000Z'),
+          new Date('2026-03-22T14:00:00.000Z'),
+        ]) {
+          expect(
+            await leaseDueJobs(sessionExecutor, {
+              kinds: ['send_step'],
+              now,
+              batchSize: 10,
+              leaseDurationMs: 60_000,
+              campaignEnabled: true,
+            })
+          ).toEqual([]);
+        }
+
+        const afterStep3Due = new Date('2026-03-23T14:00:00.000Z');
         const paused = await leaseDueJobs(sessionExecutor, {
           kinds: ['send_step', 'notify'],
           now: afterStep3Due,
@@ -454,6 +493,156 @@ describeDatabase(
         });
         expect(resumed.map(({ payload }) => payload['step'])).toEqual([3]);
       });
+    });
+
+    it('rechecks the closing send window and a stop before submitting a leased campaign job', async () => {
+      const enrollmentAt = new Date('2026-03-05T19:00:00.000Z');
+      const contactId = await createContact(enrollmentAt);
+      await materializeCampaignEnrollment(executor, {
+        enrollmentEnabled: true,
+        enrollmentStartAt: enrollmentAt,
+        now: enrollmentAt,
+        batchSize: 10,
+      });
+      const [job] = await leaseDueJobs(executor, {
+        kinds: ['send_step'],
+        now: new Date('2026-03-06T15:59:00.000Z'),
+        batchSize: 10,
+        leaseDurationMs: 120_000,
+        campaignEnabled: true,
+      });
+      if (!job?.leaseToken) throw new Error('step 1 must be leased');
+      await expect(
+        authorizeLeasedJobForSubmission(executor, {
+          campaignEnabled: true,
+          deliveryEnabled: true,
+          jobId: job.id,
+          leaseToken: job.leaseToken,
+          now: new Date('2026-03-06T15:59:59.999Z'),
+          currentTime: () => new Date('2026-03-06T16:00:00.000Z'),
+        })
+      ).resolves.toMatchObject({
+        authorized: false,
+        reason: 'outside_send_window',
+      });
+      const authorizations = await executor.execute<{ count: string }>(
+        `select count(*)::text as count from growth_activity
+         where contact_id = $1 and kind = 'delivery.submission_authorized'`,
+        [contactId]
+      );
+      expect(authorizations.rows).toEqual([{ count: '0' }]);
+
+      const [resumed] = await leaseDueJobs(executor, {
+        kinds: ['send_step'],
+        now: new Date('2026-03-09T14:00:00.000Z'),
+        batchSize: 10,
+        leaseDurationMs: 60_000,
+        campaignEnabled: true,
+      });
+      if (!resumed?.leaseToken) throw new Error('step 1 must be leased again');
+      await executor.execute(
+        `insert into growth_activity (event_key, contact_id, kind, occurred_at, data)
+         values ($1, $2, 'unsubscribe', $3, '{}')`,
+        [
+          `jobs-integration:stop:${contactId}`,
+          contactId,
+          new Date('2026-03-09T14:00:01.000Z'),
+        ]
+      );
+      await expect(
+        authorizeLeasedJobForSubmission(executor, {
+          campaignEnabled: true,
+          deliveryEnabled: true,
+          jobId: resumed.id,
+          leaseToken: resumed.leaseToken!,
+          now: new Date('2026-03-09T14:00:02.000Z'),
+        })
+      ).resolves.toMatchObject({ authorized: false });
+    });
+
+    it('recovers an unauthorized later lease after safe deferral of an authorized campaign lease', async () => {
+      const enrollmentAt = new Date('2026-03-05T19:00:00.000Z');
+      const contactId = await createContact(enrollmentAt);
+      await materializeCampaignEnrollment(executor, {
+        enrollmentEnabled: true,
+        enrollmentStartAt: enrollmentAt,
+        now: enrollmentAt,
+        batchSize: 10,
+      });
+      const leaseAt = (now: Date) =>
+        leaseDueJobs(executor, {
+          kinds: ['send_step'],
+          now,
+          batchSize: 10,
+          leaseDurationMs: 120_000,
+          campaignEnabled: true,
+        });
+      const [friday] = await leaseAt(new Date('2026-03-06T15:59:00.000Z'));
+      if (!friday?.leaseToken) throw new Error('Friday lease required');
+      await expect(
+        authorizeLeasedJobForSubmission(executor, {
+          campaignEnabled: true,
+          deliveryEnabled: true,
+          jobId: friday.id,
+          leaseToken: friday.leaseToken,
+          now: new Date('2026-03-06T15:59:30.000Z'),
+        })
+      ).resolves.toMatchObject({ authorized: true });
+      await deferLeasedJob(executor, {
+        jobId: friday.id,
+        leaseToken: friday.leaseToken,
+        now: new Date('2026-03-06T16:00:00.000Z'),
+        availableAt: new Date('2026-03-09T14:00:00.000Z'),
+        errorCode: 'outside_send_window',
+      });
+      const [monday] = await leaseAt(new Date('2026-03-09T14:00:00.000Z'));
+      expect(monday?.id).toBe(friday.id);
+      expect(monday?.leaseToken).not.toBe(friday.leaseToken);
+
+      // Monday's worker dies before authorization; Friday's event must not
+      // make this new lease an ambiguous provider submission.
+      const [tuesday] = await leaseAt(new Date('2026-03-10T14:00:00.000Z'));
+      expect(tuesday).toMatchObject({
+        id: friday.id,
+        deliveryStatus: 'not_submitted',
+      });
+      if (!tuesday?.leaseToken)
+        throw new Error('Tuesday recovery lease required');
+      expect(tuesday.leaseToken).not.toBe(monday.leaseToken);
+      const audit = await executor.execute<{ count: string }>(
+        `select count(*)::text as count from growth_activity
+         where contact_id = $1 and kind = 'delivery.acceptance_unknown'`,
+        [contactId]
+      );
+      expect(audit.rows).toEqual([{ count: '0' }]);
+
+      // An interruption after authorization on the actual current lease
+      // still requires manual reconciliation instead of resubmission.
+      await expect(
+        authorizeLeasedJobForSubmission(executor, {
+          campaignEnabled: true,
+          deliveryEnabled: true,
+          jobId: tuesday.id,
+          leaseToken: tuesday.leaseToken,
+          now: new Date('2026-03-10T14:00:30.000Z'),
+        })
+      ).resolves.toMatchObject({ authorized: true });
+      expect(await leaseAt(new Date('2026-03-11T14:00:00.000Z'))).toEqual([]);
+      const state = await executor.execute<{
+        status: string;
+        delivery_status: string;
+        last_error_code: string;
+      }>(
+        'select status, delivery_status, last_error_code from growth_jobs where id = $1',
+        [friday.id]
+      );
+      expect(state.rows).toEqual([
+        {
+          status: 'failed',
+          delivery_status: 'unknown',
+          last_error_code: 'worker_interrupted_after_authorization',
+        },
+      ]);
     });
 
     it('gates non-campaign work independently and enforces tokened transitions and artifacts', async () => {
