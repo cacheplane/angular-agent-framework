@@ -12,26 +12,50 @@ describe('AgentLifecycleRegistry integration with injectAgent()', () => {
     TestBed.resetTestingModule();
   });
 
-  it('does not error or register when no registry is provided', () => {
-    TestBed.configureTestingModule({
-      providers: [
-        provideAgent({
-          assistantId: 'a',
-          apiUrl: 'http://localhost',
-          transport: new MockAgentTransport(),
-          threadId: null,
-        }),
-      ],
-    });
-    expect(() =>
-      TestBed.runInInjectionContext(() => injectAgent()),
-    ).not.toThrow();
+  it('collects an agent built in a child injector from the root registry', () => {
+    // The registry is `providedIn: 'root'`, so nothing has to be provided and
+    // an agent constructed *below* the root still registers upward.
+    TestBed.configureTestingModule({ providers: [] });
+    const registry = TestBed.inject(AgentLifecycleRegistry);
+    expect(registry.lifecycles()).toEqual([]);
+
+    const child = createEnvironmentInjector(
+      provideAgent({
+        assistantId: 'a',
+        apiUrl: 'http://localhost',
+        transport: new MockAgentTransport(),
+        threadId: null,
+      }),
+      TestBed.inject(EnvironmentInjector),
+    );
+    const a = runInInjectionContext(child, () => injectAgent());
+
+    expect(registry.lifecycles()).toEqual([a.lifecycle]);
   });
 
-  it('registers the agent lifecycle when AgentLifecycleRegistry is provided', () => {
+  it('unregisters a lifecycle when its injector is destroyed', () => {
+    TestBed.configureTestingModule({ providers: [] });
+    const registry = TestBed.inject(AgentLifecycleRegistry);
+
+    const child = createEnvironmentInjector(
+      provideAgent({
+        assistantId: 'a',
+        apiUrl: 'http://localhost',
+        transport: new MockAgentTransport(),
+        threadId: null,
+      }),
+      TestBed.inject(EnvironmentInjector),
+    );
+    const a = runInInjectionContext(child, () => injectAgent());
+    expect(registry.lifecycles()).toEqual([a.lifecycle]);
+
+    child.destroy();
+    expect(registry.lifecycles()).toEqual([]);
+  });
+
+  it('registers the agent lifecycle without the app providing the registry', () => {
     TestBed.configureTestingModule({
       providers: [
-        AgentLifecycleRegistry,
         provideAgent({
           assistantId: 'a',
           apiUrl: 'http://localhost',
@@ -52,10 +76,8 @@ describe('AgentLifecycleRegistry integration with injectAgent()', () => {
 
   it('accumulates multiple agent lifecycles in registration order', () => {
     // Use child environment injectors so two singleton AGENTs can coexist
-    // while sharing the root-provided AgentLifecycleRegistry.
-    TestBed.configureTestingModule({
-      providers: [AgentLifecycleRegistry],
-    });
+    // while sharing the root AgentLifecycleRegistry.
+    TestBed.configureTestingModule({ providers: [] });
     const registry = TestBed.inject(AgentLifecycleRegistry);
     const parent = TestBed.inject(EnvironmentInjector);
 

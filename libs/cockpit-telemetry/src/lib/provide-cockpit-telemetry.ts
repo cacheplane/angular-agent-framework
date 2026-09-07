@@ -7,7 +7,6 @@ import {
 import { COCKPIT_TELEMETRY_CONFIG, type CockpitTelemetryConfig } from './tokens';
 import { CockpitTelemetryService } from './cockpit-telemetry.service';
 import { ActivationAggregator } from './activation-aggregator';
-import { AgentLifecycleRegistry } from '@threadplane/langgraph';
 
 export function provideCockpitTelemetry(
   config: CockpitTelemetryConfig,
@@ -15,7 +14,8 @@ export function provideCockpitTelemetry(
   return makeEnvironmentProviders([
     { provide: COCKPIT_TELEMETRY_CONFIG, useValue: config },
     ActivationAggregator,
-    AgentLifecycleRegistry,
+    // AgentLifecycleRegistry is `providedIn: 'root'` in @threadplane/langgraph:
+    // re-providing it here would shadow the instance every agent registers into.
     CockpitTelemetryService,
     {
       provide: ENVIRONMENT_INITIALIZER,
