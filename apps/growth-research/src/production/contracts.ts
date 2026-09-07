@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { z } from 'zod';
-import { CandidateSchema, PageSchema } from '../pilot/contracts.js';
+import { CandidateSchema, PageSchema } from '../company/contracts.js';
 
 export const productionGraphId = 'growth_company';
 export const requestMaxAgeMs = 120_000;

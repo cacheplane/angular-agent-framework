@@ -70,6 +70,7 @@ const LINT_ONLY_FILES = new Set(['eslint.config.mjs']);
 /** Subset of SCOPE_KEYS that own jobs running `nx lint`. Flipped true
  *  when a LINT_ONLY_FILES entry changes. */
 const LINT_SCOPE_KEYS = [
+  'scripts_tests',
   'library',
   'cockpit',
   'website',

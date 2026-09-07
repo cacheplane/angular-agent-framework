@@ -7,7 +7,7 @@ import {
   hashCompanyEvidence,
 } from '../../../growth-research/src/production/contracts.js';
 // eslint-disable-next-line @nx/enforce-module-boundaries -- use the managed candidate validator at publication
-import { validateCandidate } from '../../../growth-research/src/pilot/validation.js';
+import { validateCandidate } from '../../../growth-research/src/company/validation.js';
 
 /** Revalidate the remote candidate against the original persisted snapshot. */
 export function companyArtifact(

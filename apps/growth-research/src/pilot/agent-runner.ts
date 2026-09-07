@@ -6,15 +6,15 @@ import type {
   PilotCase,
   Validation,
   SubmissionAttempt,
-} from './contracts.js';
+} from '../company/contracts.js';
 import {
   createPilotContext,
   withPilotContext,
   PilotStop,
   pilotLimits,
   drainPilotOperations,
-} from './context.js';
-import { validateCandidate } from './validation.js';
+} from '../company/context.js';
+import { validateCandidate } from '../company/validation.js';
 
 export interface AgentResult {
   attempts?: SubmissionAttempt[];

@@ -38,7 +38,7 @@ export async function postX(auth: XAuth, draft: Draft): Promise<PostResult> {
     return writeDryRunResult(draft);
   }
 
-  let mediaIds: string[] = [];
+  const mediaIds: string[] = [];
   if (draft.media && draft.media.length > 0) {
     for (const m of draft.media) {
       mediaIds.push(await uploadMedia(auth, m.png, m.alt));

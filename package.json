@@ -22,7 +22,14 @@
     "posthog:apply": "nx run posthog-tools:sync:apply",
     "posthog:report": "nx run posthog-tools:report",
     "posthog:quality": "nx run posthog-tools:quality:live",
-    "posthog:generate-types": "nx run posthog-tools:generate-types"
+    "posthog:generate-types": "nx run posthog-tools:generate-types",
+    "growth:report": "npm run growth:observability --",
+    "growth:research": "nx run growth-research:pilot --",
+    "growth:analytics:plan": "nx run posthog-tools:sync:plan",
+    "growth:analytics:report": "nx run posthog-tools:report",
+    "growth:analytics:quality": "nx run posthog-tools:quality:live",
+    "growth:search:pull": "npm run gsc:pull",
+    "growth:search:report": "npm run gsc:report"
   },
   "private": true,
   "overrides": {
@@ -101,9 +108,7 @@
     "apps/*",
     "libs/*",
     "marketing/assets",
-    "marketing/channels",
-    "marketing/agent",
-    "marketing/metrics"
+    "marketing/channels"
   ],
   "dependencies": {
     "@ag-ui/client": "^0.0.59",

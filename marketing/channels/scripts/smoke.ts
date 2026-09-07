@@ -1,13 +1,13 @@
 // Standalone smoke runner for channel adapters. NOT exported by the package.
 //
 // Usage:
-//   pnpm marketing:channels:x:auth                                    # one-time, fills .env (X only)
-//   DRY_RUN=1 pnpm marketing:channels:x:smoke
-//   pnpm marketing:channels:x:smoke
-//   SMOKE_MEDIA=1 pnpm marketing:channels:x:smoke
-//   SMOKE_THREAD=1 pnpm marketing:channels:x:smoke
-//   DRY_RUN=1 pnpm marketing:channels:devto:smoke
-//   pnpm marketing:channels:devto:smoke
+//   npm run marketing:channels:x:auth                                    # one-time, fills .env (X only)
+//   DRY_RUN=1 npm run marketing:channels:x:smoke
+//   npm run marketing:channels:x:smoke
+//   SMOKE_MEDIA=1 npm run marketing:channels:x:smoke
+//   SMOKE_THREAD=1 npm run marketing:channels:x:smoke
+//   DRY_RUN=1 npm run marketing:channels:devto:smoke
+//   npm run marketing:channels:devto:smoke
 //
 // The default channel is 'x'. Override with --channel=devto.
 
@@ -61,7 +61,7 @@ function buildDevToDraft(): Draft {
     text: [
       '# Marketing Pipeline Smoke Test',
       '',
-      'This is an automated smoke test of the @threadplane/marketing-channels Dev.to adapter.',
+      'This is an automated smoke test of the @threadplane-internal/marketing-channels Dev.to adapter.',
       '',
       `Posted at ${stamp}. Please ignore — this article will be deleted.`,
       '',

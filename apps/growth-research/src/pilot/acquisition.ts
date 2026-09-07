@@ -1,8 +1,8 @@
 import {
   createCompanyCapture,
   type CompanyCaptureDiagnostic,
-} from '../../../lifecycle/src/enrichment/company-capture.js';
-import type { CompanyPageEvidence } from '../../../lifecycle/src/enrichment/schema.js';
+  type CompanyPageEvidence,
+} from '@threadplane-internal/growth-capture';
 
 const expectedPaths = ['/'];
 export async function acquireCompanies(

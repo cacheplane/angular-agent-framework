@@ -1,5 +1,7 @@
 # Search Console API harness
 
+Part of [Growth architecture and operations](../../../../docs/growth/README.md).
+
 ## One-time setup
 
 1. In Google Cloud console, create (or reuse) a project and enable the

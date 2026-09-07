@@ -1,5 +1,7 @@
 # Internal growth operator reports
 
+Part of [Growth architecture and operations](../../docs/growth/README.md).
+
 Run the existing CLI with the intended read-only database credentials:
 
 ```sh

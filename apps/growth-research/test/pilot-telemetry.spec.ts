@@ -5,7 +5,7 @@ import {
   readEvidence,
   submitCandidate,
   recordRejectedSubmission,
-} from '../src/pilot/context.js';
+} from '../src/company/context.js';
 import { syntheticCorpus } from '../src/pilot/fixtures.js';
 
 afterEach(() => vi.unstubAllEnvs());

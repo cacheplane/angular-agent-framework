@@ -21,7 +21,6 @@ cockpit/**/angular/test-results/
 /test-results/
 
 # Marketing channel dry-run simulation outputs (ephemeral; see "simulatedAt")
-marketing/channels/marketing/cowork/outbox/dry-runs/
 
 # Env
 .env

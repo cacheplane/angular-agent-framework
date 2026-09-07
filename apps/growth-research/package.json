@@ -3,7 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "engines": { "node": "24" },
+  "engines": {
+    "node": "24"
+  },
   "dependencies": {
     "@dawn-ai/cli": "0.8.26",
     "@dawn-ai/core": "0.8.26",
@@ -22,6 +24,7 @@
   "devDependencies": {
     "@dawn-ai/evals": "0.8.26",
     "@dawn-ai/testing": "0.8.26",
-    "@dawn-ai/workspace": "0.8.26"
+    "@dawn-ai/workspace": "0.8.26",
+    "@threadplane-internal/growth-capture": "0.0.0"
   }
 }

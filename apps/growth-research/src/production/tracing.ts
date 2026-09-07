@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
-import type { PilotEvent } from '../pilot/context.js';
+import type { PilotEvent } from '../company/context.js';
 import type { TelemetrySink } from './telemetry.js';
 
 const EventSchema = z.object({

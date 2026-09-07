@@ -11,7 +11,7 @@ import {
   withPilotContext,
   submitCandidate,
   getPilotContext,
-} from '../src/pilot/context.js';
+} from '../src/company/context.js';
 import { syntheticCorpus } from '../src/pilot/fixtures.js';
 import { runAgent } from '../src/pilot/agent-runner.js';
 let sharedMock:
@@ -397,7 +397,7 @@ it('authorizes production contexts only under the independent managed gate', asy
     deadline: 123,
   });
   expect(context.deadline).toBe(123);
-  const { assertPilotContext } = await import('../src/pilot/context.js');
+  const { assertPilotContext } = await import('../src/company/context.js');
   await withPilotContext(context, async () => {
     expect(() => assertPilotContext()).toThrow(/pilot_mode_required/);
     vi.stubEnv('GROWTH_RESEARCH_PRODUCTION_MODE', 'managed-company-only');

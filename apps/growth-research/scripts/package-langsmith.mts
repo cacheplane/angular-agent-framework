@@ -47,7 +47,7 @@ async function copySource(root: string, path: string, output: string): Promise<v
   const name = basename(path);
   const local = relative(root, path);
   if (local.startsWith('src/production/') && !['contracts.ts', 'entry.ts', 'executor.ts', 'claims.ts', 'telemetry.ts', 'tracing.ts'].includes(name)) throw new Error(`Unexpected production source: ${local}`);
-  if (local.startsWith('src/pilot/') && !['context.ts', 'contracts.ts', 'validation.ts'].includes(name)) return;
+  if (local === 'src/pilot' || local.startsWith('src/pilot/')) return;
   if (name.startsWith('.') || name === 'node_modules' || /\.(spec|test)\.[cm]?ts$/.test(name)) return;
   if ((await lstat(path)).isDirectory()) {
     await mkdir(output, { recursive: true });

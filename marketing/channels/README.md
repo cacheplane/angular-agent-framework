@@ -1,4 +1,4 @@
-# @threadplane/marketing-channels
+# @threadplane-internal/marketing-channels
 
 Channel adapters for the Threadplane marketing pipeline. One adapter per channel, all behind a single `ChannelAdapter` interface.
 
@@ -15,7 +15,7 @@ Channel adapters for the Threadplane marketing pipeline. One adapter per channel
 ## Quickstart
 
 ```ts
-import { getAdapter } from '@threadplane/marketing-channels';
+import { getAdapter } from '@threadplane-internal/marketing-channels';
 
 const x = getAdapter('x');
 const result = await x.post({
@@ -30,7 +30,7 @@ console.log(result.url);
 X uses OAuth 2.0 User Context with PKCE. The first time you set it up, run the bootstrapper:
 
 ```bash
-pnpm marketing:channels:x:auth
+npm run marketing:channels:x:auth
 ```
 
 It opens your browser, you authorize the app, and it prints the tokens for you to paste into `.env`:
@@ -43,7 +43,7 @@ X_USER_HANDLE=brian
 
 Prerequisites: create an X v2 app at <https://developer.x.com/en/portal/dashboard> and set the `X_CLIENT_ID` + `X_CLIENT_SECRET` env vars from the app's OAuth 2.0 section.
 
-When an access token expires, the adapter automatically calls `/2/oauth2/token` to refresh and prints the new refresh token to stderr (X rotates refresh tokens on use; update your `.env` for the next process start).
+When an access token expires, the adapter automatically calls `/2/oauth2/token` to refresh. Rotated tokens remain in memory and are never logged by the adapter. They are not persisted across process restarts; if authentication fails after restarting, run the bootstrapper again.
 
 ## Auth (Dev.to)
 
@@ -61,7 +61,7 @@ Dev.to uses a single static API key.
 4. Verify with a dry-run:
 
    ```bash
-   DRY_RUN=1 pnpm marketing:channels:devto:smoke
+   DRY_RUN=1 npm run marketing:channels:devto:smoke
    ```
 
 ### Tag rules (Dev.to)
@@ -75,7 +75,9 @@ Dev.to is strict about tags. The validator catches violations before the API cal
 
 ## Dry-run
 
-Set `DRY_RUN=1` and `post()` writes the draft to `marketing/cowork/outbox/dry-runs/<id>.json` instead of hitting any API. Safe for local development and CI.
+Set `DRY_RUN=1` and `post()` writes the draft to `tmp/marketing/dry-runs/<id>.json` instead of hitting any API. Safe for local development and CI.
+
+The default path is relative to the process working directory. Set `MARKETING_DRY_RUN_DIR` to an absolute path or a different relative directory to direct output to an operator's review folder. This storage is independent of Cowork.
 
 ```bash
 DRY_RUN=1 npx tsx marketing/channels/scripts/smoke.ts
@@ -103,6 +105,7 @@ All adapters call `validateDraft()` first. Drafts that violate per-channel rules
 
 ## See also
 
+- [Growth architecture and operations](../../docs/growth/README.md)
 - Spec: `docs/superpowers/specs/marketing/2026-05-17-channel-adapters-design.md`
 - Meta: `docs/superpowers/specs/marketing/2026-05-17-marketing-meta-design.md`
 - Manual smoke recipe: `MANUAL-SMOKE.md`

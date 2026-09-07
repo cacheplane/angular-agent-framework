@@ -16,7 +16,10 @@ function serializeDraft(draft: Draft): unknown {
 
 export async function writeDryRunResult(draft: Draft): Promise<PostResult> {
   const id = `dry-${crypto.randomUUID()}`;
-  const outDir = path.join(process.cwd(), 'marketing', 'cowork', 'outbox', 'dry-runs');
+  const outDir = path.resolve(
+    process.cwd(),
+    process.env.MARKETING_DRY_RUN_DIR || path.join('tmp', 'marketing', 'dry-runs'),
+  );
   await fs.mkdir(outDir, { recursive: true });
   const file = path.join(outDir, `${id}.json`);
   await fs.writeFile(

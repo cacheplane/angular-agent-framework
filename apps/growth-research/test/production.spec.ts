@@ -11,7 +11,7 @@ import {
   submitCandidate,
   trackPilotOperation,
   countModelRequest,
-} from '../src/pilot/context.js';
+} from '../src/company/context.js';
 import { AsyncLocalStorageProviderSingleton } from '@langchain/core/singletons';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { RunTree } from 'langsmith/run_trees';

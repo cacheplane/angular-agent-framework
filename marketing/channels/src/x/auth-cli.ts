@@ -1,5 +1,5 @@
 // One-time OAuth 2.0 bootstrapper for the X adapter.
-// Run via: pnpm marketing:channels:x:auth
+// Run via: npm run marketing:channels:x:auth
 
 import http from 'node:http';
 import crypto from 'node:crypto';

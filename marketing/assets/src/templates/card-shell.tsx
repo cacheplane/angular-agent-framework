@@ -136,7 +136,6 @@ export function CardShell({ input, planeDataUri, headlineSize, padding }: CardSh
             color: brand.ink,
           }}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={planeDataUri} width={34} height={34} alt="" />
           <span>{brand.wordmark}</span>
         </div>

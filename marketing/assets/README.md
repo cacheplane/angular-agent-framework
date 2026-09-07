@@ -1,11 +1,11 @@
-# @threadplane/marketing-assets
+# @threadplane-internal/marketing-assets
 
 Branded social-card rendering for the marketing pipeline. `renderCard()` turns typed input into a PNG via satori (JSX→SVG) + @resvg/resvg-js (SVG→PNG). No Next.js dependency — runs anywhere Node does.
 
 ## Usage
 
 ```ts
-import { renderCard } from '@threadplane/marketing-assets';
+import { renderCard } from '@threadplane-internal/marketing-assets';
 
 const card = await renderCard({
   template: 'x-card',

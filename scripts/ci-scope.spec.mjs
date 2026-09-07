@@ -120,6 +120,7 @@ describe('classifyFromAffected — lint-only files', () => {
     assert.equal(scope.examples_chat, true);
     assert.equal(scope.growth_lifecycle, true);
     assert.equal(scope.growth_research, true);
+    assert.equal(scope.scripts_tests, true);
     // E2e / smoke / deploy / posthog scopes: false
     assert.equal(scope.website_e2e, false);
     assert.equal(scope.cockpit_e2e, false);
@@ -155,7 +156,7 @@ describe('growth research project ownership', () => {
       await readFile('apps/growth-research/project.json', 'utf8')
     );
     const scope = classifyFromAffected(
-      ['apps/growth-research/src/pilot/context.ts'],
+      ['apps/growth-research/src/company/context.ts'],
       [{ name: project.name, tags: project.tags }]
     );
     assert.deepEqual(scope, { ...emptyScope(), growth_research: true });
@@ -163,7 +164,7 @@ describe('growth research project ownership', () => {
 
   it('Nx selects Growth Research for a pilot source change', () => {
     assert.ok(
-      nxAffectedFiles('apps/growth-research/src/pilot/context.ts').includes(
+      nxAffectedFiles('apps/growth-research/src/company/context.ts').includes(
         'growth-research'
       )
     );
@@ -506,6 +507,20 @@ describe('classifyFromAffected — apps + fallback paths via namedInputs', () =>
 });
 
 describe('classifyFromAffected — tag isolation', () => {
+  it('marketing operator changes select the job that runs their boundary checks', async () => {
+    for (const name of ['assets', 'channels']) {
+      const project = JSON.parse(await readFile(`marketing/${name}/project.json`, 'utf8'));
+      const scope = classifyFromAffected(
+        [`marketing/${name}/src/index.ts`],
+        [{ name: project.name, tags: project.tags }]
+      );
+      assert.equal(scope.scripts_tests, true);
+      assert.equal(scope.growth_lifecycle, false);
+    }
+    const workflow = await readFile('.github/workflows/ci.yml', 'utf8');
+    const job = workflow.split('  scripts-tests:')[1].split('\n  library:')[0];
+    assert.match(job, /nx run-many -t lint test --projects=marketing-assets,marketing-channels/);
+  });
   it('tags not prefixed with "scope:" are ignored', () => {
     const scope = classifyFromAffected(
       ['some.ts'],
