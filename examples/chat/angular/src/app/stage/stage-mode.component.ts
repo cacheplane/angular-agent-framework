@@ -2,7 +2,6 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
-  ElementRef,
   EnvironmentInjector,
   InjectionToken,
   afterNextRender,
@@ -282,6 +281,7 @@ export class StageMode {
   protected readonly storageKey = `stage-debug-${Date.now()}`;
   protected readonly dock = signal<StageDock>(readStageDock());
   private readonly debugPanel = viewChild(ChatDebugComponent);
+  private readonly chat = viewChild(ChatComponent);
 
   readonly timeline = signal<StageTimeline | null>(null);
   readonly controller = signal<StageController | null>(null);
@@ -292,7 +292,6 @@ export class StageMode {
       ? { onSeek: () => () => undefined, postReady: () => undefined, postState: () => undefined }
       : browserStageBridge();
 
-  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private lastPosted = '';
   private seekTarget: number | null = null;
   private seekFrame: number | null = null;
@@ -444,13 +443,9 @@ export class StageMode {
    * stage is a scrubbed display surface, not a reading surface, so a viewer
    * who scrolls up is re-pinned on the next applied seek.
    *
-   * `.chat-scroll` is the chat's own scroll container
-   * (libs/chat/.../chat.component.ts, `#scrollContainer`); it exposes no
-   * scroll API.
-   * TODO: replace with a public scrollToBottom() on ChatComponent
-   * (libs/chat/src/lib/compositions/chat/chat.component.ts, today protected
-   * onScrollBubbleClick) so this stops depending on the private .chat-scroll
-   * class.
+   * The write goes through `ChatComponent.scrollToBottom()`, which counts it
+   * as programmatic so the chat's own scroll handler does not read it as the
+   * user unpinning.
    */
   private pinTranscript(): void {
     if (typeof requestAnimationFrame !== 'function') return;
@@ -463,8 +458,7 @@ export class StageMode {
       this.pinPending = false;
       this.pinFrame = requestAnimationFrame(() => {
         this.pinFrame = null;
-        const el = this.host.nativeElement.querySelector<HTMLElement>('chat .chat-scroll');
-        if (el) el.scrollTop = el.scrollHeight;
+        this.chat()?.scrollToBottom();
         if (this.pinPending) {
           this.pinPending = false;
           this.pinTranscript();

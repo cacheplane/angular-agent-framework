@@ -1095,3 +1095,33 @@ describe('ChatComponent — markdown delivery', () => {
     expect(markdown.componentInstance.document()).toEqual(expected);
   });
 });
+
+describe('ChatComponent — scrollToBottom', () => {
+  it('scrolls the transcript to its end, re-pins, and does not read its own scroll as the user unpinning', () => {
+    TestBed.configureTestingModule({});
+    const fx = TestBed.createComponent(ChatComponent);
+    // The transcript (and its scroll container) renders only once a message
+    // exists; with none the chat shows its welcome screen.
+    fx.componentRef.setInput(
+      'agent',
+      mockAgent({ messages: [{ id: '1', role: 'assistant', content: 'Hi', delivery: staticDelivery('1') }] }),
+    );
+    fx.detectChanges();
+    const el = (fx.nativeElement as HTMLElement).querySelector<HTMLElement>('.chat-scroll');
+    if (!el) throw new Error('scroll container did not render');
+    Object.defineProperty(el, 'scrollHeight', { configurable: true, value: 2400 });
+    Object.defineProperty(el, 'clientHeight', { configurable: true, value: 400 });
+    Object.defineProperty(el, 'scrollTop', { configurable: true, writable: true, value: 0 });
+    const cmp = fx.componentInstance as unknown as { pinned: { set(v: boolean): void; (): boolean }; onScroll(): void };
+    // A user scrolled away: pinned is false and a scroll event would keep it so.
+    cmp.pinned.set(false);
+    fx.componentInstance.scrollToBottom();
+    expect(el.scrollTop).toBe(2400);
+    expect(cmp.pinned()).toBe(true);
+    // The scroll event raised by the programmatic write must not unpin, even
+    // though scrollTop is read back mid-frame before layout settles.
+    Object.defineProperty(el, 'scrollTop', { configurable: true, writable: true, value: 0 });
+    cmp.onScroll();
+    expect(cmp.pinned()).toBe(true);
+  });
+});

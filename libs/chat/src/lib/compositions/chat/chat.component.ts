@@ -806,13 +806,26 @@ export class ChatComponent {
     if (nextPinned !== this.pinned()) this.pinned.set(nextPinned);
   }
 
-  protected onScrollBubbleClick(): void {
+  /**
+   * Scrolls the transcript to its newest content and re-pins it, exactly as
+   * the scroll-to-bottom bubble does. Hosts that apply many messages in one
+   * pass (a replay seeking to a recorded time, a restored thread rendered
+   * after tool views mount) call this once their layout has settled: the
+   * chat's own pin runs when messages change, which can be before the views
+   * that follow them have rendered. The write is counted as programmatic so
+   * the scroll event it raises does not read as the user unpinning.
+   */
+  scrollToBottom(): void {
     const el = this.scrollContainer()?.nativeElement;
     if (!el) return;
     this.programmaticScrollCount++;
     el.scrollTop = el.scrollHeight;
     requestAnimationFrame(() => { this.programmaticScrollCount--; });
     this.pinned.set(true);
+  }
+
+  protected onScrollBubbleClick(): void {
+    this.scrollToBottom();
   }
 
   protected onUserSubmitted(): void {
