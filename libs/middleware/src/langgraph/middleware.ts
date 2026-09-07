@@ -85,13 +85,18 @@ export function bindClientTools<M extends BindableModel>(
  * Routing helper for a LangGraph conditional edge. Returns `toolsNode` when the last
  * message has a server tool call (dispatch to the server ToolNode); otherwise `end`
  * (client-only calls — the browser executes them — and no-tool-call turns both end).
+ *
+ * `toolsNode` defaults to `'server_tools'`. It cannot default to `'tools'`, because
+ * {@link clientToolsChannel} declares a `tools` state channel and LangGraph.js shares
+ * one namespace between channel names and node names — `addNode('tools', …)` throws
+ * "tools is already being used as a state attribute".
  */
 export function routeAfterAgent(
   state: ClientToolsState,
   serverToolNames: Iterable<string>,
   opts?: { toolsNode?: string; end?: string },
 ): string {
-  const toolsNode = opts?.toolsNode ?? 'tools';
+  const toolsNode = opts?.toolsNode ?? 'server_tools';
   const end = opts?.end ?? '__end__';
   return hasServerToolCall(state, serverToolNames) ? toolsNode : end;
 }

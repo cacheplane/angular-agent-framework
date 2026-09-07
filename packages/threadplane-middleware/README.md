@@ -71,6 +71,24 @@ from threadplane.middleware.langgraph import (
 )
 ```
 
+## Pushing data to the frontend mid-run
+
+```python
+from langchain_core.runnables import RunnableConfig
+from threadplane.middleware.langgraph import emit_custom_event
+
+async def analysis_node(state, config: RunnableConfig):
+    await emit_custom_event("analysis_progress", {"pct": 42}, config=config)
+    return state
+```
+
+`emit_custom_event(name, value, *, config=None)` wraps LangChain's
+`adispatch_custom_event`. An `ag-ui-langgraph` backend consumes the graph
+through `astream_events`, and only `adispatch_custom_event` places an event on
+that stream — a `get_stream_writer()` write with `stream_mode="custom"` is
+silently dropped and never reaches the client. Pass `config` when the node
+already receives one; omit it and the ambient run context is used.
+
 ## Development
 
 ```bash

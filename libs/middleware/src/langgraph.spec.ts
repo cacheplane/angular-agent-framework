@@ -105,7 +105,7 @@ describe('routeAfterAgent', () => {
     tools: [{ name: 'get_weather', description: '', parameters: {} }],
   });
   it('routes a server tool call to the tools node', () => {
-    expect(routeAfterAgent(st(['search']), ['search'])).toBe('tools');
+    expect(routeAfterAgent(st(['search']), ['search'])).toBe('server_tools');
   });
   it('routes a client-only tool call to END', () => {
     expect(routeAfterAgent(st(['get_weather']), [])).toBe('__end__');
@@ -114,7 +114,7 @@ describe('routeAfterAgent', () => {
     expect(routeAfterAgent(st([]), [])).toBe('__end__');
   });
   it('routes a mixed call to the server (precedence)', () => {
-    expect(routeAfterAgent(st(['get_weather', 'search']), ['search'])).toBe('tools');
+    expect(routeAfterAgent(st(['get_weather', 'search']), ['search'])).toBe('server_tools');
   });
   it('honors custom node names', () => {
     expect(routeAfterAgent(st(['search']), ['search'], { toolsNode: 'act' })).toBe('act');
@@ -131,7 +131,7 @@ describe('clientToolsRouter', () => {
   });
   it('returns a callback that routes via routeAfterAgent with bound serverToolNames', () => {
     const route = clientToolsRouter(['search']);
-    expect(route(st(['search']))).toBe('tools');
+    expect(route(st(['search']))).toBe('server_tools');
     expect(route(st(['get_weather']))).toBe('__end__');
   });
   it('honors custom node names', () => {

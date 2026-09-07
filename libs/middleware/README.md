@@ -55,9 +55,16 @@ const graph = new StateGraph(State)
   .addNode('agent', agent)
   .addEdge('__start__', 'agent')
   // clientToolsRouter binds the server tool names once; pass [] when there are none.
-  .addConditionalEdges('agent', clientToolsRouter([]), ['tools', END])
+  // With no server tools there is no tool node, so END is the only destination.
+  .addConditionalEdges('agent', clientToolsRouter([]), [END])
   .compile();
 ```
+
+The router's server destination defaults to `'server_tools'`. It cannot default to
+`'tools'`: `clientToolsChannel()` declares a `tools` state channel, and LangGraph.js
+shares one namespace between channel names and node names, so `addNode('tools', …)`
+throws *"tools is already being used as a state attribute"*. Name the server tool node
+`server_tools` (or pass `{ toolsNode }` to use another name).
 
 ### What happens with a client tool call
 

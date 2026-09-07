@@ -65,19 +65,19 @@ const graph = new StateGraph(State)
   .addEdge('server_tools', 'agent')
   .addConditionalEdges(
     'agent',
-    (state) => clientToolsRouter(serverToolNames, { toolsNode: 'server_tools' })(state),
+    (state) => clientToolsRouter(serverToolNames)(state),
     ['server_tools', END],
   )
   .compile();
 ```
 
-When the last model message calls a server tool, the router returns `'server_tools'`. When the last model message calls only browser-declared client tools, the router returns `END` so the frontend can execute the call and resume.
+When the last model message calls a server tool, the router returns `'server_tools'` — its default destination, which is why the snippet above passes no options. When the last model message calls only browser-declared client tools, the router returns `END` so the frontend can execute the call and resume.
 
-<Callout type="warning" title="Do not name the server tool node `tools`">
-`clientToolsChannel()` declares a `tools` state channel, and LangGraph refuses a node whose name collides with a channel: `addNode` throws *"tools is already being used as a state attribute (a.k.a. a channel), cannot also be used as a node name"*. The router's default destination is `'tools'`, so pass `toolsNode` whenever the graph actually has a server tool node. Every destination named in the path map must also exist as a node, or `.compile()` throws *"Found edge ending at unknown node"*.
+<Callout type="warning" title="A node cannot be named `tools`">
+`clientToolsChannel()` declares a `tools` state channel, and LangGraph refuses a node whose name collides with a channel: `addNode` throws *"tools is already being used as a state attribute (a.k.a. a channel), cannot also be used as a node name"*. That is why the router's default destination is `'server_tools'`. Name the node something else and pass `toolsNode` if `'server_tools'` does not suit you. Every destination named in the path map must also exist as a node, or `.compile()` throws *"Found edge ending at unknown node"*.
 </Callout>
 
-A graph with no server tools at all can drop the node, the override, and the path-map entry, and route to `[END]` alone — which is what the package's own integration test does.
+A graph with no server tools at all can drop the node and the path-map entry, and route to `[END]` alone — which is what the package's own integration test does.
 
 ## Complete skeleton
 
@@ -114,7 +114,7 @@ export const graph = new StateGraph(State)
   .addEdge('server_tools', 'agent')
   .addConditionalEdges(
     'agent',
-    (state) => clientToolsRouter(serverToolNames, { toolsNode: 'server_tools' })(state),
+    (state) => clientToolsRouter(serverToolNames)(state),
     ['server_tools', END],
   )
   .compile();
