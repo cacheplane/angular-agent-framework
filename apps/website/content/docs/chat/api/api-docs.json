@@ -2319,6 +2319,12 @@
         ]
       },
       {
+        "name": "scrollToBottom",
+        "signature": "scrollToBottom(): void",
+        "description": "Scrolls the transcript to its newest content and re-pins it, exactly as\nthe scroll-to-bottom bubble does. Hosts that apply many messages in one\npass (a replay seeking to a recorded time, a restored thread rendered\nafter tool views mount) call this once their layout has settled: the\nchat's own pin runs when messages change, which can be before the views\nthat follow them have rendered. The write is counted as programmatic so\nthe scroll event it raises does not read as the user unpinning.",
+        "params": []
+      },
+      {
         "name": "submitMessage",
         "signature": "submitMessage(text: string): void",
         "description": "Programmatic submit. Calls `agent.submit({ message: text })` and updates\nthe CHAT_LIFECYCLE signals. Trimmed-empty text is a no-op.",
