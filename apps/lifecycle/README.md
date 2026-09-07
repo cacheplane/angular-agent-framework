@@ -1,6 +1,6 @@
 # Threadplane lifecycle service
 
-This Node 24 service builds Dawn 0.8.21's supported Hono target and serves it through an app-owned Vercel function. The Vercel adapter requires the exact `LIFECYCLE_SERVICE_SECRET` bearer token on every Dawn path. Dawn route middleware repeats the same check for execution routes.
+This Node 24 service builds Dawn 0.8.26's native Vercel target and adds a thin app-owned service boundary. The Vercel adapter requires the exact `LIFECYCLE_SERVICE_SECRET` bearer token on every Dawn path. Dawn route middleware repeats the same check for execution routes.
 
 The service has two database boundaries:
 
@@ -25,7 +25,7 @@ Recipient delivery also requires `GROWTH_PUBLIC_ACTION_ORIGIN`, a server-only ba
 
 Set `GROWTH_DATABASE_ENVIRONMENT` to exactly `preview`, `production`, or `test` in every process that handles verified Resend events. A verified webhook whose `environment` provider tag is missing or differs from that value is acknowledged without opening a growth transaction or changing delivery/suppression state.
 
-The app's Vercel project must use `apps/lifecycle` as its root directory, enable access to files outside that directory for the npm/Nx monorepo build, and select Node 24. `npx nx build lifecycle` generates the Dawn Hono artifact, rewrites its generated store binding to `DAWN_DATABASE_URL`, verifies the expected `app.mjs` fetch export, and drives an authenticated local request through the adapter.
+The app's Vercel project must use `apps/lifecycle` as its root directory, enable access to files outside that directory for the npm/Nx monorepo build, and select Node 24. `npx nx build lifecycle` generates the closed native function in `.vercel/output`, bundles a sibling authentication wrapper, and verifies it under plain Node outside the workspace. The wrapper passes the original request with an explicit Dawn database binding; generated source is never rewritten. A missing `DAWN_DATABASE_URL` fails closed. Function metadata preserves the 60-second limit. The existing Nx build command is intentional; Dawn may emit a reference Vercel configuration because it only recognizes its direct CLI command. Resend's optional React email renderer is installed so the native bundle has no unresolved package imports; campaign templates remain unchanged.
 
 Keep `LIFECYCLE_CRON_ENABLED` unset or set to anything other than the exact value `true` until the preview dogfood checklist in `docs/superpowers/runbooks/2026-08-31-growth-lifecycle-cutover.md` passes. In particular, verify outer auth on all Dawn surfaces, named-thread dispatch, duplicate invocation behavior, recovery pause/resume, cancellation/AbortSignal propagation, and Dawn persistence across fresh instances. Send findings to Dawn task `01a05e2f-7e93-7bd0-af74-f13d5a7719cd` for generalized backport.
 

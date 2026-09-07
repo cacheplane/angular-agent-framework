@@ -6,13 +6,17 @@
   "engines": {
     "node": ">=24.0.0"
   },
+  "devDependencies": {
+    "esbuild": "0.27.4"
+  },
   "dependencies": {
-    "@dawn-ai/cli": "0.8.21",
-    "@dawn-ai/core": "0.8.21",
-    "@dawn-ai/langgraph": "0.8.21",
-    "@dawn-ai/postgres-storage": "0.8.21",
-    "@dawn-ai/sdk": "0.8.21",
+    "@dawn-ai/cli": "0.8.26",
+    "@dawn-ai/core": "0.8.26",
+    "@dawn-ai/langgraph": "0.8.26",
+    "@dawn-ai/postgres-storage": "0.8.26",
+    "@dawn-ai/sdk": "0.8.26",
     "@neondatabase/serverless": "0.10.4",
+    "@react-email/render": "2.1.0",
     "@threadplane-internal/growth": "0.0.0",
     "hono": "4.13.5",
     "parse5": "8.0.1",

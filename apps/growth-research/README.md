@@ -136,7 +136,7 @@ Human semantic review is not replaced by model grading or string matching.
 
 | Finding | Evidence / owning layer | Status and next verification |
 | --- | --- | --- |
-| Nullable tool fields become required strings | Dawn 0.8.24 compiler JSON schema conversion; observed generated submit schema and failed unknown-field submissions | Upstream core and LangChain conversion regression/fix in progress. Pilot uses the supported authored Zod schema export; a package upgrade must rerun the original extraction probe before declaring the upstream defect released. |
+| Nullable tool fields become required strings | Dawn 0.8.24 compiler JSON schema conversion; observed generated submit schema and failed unknown-field submissions | Reproduced with published 0.8.26: compiler extraction of `submitCandidate` still emits required string-only profile fields. Pilot retains the supported authored Zod schema export; this upgrade does not establish an upstream fix. |
 | Bound model calls bypass subclass generation hooks | Real bound-model regression in this application | Guards, request counts and JSON usage capture live at the actual provider fetch boundary; generated graph tests verify it. |
 | Page capture yields empty, partial, or mostly navigation evidence | Company-only acquisition against the six documented domains | Outcomes retained. Evaluate extraction improvements separately; do not hide failures by swapping cases. |
 | Baseline provider rejects billing state | Earlier live baseline synthetic calls returned a classified billing rejection | Historical finding for the retired adapter; failed calls provide no quality comparison. |
@@ -150,7 +150,11 @@ The local evaluation harness remains isolated from those production jobs.
 ## Synthetic compatibility deployment
 
 Private synthetic Dawn application, separate from lifecycle and the Python cockpit.
-Published Dawn packages are pinned to `0.8.24`; the app and deployment require Node 24.
+Published Dawn packages are pinned to `0.8.26`; the app and deployment require Node 24.
+The published 0.8.25 release contains no functional package changes; 0.8.26 adds
+opt-in server CORS. The tagged core and LangChain sources contain no nullable-schema,
+memory-enablement, or delegation-checkpoint fix, so the compatibility workarounds
+below remain in place. Historical findings above retain their observed versions.
 The only public graph ID is `growth_research`, pointing to the unchanged generated
 Dawn `/enrichment/research#agent` entry. The safe alias avoids slash/hash routing
 failures in the Agent Server's internal per-graph HTTP endpoints. Its registered researcher is
@@ -193,8 +197,13 @@ it after changing direct dependencies, use `deploymentManifest()` from
 `npm install --package-lock-only --ignore-scripts --workspaces=false` there, and copy
 its lock to `deployment-package-lock.json`. The build rejects stale direct dependency
 locks. Do not copy the monorepo lock or workspace dependencies into the artifact.
-The workspace lock keeps this app's dependency tree nested so its testing helpers
-and runtime resolve Dawn 0.8.24 while lifecycle retains Dawn 0.8.21.
+The workspace lock pins this app's testing helpers and runtime, together with
+lifecycle, to Dawn 0.8.26.
+The SDK remains nested under each app so its Zod 4 peer resolves to that app's
+version, rather than the root Zod 3 package. Regenerating the stale Dawn dependency lock entries
+with peer resolution enabled restores this layout, which clean `npm ci` preserves
+with the repository's existing install settings. The packaging suite checks
+SDK-local Zod resolution to catch regressions during later lock regeneration.
 
 Set `GROWTH_RESEARCH_FIXTURE_MODE=synthetic-only` explicitly to permit model calls.
 The default blocks them. The fixed corpus contains `atlas` and `beacon`; tools accept

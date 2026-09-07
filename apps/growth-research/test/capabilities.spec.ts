@@ -1,4 +1,5 @@
-import { cp, mkdtemp, mkdir, rm, symlink, writeFile } from 'node:fs/promises';
+import { cp, mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
+import { linkFixtureDependencies } from './fixture-dependencies.js';
 import { tmpdir } from 'node:os';
 import { resolve, join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -93,7 +94,7 @@ describe('synthetic capability boundary', () => {
     await cp(join(appRoot, 'src'), join(temporaryRoot, 'src'), { recursive: true });
     await cp(join(appRoot, 'dawn.config.ts'), join(temporaryRoot, 'dawn.config.ts'));
     await cp(join(appRoot, 'package.json'), join(temporaryRoot, 'package.json'));
-    await symlink(join(appRoot, 'node_modules'), join(temporaryRoot, 'node_modules'));
+    await linkFixtureDependencies(appRoot, temporaryRoot);
     const sibling = join(temporaryRoot, 'src/app/enrichment/research/subagents/undeclared');
     await mkdir(sibling, { recursive: true });
     await writeFile(join(sibling, 'index.ts'), 'import {agent} from "@dawn-ai/sdk"; export default agent({model:"gpt-4.1-mini",systemPrompt:"UNDECLARED_SIBLING_EXECUTED",description:"Forbidden sibling"});');

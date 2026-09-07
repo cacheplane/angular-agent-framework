@@ -1,5 +1,6 @@
 import { expect, it, vi, afterEach, afterAll, beforeAll } from 'vitest';
-import { cp, mkdtemp, rm, symlink } from 'node:fs/promises';
+import { cp, mkdtemp, rm } from 'node:fs/promises';
+import { linkFixtureDependencies } from './fixture-dependencies.js';
 import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { resolve, join } from 'node:path';
@@ -31,11 +32,7 @@ beforeAll(async () => {
       recursive: true,
     });
   }
-  await symlink(
-    join(appRoot, 'node_modules'),
-    join(generatedRoot, 'node_modules'),
-    'dir'
-  );
+  await linkFixtureDependencies(appRoot, generatedRoot);
   execFileSync(process.execPath, ['scripts/dawn-cli.mts', 'build'], {
     cwd: generatedRoot,
     stdio: 'pipe',
