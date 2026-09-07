@@ -20,9 +20,8 @@ function normalize(entry: Type<unknown> | RenderViewEntry): NormalizedEntry {
  * Build an {@link AngularRegistry} from a plain object mapping tool-call names
  * to Angular components (or fully specified {@link RenderViewEntry} objects).
  *
- * The returned registry is consumed by both `provideRender` (to drive
- * dynamic component rendering) and `provideChat` (via `renderRegistry`) so
- * that a single `defineAngularRegistry` call wires both layers.
+ * The returned registry is consumed by `provideRender` to drive dynamic
+ * component rendering.
  *
  * **Entry forms**
  * - Bare `Type<unknown>` — the component is paired with the built-in

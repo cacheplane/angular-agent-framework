@@ -56,7 +56,7 @@ Both halves matter, and the first one matters for a reason worth reading the nex
 
 ### Providing the agent
 
-`provideAgent()` from `@threadplane/langgraph` registers the agent at the application root, and `provideChat({})` registers the chat defaults with no overrides. `subagentToolNames: ['task']` is already the default, so the line changes nothing at runtime and is there to say which tool call means that a child started. The example resolves its connection at runtime because the host that serves the demo decides which runtime is attached; your own application passes `apiUrl` and `assistantId` directly.
+`provideAgent()` from `@threadplane/langgraph` registers the agent at the application root, and it is the only provider the `<chat>` composition requires. `subagentToolNames: ['task']` is already the default, so the line changes nothing at runtime and is there to say which tool call means that a child started. The example resolves its connection at runtime because the host that serves the demo decides which runtime is attached; your own application passes `apiUrl` and `assistantId` directly.
 
 <ExampleCode file="app.config.ts" />
 

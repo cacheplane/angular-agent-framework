@@ -115,21 +115,19 @@ It is a peer dep so you can swap it.
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
 import { provideAgent } from '@threadplane/ag-ui';
-import { provideChat } from '@threadplane/chat';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideAgent({ url: 'http://localhost:8000/agent' }),
-    provideChat({ assistantName: 'Astra' }),
   ],
 };
 ```
 
 That is the whole bootstrap.
 `provideAgent` is the AG-UI transport. It wraps the official `@ag-ui/client` `HttpAgent` and exposes the signal-shaped contract via DI.
-`provideChat` is the chat UI's configuration.
+It is the only provider the chat components need.
 
-Notice they are independent.
+Notice how little the two layers know about each other.
 `@threadplane/chat` does not know it is talking to an AG-UI backend.
 It just reads from the `Agent` contract.
 We will lean on that boundary later.

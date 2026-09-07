@@ -42,7 +42,7 @@ The server is a FastAPI application. `add_langgraph_fastapi_endpoint` mounts the
 
 ### Providing the agent
 
-`provideAgent()` from `@threadplane/ag-ui` registers the agent at the application root, and `provideChat({})` registers the chat defaults. The example resolves its URL at runtime because the host that serves the demo decides which runtime is attached; your own application passes a `url` directly.
+`provideAgent()` from `@threadplane/ag-ui` registers the agent at the application root, and it is the only provider the `<chat>` composition requires. The example resolves its URL at runtime because the host that serves the demo decides which runtime is attached; your own application passes a `url` directly.
 
 <ExampleCode file="app.config.ts" />
 

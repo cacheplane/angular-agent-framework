@@ -66,7 +66,7 @@ The Angular side declares the parent's state once and hands it to a ref that bot
 
 <ExampleCode file="agent-ref.ts" />
 
-The application config registers that ref with `provideAgent()` and adds `provideChat({})` for the chat composition.
+The application config registers that ref with `provideAgent()`.
 
 The running example registers the provider through a factory that reads its connection from the host that serves the demo, which is how the same build runs locally and in production. Your own application passes the two connection values as literals, and keeps `transcriptNodeNames` exactly as the example sets it:
 
@@ -76,7 +76,6 @@ provideAgent(SUBGRAPHS_AGENT, {
   assistantId: 'subgraphs',
   transcriptNodeNames: ['answer'],
 }),
-provideChat({}),
 ```
 
 `assistantId` must match the graph name in `langgraph.json`. `transcriptNodeNames` whitelists the *top-level* nodes whose message tokens belong in the chat transcript, which here means the `answer` node alone. The parent's other node runs a structured-output call of its own, and the whitelist is what keeps that traffic out of the chat.

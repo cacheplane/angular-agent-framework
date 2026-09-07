@@ -26,7 +26,7 @@ The compiled graph is exported as `graph`, which is the symbol `langgraph.json` 
 
 ### The application configuration
 
-`provideAgent()` registers the agent for the whole application. This example resolves its connection details at runtime from the host that serves the demo, which is why its factory reads them rather than hard-coding them. It sits beside `provideChat({})`, which registers the chat library's own providers.
+`provideAgent()` registers the agent for the whole application, and it is the only provider the chat components require. This example resolves its connection details at runtime from the host that serves the demo, which is why its factory reads them rather than hard-coding them.
 
 <ExampleCode file="app.config.ts" />
 

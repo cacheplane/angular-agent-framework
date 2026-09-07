@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Removed
+
+- **`provideChat()`, `ChatConfig`, and `CHAT_CONFIG` are gone.** No component in the library ever injected the token, so calling `provideChat({})` configured nothing: `renderRegistry`, `avatarLabel`, and `assistantName` were values only your own wrappers could read back. Delete the call and the import; `provideAgent()` from your runtime adapter is the only provider the chat components require, and everything they render is driven by component inputs. If you were reading `CHAT_CONFIG` from your own components, define your own injection token for those values.
+
 ### Changed
 
 - **`@angular/forms` peer dependency removed:** `chat-input` now binds its textarea with a direct `[value]`/`(input)` pair (fixes the composer keeping sent text under zoneless + OnPush). `@threadplane/chat` no longer requires `@angular/forms` — consumers may drop it unless they use it themselves.

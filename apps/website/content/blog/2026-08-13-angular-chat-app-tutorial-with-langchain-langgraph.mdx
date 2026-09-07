@@ -173,7 +173,6 @@ import {
   signal,
 } from '@angular/core';
 import { provideRouter } from '@angular/router';
-import { provideChat } from '@threadplane/chat';
 import { LANGGRAPH_THREADS_CONFIG, provideAgent } from '@threadplane/langgraph';
 
 import { routes } from './app.routes';
@@ -195,7 +194,6 @@ export const appConfig: ApplicationConfig = {
       onThreadId: (id) => ACTIVE_THREAD.set(id),
     }),
     { provide: LANGGRAPH_THREADS_CONFIG, useValue: { apiUrl: API_URL } },
-    provideChat({ assistantName: 'Assistant' }),
   ],
 };
 ```

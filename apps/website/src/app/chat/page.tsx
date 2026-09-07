@@ -79,7 +79,10 @@ export default async function ChatPage() {
           { claim: 'The approval gate as a component', api: 'interrupt primitive' },
           { claim: 'Composes against the streaming contract', api: 'Agent contract' },
         ]}
-        cta={{ label: 'Headless API', href: '/docs/chat/api/provide-chat' }}
+        cta={{
+          label: 'Headless API',
+          href: '/docs/chat/concepts/primitives-vs-compositions',
+        }}
         visualLeft
         visual={<ChatLandingCodeShowcase />}
       />

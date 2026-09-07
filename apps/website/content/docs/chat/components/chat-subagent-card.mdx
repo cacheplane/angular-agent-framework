@@ -62,7 +62,7 @@ The system prompt tells the orchestrator to dispatch research, then booking, the
 
 ### Telling the adapter that task means delegation
 
-`provideAgent()` registers the agent once for the whole application, and `provideChat({})` registers the chat configuration at its defaults. The one subagent-specific line is `subagentToolNames`. The default is already `['task']`, so this example states explicitly what it would otherwise inherit.
+`provideAgent()` registers the agent once for the whole application, and it is the only provider the `<chat>` composition requires. The one subagent-specific line is `subagentToolNames`. The default is already `['task']`, so this example states explicitly what it would otherwise inherit.
 
 The example resolves its connection details at runtime from the host that serves the demo, which is why its factory reads them rather than hard-coding them; your own application passes `apiUrl` and `assistantId` directly.
 

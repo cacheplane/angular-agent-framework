@@ -72,7 +72,7 @@ That wrapper is what turns a LangGraph pause into the AG-UI event described belo
 
 ### The agent provider
 
-`provideAgent()` registers the agent once for the whole application, and `provideChat({})` registers the configuration the `<chat>` composition reads, here left at its defaults. The example passes a factory because it resolves its endpoint at runtime from the host that serves the demo.
+`provideAgent()` registers the agent once for the whole application, and it is the only provider the `<chat>` composition requires. The example passes a factory because it resolves its endpoint at runtime from the host that serves the demo.
 
 <ExampleCode file="app.config.ts" />
 

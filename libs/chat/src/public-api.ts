@@ -1,5 +1,4 @@
 // Shared types
-export type { ChatConfig } from './lib/provide-chat';
 export type { MessageTemplateType } from './lib/chat.types';
 
 // Agent contract (runtime-neutral)
@@ -98,9 +97,6 @@ export type {
   CitationTypeIcon, CitationTypeMeta, CitationSourceVisual,
   CitationImageVisual, CitationTypeIconVisual, CitationMonogramVisual,
 } from './lib/agent/citation-display';
-
-// DI provider
-export { provideChat, CHAT_CONFIG } from './lib/provide-chat';
 
 // Routing utilities
 export { injectThreadRouting } from './lib/routing/thread-routing';
@@ -286,7 +282,7 @@ export type {
   ClientToolExecutionRecord,
   ClientToolExecutionStore,
 } from './lib/client-tools/client-tool-execution-guard';
-// createClientToolsCoordinator: internal — provideChat wires it; not public.
+// createClientToolsCoordinator: internal — the chat compositions wire it; not public.
 export { toClientToolSpecs } from './lib/client-tools/client-tools-coordinator';
 export type { ClientToolsCoordinator } from './lib/client-tools/client-tools-coordinator';
 

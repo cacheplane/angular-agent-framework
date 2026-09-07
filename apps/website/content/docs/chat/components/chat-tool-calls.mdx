@@ -38,7 +38,7 @@ The names bound here are the names the component groups by and labels its cards 
 
 ### The agent provider
 
-`provideAgent()` registers the agent once for the whole application, and `provideChat({})` registers the chat library's configuration, here left at its defaults. The example passes a factory because it resolves its connection details at runtime from the host that serves the demo. Your own application does not need the factory.
+`provideAgent()` registers the agent once for the whole application, and it is the only provider the `<chat>` composition requires. The example passes a factory because it resolves its connection details at runtime from the host that serves the demo. Your own application does not need the factory.
 
 <ExampleCode file="app.config.ts" />
 

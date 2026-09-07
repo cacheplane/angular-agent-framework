@@ -1,5 +1,4 @@
 import { ApplicationConfig } from '@angular/core';
-import { provideChat } from '@threadplane/chat';
 import { injectCockpitRuntimeConnection } from '@threadplane/cockpit-telemetry';
 import {
   LANGGRAPH_CLIENT_OPTIONS,
@@ -10,7 +9,6 @@ export const appConfig: ApplicationConfig = {
   providers: [
     // The agent is provided at the component (ThreadsComponent) because its
     // threadId + onThreadId config is per-instance — see threads.component.ts.
-    provideChat({}),
     // The adapter expects metadata.title; the cap's generate_title
     // graph node writes there. No per-cap key override needed.
     {

@@ -174,7 +174,7 @@ import { extractCitations } from '@threadplane/langgraph';
 const citations = extractCitations(message);
 ```
 
-`Citation` is a type from `@threadplane/chat`; `CitationsResolverService` and `provideChat` also live there.
+`Citation` is a type from `@threadplane/chat`; `CitationsResolverService` also lives there.
 
 ## Testing
 

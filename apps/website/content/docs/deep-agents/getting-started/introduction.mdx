@@ -33,7 +33,6 @@ That means the setup is identical for all five capabilities, and it is the setup
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
 import { provideAgent } from '@threadplane/langgraph';
-import { provideChat } from '@threadplane/chat';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -42,7 +41,6 @@ export const appConfig: ApplicationConfig = {
       // the key this graph is registered under in langgraph.json
       assistantId: 'agent',
     }),
-    provideChat({}),
   ],
 };
 ```

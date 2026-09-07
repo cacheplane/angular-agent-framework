@@ -95,17 +95,15 @@ yarn add @threadplane/chat @threadplane/langgraph marked
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
 import { provideAgent } from '@threadplane/langgraph';
-import { provideChat } from '@threadplane/chat';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideAgent({ apiUrl: 'http://localhost:2024' }),
-    provideChat({ assistantName: 'Assistant' }),
   ],
 };
 ```
 
-`provideAgent` is the transport. `provideChat` is the UI configuration. They are independent on purpose — you can use one without the other.
+`provideAgent` is the transport, and it is the only provider the chat components need. The UI is configured entirely through component inputs, so the two layers stay independent on purpose.
 
 </Step>
 <Step title="Create the agent in your component">

@@ -117,12 +117,10 @@ That is why `request_approval` can branch on `decision["approved"]` and pick up 
 ```ts
 // app.config.ts
 import { provideAgent } from '@threadplane/langgraph';
-import { provideChat } from '@threadplane/chat';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideAgent({ apiUrl: environment.langGraphApiUrl }),
-    provideChat({}),
   ],
 };
 ```

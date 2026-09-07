@@ -89,16 +89,9 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-That is the only provider `<chat>` needs.
-
-<Callout type="warning" title="provideChat() does not configure the built-in components">
-`provideChat()` parks a `ChatConfig` object on the `CHAT_CONFIG` injection token
-for your own components to read. No component in `@threadplane/chat` injects that
-token, so calling it changes nothing about what `<chat>` renders — including
-`assistantName` and `avatarLabel`, which no built-in component displays. Call it
-only when your own wrappers inject `CHAT_CONFIG`. See
-[Configuration](/docs/chat/guides/configuration).
-</Callout>
+That is the only provider `<chat>` needs. There is no separate chat provider:
+everything the built-in components render is driven by their inputs, and their
+appearance by the `--tplane-chat-*` custom properties.
 
 ## 3. Render your first chat
 
@@ -131,6 +124,6 @@ carries the conformance runners and fixtures, not `mockAgent()`.
 
 ## What's next
 
-- [Configuration](/docs/chat/guides/configuration)
+- [Theming](/docs/chat/guides/theming)
 - [ChatComponent](/docs/chat/components/chat)
 - [Choosing an adapter](/docs/choosing-an-adapter)

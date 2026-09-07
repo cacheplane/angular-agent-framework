@@ -65,7 +65,7 @@ The backend is a FastAPI application. `add_strands_fastapi_endpoint` from the `a
 
 ### Providing the agent
 
-`provideAgent()` registers the agent once for the whole application, and `provideChat({})` registers the configuration the `<chat>` composition reads, here left at its defaults. The example passes a factory because it resolves its endpoint at runtime from the host that serves the demo. Your own application does not need the factory.
+`provideAgent()` registers the agent once for the whole application, and it is the only provider the `<chat>` composition requires. The example passes a factory because it resolves its endpoint at runtime from the host that serves the demo. Your own application does not need the factory.
 
 <ExampleCode file="app.config.ts" title="app.config.ts" />
 

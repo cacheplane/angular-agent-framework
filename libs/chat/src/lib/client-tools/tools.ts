@@ -129,7 +129,7 @@ export function ask<S extends StandardSchemaV1, C>(
  * The overload is generic over the entire map (`const M`) so that each tool's
  * precise type ({@link FunctionToolDef}`<S,R>`, {@link ViewToolDef}`<S,C>`, or
  * {@link AskToolDef}`<S,C>`) and every literal key are preserved in the
- * {@link ClientToolRegistry} passed to `provideChat`. This lets downstream
+ * {@link ClientToolRegistry} passed to the `clientTools` input. This lets downstream
  * consumers look up individual tools without losing generic information.
  *
  * @param map An object literal mapping tool names to tool definitions created

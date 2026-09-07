@@ -42,7 +42,7 @@ export interface StreamingState {
 export const STREAMING_AGENT = createAgentRef<StreamingState>('streaming');
 ```
 
-The example resolves its connection details at runtime from the host that serves the demo, which is why its factory reads them rather than hard-coding them. It sits alongside `provideChat({})`, which supplies the chat composition's own providers.
+The example resolves its connection details at runtime from the host that serves the demo, which is why its factory reads them rather than hard-coding them. It is the only provider `<chat>` requires.
 
 <ExampleCode file="app.config.ts" />
 
@@ -53,7 +53,6 @@ provideAgent(STREAMING_AGENT, {
   apiUrl: 'https://your-deployment.langgraph.app',
   assistantId: 'streaming',
 }),
-provideChat({}),
 ```
 
 `assistantId` must match the graph name in `langgraph.json`.
