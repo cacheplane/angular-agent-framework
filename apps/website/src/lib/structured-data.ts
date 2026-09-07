@@ -36,11 +36,10 @@ export function organizationJsonLd() {
     '@id': ORGANIZATION_ID,
     name: SITE_NAME,
     url: getCanonicalUrl('/'),
-    // No `logo`: there is no square brand mark in the repo (the in-app LogoMark
-    // renders an emoji), and the generated social card is a 1200x630 marketing
-    // image, not a mark — it would satisfy Google's format floor while asserting
-    // something false about the brand. Restore this property once a real square
-    // mark ships in `public/logos/`.
+    // A real square mark now ships at `public/brand/logo-512.png`: the paper
+    // plane knocked out of a navy field, the same art the favicon rasterises
+    // from. The social card is deliberately still not used here — it is a
+    // 1200x630 marketing image, not a mark.
     description:
       'Threadplane builds the Angular UI layer for production agent applications on LangGraph and AG-UI-compatible runtimes.',
     sameAs: [REPOSITORY_URL, 'https://www.npmjs.com/package/@threadplane/chat'],
@@ -54,6 +53,7 @@ export function websiteJsonLd() {
     '@id': `${getCanonicalUrl('/')}#website`,
     name: SITE_NAME,
     url: getCanonicalUrl('/'),
+    logo: getCanonicalUrl('/brand/logo-512.png'),
     description: SHORT_POSITIONING_DESCRIPTION,
     publisher: { '@id': ORGANIZATION_ID },
   };

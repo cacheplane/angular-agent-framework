@@ -2,6 +2,8 @@ import { ImageResponse } from 'next/og';
 import { getAllPosts, getPostBySlug } from '../../../lib/blog';
 import { getAuthor } from '../../../lib/blog-authors';
 import { loadCardFonts } from '../../og-font';
+import { CARD } from '../../card/tokens';
+import { Rail, Wordmark } from '../../card/chrome';
 
 export const runtime = 'nodejs';
 export const alt = 'Threadplane blog post';
@@ -43,8 +45,8 @@ export default async function og({ params }: Params) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: '#0b0d12',
-            color: '#ffffff',
+            background: CARD.ground,
+            color: CARD.ink,
             fontSize: 64,
           }}
         >
@@ -55,7 +57,7 @@ export default async function og({ params }: Params) {
     );
   }
 
-  const fonts = await loadCardFonts();
+  const fonts = await loadCardFonts({ mono: true });
   const author = getAuthor(post.frontmatter.author);
 
   return new ImageResponse(
@@ -68,21 +70,12 @@ export default async function og({ params }: Params) {
           flexDirection: 'column',
           justifyContent: 'space-between',
           padding: 64,
-          background: '#0b0d12',
-          color: '#ffffff',
+          background: CARD.ground,
+          color: CARD.ink,
           fontFamily: 'Inter, sans-serif',
         }}
       >
-        <div
-          style={{
-            fontSize: 24,
-            textTransform: 'uppercase',
-            letterSpacing: '0.12em',
-            opacity: 0.6,
-          }}
-        >
-          Threadplane Blog
-        </div>
+        <Rail text="THREADPLANE BLOG" />
         <div
           style={{
             fontFamily: 'EB Garamond, Georgia, serif',
@@ -90,20 +83,24 @@ export default async function og({ params }: Params) {
             fontWeight: 700,
             lineHeight: 1.1,
             letterSpacing: '-0.02em',
-            maxWidth: '90%',
+            color: CARD.ink,
+            maxWidth: '92%',
           }}
         >
           {post.frontmatter.title}
         </div>
         {/*
           Satori requires an explicit `display` on any div with more than one
-          child node, and throws otherwise. This byline has three (name,
-          separator, date), so the `display: flex` is load-bearing — its
-          absence is what 500ed every post's card. The two divs above have a
-          single child each and need no `display`.
+          child node, and throws otherwise. This row has two (the byline and
+          the wordmark), and the byline itself has three (name, separator,
+          date), so both `display: flex` are load-bearing — their absence is
+          what 500ed every post's card.
         */}
-        <div style={{ display: 'flex', fontSize: 24, opacity: 0.7 }}>
-          {author.name} · {post.frontmatter.date}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', fontSize: 24, color: CARD.inkMuted }}>
+            {author.name} · {post.frontmatter.date}
+          </div>
+          <Wordmark size={30} />
         </div>
       </div>
     ),

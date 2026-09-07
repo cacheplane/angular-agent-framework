@@ -27,6 +27,18 @@ test('landing page renders hero headline', async ({ page }) => {
   await expect(page.locator('.hero-eyebrow')).toContainText('Angular');
 });
 
+test('the default social card renders as a PNG', async ({ request }) => {
+  // The default card is rendered at request time, so a Satori rejection — a
+  // div with two children and no explicit `display`, a font it cannot parse —
+  // is a 500 on the live route rather than a build failure. The blog's cards
+  // are prerendered and already fail the build, so only this one needs a
+  // runtime check.
+  const res = await request.get('/opengraph-image');
+  expect(res.status()).toBe(200);
+  expect(res.headers()['content-type']).toContain('image/png');
+  expect((await res.body()).byteLength).toBeGreaterThan(10_000);
+});
+
 test('landing page renders the dark proof band', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#proof-heading')).toBeVisible();
