@@ -40,6 +40,28 @@ export const NARRATIVE_MENTIONS: ReadonlyArray<readonly [string, RegExp]> = [
   ['telemetry hooks aside', /telemetry hooks/iu],
 ];
 
+/**
+ * Positioning we have retired, and must not still be asserting anywhere.
+ *
+ * Copy on the website is single-sourced through `positioning.ts` and guarded
+ * by its own spec. These are the places that are *not*: static SVG banners,
+ * generated PDF covers, and the package READMEs — artifacts that keep
+ * rendering happily long after the words on them stopped being true. The
+ * overview whitepaper cover carried "Agent UI for Angular" for months past
+ * that phrase's retirement, because regenerating it meant paying for LLM
+ * chapter prose nobody wanted to touch.
+ *
+ * Add a phrase here in the same change that retires it.
+ */
+export const RETIRED_POSITIONING: readonly string[] = [
+  'AI agent UI framework for Angular',
+  'Angular AI Agent UI Framework',
+  'Angular AI agent UI framework',
+  'Enterprise Angular Agent UI',
+  'Production-ready agent UI',
+  'thread plane for enterprise agents',
+];
+
 /** Routes retired in favour of the canonical policy. */
 export const RETIRED_ROUTE_PATTERN = /\/docs\/telemetry|\/api\/markdown\/telemetry/u;
 

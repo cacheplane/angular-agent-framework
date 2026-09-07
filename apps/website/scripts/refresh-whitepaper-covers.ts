@@ -13,8 +13,13 @@
  * 2. Update the cover footer color (#888 → #8b8fa3 / textMuted).
  * 3. Update TOC row colors (rgba(0,0,0,.06) → #e6e8ee / border;
  *    #444 → #555770 / textSecondary).
- * 4. Write the updated HTML back.
- * 5. Render to PDF using Puppeteer.
+ * 4. Replace retired positioning copy on the cover. The rendered artifacts
+ *    outlive the generator config — the overview cover still read "Agent UI
+ *    for Angular" under the eyebrow "Threadplane · Enterprise Angular Agent
+ *    UI" long after both were retired, because regenerating means paying for
+ *    LLM chapter prose nobody wanted to change.
+ * 5. Write the updated HTML back.
+ * 6. Render to PDF using Puppeteer.
  *
  * Usage:
  *   pnpm tsx apps/website/scripts/refresh-whitepaper-covers.ts
@@ -55,6 +60,25 @@ const PAPERS: Paper[] = [
   },
 ];
 
+/**
+ * Retired positioning, and what replaces it.
+ *
+ * Straight string swaps rather than regexes: these are exact phrases that
+ * shipped inside a cover, and a loose pattern here would quietly rewrite
+ * chapter prose further down the same file.
+ *
+ * The guide titles on the other three covers are deliberately absent. "The
+ * Enterprise Guide to Generative UI in Angular" is the name of a document,
+ * not a claim about what the product is, and renaming a book people have
+ * already downloaded buys nothing.
+ */
+const RETIRED_COPY: ReadonlyArray<readonly [string, string]> = [
+  ['Threadplane · Enterprise Angular Agent UI', 'Threadplane · Open source · Angular'],
+  // The generator's config already says `title: 'Threadplane'`; only the
+  // rendered artifact still carries the old four-line stack.
+  ['Agent<br>UI<br>for<br>Angular', 'Threadplane'],
+];
+
 const LEGACY_GRADIENT_RE =
   /background:linear-gradient\(135deg,\s*#[0-9a-fA-F]+\s+0%,\s*#[0-9a-fA-F]+\s+45%,\s*#[0-9a-fA-F]+\s+70%,\s*#[0-9a-fA-F]+\s+100%\)/;
 
@@ -73,6 +97,10 @@ function refreshHtml(html: string, paper: Paper): string {
     /border-bottom:1px solid rgba\(0,0,0,\.06\);font-size:15px;color:#444/g,
     'border-bottom:1px solid #e6e8ee;font-size:15px;color:#555770',
   );
+
+  for (const [from, to] of RETIRED_COPY) {
+    out = out.split(from).join(to);
+  }
 
   return out;
 }

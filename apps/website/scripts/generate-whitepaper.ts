@@ -69,7 +69,7 @@ const WHITEPAPERS: Record<string, WhitepaperConfig> = {
     id: 'overview',
     title: 'Threadplane',
     subtitle: 'Production-ready chat, threads, and generative UI for AI agents',
-    eyebrow: 'Threadplane · Enterprise Angular Agent UI',
+    eyebrow: 'Threadplane · Open source · Angular',
     coverGradient: 'linear-gradient(135deg, #fafbfc 0%, #eaf3ff 100%)',
     outputPdf: 'apps/website/public/whitepaper.pdf',
     outputHtml: 'apps/website/public/whitepaper-preview.html',
