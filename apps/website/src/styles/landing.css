@@ -1676,6 +1676,120 @@
   --diagram-scroll-bg: var(--color-surface-tinted);
 }
 
+/* EnterpriseArchitecture — components/landing/EnterpriseArchitecture.tsx
+ * The homepage architecture diagram. Geometry lives in lib/architecture-diagram.ts;
+ * these rules are only the type ramp and the fills. Text sizes are viewBox
+ * units (the SVG is 1280 wide and scales with the figure). */
+.stack-diagram-section .arch-figure {
+  width: 100%;
+}
+.arch-figure .tp-diagram-svg {
+  min-width: 1024px;
+}
+.arch-figure text {
+  font-family: var(--font-inter);
+  font-size: 12.5px;
+  fill: var(--color-text-primary);
+}
+.arch-figure .arch-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+.arch-figure .arch-body {
+  font-size: 12.5px;
+  fill: var(--color-text-secondary);
+}
+.arch-figure .arch-caption {
+  font-size: 12px;
+  font-style: italic;
+  fill: var(--color-text-secondary);
+}
+.arch-figure .arch-mono {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  fill: #2a3a5c;
+}
+.arch-figure .arch-zone-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  fill: var(--color-text-secondary);
+}
+.arch-figure .arch-zone-owner {
+  font-size: 11px;
+  text-anchor: end;
+  fill: var(--color-text-muted, #8a8f98);
+}
+.arch-figure .arch-tag {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-anchor: end;
+  fill: #2f5fa8;
+}
+.arch-figure .arch-docs {
+  font-size: 10.5px;
+  text-anchor: end;
+  fill: #2f5fa8;
+  opacity: 0.75;
+}
+.arch-figure .arch-card-link:hover .arch-docs {
+  opacity: 1;
+}
+.arch-figure .arch-card-link:hover .arch-card {
+  stroke: #9db6e4;
+}
+.arch-figure .arch-card {
+  fill: url(#enterprise-architecture-card);
+  stroke: #dfe3ea;
+  stroke-width: 1;
+}
+.arch-figure .arch-card--tp {
+  fill: url(#enterprise-architecture-tp);
+  stroke: #9db6e4;
+  stroke-width: 1.2;
+}
+.arch-figure .arch-chip rect {
+  fill: #fff;
+  stroke: #e2e6ec;
+}
+.arch-figure .arch-chip[data-tone='tp'] rect {
+  fill: rgba(255, 255, 255, 0.7);
+  stroke: #c9d6ee;
+}
+.arch-figure .arch-chip text {
+  font-size: 11.5px;
+  font-weight: 500;
+  fill: #2a2f3a;
+}
+.arch-figure .arch-badge rect {
+  fill: #fff;
+  stroke: #e2e6ec;
+}
+.arch-figure .arch-cap text {
+  font-size: 13px;
+  font-weight: 500;
+  fill: var(--color-text-primary);
+}
+.arch-figure .arch-cap:hover text {
+  fill: #2f5fa8;
+}
+.arch-figure .arch-arrow path {
+  stroke: #7d8492;
+  stroke-width: 1.5;
+  fill: none;
+}
+.arch-figure .arch-grid-major {
+  stroke: #7fb0ff;
+  stroke-width: 1;
+  opacity: 0.6;
+}
+.arch-figure .arch-grid-minor {
+  stroke: #dbe7fb;
+  stroke-width: 0.5;
+  opacity: 0.6;
+}
+
 /* HomeConceptGrid — components/landing/HomeConceptGrid.tsx */
 .home-concept {
   display: flex;
@@ -1901,45 +2015,4 @@
   color: var(--color-accent);
   font-weight: 600;
   text-decoration: none;
-}
-
-/* ── Scope table (Task 13) ───────────────────────────────────────────────── */
-.scope-table-wrap {
-  overflow-x: auto;
-  margin-top: 20px;
-}
-
-.scope-table {
-  width: 100%;
-  min-width: 640px;
-  border-collapse: collapse;
-  font-size: 14px;
-}
-
-.scope-table th,
-.scope-table td {
-  text-align: left;
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--color-border);
-  vertical-align: top;
-}
-
-.scope-table thead th {
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--color-text-muted);
-}
-
-/* The stills form of the beat block and the ledger — StageStills.tsx. The
- * block mirrors `.stage-rail-beat` without the grid placement; the ending
- * reuses `.stage-rail-close` (its `grid-area` is inert outside the rail grid)
- * and only needs room after the last still. */
-.stage-still-text {
-  display: flex;
-  gap: 14px;
-  align-items: flex-start;
-}
-.stage-stills-close {
-  margin-top: 64px;
 }

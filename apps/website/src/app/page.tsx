@@ -1,6 +1,6 @@
 import { Hero } from '../components/landing/Hero';
 import { Reliability } from '../components/landing/Reliability';
-import { ScopeTable } from '../components/landing/ScopeTable';
+import { EnterpriseArchitecture } from '../components/landing/EnterpriseArchitecture';
 import { Stage } from '../components/landing/Stage';
 import { TeamsBlock } from '../components/landing/TeamsBlock';
 import { HomeFAQ } from '../components/landing/HomeFAQ';
@@ -34,7 +34,7 @@ export default function HomePage() {
     <>
       <Hero />
       <Reliability />
-      <ScopeTable />
+      <EnterpriseArchitecture />
 
       {/* The four capability beats (stream, persist, approve, render): stills
           by default, the pinned live act on wide, motion-tolerant viewports

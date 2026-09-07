@@ -50,7 +50,7 @@ test('landing page renders the spine in order (live-stage spec §3)', async ({ p
   const ids = [
     'hero-heading',
     'proof-heading',
-    'why-heading',
+    'architecture-heading',
     'stage-heading',
     'final-cta-heading',
     'pilot-heading',
