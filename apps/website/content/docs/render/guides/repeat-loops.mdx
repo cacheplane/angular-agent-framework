@@ -103,7 +103,7 @@ Inside a repeat, prop expressions gain three forms that resolve against the curr
 
 `$state` still works and still reads the global model, so an element can mix per-item values with application-wide ones. `$bindItem` behaves like `$bindState`: the prop receives the resolved value, and the write-back path arrives on the component's `bindings` input as `/tasks/1/field`.
 
-The same `$item` and `$index` forms are available in a `visible` condition on the **children** of a repeated element. Each mount provides its iteration context through a child injector, so a child inherits the repeat scope and its condition resolves against that mount's item:
+The same `$item` and `$index` forms are available in a `visible` condition, on the repeated element itself and on its **children** alike. Each mount provides its iteration context through a child injector, so a child inherits the repeat scope and its condition resolves against that mount's item:
 
 ```json
 {
@@ -120,7 +120,20 @@ The same `$item` and `$index` forms are available in a `visible` condition on th
 }
 ```
 
-A `visible` condition on the element that carries `repeat` is a different matter: the Angular renderer does not evaluate it. That element takes the repeat branch, which mounts every item in the array, so a row cannot hide itself that way. Put the condition on a child, as above, or filter the array in the state model before it reaches the repeat path.
+A `visible` condition on the element that carries `repeat` is evaluated once per item, in that item's own scope, so a row can hide itself:
+
+```json
+{
+  "row": {
+    "type": "Text",
+    "props": { "content": { "$item": "title" } },
+    "repeat": { "statePath": "/tasks" },
+    "visible": { "$item": "done", "eq": false }
+  }
+}
+```
+
+Only the entries whose condition holds are mounted; the rest leave no markup behind. Filtering the array in the state model before it reaches the repeat path remains an option, and is the better one when the hidden rows should not be in the model at all.
 
 ## Item scope in Angular
 

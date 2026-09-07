@@ -16,7 +16,7 @@ import { signalStateStore } from '@threadplane/render';
 ## Signature
 
 ```typescript
-function signalStateStore(initialState: StateModel = {}): StateStore;
+function signalStateStore(initialState: StateModel = {}): SignalStateStore;
 ```
 
 ### Parameters
@@ -27,7 +27,7 @@ function signalStateStore(initialState: StateModel = {}): StateStore;
 
 ### Returns
 
-A `StateStore` object with the following interface:
+A `SignalStateStore` -- the `StateStore` interface from `@json-render/core` plus one extra member:
 
 ```typescript
 interface StateStore {
@@ -38,9 +38,20 @@ interface StateStore {
   getServerSnapshot?: () => StateModel;
   subscribe: (listener: () => void) => () => void;
 }
+
+interface SignalStateStore extends StateStore {
+  lastChange?: () => StateChangeRecord | undefined;
+}
+
+interface StateChangeRecord {
+  readonly path: string;
+  readonly value: unknown;
+}
 ```
 
 `getServerSnapshot` is an optional member of the `@json-render/core` interface used for server-side rendering. `signalStateStore()` does not implement it, so consumers fall back to `getSnapshot()`.
+
+`SignalStateStore` and `StateChangeRecord` are both exported from `@threadplane/render`. Anywhere a plain `StateStore` is accepted -- the `store` input on `<render-spec>`, the `store` field of `provideRender()` -- a `SignalStateStore` is accepted too.
 
 ## Methods
 
@@ -127,6 +138,28 @@ store.set('/count', 2); // no log
 
 **Returns:** `() => void` -- an unsubscribe function.
 
+### lastChange()
+
+Returns the path and value of the most recent mutation, or `undefined` before the first one. It is written before subscribers are notified, so a subscriber can read it to learn what changed -- `subscribe()` itself hands the listener nothing.
+
+```typescript
+const store = signalStateStore({ user: { name: 'Alice' } });
+
+store.lastChange();               // undefined
+store.set('/user/name', 'Bob');
+store.lastChange();               // { path: '/user/name', value: 'Bob' }
+
+store.subscribe(() => {
+  console.log('changed at', store.lastChange()?.path);
+});
+```
+
+A write that is skipped as a no-op does not update it. `update()` records the last path it actually applied.
+
+**Returns:** `StateChangeRecord | undefined`.
+
+This is what lets `<render-spec>` report a real `path` on its `stateChange` render event. See the [Events guide](/docs/render/guides/events).
+
 ## JSON Pointer Format
 
 Paths follow the [RFC 6901](https://datatracker.ietf.org/doc/html/rfc6901) JSON Pointer specification:
@@ -144,9 +177,15 @@ Paths follow the [RFC 6901](https://datatracker.ietf.org/doc/html/rfc6901) JSON 
 | `/items/2/name` | `name` property of third array element |
 | `/a~1b` | Property named `a/b` |
 
-<Callout type="warning" title="The leading slash is required">
-A path without a leading `/` silently drops its first segment. `store.get('count')` returns the entire state object, and `store.set('count', 1)` replaces the entire state with `1` rather than writing `/count`. Always write `'/count'`.
-</Callout>
+The leading `/` is required. `''` and `'/'` both address the root; any other path that does not start with `/` throws an `Error` naming the path, on `get()`, `set()` and `update()` alike:
+
+```typescript
+store.set('count', 1);
+// Error: Invalid state path "count": a state store path is a JSON Pointer
+// and needs a leading "/" (write "/count" to address that key, or "" for the root).
+```
+
+A rejected `update()` applies none of its entries, so a bad path in a batch leaves the state untouched.
 
 ## Reactive Behavior
 

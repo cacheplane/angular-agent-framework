@@ -88,6 +88,12 @@
         "optional": false
       },
       {
+        "name": "repeatVisible",
+        "type": "Signal<boolean[]>",
+        "description": "Per-item visibility for repeat elements. The element's own `visible`\n condition is evaluated once per item, in that item's scope, so\n `{ $item: … }` and `{ $index: … }` conditions can hide individual rows —\n the same rule the non-repeat branch applies to a single mount.",
+        "optional": false
+      },
+      {
         "name": "resolvedInputs",
         "type": "Signal<object>",
         "description": "Resolved inputs for non-repeat elements.",
@@ -621,6 +627,56 @@
     "examples": []
   },
   {
+    "name": "SignalStateStore",
+    "kind": "interface",
+    "description": "The StateStore that signalStateStore returns.\n\nAdds `lastChange()` on top of the `@json-render/core` interface, which is\nhow `<render-spec>` reports the mutated path on a `stateChange` render\nevent — `StateStore.subscribe` itself carries no path. A store from any\nother implementation simply omits the member.",
+    "properties": [
+      {
+        "name": "get",
+        "type": "(path: string) => unknown",
+        "description": "Read a value by JSON Pointer path.",
+        "optional": false
+      },
+      {
+        "name": "getServerSnapshot",
+        "type": "() => StateModel",
+        "description": "Optional server snapshot for SSR (passed to `useSyncExternalStore`). Falls back to `getSnapshot` when omitted.",
+        "optional": true
+      },
+      {
+        "name": "getSnapshot",
+        "type": "() => StateModel",
+        "description": "Return the full state object (used by `useSyncExternalStore`).",
+        "optional": false
+      },
+      {
+        "name": "lastChange",
+        "type": "() => StateChangeRecord | undefined",
+        "description": "The path and value of the most recent mutation, or `undefined` before the\nfirst one. Written before subscribers are notified, so a subscriber can\nread it to learn what changed.",
+        "optional": true
+      },
+      {
+        "name": "set",
+        "type": "(path: string, value: unknown) => void",
+        "description": "Write a value by JSON Pointer path and notify subscribers.\nEquality is checked by reference (`===`), not deep comparison.\nCallers must pass a new object/array reference for changes to be detected.",
+        "optional": false
+      },
+      {
+        "name": "subscribe",
+        "type": "(listener: () => void) => () => void",
+        "description": "Register a listener that is called on every state change. Returns an unsubscribe function.",
+        "optional": false
+      },
+      {
+        "name": "update",
+        "type": "(updates: Record<string, unknown>) => void",
+        "description": "Write multiple values at once and notify subscribers (single notification).\nEach value is compared by reference (`===`); only paths whose value\nactually changed are applied.",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
     "name": "StandardSchemaV1",
     "kind": "interface",
     "description": "",
@@ -629,6 +685,26 @@
         "name": "~standard",
         "type": "StandardSchemaProps<Input, Output>",
         "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "StateChangeRecord",
+    "kind": "interface",
+    "description": "The path and value of the mutation that most recently notified subscribers.",
+    "properties": [
+      {
+        "name": "path",
+        "type": "string",
+        "description": "The JSON Pointer that was written.",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "type": "unknown",
+        "description": "The value written at that pointer.",
         "optional": false
       }
     ],
@@ -818,8 +894,8 @@
   {
     "name": "signalStateStore",
     "kind": "function",
-    "description": "Create a signal-backed StateStore for a generative-UI surface —\nholds the bound state that spec `$bindState` paths read and interactive\nelements write, with path-addressable get/set and change subscriptions.",
-    "signature": "signalStateStore(initialState: StateModel): StateStore",
+    "description": "Create a signal-backed StateStore for a generative-UI surface —\nholds the bound state that spec `$bindState` paths read and interactive\nelements write, with path-addressable get/set and change subscriptions.\n\nEvery path is a JSON Pointer and must start with `/` (or be `''` / `'/'`\nfor the root); a slash-less path throws.",
+    "signature": "signalStateStore(initialState: StateModel): SignalStateStore",
     "params": [
       {
         "name": "initialState",
@@ -829,11 +905,11 @@
       }
     ],
     "returns": {
-      "type": "StateStore",
+      "type": "SignalStateStore",
       "description": ""
     },
     "examples": [
-      "```ts\nconst store = signalStateStore({ count: 0 });\nstore.set('/count', 1);\n```"
+      "```ts\nconst store = signalStateStore({ count: 0 });\nstore.set('/count', 1);\nstore.lastChange?.(); // { path: '/count', value: 1 }\n```"
     ]
   },
   {
