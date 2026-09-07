@@ -82,6 +82,7 @@ from threadplane.middleware.langgraph import (
     bind_client_tools,
     client_tool_names,
     client_tool_specs,
+    emit_custom_event,
     has_client_tool_call,
     has_server_tool_call,
     last_message,
@@ -100,8 +101,30 @@ from threadplane.middleware.langgraph import (
 | `last_message(state)` | Return the last message from `state["messages"]`, or `None`. |
 | `a2ui_client_capabilities(state)` | Return the A2UI capabilities the frontend advertised, or `None`. |
 | `announce_subagent(config, tool_call_id)` | Emit a custom event binding a child graph's stream namespace to the tool call that started it. |
+| `emit_custom_event(name, value, config=None)` | Push a payload to the frontend as an AG-UI `CUSTOM` event. |
 
 That import list is the package's full `__all__`.
+
+## Pushing data to the frontend mid-run
+
+`emit_custom_event` is an async helper that wraps LangChain's `adispatch_custom_event`:
+
+```python
+from langchain_core.runnables import RunnableConfig
+from threadplane.middleware.langgraph import emit_custom_event
+
+async def analysis_node(state: State, config: RunnableConfig) -> State:
+    await emit_custom_event("analysis_progress", {"pct": 42}, config=config)
+    return state
+```
+
+The `name` becomes `CustomStreamEvent.name` on the client and the `value` becomes `CustomStreamEvent.data`. Pass `config` when the node already receives one; omit it and the ambient run context is used.
+
+<Callout type="warning" title="get_stream_writer does not reach the frontend">
+An `ag-ui-langgraph` backend consumes the graph through `astream_events`, and only `adispatch_custom_event` places an event on that stream. Writing to `get_stream_writer()` with `stream_mode="custom"` is silently dropped, so nothing reaches the adapter. Use `emit_custom_event` and the payload survives.
+</Callout>
+
+The Angular side of this is documented in the AG-UI [Custom Events guide](/docs/ag-ui/guides/custom-events).
 
 ## Frontend contract
 

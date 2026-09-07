@@ -1,5 +1,6 @@
 """threadplane-middleware — LangGraph middleware for client-declared tools."""
 
+from threadplane.middleware.langgraph.custom_events import emit_custom_event
 from threadplane.middleware.langgraph.middleware import (
     a2ui_client_capabilities,
     announce_subagent,
@@ -18,6 +19,7 @@ __all__ = [
     "bind_client_tools",
     "client_tool_names",
     "client_tool_specs",
+    "emit_custom_event",
     "has_client_tool_call",
     "has_server_tool_call",
     "last_message",
