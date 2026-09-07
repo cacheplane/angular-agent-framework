@@ -1,0 +1,66 @@
+{
+  "slug": "growth-telemetry-missing-transport",
+  "posthog_id": 11684151,
+  "kind": "trends",
+  "name": "Telemetry quality — missing transport",
+  "description": "Historical malformed runtime events remain visible. Admission rejects new malformed payloads after deployment. This is a data-quality count, not application errors.",
+  "events": [
+    {
+      "event": "tplane:runtime_instance_created",
+      "math": "total",
+      "properties": [
+        {
+          "key": "transport",
+          "value": "",
+          "operator": "is_not_set"
+        }
+      ]
+    },
+    {
+      "event": "tplane:runtime_request_created",
+      "math": "total",
+      "properties": [
+        {
+          "key": "transport",
+          "value": "",
+          "operator": "is_not_set"
+        }
+      ]
+    },
+    {
+      "event": "tplane:stream_started",
+      "math": "total",
+      "properties": [
+        {
+          "key": "transport",
+          "value": "",
+          "operator": "is_not_set"
+        }
+      ]
+    },
+    {
+      "event": "tplane:stream_ended",
+      "math": "total",
+      "properties": [
+        {
+          "key": "transport",
+          "value": "",
+          "operator": "is_not_set"
+        }
+      ]
+    },
+    {
+      "event": "tplane:stream_errored",
+      "math": "total",
+      "properties": [
+        {
+          "key": "transport",
+          "value": "",
+          "operator": "is_not_set"
+        }
+      ]
+    }
+  ],
+  "interval": "day",
+  "date_from": "-30d"
+}

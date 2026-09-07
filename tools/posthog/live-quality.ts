@@ -217,12 +217,14 @@ export function formatLiveQualityReport({
   checkedEvents,
   coverageRequirements = [],
   days,
+  limitPerEvent,
   events,
   findings,
 }: {
   checkedEvents: readonly string[];
   coverageRequirements?: readonly LiveCoverageRequirement[];
   days: number;
+  limitPerEvent?: number;
   events: readonly LiveTelemetryEvent[];
   findings: readonly LiveQualityFinding[];
 }): string {
@@ -236,6 +238,9 @@ export function formatLiveQualityReport({
   lines.push(
     `Live telemetry quality — last ${days} ${days === 1 ? 'day' : 'days'}`
   );
+  lines.push('');
+  lines.push(`Sampled observations: ${events.length}. This is a bounded sample, not total traffic${limitPerEvent === undefined ? '.' : ` (up to ${limitPerEvent} events per event name).`}`);
+  lines.push('Zero samples do not establish healthy collection. Error and warning counts below count findings, not distinct events.');
   lines.push('');
   if (coverageRequirements.length > 0) {
     lines.push('| Event | Sampled events | Required minimum |');
@@ -350,6 +355,7 @@ async function main(): Promise<number> {
         checkedEvents,
         coverageRequirements: options.coverageRequirements,
         days: options.days,
+        limitPerEvent: options.limitPerEvent,
         events,
         findings,
       })

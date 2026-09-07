@@ -79,4 +79,21 @@ describe('adapter helpers', () => {
     vi.mocked(captureEvent).mockRejectedValueOnce(new Error('network'));
     await expect(captureStreamStarted({ provider: 'x', model: 'y' })).resolves.toBeUndefined();
   });
+
+  test.each([captureStreamStarted, captureStreamEnded, captureStreamErrored])('legacy stream helpers identify transport as unknown', async (capture) => {
+    await capture({ provider: 'openai', model: 'gpt-4', error: new Error('private') });
+    expect(vi.mocked(captureEvent).mock.calls[0][1]).toMatchObject({ transport: 'unknown' });
+  });
+
+  test.each([captureStreamStarted, captureStreamEnded, captureStreamErrored])('stream helpers preserve an explicit transport', async (capture) => {
+    await capture({ transport: 'ag-ui', provider: 'openai', model: 'gpt-4', error: new Error('private') } as never);
+    expect(vi.mocked(captureEvent).mock.calls[0][1]).toMatchObject({ transport: 'ag-ui' });
+  });
+
+  test.each([null, 'private', 42, [], new Date(), {}, { provider: 'openai' }, { provider: '', model: 'gpt-4' }])('stream helpers do not manufacture events from malformed inputs', async (input) => {
+    await captureStreamStarted(input as never);
+    await captureStreamEnded(input as never);
+    await captureStreamErrored(input as never);
+    expect(captureEvent).not.toHaveBeenCalled();
+  });
 });

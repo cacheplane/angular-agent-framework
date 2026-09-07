@@ -36,7 +36,7 @@ The standard PostHog `$pageview` event is used as-is across all three surfaces.
 | `marketing:lead_form_submit`          | Submit attempt (any surface)                                                                  |
 | `marketing:lead_form_success`         | Server 2xx                                                                                    |
 | `marketing:lead_form_fail`            | Server non-2xx                                                                                |
-| `marketing:lead_qualified`            | Server-side enrichment passes (qualified-lead def)                                            |
+| `marketing:lead_qualified`            | Historical only: retired qualification emitter. Current evidence and authorization live in Growth. |
 | `marketing:newsletter_signup_submit`  | Submit attempt                                                                                |
 | `marketing:newsletter_signup_success` | Server 2xx                                                                                    |
 | `marketing:newsletter_signup_fail`    | Failure                                                                                       |
@@ -50,6 +50,18 @@ The standard PostHog `$pageview` event is used as-is across all three surfaces.
 | `blog:copy_code_click`                | Copy-button click on a code block inside a blog post. Props: `surface: 'blog'`, `code_lang?`. |
 | `docs:tab_select`                     | MDX tab change                                                                                |
 | `docs:sidebar_section_toggle`         | Sidebar nav toggle                                                                            |
+| `docs:workspace_navigation` | Workspace capability navigation; `capability`, `category`, `from_capability`, `surface`. |
+| `docs:workspace_mode_switched` | Workspace mode change; `capability`, `from_mode`, `to_mode`, `surface`. |
+| `docs:workspace_runtime_action` | Explicit runtime action; `capability`, `action`, `state_before`, `outcome`, `surface`. |
+| `docs:workspace_runtime_status_changed` | Runtime status transition; `capability`, `from_state`, `to_state`, optional `elapsed_ms`/`reason_code`, `surface`. |
+| `marketing:stage_progress` | Recorded homepage stage progress; `surface`, `stage_event`, optional `beat`. Not a live developer runtime. |
+
+Current dashboards distinguish website intent, client-observed form acceptance,
+and independent demo milestones. `hero_install` is a copy attempt recorded before
+clipboard success, not an npm install. The former six-signal activation funnel
+does not represent Growth's install/runtime activation and is no longer managed.
+Actual install/runtime activation, enrichment, authorization and email outcomes
+remain authoritative in Neon; see [Growth operations](../growth/README.md).
 
 ## Cockpit (activation surface)
 

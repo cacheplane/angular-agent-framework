@@ -1,8 +1,10 @@
 import { PostHog } from 'posthog-node';
 import { NextRequest, NextResponse } from 'next/server';
-import { normalizePostHogHost, toSafeAnalyticsString } from '@threadplane/telemetry/shared';
+import { normalizePostHogHost, parseTelemetryEvent, toSafeAnalyticsString } from '@threadplane/telemetry/shared';
+import { readBoundedBody } from '../_internal/read-bounded-body';
 
 const PUBLIC_INGEST_KEY = 'phc_public_cacheplane_telemetry';
+const MAX_BODY_BYTES = 16_384;
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -41,13 +43,13 @@ function readPayload(value: unknown): {
   if (payload.key !== undefined && payload.key !== PUBLIC_INGEST_KEY) return null;
 
   const distinctId = toSafeAnalyticsString(payload.distinctId, 200);
-  const event = toSafeAnalyticsString(payload.event, 100);
-  if (!distinctId || !event?.startsWith('tplane:')) return null;
+  const parsed = parseTelemetryEvent(payload.event, payload.properties);
+  if (!distinctId || !parsed) return null;
 
   return {
     distinctId,
-    event,
-    properties: isRecord(payload.properties) ? payload.properties : {},
+    event: parsed.event,
+    properties: parsed.properties,
   };
 }
 
@@ -65,7 +67,9 @@ export function OPTIONS(): NextResponse {
 export async function POST(req: NextRequest) {
   let body: unknown;
   try {
-    body = await req.json();
+    const rawBody = await readBoundedBody(req, MAX_BODY_BYTES);
+    if (rawBody === null) return jsonWithCors({ error: 'Invalid request body' }, { status: 413 });
+    body = JSON.parse(rawBody);
   } catch {
     return jsonWithCors({ error: 'Invalid JSON' }, { status: 400 });
   }
@@ -98,8 +102,8 @@ export async function POST(req: NextRequest) {
     });
     await posthog.shutdown();
     return jsonWithCors({ ok: true }, { status: 202 });
-  } catch (err) {
-    console.error('[telemetry-ingest] capture failed:', err);
+  } catch {
+    console.error('[telemetry-ingest] capture failed');
     await posthog.shutdown().catch(() => undefined);
     return jsonWithCors(
       { error: 'Event ingest failed' },

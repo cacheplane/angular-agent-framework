@@ -1,0 +1,34 @@
+{
+  "slug": "growth-overview",
+  "posthog_id": 2073577,
+  "name": "Growth · Quick overview",
+  "description": "V1 acquisition and observed usage, with explicit data-quality context. Copy attempts are not installs; demo milestones are not activation. Neon owns actual installs, enrichment, authorization and email outcomes: npm run growth:report -- funnel / journey. No automatic person linkage is implied. https://github.com/cacheplane/angular-agent-framework/blob/main/docs/growth/README.md",
+  "tags": [
+    "gtm",
+    "growth",
+    "overview"
+  ],
+  "tiles": [
+    {
+      "insight": "pageviews-by-landing"
+    },
+    {
+      "insight": "growth-install-intent"
+    },
+    {
+      "insight": "growth-form-acceptance"
+    },
+    {
+      "insight": "growth-docs-engagement"
+    },
+    {
+      "insight": "cockpit-recipe-completion"
+    },
+    {
+      "insight": "growth-runtime-surfaces"
+    },
+    {
+      "insight": "growth-telemetry-missing-transport"
+    }
+  ]
+}

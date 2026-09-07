@@ -2,15 +2,15 @@
   "slug": "install-command-clicks",
   "posthog_id": 8587349,
   "kind": "trends",
-  "name": "Install command clicks",
+  "name": "Install command copy attempts",
   "events": [
     {
       "event": "marketing:cta_click",
       "math": "total",
       "properties": [
         {
-          "key": "track",
-          "value": "developer",
+          "key": "cta_id",
+          "value": "hero_install",
           "operator": "exact"
         }
       ]
@@ -19,5 +19,6 @@
   "breakdown": "cta_id",
   "breakdown_limit": 10,
   "interval": "day",
-  "date_from": "-30d"
+  "date_from": "-30d",
+  "description": "Clicks on Copy install command (hero_install). This event fires before clipboard success; it is intent, not an npm install."
 }
