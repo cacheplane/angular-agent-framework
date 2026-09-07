@@ -1,5 +1,6 @@
 import type { HTMLAttributes } from 'react';
 import { cn } from '../../lib/cn';
+import { PlaneMark } from './PlaneMark';
 
 type LogoSize = 'sm' | 'md';
 
@@ -24,7 +25,7 @@ export function LogoMark({
       style={style}
       {...rest}
     >
-      <span aria-hidden="true" data-ui="logo-mark-icon">🛩️</span>
+      <PlaneMark data-ui="logo-mark-icon" />
       {iconOnly ? null : <span>Threadplane</span>}
     </span>
   );

@@ -1,28 +1,11 @@
 /**
- * Shared font loading for the `opengraph-image` routes.
+ * Font types and helpers shared by the `opengraph-image` routes.
  *
- * This module lives next to `EBGaramond-Bold.ttf` on purpose. Next's file
- * tracer (`@vercel/nft`) statically evaluates `join(dirname(fileURLToPath(
- * import.meta.url)), 'EBGaramond-Bold.ttf')` and adds the TTF to the traced
- * bundle of every route that reaches this code. It does *not* resolve a
- * parent-traversal form like `join(here, '../../EBGaramond-Bold.ttf')`, which
- * is how `blog/[slug]/opengraph-image.tsx` used to read the font: locally the
- * source tree is on disk so it worked, but the deployed serverless function
- * never received the file. Keeping the read in one colocated module means the
- * traversal never has to be written again.
- *
- * EB Garamond is bundled as a static-weight TTF rather than fetched because:
- * 1. Google Fonts only serves Garamond as woff2 — Satori can't decode woff2.
- * 2. The variable-weight TTF in Google's fonts repo trips Satori's TTF parser
- *    ("Cannot read properties of undefined (reading '256')") on variable-font
- *    tables (fvar/STAT/MVAR/HVAR).
- *
- * The committed TTF was produced by instancing the upstream variable font to
- * wght=700 and stripping the now-unused variable tables — see
- * apps/website/scripts/instance-garamond.py. The file is ~500KB, served only
- * from this server-side render path (never downloaded by browsers).
+ * The faces themselves are bundled and read by `./card/fonts`, which is
+ * colocated with the TTFs so Next's file tracer can resolve them. This module
+ * keeps only the types, the Satori guard rails, and the optional Google Fonts
+ * fetch for a face we do not bundle.
  */
-
 /** The CSS weight domain Satori accepts — wider than the weights we ship. */
 export type OgFontWeight = 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900;
 
@@ -32,25 +15,6 @@ export interface OgFont {
   /** Satori matches the closest available weight. */
   weight: OgFontWeight;
   style: 'normal';
-}
-
-/**
- * Reads the bundled Garamond TTF. Returns null (never throws) if the file is
- * missing so a card without the serif headline still renders.
- */
-export async function loadLocalGaramond(): Promise<ArrayBuffer | null> {
-  try {
-    const { fileURLToPath } = await import('node:url');
-    const { readFile } = await import('node:fs/promises');
-    const { dirname, join } = await import('node:path');
-    const here = dirname(fileURLToPath(import.meta.url));
-    // Keep this a bare sibling filename — see the module comment above.
-    const buf = await readFile(join(here, 'EBGaramond-Bold.ttf'));
-    return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer;
-  } catch (err) {
-    console.warn('og-font: failed to load bundled Garamond TTF', err);
-    return null;
-  }
 }
 
 /**
@@ -89,23 +53,32 @@ export function satoriFonts(candidates: (OgFont | null)[]): OgFont[] | undefined
 }
 
 /**
- * Loads the shared card font set: bundled Garamond for headlines, Inter for
- * body copy, and optionally JetBrains Mono for the eyebrow/pill lettering.
+ * Loads the shared card font set: Garamond for display type, Inter for body,
+ * and JetBrains Mono for the eyebrow and pills.
  *
- * Every load is best-effort, so this returns `undefined` (not `[]`) when the
- * TTF is missing *and* Google Fonts is unreachable — see `satoriFonts`.
+ * All four are bundled (see `./card/fonts`). They used to be fetched from
+ * Google Fonts on every render, which is a network round trip inside an image
+ * render that fails silently: the card simply came out in whichever faces
+ * happened to load. A card specified with a mono eyebrow rendered in serif
+ * that way. `loadGoogleFont` is kept for callers that want a face we do not
+ * bundle, but no card depends on it.
+ *
+ * Returns `undefined` (not `[]`) when nothing loaded — see `satoriFonts`.
  */
 export async function loadCardFonts(options: { mono?: boolean } = {}): Promise<OgFont[] | undefined> {
-  const [garamondBold, interRegular, interBold, monoBold] = await Promise.all([
-    loadLocalGaramond(),
-    loadGoogleFont('Inter', 400),
-    loadGoogleFont('Inter', 600),
-    options.mono ? loadGoogleFont('JetBrains+Mono', 700) : Promise.resolve(null),
+  const { readGaramondBold, readInterRegular, readInterSemiBold, readMonoBold, toFont } = await import(
+    './card/fonts'
+  );
+  const [garamond, interRegular, interSemiBold, mono] = await Promise.all([
+    readGaramondBold(),
+    readInterRegular(),
+    readInterSemiBold(),
+    options.mono ? readMonoBold() : Promise.resolve(null),
   ]);
   return satoriFonts([
-    garamondBold && { name: 'EB Garamond', data: garamondBold, weight: 700, style: 'normal' },
-    interRegular && { name: 'Inter', data: interRegular, weight: 400, style: 'normal' },
-    interBold && { name: 'Inter', data: interBold, weight: 600, style: 'normal' },
-    monoBold && { name: 'JetBrains Mono', data: monoBold, weight: 700, style: 'normal' },
+    toFont('EB Garamond', 700, garamond),
+    toFont('Inter', 400, interRegular),
+    toFont('Inter', 600, interSemiBold),
+    toFont('JetBrains Mono', 700, mono),
   ]);
 }

@@ -322,14 +322,21 @@
 [data-ui="logo-mark"][data-size="md"] {
   font-size: 16px;
 }
+/* The glyph is an SVG filled with currentColor, so it inherits the wordmark's
+ * color. Sized in px rather than em: the wordmark is Garamond, whose em box
+ * would make the plane read smaller beside it than it measures. */
 [data-ui="logo-mark-icon"] {
-  line-height: 1;
+  display: block;
+  flex: none;
+  color: inherit;
 }
 [data-ui="logo-mark"][data-size="sm"] > [data-ui="logo-mark-icon"] {
-  font-size: 18px;
+  width: 15px;
+  height: 15px;
 }
 [data-ui="logo-mark"][data-size="md"] > [data-ui="logo-mark-icon"] {
-  font-size: 22px;
+  width: 18px;
+  height: 18px;
 }
 
 /* UI primitive — BrowserFrame.

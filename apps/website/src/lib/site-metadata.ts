@@ -20,7 +20,7 @@ export const DEFAULT_SOCIAL_IMAGE_META = {
   url: DEFAULT_SOCIAL_IMAGE,
   width: 1200,
   height: 630,
-  alt: 'Threadplane — the open-source thread-plane for agents. Chat, durable threads, persistence, human approvals, and generative UI for Angular, on LangGraph and AG-UI.',
+  alt: 'Threadplane — the open-source thread-plane for agents. Beside the tagline, a browser frame shows the product pausing for a human: an agent proposes deleting three backups, with Approve and Decline.',
 } as const;
 export {
   CODING_AGENT_PROMPT,
