@@ -1,25 +1,31 @@
 {
   "slug": "developer-funnel",
   "posthog_id": 1582272,
-  "name": "GTM · Developer funnel",
-  "description": "Pageview → install → cockpit activation. Source: gtm.md §4.",
+  "name": "Growth \u00b7 Acquisition and demo engagement",
+  "description": "Website intent, client-observed form acceptance and independent demo milestones. Not a sequential install-to-email funnel. Actual install/runtime activation, enrichment and outreach outcomes are in Neon; use growth:report. https://github.com/cacheplane/angular-agent-framework/blob/main/docs/growth/README.md",
   "tags": [
     "gtm",
-    "developer-track",
-    "phase-1"
+    "growth",
+    "acquisition"
   ],
   "tiles": [
     {
       "insight": "pageviews-by-landing"
     },
     {
+      "insight": "growth-install-intent"
+    },
+    {
       "insight": "install-command-clicks"
     },
     {
-      "insight": "cockpit-recipe-completion"
+      "insight": "growth-form-acceptance"
     },
     {
-      "insight": "activation-funnel"
+      "insight": "growth-docs-engagement"
+    },
+    {
+      "insight": "cockpit-recipe-completion"
     }
   ]
 }

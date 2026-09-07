@@ -1,0 +1,35 @@
+{
+  "slug": "growth-install-intent",
+  "posthog_id": 11684149,
+  "kind": "trends",
+  "name": "Install dialog opens and copy attempts",
+  "description": "Website intent only. Opening the dialog or clicking copy does not prove an npm install.",
+  "events": [
+    {
+      "event": "marketing:cta_click",
+      "name": "Install dialog opened",
+      "math": "total",
+      "properties": [
+        {
+          "key": "cta_id",
+          "value": "hero_install_open",
+          "operator": "exact"
+        }
+      ]
+    },
+    {
+      "event": "marketing:cta_click",
+      "name": "Copy attempted",
+      "math": "total",
+      "properties": [
+        {
+          "key": "cta_id",
+          "value": "hero_install",
+          "operator": "exact"
+        }
+      ]
+    }
+  ],
+  "interval": "day",
+  "date_from": "-30d"
+}

@@ -3,7 +3,62 @@ import assert from 'node:assert/strict';
 import { mkdtemp, writeFile, mkdir, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { computePlan, type SyncClient } from './sync.js';
+import { computePlan, fetchAllPages, type SyncClient } from './sync.js';
+
+test('pagination retains results beyond the first page and refuses stalled next pages', async () => {
+  const offsets: number[] = [];
+  const rows = await fetchAllPages(async (offset, limit) => {
+    offsets.push(offset);
+    return { results: Array.from({ length: offset === 0 ? limit : 2 }, (_, index) => offset + index), next: offset === 0 ? 'https://app.posthog.com/api/projects/1/insights/?offset=100' : null };
+  });
+  assert.equal(rows.length, 102);
+  assert.deepEqual(offsets, [0, 100]);
+  await assert.rejects(fetchAllPages(async () => ({ results: [], next: 'next' })), /did not advance/);
+});
+
+test('trend mapping retains descriptions, series names and valueless presence filters', () => {
+  const output = toPostHogInsight({ kind: 'trends', name: 'Quality', description: 'Sampled events', events: [{ event: 'tplane:stream_started', name: 'Missing transport', properties: [{ key: 'transport', operator: 'is_not_set' }] }] });
+  assert.equal(output.description, 'Sampled events');
+  assert.equal(output.query.source.series[0].name, 'Missing transport');
+  assert.deepEqual(output.query.source.series[0].properties, [{ key: 'transport', operator: 'is_not_set', type: 'event' }]);
+});
+
+test('wiring preserves manual memberships and detaches stale managed tiles without deleting insights', async () => {
+  const root = await fixtureRoot();
+  await writeFile(join(root, 'dashboards/d1.json'), JSON.stringify({ slug: 'd1', posthog_id: 10, name: 'D1', description: '', tiles: [{ insight: 'i1' }] }));
+  await writeFile(join(root, 'insights/i1.json'), JSON.stringify({ slug: 'i1', posthog_id: 1, name: 'I1', kind: 'trends', events: [{ event: '$pageview' }] }));
+  const client = fakeClient({ dashboards: [{ id: 10, name: 'D1' }], insights: [{ id: 1, name: 'I1', dashboards: [99] }, { id: 2, name: 'Stale', dashboards: [10, 99] }, { id: 3, name: 'Manual', dashboards: [99] }] });
+  const writes: Array<[number, unknown]> = [];
+  client.updateInsight = async (id, body) => { if (body.dashboards) writes.push([id, body.dashboards]); return { id, name: 'I' }; };
+  client.deleteInsight = async () => { throw new Error('must not delete'); };
+  const result = await applyPlan({ root, client, plan: await computePlan({ root, client }) });
+  assert.equal(result.failed, 0);
+  assert.deepEqual(writes, [[1, [99, 10]], [2, [99]]]);
+});
+
+test('wiring failures increment failed count', async () => {
+  const root = await fixtureRoot();
+  await writeFile(join(root, 'dashboards/d1.json'), JSON.stringify({ slug: 'd1', posthog_id: 10, name: 'D1', description: '', tiles: [] }));
+  const client = fakeClient({ dashboards: [{ id: 10, name: 'D1' }], insights: [{ id: 2, name: 'Stale', dashboards: [10] }] });
+  client.updateInsight = async () => { throw new Error('network'); };
+  const result = await applyPlan({ root, client, plan: await computePlan({ root, client }) });
+  assert.equal(result.failed, 1);
+  assert.match(result.errors[0].slug, /wiring/);
+});
+
+test('wiring refuses to replace memberships when an existing insight is absent from readback', async () => {
+  const root = await fixtureRoot();
+  await writeFile(join(root, 'dashboards/d1.json'), JSON.stringify({ slug: 'd1', posthog_id: 10, name: 'D1', description: '', tiles: [{ insight: 'i1' }] }));
+  await writeFile(join(root, 'insights/i1.json'), JSON.stringify({ slug: 'i1', posthog_id: 1, name: 'I1', kind: 'trends', events: [{ event: '$pageview' }] }));
+  const client = fakeClient({ dashboards: [{ id: 10, name: 'D1' }], insights: [{ id: 1, name: 'I1', dashboards: [99] }] });
+  const plan = await computePlan({ root, client });
+  client.listInsights = async () => [];
+  const writes: unknown[] = [];
+  client.updateInsight = async (id, body) => { if (body.dashboards) writes.push(body); return { id, name: 'I1' }; };
+  const result = await applyPlan({ root, client, plan });
+  assert.equal(result.failed, 1);
+  assert.deepEqual(writes, []);
+});
 
 async function fixtureRoot(): Promise<string> {
   const dir = await mkdtemp(join(tmpdir(), 'posthog-tools-test-'));
@@ -247,6 +302,12 @@ test('applyPlan: toPostHogDashboard — body excludes tiles and slug, keeps name
 });
 
 import { toPostHogInsight, toPostHogDashboard } from './sync.js';
+
+test('toPostHogInsight maps friendly series labels to custom_name', () => {
+  const result = toPostHogInsight({ slug: 'intent', kind: 'trends', name: 'Install intent', events: [{ event: 'marketing:cta_click', name: 'Copy attempts' }] });
+  assert.equal(result.query.source.series[0].custom_name, 'Copy attempts');
+  assert.equal(result.query.source.series[0].event, 'marketing:cta_click');
+});
 
 test('toPostHogInsight: trends maps to InsightVizNode/TrendsQuery', () => {
   const out = toPostHogInsight({

@@ -92,10 +92,13 @@ search reporting also have no in-repo recurring worker.
 
 The Growth funnel is an observation/activation report, not a complete sequential
 anonymous conversion funnel. A UTM is not a proven link from a social post to a
-developer identity. Current PostHog report parsing needs separate improvement for
-funnels and multiple trend series; do not treat unsupported or missing data as
-proof of zero activity. An analytics contract failure does not itself prove a
-lifecycle delivery failure.
+developer identity. PostHog's Quick overview separates acquisition, docs, demo
+and public runtime signals; install copy attempts do not measure npm installs.
+The runtime dashboard includes demo usage and historical malformed events.
+The weekly report separates additive daily series and marks funnels, unique
+counts, breakdowns and missing results `Unavailable`. An analytics contract
+failure does not itself prove a lifecycle delivery failure. See the
+[dashboard inventory and measurement limits](../../tools/posthog/README.md#current-growth-dashboards).
 
 ## Contributor checks
 

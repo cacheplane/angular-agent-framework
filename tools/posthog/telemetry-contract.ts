@@ -24,6 +24,7 @@ type TelemetryEventContract = {
 };
 
 const runtimeProperties = [
+  'angularVersion',
   'durationMs',
   'errorClass',
   'model',
@@ -35,6 +36,7 @@ const runtimeProperties = [
 ] as const;
 
 const ctaProperties = [
+  'adapter',
   'cta_id',
   'cta_text',
   'destination_url',
@@ -50,6 +52,7 @@ const cockpitShellProperties = [
   'file_path',
   'from_capability',
   'from_mode',
+  'source_page',
   'surface',
   'to_mode',
 ] as const;
@@ -116,6 +119,31 @@ export const TELEMETRY_EVENT_CONTRACT: Record<string, TelemetryEventContract> =
         'surface',
         'track',
       ],
+    },
+    'marketing:lead_form_success': {
+      requiredProperties: [],
+      allowedProperties: ctaProperties,
+      allowedBreakdowns: ['surface', 'source_page'],
+    },
+    'marketing:whitepaper_signup_success': {
+      requiredProperties: [],
+      allowedProperties: [...ctaProperties, 'paper'],
+      allowedBreakdowns: ['surface', 'source_page', 'paper'],
+    },
+    'marketing:newsletter_signup_success': {
+      requiredProperties: [],
+      allowedProperties: ctaProperties,
+      allowedBreakdowns: ['surface', 'source_page'],
+    },
+    'docs:workspace_navigation': {
+      requiredProperties: ['capability'],
+      allowedProperties: cockpitShellProperties,
+      allowedBreakdowns: ['capability', 'category'],
+    },
+    'docs:workspace_mode_switched': {
+      requiredProperties: ['capability'],
+      allowedProperties: cockpitShellProperties,
+      allowedBreakdowns: ['capability', 'from_mode', 'to_mode'],
     },
     'tplane:browser_chat_init': {
       requiredProperties: ['surface'],

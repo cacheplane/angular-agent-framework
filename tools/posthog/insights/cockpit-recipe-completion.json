@@ -2,17 +2,30 @@
   "slug": "cockpit-recipe-completion",
   "posthog_id": 8587348,
   "kind": "trends",
-  "name": "Cockpit recipe completion",
+  "name": "Demo milestones \u2014 independent counts",
   "events": [
     {
-      "event": "cockpit:recipe_opened",
-      "math": "total"
+      "event": "cockpit:transport_connected",
+      "math": "total",
+      "name": "Transport connected"
     },
     {
-      "event": "cockpit:chat_first_message",
-      "math": "total"
+      "event": "cockpit:thread_persisted",
+      "math": "total",
+      "name": "Thread persisted"
+    },
+    {
+      "event": "cockpit:interrupt_handled",
+      "math": "total",
+      "name": "Approval handled"
+    },
+    {
+      "event": "cockpit:generative_component_rendered",
+      "math": "total",
+      "name": "Component rendered"
     }
   ],
   "interval": "day",
-  "date_from": "-30d"
+  "date_from": "-30d",
+  "description": "Observed demo connections, persistence, approvals and rendering. Independent event totals, not a sequential funnel, unique developers or install activation."
 }
