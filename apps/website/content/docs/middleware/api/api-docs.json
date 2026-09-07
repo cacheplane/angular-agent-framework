@@ -559,7 +559,7 @@
   {
     "name": "clientToolsRouter",
     "kind": "function",
-    "description": "A prebuilt conditional-edge callback. serverToolNames is bound once at construction;\nthe returned function takes only state.\n\n  graph.addConditionalEdges('agent', clientToolsRouter([]), ['tools', END]);",
+    "description": "A prebuilt conditional-edge callback. serverToolNames is bound once at construction;\nthe returned function takes only state.\n\n  graph.addConditionalEdges('agent', clientToolsRouter(names), ['server_tools', END]);\n\n`opts.toolsNode` defaults to `'server_tools'`; a graph carrying the client-tool\nchannels cannot name a node `tools`, because clientToolsChannel already\nclaims that name as a state channel.",
     "signature": "clientToolsRouter(serverToolNames: Iterable<string>, opts: object): (state: ClientToolsState) => string",
     "params": [
       {
@@ -760,7 +760,7 @@
   {
     "name": "routeAfterAgent",
     "kind": "function",
-    "description": "Routing helper for a LangGraph conditional edge. Returns `toolsNode` when the last\nmessage has a server tool call (dispatch to the server ToolNode); otherwise `end`\n(client-only calls — the browser executes them — and no-tool-call turns both end).",
+    "description": "Routing helper for a LangGraph conditional edge. Returns `toolsNode` when the last\nmessage has a server tool call (dispatch to the server ToolNode); otherwise `end`\n(client-only calls — the browser executes them — and no-tool-call turns both end).\n\n`toolsNode` defaults to `'server_tools'`. It cannot default to `'tools'`, because\nclientToolsChannel declares a `tools` state channel and LangGraph.js shares\none namespace between channel names and node names — `addNode('tools', …)` throws\n\"tools is already being used as a state attribute\".",
     "signature": "routeAfterAgent(state: ClientToolsState, serverToolNames: Iterable<string>, opts: object): string",
     "params": [
       {

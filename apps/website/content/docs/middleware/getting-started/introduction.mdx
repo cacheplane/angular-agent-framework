@@ -54,7 +54,7 @@ If a turn mixes server tool calls and client tool calls, server tools win the fi
 |-----|---------|
 | `clientToolsChannel()` | Adds the `tools` and `client_tools` state channels to a LangGraph annotation. |
 | `bindClientTools()` | Binds server tools plus client-declared tool stubs onto a model. |
-| `clientToolsRouter()` | Creates a conditional-edge router for server-tool vs client-tool routing. |
+| `clientToolsRouter()` | Creates a conditional-edge router for server-tool vs client-tool routing. Its server destination defaults to `'server_tools'`, because `tools` is already a state channel and LangGraph.js forbids a node of that name. |
 | `clientToolSpecs()` | Converts state catalog entries into OpenAI function-tool specs. |
 | `clientToolNames()` | Returns the set of client-declared tool names for a run. |
 | `hasClientToolCall()` | Checks whether the last message calls a client tool. |
@@ -89,6 +89,7 @@ The same entry point also exports a deduplication surface, for backends that mus
 | `last_message()` | Reads the last message from state. |
 | `a2ui_client_capabilities(state)` | Reads the A2UI client capabilities the frontend advertised, or `None` when it advertised none. |
 | `announce_subagent(config, tool_call_id)` | Emits a custom event binding a child graph's stream namespace to the tool call that started it. |
+| `emit_custom_event(name, value, config=None)` | Pushes a payload to the frontend as an AG-UI `CUSTOM` event, on the one delivery path an `ag-ui-langgraph` bridge reads. |
 
 ## When to use it
 
