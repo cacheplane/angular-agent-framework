@@ -127,8 +127,25 @@ export class ChatStreamingMdComponent {
   readonly document = input.required<StreamingMarkdownDocument>();
   readonly viewRegistry = input<ViewRegistry | undefined>(undefined);
 
+  /**
+   * A registry provided further up the injector tree — at the application root
+   * or on a route. `skipSelf` is what makes an app-wide override possible: this
+   * component provides `MARKDOWN_VIEW_REGISTRY` on its own injector for its
+   * descendants, so without it the component would only ever find its own
+   * value and shadow the ancestor.
+   */
+  private readonly ancestorRegistry = inject<ViewRegistry | null>(
+    MARKDOWN_VIEW_REGISTRY,
+    { optional: true, skipSelf: true }
+  );
+
+  /**
+   * Most specific wins: the `[viewRegistry]` input, then a registry provided by
+   * an ancestor injector, then the built-in markdown views.
+   */
   readonly resolvedRegistry = computed(
-    () => this.viewRegistry() ?? cacheplaneMarkdownViews
+    () =>
+      this.viewRegistry() ?? this.ancestorRegistry ?? cacheplaneMarkdownViews
   );
 
   private readonly resolver = inject(CitationsResolverService, {

@@ -126,16 +126,14 @@ Use the exported `markdownDocument(content, delivery)` helper to derive it from 
 
 It resolves each markdown node type against `MARKDOWN_VIEW_REGISTRY` — a chat-internal DI token exported from `@threadplane/chat` and consumed by the markdown node components.
 
-Every `<chat-streaming-md>` instance provides `MARKDOWN_VIEW_REGISTRY` on its own
-component injector, from `[viewRegistry]` when you pass one and from
-`cacheplaneMarkdownViews` (the full 26-node registry) otherwise.
+Every `<chat-streaming-md>` instance provides the resolved registry on its own
+component injector, so the markdown node components below it read one value.
+Resolution runs most-specific-first:
 
-<Callout type="warning" title="There is no app-wide markdown override">
-Because the component always provides the token itself, a
-`MARKDOWN_VIEW_REGISTRY` provider in your root or route providers is shadowed and
-never reaches the markdown node components. `[viewRegistry]` on
-`<chat-streaming-md>` is the only override point.
-</Callout>
+1. The `[viewRegistry]` input on that `<chat-streaming-md>`.
+2. A `MARKDOWN_VIEW_REGISTRY` provider on an ancestor injector -- your
+   application root or a route.
+3. `cacheplaneMarkdownViews`, the full 26-node registry.
 
 ## Overriding Markdown Components
 
@@ -177,10 +175,38 @@ export class CustomChatComponent {
 Use `overrideViews` when replacing an existing node type. Use `withViews` when adding a brand-new node type that `cacheplaneMarkdownViews` does not yet cover — `withViews` is additive-only and the base registry wins on conflicts. See the [render views API](/docs/render/api/views) for full signatures.
 </Callout>
 
-`<chat>` renders assistant markdown through its own `<chat-streaming-md>`, and
-does not forward a `[viewRegistry]`. To ship a custom node renderer inside a
-conversation, project your own `ai` message template into
-`<chat-message-list>` and mount `<chat-streaming-md [viewRegistry]="…">` there.
+### App-wide override
+
+Provide `MARKDOWN_VIEW_REGISTRY` once and every markdown surface below that
+injector picks it up, including the `<chat-streaming-md>` that `<chat>` mounts
+for assistant messages. `<chat>` forwards nothing, and needs to forward nothing.
+
+```typescript
+// app.config.ts
+import { ApplicationConfig } from '@angular/core';
+import {
+  MARKDOWN_VIEW_REGISTRY,
+  cacheplaneMarkdownViews,
+} from '@threadplane/chat';
+import { overrideViews } from '@threadplane/render';
+import { MyCodeBlockComponent } from './my-code-block.component';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    {
+      provide: MARKDOWN_VIEW_REGISTRY,
+      useValue: overrideViews(cacheplaneMarkdownViews, {
+        'code-block': MyCodeBlockComponent,
+      }),
+    },
+  ],
+};
+```
+
+The same provider works in a route's `providers` array when only one section of
+the application should render markdown differently. A `[viewRegistry]` input on
+an individual `<chat-streaming-md>` still wins over both, so a single surface can
+opt out of the application-wide choice.
 
 ## Node-Type Reference
 
