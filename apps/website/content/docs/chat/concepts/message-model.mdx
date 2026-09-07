@@ -164,7 +164,7 @@ type ContentBlock =
 
 Plain text is the common case, and it is the only case in the demo: the LangGraph adapter flattens LangChain content arrays down to their visible text before the message reaches a component, keeping the raw payload on `extra`. Adapters that can preserve more shape emit blocks instead.
 
-Custom templates should therefore check the type before assuming they can interpolate `content` directly. `messageContent()` does this for you, taking a LangChain `BaseMessage` rather than the `Message` shape, and hand-written code can do the same:
+Custom templates should therefore check the type before assuming they can interpolate `content` directly. `messageContent()` does this for you and accepts the `Message` shape directly, and hand-written code can do the same:
 
 ```ts
 function textOf(message: Message): string {

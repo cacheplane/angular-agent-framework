@@ -126,13 +126,22 @@ Project content into the window header with the `[chatHeader]` slot:
 
 ## Styling
 
-The popup uses the standard `--tplane-chat-*` token system. The launcher position is not tokenized: the host is `position: fixed; bottom: 1rem; right: 1rem`, so move it by overriding those properties on the host element from a global stylesheet:
+The popup uses the standard `--tplane-chat-*` token system. Two tokens control where the launcher sits, both defaulting to `1rem`:
+
+| Token | Default | Controls |
+|-------|---------|----------|
+| `--tplane-chat-launcher-offset-x` | `1rem` | Distance from the right edge of the viewport |
+| `--tplane-chat-launcher-offset-y` | `1rem` | Distance from the bottom edge of the viewport |
+
+Set them anywhere the popup inherits from, such as `:root`, to clear a bottom bar or a consent banner:
 
 ```css
-chat-popup {
-  bottom: 1.5rem;
-  right: 1.5rem;
+:root {
+  --tplane-chat-launcher-offset-x: 1.5rem;
+  --tplane-chat-launcher-offset-y: 5rem;
 }
 ```
+
+The popup window reads the same horizontal offset, so it stays aligned with the launcher when you move it. Below 640px the window goes full screen and ignores both.
 
 See [Theming](/docs/chat/guides/theming) for the full token reference.

@@ -7,7 +7,7 @@ import type { A2uiSurface } from '@threadplane/a2ui';
 import { createA2uiSurfaceStore, type A2uiSurfaceStore, type A2uiSurfaceState } from '../a2ui/surface-store';
 import { isTraceEnabled, trace } from './trace';
 
-export type ContentType = 'pending' | 'markdown' | 'json-render' | 'a2ui' | 'mixed';
+export type ContentType = 'pending' | 'markdown' | 'json-render' | 'a2ui';
 
 const A2UI_PREFIX = '---a2ui_JSON---';
 
@@ -211,7 +211,7 @@ export function createContentClassifier(): ContentClassifier {
 
       if (delta.length === 0) return;
 
-      if (currentType === 'markdown' || currentType === 'mixed') {
+      if (currentType === 'markdown') {
         markdownSignal.set(content);
       } else if (currentType === 'json-render') {
         if (store) {

@@ -20,7 +20,7 @@ Each AI message is processed by a `ContentClassifier` that examines the content 
 | Prose with inline JSON-render specs | `markdown` | Markdown path, with embedded specs rendered in place |
 | Any other text | `markdown` | Rendered as markdown prose |
 
-Prose that interleaves inline JSON-render specs still classifies as `'markdown'` — the markdown path renders the embedded specs in place. The `ContentType` union also includes `'mixed'`, but `createContentClassifier` does not currently emit it, so treat it as reserved: do not branch on `classifier.type() === 'mixed'` expecting inline-spec content to land there. (`'a2ui'` is covered under [A2UI Content Detection](#a2ui-content-detection) below.)
+Prose that interleaves inline JSON-render specs still classifies as `'markdown'` — the markdown path renders the embedded specs in place. There is no separate type for interleaved content. (`'a2ui'` is covered under [A2UI Content Detection](#a2ui-content-detection) below.)
 
 <Callout type="info" title="Per-message classification">
 Each message gets its own classifier instance. Classification happens once per message — the type is determined by the first meaningful character and never changes.
@@ -68,7 +68,7 @@ classifier.dispose();
 
 | Signal | Type | Description |
 |--------|------|-------------|
-| `type` | `Signal<ContentType>` | `'pending'`, `'markdown'`, `'json-render'`, `'a2ui'`, or `'mixed'` |
+| `type` | `Signal<ContentType>` | `'pending'`, `'markdown'`, `'json-render'`, or `'a2ui'` |
 | `markdown` | `Signal<string>` | Accumulated markdown prose (empty for pure JSON) |
 | `spec` | `Signal<Spec \| null>` | Materialized JSON-render spec with structural sharing |
 | `elementStates` | `Signal<Map<string, ElementAccumulationState>>` | Per-element tracking of which properties have been received |
@@ -77,7 +77,7 @@ classifier.dispose();
 ### ContentType
 
 ```typescript
-type ContentType = 'pending' | 'markdown' | 'json-render' | 'a2ui' | 'mixed';
+type ContentType = 'pending' | 'markdown' | 'json-render' | 'a2ui';
 ```
 
 ## Using ParseTreeStore Directly

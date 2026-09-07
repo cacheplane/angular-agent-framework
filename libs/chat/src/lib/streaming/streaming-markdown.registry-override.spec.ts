@@ -23,7 +23,7 @@ import {
 
 @Component({
   standalone: true,
-  selector: 'test-loud-paragraph',
+  selector: 'chat-test-loud-paragraph',
   template: `<p class="loud-paragraph"><ng-content /></p>`,
 })
 class LoudParagraphComponent {
