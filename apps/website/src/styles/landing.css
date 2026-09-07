@@ -1695,6 +1695,17 @@
   font-size: 15px;
   font-weight: 600;
 }
+.arch-figure .arch-title--lg {
+  font-size: 19px;
+}
+.arch-figure .arch-zone-label--app {
+  font-size: 10.5px;
+  fill: #2f5fa8;
+}
+.arch-figure .arch-caption--mid {
+  text-anchor: middle;
+  font-size: 11.5px;
+}
 .arch-figure .arch-body {
   font-size: 12.5px;
   fill: var(--color-text-secondary);
@@ -1758,7 +1769,7 @@
   stroke: #c9d6ee;
 }
 .arch-figure .arch-chip text {
-  font-size: 11.5px;
+  font-size: 12.5px;
   font-weight: 500;
   fill: #2a2f3a;
 }
@@ -1767,14 +1778,14 @@
   stroke: #e2e6ec;
 }
 .arch-figure .arch-cap text {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   fill: var(--color-text-primary);
 }
 .arch-figure .arch-cap:hover text {
   fill: #2f5fa8;
 }
-.arch-figure .arch-arrow path {
+.arch-figure .arch-arrow {
   stroke: #7d8492;
   stroke-width: 1.5;
   fill: none;

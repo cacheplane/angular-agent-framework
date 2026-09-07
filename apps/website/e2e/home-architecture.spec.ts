@@ -60,7 +60,7 @@ test.describe('homepage architecture', () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/');
     await expect(page.locator('#architecture-heading')).toHaveText(
-      'Where Threadplane fits in your agent platform.'
+      'The UI layer between your users and your agents.'
     );
     await expect(page.locator('#why-heading')).toHaveCount(0);
     const cards = page.locator(`${DIAGRAM} [data-card]`);
