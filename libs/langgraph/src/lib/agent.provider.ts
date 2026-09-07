@@ -1,4 +1,4 @@
-import { InjectionToken, inject, type Provider, type Signal } from '@angular/core';
+import { InjectionToken, inject, isDevMode, type Provider, type Signal } from '@angular/core';
 import type { BaseMessage } from '@langchain/core/messages';
 import type { BagTemplate } from '@langchain/langgraph-sdk';
 import type { AgentRef, AgentRuntimeTelemetrySink } from '@threadplane/chat';
@@ -8,6 +8,7 @@ import type {
   LangGraphAgent,
   LangGraphClientOptions,
 } from './agent.types';
+import { AGENT_LIFECYCLE } from './lifecycle';
 
 /**
  * Configuration for an agent instance.
@@ -77,6 +78,19 @@ export const AGENT_CONFIG = new InjectionToken<AgentConfig>('AGENT_CONFIG');
 export const AGENT = new InjectionToken<LangGraphAgent>('AGENT');
 
 /**
+ * @internal — multi-token collecting the debug name of every `provideAgent(ref, …)`
+ * call at one injector level, so the ref-less `AGENT` alias can warn in dev mode
+ * when more than one ref competes for it. Angular does not merge multi-providers
+ * across parent and child injectors, so this list is exactly "this level".
+ */
+const AGENT_REF_NAMES = new InjectionToken<string[]>('AGENT_REF_NAMES');
+
+/** @internal — human-readable name of an agent ref for warning copy. */
+function refDebugName(ref: AgentRef<unknown>): string {
+  return ref.token.toString().replace(/^InjectionToken\s+/, '');
+}
+
+/**
  * @internal — builds a LangGraphAgent from an already-resolved config.
  * Must be called from an injection context (the legacy `agent()` factory calls
  * `inject(DestroyRef)`).
@@ -140,8 +154,14 @@ function isAgentRef<T>(x: unknown): x is AgentRef<T> {
  * provided side by side in a single `providers` array and `injectAgent(refA)`
  * / `injectAgent(refB)` return distinct agents. The ref-less `injectAgent()`
  * resolves a single shared token, which can only point at one of them: when
- * more than one ref is provided at the same level the **last** call wins.
- * Always inject by ref when an injector provides more than one agent.
+ * more than one ref is provided at the same level the **last** call wins, and
+ * resolving it in dev mode logs a `console.warn` naming every competing ref.
+ * The `AGENT_LIFECYCLE` token follows the same rule. Always inject by ref when
+ * an injector provides more than one agent.
+ *
+ * **Lifecycle token.** Every form also provides `AGENT_LIFECYCLE`, so
+ * `inject(AGENT_LIFECYCLE)` returns the same object as `injectAgent().lifecycle`
+ * without reaching for the agent itself.
  *
  * @example Two agents in one providers array
  * ```ts
@@ -199,6 +219,7 @@ export function provideAgent<T = Record<string, unknown>>(
       // config from here, so the factory is invoked exactly once.
       { provide: AGENT_CONFIG, useFactory: resolveConfig },
       { provide: AGENT, useFactory: agentFactory<T> },
+      { provide: AGENT_LIFECYCLE, useFactory: () => inject(AGENT).lifecycle },
     ];
   }
 
@@ -212,10 +233,35 @@ export function provideAgent<T = Record<string, unknown>>(
   const refConfig = new InjectionToken<AgentConfig<T>>(
     `AGENT_CONFIG(${ref.token.toString()})`,
   );
+  const thisRefName = refDebugName(ref as AgentRef<unknown>);
   return [
     { provide: refConfig, useFactory: resolveConfig },
     { provide: ref.token, useFactory: () => createAgentFromConfig(inject(refConfig)) },
     { provide: AGENT_CONFIG, useExisting: refConfig },
-    { provide: AGENT, useExisting: ref.token },
+    { provide: AGENT_REF_NAMES, useValue: thisRefName, multi: true },
+    {
+      provide: AGENT,
+      useFactory: () => {
+        if (isDevMode()) {
+          const names = inject(AGENT_REF_NAMES, { optional: true }) ?? [];
+          const others = names.filter((n) => n !== thisRefName);
+          if (others.length > 0) {
+            console.warn(
+              `[@threadplane/langgraph] provideAgent(): ${names.length} agent refs ` +
+                `(${names.join(', ')}) are provided at the same injector level. ` +
+                `The ref-less injectAgent() resolves a single shared token, so it now ` +
+                `returns the last one provided (${thisRefName}). ` +
+                `Inject by ref — injectAgent(${others[0]}) / injectAgent(${thisRefName}) — ` +
+                `to reach each agent unambiguously.`,
+            );
+          }
+        }
+        return inject(ref.token) as LangGraphAgent<T>;
+      },
+    },
+    {
+      provide: AGENT_LIFECYCLE,
+      useFactory: () => (inject(ref.token) as LangGraphAgent<T>).lifecycle,
+    },
   ];
 }
