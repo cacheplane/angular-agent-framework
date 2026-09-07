@@ -1,117 +1,123 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { build } from 'esbuild';
 
-import { createLifecycleVercelAdapter } from '../src/vercel-adapter.js';
+const sourceRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
-const GENERIC_DATABASE_ENV = /(?<!DAWN_)DATABASE_URL/u;
-const GENERATED_DAWN_TS_IMPORT =
-  /from "(\.\.\/\.\.\/src\/[^"]+)\.ts"/gu;
-
-export function rewriteDedicatedDawnDatabaseEnv(source: string): string {
-  if (!source.includes('binding(env, "DATABASE_URL")')) {
-    throw new Error(
-      'Generated Dawn stores are missing the expected DATABASE_URL lookup'
-    );
-  }
-  const rewritten = source.replaceAll('DATABASE_URL', 'DAWN_DATABASE_URL');
-  if (
-    !rewritten.includes('binding(env, "DAWN_DATABASE_URL")') ||
-    GENERIC_DATABASE_ENV.test(rewritten)
-  ) {
-    throw new Error('Generated Dawn stores did not isolate DAWN_DATABASE_URL');
-  }
-  return rewritten;
-}
-
-export function assertExpectedDawnDefaultExport(source: string): void {
-  if (!/export default app\s*$/mu.test(source)) {
-    throw new Error(
-      'Generated Dawn app is missing the expected default export'
-    );
-  }
-}
-
-export function rewriteDawnModuleImports(source: string): string {
-  const imports = [...source.matchAll(GENERATED_DAWN_TS_IMPORT)].map(
-    (match) => match[1]
-  );
-  if (
-    !imports.includes('../../src/middleware') ||
-    !imports.some((specifier) => specifier?.startsWith('../../src/app/'))
-  ) {
-    throw new Error(
-      'Generated Dawn modules are missing the expected TypeScript module imports'
-    );
-  }
-  const rewritten = source.replaceAll(GENERATED_DAWN_TS_IMPORT, 'from "$1.js"');
-  if (GENERATED_DAWN_TS_IMPORT.test(rewritten)) {
-    throw new Error('Generated Dawn TypeScript module imports remain');
-  }
-  return rewritten;
-}
-
-export async function verifyVercelAdapter(
-  appRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+export async function finalizeVercelAdapter(
+  appRoot = sourceRoot
 ): Promise<void> {
-  const buildRoot = resolve(appRoot, '.dawn/build');
-  const storesPath = resolve(buildRoot, 'stores.mjs');
-  const appPath = resolve(buildRoot, 'app.mjs');
-  const modulesPath = resolve(buildRoot, 'modules.edge.mjs');
-  const stores = await readFile(storesPath, 'utf8');
-  const rewrittenStores = rewriteDedicatedDawnDatabaseEnv(stores);
-  if (stores !== rewrittenStores) {
-    await writeFile(storesPath, rewrittenStores, 'utf8');
-  }
-
-  const modules = await readFile(modulesPath, 'utf8');
-  const rewrittenModules = rewriteDawnModuleImports(modules);
-  if (modules !== rewrittenModules) {
-    await writeFile(modulesPath, rewrittenModules, 'utf8');
-  }
-
-  const appSource = await readFile(appPath, 'utf8');
-  assertExpectedDawnDefaultExport(appSource);
-  const generated = (await import(
-    `${pathToFileURL(appPath).href}?verify=1`
-  )) as {
-    default?: { fetch?: unknown };
-  };
-  if (typeof generated.default?.fetch !== 'function') {
-    throw new Error(
-      'Generated Dawn app default export is not fetch-compatible'
-    );
-  }
-  const apiEntry = (await import(
-    `${pathToFileURL(resolve(appRoot, 'api/index.ts')).href}?verify=1`
-  )) as { default?: { fetch?: unknown } };
-  if (typeof apiEntry.default?.fetch !== 'function') {
-    throw new Error('Lifecycle Vercel entry is not fetch-compatible');
-  }
-
-  let delegated = false;
-  const adapter = createLifecycleVercelAdapter(
+  const outputRoot = resolve(appRoot, '.vercel/output');
+  const functionRoot = resolve(outputRoot, 'functions/index.func');
+  const runtimePath = resolve(functionRoot, 'index.mjs');
+  const native = await readFile(runtimePath);
+  const metadataPath = resolve(functionRoot, '.vc-config.json');
+  const metadata = JSON.parse(await readFile(metadataPath, 'utf8'));
+  assert.deepEqual(metadata, {
+    handler: 'index.mjs',
+    launcherType: 'Nodejs',
+    runtime: 'nodejs24.x',
+  });
+  assert.deepEqual(
+    JSON.parse(await readFile(resolve(outputRoot, 'config.json'), 'utf8')),
     {
-      fetch(request) {
-        delegated = request.url === 'https://lifecycle.invalid/healthz';
-        return new Response('ok');
-      },
+      version: 3,
+      routes: [{ dest: '/index', src: '/(.*)' }],
+    }
+  );
+  const result = await build({
+    stdin: {
+      contents: `import app from './index.mjs';\nimport { createLifecycleVercelAdapter } from ${JSON.stringify(
+        resolve(sourceRoot, 'src/vercel-adapter.ts')
+      )};\nexport default createLifecycleVercelAdapter(app);`,
+      resolveDir: functionRoot,
+      sourcefile: 'lifecycle-entry.mjs',
+      loader: 'js',
     },
-    () => 'adapter-verification-secret'
+    outfile: resolve(functionRoot, 'lifecycle.mjs'),
+    bundle: true,
+    platform: 'node',
+    target: 'node24',
+    format: 'esm',
+    external: ['./index.mjs'],
+    metafile: true,
+  });
+  assert.ok(result.metafile);
+  const imports = Object.values(result.metafile.outputs).flatMap(
+    (output) => output.imports
   );
-  const response = await adapter.fetch(
-    new Request('https://lifecycle.invalid/api/healthz', {
-      headers: { authorization: 'Bearer adapter-verification-secret' },
-    })
+  assert.deepEqual(imports.map((item) => item.path).sort(), [
+    './index.mjs',
+    'node:crypto',
+  ]);
+  assert.deepEqual(
+    await readFile(runtimePath),
+    native,
+    'Native Dawn runtime must remain unchanged'
   );
-  if (!delegated || !response.ok || (await response.text()) !== 'ok') {
-    throw new Error(
-      'Lifecycle Vercel adapter local request verification failed'
+  await writeFile(
+    metadataPath,
+    `${JSON.stringify(
+      { ...metadata, handler: 'lifecycle.mjs', maxDuration: 60 },
+      null,
+      2
+    )}\n`
+  );
+}
+
+export async function verifyVercelAdapter(appRoot = sourceRoot): Promise<void> {
+  await finalizeVercelAdapter(appRoot);
+  // Import outside the workspace under plain Node, without tsx or node_modules.
+  const isolated = await mkdtemp(resolve(tmpdir(), 'lifecycle-vercel-'));
+  try {
+    await cp(
+      resolve(appRoot, '.vercel/output/functions/index.func'),
+      isolated,
+      { recursive: true }
     );
+    const code = `
+      import assert from 'node:assert/strict';
+      const {default:app} = await import(${JSON.stringify(
+        pathToFileURL(resolve(isolated, 'lifecycle.mjs')).href
+      )});
+      for (const path of ['/healthz','/threads','/threads/id/state','/memory/candidates']) {
+        assert.equal((await app.fetch(new Request('https://lifecycle.invalid'+path))).status,401);
+      }
+      const request=()=>new Request('https://lifecycle.invalid/healthz',{headers:{authorization:'Bearer artifact-check'}});
+      delete process.env.DAWN_DATABASE_URL;
+      assert.equal((await app.fetch(request())).status,503);
+    `;
+    const result = spawnSync(
+      process.execPath,
+      ['--input-type=module', '-e', code],
+      {
+        cwd: isolated,
+        encoding: 'utf8',
+        timeout: 30_000,
+        env: {
+          PATH: process.env['PATH'],
+          LIFECYCLE_SERVICE_SECRET: 'artifact-check',
+          VERCEL_DEPLOYMENT_ID: 'artifact-check',
+        },
+      }
+    );
+    if (result.error || result.status !== 0)
+      throw new Error(
+        `Isolated native Vercel verification failed: ${
+          result.error?.message ?? result.stderr
+        }`
+      );
+  } finally {
+    await rm(isolated, { recursive: true, force: true });
   }
 }
 
-const invokedPath = process.argv[1] ? resolve(process.argv[1]) : '';
-if (invokedPath === fileURLToPath(import.meta.url)) {
+if (
+  process.argv[1] &&
+  resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+)
   await verifyVercelAdapter();
-}

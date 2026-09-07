@@ -4,7 +4,7 @@ import {
   type GrowthJob,
   type SqlExecutor,
 } from '@threadplane-internal/growth';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import middleware from './middleware.js';
 import {
@@ -89,6 +89,27 @@ function dependencies(
 }
 
 describe('Dawn lifecycle service authorization', () => {
+  beforeEach(() =>
+    vi.stubEnv('DAWN_DATABASE_URL', 'postgres://dawn.test/runtime')
+  );
+  afterEach(() => vi.unstubAllEnvs());
+
+  it.each([undefined, '', '   '])(
+    'rejects absent Dawn database binding: %s',
+    async (databaseUrl) => {
+      vi.stubEnv('DAWN_DATABASE_URL', databaseUrl);
+      vi.stubEnv('DATABASE_URL', 'postgres://growth.test/control');
+      const fetch = vi.fn();
+      const adapter = createLifecycleVercelAdapter({ fetch }, () => 'secret');
+      const response = await adapter.fetch(
+        new Request('https://lifecycle.test/healthz', {
+          headers: { authorization: 'Bearer secret' },
+        })
+      );
+      expect(response.status).toBe(503);
+      expect(fetch).not.toHaveBeenCalled();
+    }
+  );
   it.each([undefined, '', 'Bearer wrong', 'bearer service-secret'])(
     'rejects a missing or wrong route-middleware token: %s',
     async (authorization) => {
@@ -153,26 +174,28 @@ describe('Dawn lifecycle service authorization', () => {
     '/agui/%2Fdispatch%23workflow',
     '/memory/candidates',
   ])(
-    'outer adapter preserves %s across the Vercel catch-all rewrite',
+    'outer adapter preserves %s through the native Vercel catch-all',
     async (pathname) => {
       const fetch = vi.fn().mockResolvedValue(new Response('healthy'));
       const adapter = createLifecycleVercelAdapter({ fetch }, () => 'secret');
-      const request = new Request(
-        `https://lifecycle.test/api${pathname}?probe=1`,
-        { headers: { authorization: 'Bearer secret' } }
-      );
+      const request = new Request(`https://lifecycle.test${pathname}?probe=1`, {
+        headers: { authorization: 'Bearer secret' },
+      });
 
       const response = await adapter.fetch(request);
 
       expect(await response.text()).toBe('healthy');
-      expect(fetch).toHaveBeenCalledOnce();
+      expect(fetch).toHaveBeenCalledWith(request, {
+        DATABASE_URL: 'postgres://dawn.test/runtime',
+      });
       const delegated = fetch.mock.calls[0]?.[0];
+      expect(delegated).toBe(request);
       expect(new URL(delegated?.url ?? '').pathname).toBe(pathname);
       expect(new URL(delegated?.url ?? '').search).toBe('?probe=1');
     }
   );
 
-  it('outer adapter delegates the public path when Vercel preserves the rewrite URL', async () => {
+  it('outer adapter delegates the original public request', async () => {
     const fetch = vi.fn().mockResolvedValue(new Response('healthy'));
     const adapter = createLifecycleVercelAdapter({ fetch }, () => 'secret');
     const request = new Request('https://lifecycle.test/healthz', {
@@ -209,7 +232,7 @@ describe('Dawn lifecycle service authorization', () => {
     );
 
     const response = await adapter.fetch(
-      new Request('https://lifecycle.test/api/healthz', {
+      new Request('https://lifecycle.test/healthz', {
         headers: { authorization: 'Bearer secret' },
       })
     );
@@ -230,7 +253,7 @@ describe('Dawn lifecycle service authorization', () => {
     );
 
     const response = await adapter.fetch(
-      new Request('https://lifecycle.test/api/healthz')
+      new Request('https://lifecycle.test/healthz')
     );
 
     expect(response.status).toBe(401);

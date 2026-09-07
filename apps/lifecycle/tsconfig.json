@@ -13,5 +13,5 @@
     "noEmitOnError": false,
     "types": ["node", "vitest/globals"]
   },
-  "include": ["api/**/*.ts", "scripts/**/*.ts", "src/**/*.ts", "*.ts"]
+  "include": ["scripts/**/*.ts", "scripts/**/*.mts", "src/**/*.ts", "*.ts"]
 }

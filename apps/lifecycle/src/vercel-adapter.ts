@@ -1,14 +1,15 @@
 import { hasExactBearerToken } from './service-auth.js';
 
 export interface DawnFetchApp {
-  fetch(request: Request): Response | Promise<Response>;
+  fetch(
+    request: Request,
+    env: { DATABASE_URL: string }
+  ): Response | Promise<Response>;
 }
 
 export interface LifecycleVercelAdapter {
   fetch(request: Request): Promise<Response>;
 }
-
-const INTERNAL_FUNCTION_PREFIX = '/api';
 
 function jsonError(status: number, error: string): Response {
   return Response.json(
@@ -17,25 +18,14 @@ function jsonError(status: number, error: string): Response {
   );
 }
 
-function dawnRequestFromVercelRewrite(request: Request): Request {
-  const url = new URL(request.url);
-  if (url.pathname === INTERNAL_FUNCTION_PREFIX) {
-    url.pathname = '/';
-  } else if (url.pathname.startsWith(`${INTERNAL_FUNCTION_PREFIX}/`)) {
-    url.pathname = url.pathname.slice(INTERNAL_FUNCTION_PREFIX.length);
-  } else {
-    // Vercel rewrites can preserve the public URL presented to the function.
-    return request;
-  }
-  return new Request(url, request);
-}
-
 export function createLifecycleVercelAdapter(
   dawnApp: DawnFetchApp,
   readSecret: () => string | undefined = () =>
     process.env['LIFECYCLE_SERVICE_SECRET'],
   readDeploymentId: () => string | undefined = () =>
-    process.env['VERCEL_DEPLOYMENT_ID']
+    process.env['VERCEL_DEPLOYMENT_ID'],
+  readDawnDatabaseUrl: () => string | undefined = () =>
+    process.env['DAWN_DATABASE_URL']
 ): LifecycleVercelAdapter {
   return {
     async fetch(request: Request): Promise<Response> {
@@ -49,9 +39,14 @@ export function createLifecycleVercelAdapter(
       ) {
         return jsonError(401, 'Unauthorized');
       }
-      const dawnRequest = dawnRequestFromVercelRewrite(request);
-      const response = await dawnApp.fetch(dawnRequest);
-      if (new URL(dawnRequest.url).pathname !== '/healthz') return response;
+      const databaseUrl = readDawnDatabaseUrl()?.trim();
+      if (!databaseUrl) return jsonError(503, 'Service unavailable');
+      // Dawn binds stores to this exact request. Keep Growth's process-level
+      // DATABASE_URL untouched and never fall back to it for runtime storage.
+      const response = await dawnApp.fetch(request, {
+        DATABASE_URL: databaseUrl,
+      });
+      if (new URL(request.url).pathname !== '/healthz') return response;
       const deploymentId = readDeploymentId()?.trim();
       if (!deploymentId) return response;
       const headers = new Headers(response.headers);

@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { stageLangSmith } from '../scripts/package-langsmith.mts';
+import { createRequire } from 'node:module';
 
 const roots: string[] = [];
 const graphId = '/enrichment/research#agent';
@@ -13,8 +14,8 @@ async function fixture() {
   const root = await mkdtemp(join(tmpdir(), 'growth-packaging-test-'));
   roots.push(root);
   const files: Record<string, string> = {
-    'package.json': JSON.stringify({ name: 'fixture', version: '0.0.0', private: true, type: 'module', engines: { node: '24' }, dependencies: { '@dawn-ai/core': '0.8.24' } }),
-    'deployment-package-lock.json': JSON.stringify({ name: 'fixture', version: '0.0.0', lockfileVersion: 3, packages: { '': { name: 'fixture', version: '0.0.0', engines: { node: '24' }, dependencies: { '@dawn-ai/core': '0.8.24' } }, 'node_modules/@dawn-ai/core': { version: '0.8.24', resolved: 'https://registry.npmjs.org/@dawn-ai/core/-/core-0.8.24.tgz' } } }),
+    'package.json': JSON.stringify({ name: 'fixture', version: '0.0.0', private: true, type: 'module', engines: { node: '24' }, dependencies: { '@dawn-ai/core': '0.8.26' } }),
+    'deployment-package-lock.json': JSON.stringify({ name: 'fixture', version: '0.0.0', lockfileVersion: 3, packages: { '': { name: 'fixture', version: '0.0.0', engines: { node: '24' }, dependencies: { '@dawn-ai/core': '0.8.26' } }, 'node_modules/@dawn-ai/core': { version: '0.8.26', resolved: 'https://registry.npmjs.org/@dawn-ai/core/-/core-0.8.26.tgz' } } }),
     'dawn.config.ts': 'export default { build: { targets: ["langsmith"] } };',
     'src/app/enrichment/research/index.ts': 'export default {};',
     'src/app/enrichment/research/plan.md': '# Synthetic plan\nVerify fixture evidence.',
@@ -37,6 +38,12 @@ async function fixture() {
 afterEach(async () => { await Promise.all(roots.splice(0).map(root => rm(root, { recursive: true, force: true }))); });
 
 describe('standalone LangSmith packaging', () => {
+  it('resolves the Dawn SDK with its required Zod 4 peer in the workspace', () => {
+    const appRequire = createRequire(new URL('../package.json', import.meta.url));
+    const sdkRequire = createRequire(appRequire.resolve('@dawn-ai/sdk'));
+    expect(sdkRequire('zod/package.json').version).toMatch(/^4\./);
+  });
+
   it('packages the production adapter and private generated company child, excluding operator modules', async () => {
     const root = await fixture();
     const path = join(root, '.dawn/build/langgraph.json');
@@ -137,7 +144,7 @@ describe('standalone LangSmith packaging', () => {
     await expect(stageLangSmith(root)).rejects.toThrow(/symlink|outside/i);
   });
 
-  it.each(['workspace:*', 'file:../../libs/growth', '^0.8.24'])('rejects non-exact or local dependencies: %s', async version => {
+  it.each(['workspace:*', 'file:../../libs/growth', '^0.8.26'])('rejects non-exact or local dependencies: %s', async version => {
     const root = await fixture();
     const manifest = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
     manifest.dependencies['@dawn-ai/core'] = version;

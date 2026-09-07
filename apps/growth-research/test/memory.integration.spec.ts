@@ -1,5 +1,6 @@
 import { execFile } from 'node:child_process';
-import { cp, mkdir, mkdtemp, rm, symlink } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, rm } from 'node:fs/promises';
+import { linkFixtureDependencies } from './fixture-dependencies.js';
 import { tmpdir } from 'node:os';
 import { promisify } from 'node:util';
 import { dirname, join, resolve } from 'node:path';
@@ -29,7 +30,7 @@ it('persists candidates across fresh processes, excludes them from active recall
     for (const name of ['dawn.config.ts', 'package.json']) await cp(join(appRoot, name), join(relocated, name));
     await mkdir(join(relocated, 'scripts'));
     await cp(join(appRoot, 'scripts/memory-probe.mts'), join(relocated, 'scripts/memory-probe.mts'));
-    await symlink(join(appRoot, 'node_modules'), join(relocated, 'node_modules'));
+    await linkFixtureDependencies(appRoot, relocated);
     const read = await probe('read', 'atlas');
     expect(read.pid).not.toBe(written.pid);
     expect(read.candidateIds).toContain(written.id);
