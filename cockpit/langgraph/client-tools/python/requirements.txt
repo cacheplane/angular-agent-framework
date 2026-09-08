@@ -222,7 +222,7 @@ tenacity==9.1.4
     # via
     #   langchain-core
     #   langgraph-api
-threadplane-middleware==0.0.1
+threadplane-middleware==0.1.0
     # via cockpit-langgraph-client-tools
 tiktoken==0.13.0
     # via langchain-openai

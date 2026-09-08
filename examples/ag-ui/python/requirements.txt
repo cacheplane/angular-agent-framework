@@ -145,7 +145,7 @@ starlette==1.2.1
     # via fastapi
 tenacity==9.1.4
     # via langchain-core
-threadplane-middleware==0.0.1
+threadplane-middleware==0.1.0
     # via examples-ag-ui-python
 tiktoken==0.13.0
     # via langchain-openai
