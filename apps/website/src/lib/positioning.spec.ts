@@ -157,14 +157,15 @@ describe('positioning: coding-agent prompt', () => {
 });
 
 describe('homepage restructure copy (live-stage spec §3)', () => {
-  it('closes on the open-source offer: one sentence, the licence, the fork CTA', async () => {
+  it('closes on the open-source offer: an aviation eyebrow, two words, the licence and the CTA', async () => {
     const { OPEN_SOURCE_STRIP } = await import('./positioning');
-    expect(`${OPEN_SOURCE_STRIP.lead} ${OPEN_SOURCE_STRIP.emphasis}`).toBe(
-      'Yes, this is all free. Don’t like something? Fork us.',
-    );
-    // The strip is one line on a wide viewport; long copy would wrap into the
-    // action group and undo the whole point of the shape.
-    expect(`${OPEN_SOURCE_STRIP.lead} ${OPEN_SOURCE_STRIP.emphasis}`.length).toBeLessThanOrEqual(60);
+    expect(OPEN_SOURCE_STRIP.eyebrow).toBe('Squawk 1200');
+    expect(OPEN_SOURCE_STRIP.headline).toBe('Fork us.');
+    // The headline is set at up to 116px. More than two short words wraps,
+    // and a wrapped headline stops reading as a full stop.
+    expect(OPEN_SOURCE_STRIP.headline.length).toBeLessThanOrEqual(12);
+    // The eyebrow sits on one line at 0.18em tracking beside nothing else.
+    expect(OPEN_SOURCE_STRIP.eyebrow.length).toBeLessThanOrEqual(14);
     expect(OPEN_SOURCE_STRIP.licence).toBe('MIT');
     expect(OPEN_SOURCE_STRIP.cta).toBe('Fork on GitHub');
   });
