@@ -2119,9 +2119,13 @@
  * was too many competing layers. */
 .proof-ladder {
   display: block;
+  /* Spans the full content width rather than a capped 700px. Capped and
+   * left-aligned, the instrument's waterline landed well left of the band's
+   * centre and the whole thing read as stray marks; full width makes it a
+   * divider whose waterline is centred, which is what it is for. The strokes
+   * hold their weight at any scale via vector-effect below. */
   width: 100%;
   height: auto;
-  max-width: 700px;
   margin: 4px 0 26px;
 }
 /* The svg is width:100% over a 700-wide viewBox, so below 700px the whole
