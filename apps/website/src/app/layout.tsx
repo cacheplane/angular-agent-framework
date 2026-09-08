@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { EB_Garamond, Inter, JetBrains_Mono } from 'next/font/google';
+import { Archivo, Archivo_Black, Inter, JetBrains_Mono } from 'next/font/google';
 import '@threadplane/design-tokens/tokens.css';
 import './global.css';
 import { Nav } from '../components/shared/Nav';
@@ -20,16 +20,27 @@ import { getFormPolicy } from '../lib/growth/form-policy';
 import { WebsiteSignals } from '../components/shared/WebsiteSignals';
 import { websiteContentCatalog } from '../lib/growth/website-content';
 
-const garamond = EB_Garamond({
+const display = Archivo_Black({
   subsets: ['latin'],
-  weight: ['400', '700', '800'],
-  style: ['normal', 'italic'],
+  weight: '400',
   variable: '--font-display',
 });
 
-const inter = Inter({
+const sans = Archivo({
   subsets: ['latin'],
   variable: '--font-sans',
+});
+
+/**
+ * Inter is retained for diagrams only, and MUST be loaded here rather than
+ * left to theme.css: next/font registers its family under a hashed name, so
+ * theme.css's raw `Inter, system-ui` stack never matches it and would silently
+ * fall back to system-ui. Diagram geometry is pinned to Inter's metrics —
+ * see the FONTS note in src/styles/ui.css and e2e/home-architecture.spec.ts.
+ */
+const diagram = Inter({
+  subsets: ['latin'],
+  variable: '--font-diagram',
 });
 
 const mono = JetBrains_Mono({
@@ -66,7 +77,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${garamond.variable} ${inter.variable} ${mono.variable}`}
+      className={`${display.variable} ${sans.variable} ${diagram.variable} ${mono.variable}`}
     >
       <body>
         {/*
