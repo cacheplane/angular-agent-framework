@@ -23,12 +23,13 @@ const TOKENS_CSS = resolve(__dirname, 'tokens.css');
  * 2. Names reserved ahead of their consumers: `--ds-signal`,
  *    `--ds-signal-strong`, `--ds-scope`, `--ds-alert`, `--ds-ink` are the
  *    aviation-yellow retheme's brand colors, and `--ds-font-display` /
- *    `--ds-font-diagram` are the retheme's font faces (replacing the
- *    consumer-referenced `--ds-font-serif`, which the retheme retires — see
- *    workspace.css in Task 5). A repo-wide grep finds ZERO references to any
- *    of these outside libs/design-tokens/ as of 2026-09-07 — that is
- *    expected, not a mistake, because cockpit/example adoption has not
- *    landed yet. Do NOT remove them because the grep above comes up empty;
+ *    `--ds-font-diagram` are the retheme's font faces, replacing
+ *    `--ds-font-serif` — a name this list previously guarded and the retheme
+ *    retires. Its one surviving use is the fallback in workspace.css, behind
+ *    `var(--font-display)` (see Task 5). A repo-wide grep finds ZERO
+ *    references to any of the reserved names above outside
+ *    libs/design-tokens/ as of 2026-09-07 — that is expected, not a mistake,
+ *    because cockpit/example adoption has not landed yet. Do NOT remove them because the grep above comes up empty;
  *    they must stay guarded so the names are ready when a consumer needs
  *    them.
  */

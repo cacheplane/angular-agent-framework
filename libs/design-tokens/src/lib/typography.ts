@@ -24,6 +24,12 @@ export const typography = {
    * 8px grid and home-architecture.spec.ts measures each rendered text run
    * against its card. Retyping diagrams would force a geometry rework larger
    * than the retheme itself.
+   *
+   * On apps/website this var must keep being supplied by next/font in
+   * layout.tsx: the raw `Inter` literal theme.css emits does not match
+   * next/font's hashed family name, so without the loader diagrams fall back
+   * to system-ui and every glyph width shifts. See the FONTS note in
+   * apps/website/src/styles/ui.css.
    */
   fontDiagram: 'Inter, system-ui, sans-serif',
   /** Monospace font for code and labels. ui-monospace before the generic
