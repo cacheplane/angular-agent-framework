@@ -25,23 +25,54 @@ const STEPS = [
   { width: 1440, note: 'desktop' },
 ];
 
-for (const step of STEPS) {
-  test(`--nav-h matches the rendered nav at ${step.width}px (${step.note})`, async ({ page }) => {
-    await page.setViewportSize({ width: step.width, height: 800 });
-    await page.goto('/docs/langgraph/getting-started/introduction');
+/**
+ * `--nav-h` is route-dependent as of the navbar redesign: marketing routes keep
+ * the measured 58/66/81 ladder, and /docs is a flat 58 at every width. Both
+ * have to be measured, because the declared value is rounded up off the
+ * rendered height and only a browser knows what that height is.
+ */
+const SURFACES = [
+  { name: 'marketing', url: '/' },
+  { name: 'docs', url: '/docs/langgraph/getting-started/introduction' },
+];
 
-    const nav = page.locator('nav').first();
-    await expect(nav).toBeVisible();
+for (const surface of SURFACES) {
+  for (const step of STEPS) {
+    test(`--nav-h matches the rendered nav on ${surface.name} at ${step.width}px (${step.note})`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: step.width, height: 800 });
+      await page.goto(surface.url);
 
-    const measured = await nav.evaluate((el) => el.getBoundingClientRect().height);
-    const variable = await page.evaluate(() =>
-      parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav-h')),
-    );
+      const nav = page.locator('nav').first();
+      await expect(nav).toBeVisible();
 
-    expect(variable).toBeGreaterThanOrEqual(measured);
-    expect(variable - measured).toBeLessThanOrEqual(1);
-  });
+      const measured = await nav.evaluate((el) => el.getBoundingClientRect().height);
+      const variable = await page.evaluate(() =>
+        parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav-h')),
+      );
+
+      expect(variable).toBeGreaterThanOrEqual(measured);
+      expect(variable - measured).toBeLessThanOrEqual(1);
+    });
+  }
 }
+
+test('the docs nav does not grow with the breakpoint', async ({ page }) => {
+  const heights: number[] = [];
+  for (const width of [375, 768, 1440]) {
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto('/docs/langgraph/getting-started/introduction');
+    heights.push(
+      await page
+        .locator('nav')
+        .first()
+        .evaluate((el) => el.getBoundingClientRect().height),
+    );
+  }
+  const [phone] = heights;
+  for (const height of heights) expect(Math.abs(height - phone)).toBeLessThanOrEqual(1);
+});
 
 test('the docs column starts directly under the nav at a tablet width', async ({ page }) => {
   // The 15px overshoot showed up here as dead space above the breadcrumb.

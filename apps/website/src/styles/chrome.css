@@ -40,6 +40,20 @@
   }
 }
 
+/* Docs condenses to one height at every width. The three marketing steps exist
+ * because padding grows at md while the tall link row only appears at lg; docs
+ * keeps the short padding throughout, so it has no such asymmetry. Still
+ * measured, not derived — e2e/nav-height.spec.ts pins both ladders.
+ *
+ * This beats the media queries above regardless of source order: `:has()`
+ * takes the specificity of its most specific argument, so this scores (0,3,0)
+ * against plain `:root`'s (0,1,0), and media queries add nothing. The <nav> is
+ * server-rendered, so it matches on first paint with no flash of the taller
+ * marketing bar. */
+:root:has(.nav-bar[data-route='docs']) {
+  --nav-h: 58px;
+}
+
 /* Footer */
 .footer-root {
   background: var(--color-surface);
@@ -118,6 +132,33 @@
 .nav-bar[data-surface='transparent'] [data-ui='button'][data-variant='primary'] {
   background: var(--color-accent);
   color: var(--color-text-inverted);
+}
+/* Inside docs the bar is chrome around the reader's content, not the page's
+ * headline, so it condenses: the md/lg padding step is flattened back to the
+ * phone's 16px at every width, and the CTA demotes from a fill button to a
+ * text link.
+ *
+ * The demotion is also what makes the height flat. `Button` gives size=md a
+ * hard `height: 40px`, which is what pushes the marketing bar to 81px once the
+ * lg link row appears; dropping to `height: auto` leaves the 25px logo as the
+ * tallest thing in the row at every width, so 16 + 25 + 16 + the 1px border
+ * measures the same 58px from 375px up. Raising the padding here without
+ * re-measuring --nav-h above is what re-opens the dead-space bug.
+ *
+ * `Button` stamps data-ui/data-variant/data-size and adds no class of its own,
+ * so this has to select on the attributes — a `.btn` selector matches nothing
+ * and fails silently. */
+.nav-bar[data-route='docs'] > div {
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+.nav-bar[data-route='docs'] [data-ui='button'][data-variant='primary'] {
+  background: none;
+  color: var(--color-accent);
+  height: auto;
+  padding-inline: 0;
+  border-color: transparent;
+  box-shadow: none;
 }
 .nav-scroll-sentinel {
   position: absolute;

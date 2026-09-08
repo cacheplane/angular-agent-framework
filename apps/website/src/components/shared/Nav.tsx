@@ -200,6 +200,7 @@ export function Nav() {
         className="fixed top-0 left-0 right-0 z-50 nav-bar"
         data-site-navigation=""
         data-surface={surface}
+        data-route={isDocsPage ? 'docs' : 'marketing'}
       >
         {/* Top bar */}
         <div className="flex items-center justify-between px-6 py-4 md:px-8 md:py-5">
