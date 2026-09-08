@@ -162,6 +162,41 @@ function CardRows({ card }: { card: Card }) {
                 </text>
               </g>
             );
+          case 'items':
+            return (
+              <g
+                key={i}
+                className="arch-items"
+                data-tone={card.highlight ? 'tp' : 'plain'}
+              >
+                {row.items.map((item, j) => {
+                  const y = row.y + j * row.step;
+                  return (
+                    <g key={item}>
+                      <rect
+                        className="arch-item-band"
+                        x={card.x + 12}
+                        y={y - 18}
+                        width={card.width - 24}
+                        height={26}
+                        rx={8}
+                      />
+                      <rect
+                        className="arch-item-bar"
+                        x={card.x + 12}
+                        y={y - 14}
+                        width={3}
+                        height={18}
+                        rx={1.5}
+                      />
+                      <text className="arch-body" x={card.x + CARD_PAD} y={y}>
+                        {item}
+                      </text>
+                    </g>
+                  );
+                })}
+              </g>
+            );
           case 'marks':
             return (
               <g key={i}>
@@ -379,6 +414,7 @@ function ArchitectureStack() {
         const caps = c.rows.find((r) => r.kind === 'caps');
         const marks = c.rows.find((r) => r.kind === 'marks');
         const texts = c.rows.filter((r) => r.kind === 'text');
+        const items = c.rows.find((r) => r.kind === 'items');
         const mono = c.rows.find((r) => r.kind === 'mono');
         const badges = c.rows.filter((r) => r.kind === 'badge');
         return (
@@ -407,6 +443,13 @@ function ArchitectureStack() {
                   {texts.map((r) =>
                     r.kind === 'text' ? <li key={r.text}>{r.text}</li> : null
                   )}
+                </ul>
+              ) : null}
+              {items && items.kind === 'items' ? (
+                <ul className="arch-stack-items">
+                  {items.items.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
                 </ul>
               ) : null}
               {caps && caps.kind === 'caps' ? (

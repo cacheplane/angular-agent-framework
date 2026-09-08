@@ -119,6 +119,13 @@ describe('architecture diagram geometry', () => {
             c.y + c.height - 12
           );
         }
+        if (r.kind === 'items') {
+          const last = r.y + (r.items.length - 1) * r.step;
+          expect(r.y - 18, `${c.id} items top`).toBeGreaterThan(c.y + 40);
+          expect(last + 8, `${c.id} items bottom`).toBeLessThanOrEqual(
+            c.y + c.height - 8
+          );
+        }
         if (r.kind === 'caps') {
           expect(r.y + r.caps.length * 40).toBeLessThanOrEqual(
             c.y + c.height - 24

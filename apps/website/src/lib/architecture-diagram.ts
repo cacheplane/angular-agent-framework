@@ -88,6 +88,14 @@ export type Row =
       readonly mark: LogoKey;
       readonly label: string;
     }
+  /** A banded list: one row per item, each with a left accent bar. */
+  | {
+      readonly kind: 'items';
+      readonly y: number;
+      readonly items: readonly string[];
+      /** Vertical pitch between rows. */
+      readonly step: number;
+    }
   /** A row of mark badges with no labels. */
   | {
       readonly kind: 'marks';
@@ -216,9 +224,16 @@ export const CARDS: readonly Card[] = [
     tag: 'FIRST-CLASS',
     highlight: true,
     rows: [
-      { kind: 'text', y: 212, text: 'checkpoints · interrupts' },
-      { kind: 'text', y: 240, text: 'time travel · memory' },
-      { kind: 'text', y: 268, text: 'subgraphs · durable runs' },
+      {
+        kind: 'items',
+        y: 212,
+        step: 32,
+        items: [
+          'checkpoints · interrupts',
+          'time travel · memory',
+          'subgraphs · durable runs',
+        ],
+      },
     ],
   },
   {
@@ -231,7 +246,9 @@ export const CARDS: readonly Card[] = [
     title2: 'protocol',
     href: '/docs/ag-ui/getting-started/introduction',
     mark: 'agui',
-    rows: [{ kind: 'text', y: 460, text: 'events · tools · state' }],
+    rows: [
+      { kind: 'items', y: 460, step: 32, items: ['events · tools · state'] },
+    ],
   },
   {
     id: 'langsmith',
@@ -243,9 +260,12 @@ export const CARDS: readonly Card[] = [
     href: '/docs/langgraph/guides/deployment',
     mark: 'langchain',
     rows: [
-      { kind: 'text', y: 172, text: 'deploy · observe' },
-      { kind: 'text', y: 212, text: 'traces · evals' },
-      { kind: 'text', y: 240, text: 'or self-hosted' },
+      {
+        kind: 'items',
+        y: 200,
+        step: 32,
+        items: ['deploy · observe', 'traces · evals', 'or self-hosted'],
+      },
     ],
   },
   {
@@ -264,7 +284,12 @@ export const CARDS: readonly Card[] = [
         size: 30,
         step: 34,
       },
-      { kind: 'text', y: 468, text: 'CrewAI · Mastra · Microsoft' },
+      {
+        kind: 'items',
+        y: 468,
+        step: 32,
+        items: ['CrewAI · Mastra · Microsoft'],
+      },
     ],
   },
 ];

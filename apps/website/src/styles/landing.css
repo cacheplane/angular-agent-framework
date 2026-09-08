@@ -1773,6 +1773,40 @@
   font-weight: 500;
   fill: #2a2f3a;
 }
+/* Adapter and agent capability rows: a banded list with a left accent, so
+ * the lines read as a feature list rather than loose paragraph text. */
+.arch-figure .arch-item-band {
+  fill: #f2f5f8;
+}
+.arch-figure .arch-item-bar {
+  fill: #c2cad6;
+}
+.arch-figure .arch-items[data-tone='tp'] .arch-item-band {
+  fill: rgba(255, 255, 255, 0.75);
+}
+.arch-figure .arch-items[data-tone='tp'] .arch-item-bar {
+  fill: #2f5fa8;
+}
+.arch-stack-items {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  font-family: var(--font-inter);
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.arch-stack-items li {
+  background: #f2f5f8;
+  border-left: 3px solid #c2cad6;
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+.arch-stack-card[data-highlight] .arch-stack-items li {
+  background: rgba(255, 255, 255, 0.75);
+  border-left-color: #2f5fa8;
+}
 .arch-figure .arch-badge rect {
   fill: #fff;
   stroke: #e2e6ec;
