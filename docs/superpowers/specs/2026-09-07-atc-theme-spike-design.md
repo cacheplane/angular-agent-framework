@@ -231,10 +231,15 @@ rule or an underline colour.
 2. **Homepage hero** — full-bleed `#FFAF00` block, Archivo Black headline in
    `#0A0A0A`, black primary button, terminated by a `#15253E` strip carrying
    the trust line in JetBrains Mono. Below the strip, white.
-3. **Docs shell** — a document first. Yellow is the active sidebar item's 3px
-   left rule, the callout's left rule over a near-white tint, and keyword
-   colour inside scope-navy code blocks. Links are `#15253E` with a yellow
-   underline.
+3. **Docs shell** — a document first. Yellow arrives through the tokens rather
+   than through new rules: the active sidebar item is already
+   `background: var(--color-accent-surface)` with `color: var(--color-accent)`,
+   which the retheme turns into a soft yellow pill with navy ink. Links are
+   `#15253E`. **Correction to an earlier draft:** this section previously
+   called for a 3px left rule on the active item. That is withdrawn —
+   `DocsControlPlane.spec.tsx` deliberately guards "rounded sidebar states
+   without a left marker" (#963), and the token change already produces the
+   intended treatment without contradicting it.
 
 Every other marketing page (pricing, blog, about, solutions, pilot-to-prod)
 inherits the new tokens and fonts automatically — that is the point of the
