@@ -1408,6 +1408,21 @@ Expected: PASS, 3 tests.
 
 If `solidifies once scrolled` fails, the sentinel is not scrolling — check that it rendered outside `<nav>` and that no ancestor has `position: relative` making `top: 0` mean something other than the top of the document.
 
+- [ ] **Step 4b: Decide the deferred `setAtTop(true)` question**
+
+Task 2 left this open deliberately, because jsdom cannot measure layout and the answer needs a real browser. `useNavSurface` optimistically assumes top-of-page on effect entry, before the observer's first (asynchronous) callback lands.
+
+- The **common case** — a fresh load of `/` at scroll 0 — is why the optimistic set exists. Removing it makes every normal load flash solid over the hero before flipping to transparent.
+- The **inverse case** — a hero route that mounts *already scrolled*, via a `#hash` deep link or back-navigation with scroll restoration — flashes transparent over white content instead.
+
+Neither is free; a boolean-then-correct approach always picks which case flashes. The fix that resolves both is seeding `atTop` from a synchronous `sentinel.getBoundingClientRect()` inside the effect, which is available immediately rather than waiting on the observer.
+
+Check both cases in a real browser: load `/`, then load `/#open-source`, then navigate away and press Back. If either flashes visibly, implement the `getBoundingClientRect()` seed and re-run Task 2's spec. If neither does, delete the deferral comment in `useNavSurface.ts` and record here that it was checked and left alone.
+
+- [ ] **Step 4c: Confirm the surface against a deployed preview, not only the dev server**
+
+`reactStrictMode` is unset in `apps/website/next.config.ts`, so it takes Next's default of `true` and effects double-invoke in dev — the observer is created, disconnected, and recreated on every mount. This repo has already been bitten by website e2e passing against `next dev` and failing only against deployed prod, so a green local run is not sufficient evidence here. Confirm the transparent and solid states on the Vercel preview build before calling this done.
+
 - [ ] **Step 5: Commit**
 
 ```bash
