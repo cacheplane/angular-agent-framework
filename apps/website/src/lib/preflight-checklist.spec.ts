@@ -52,4 +52,13 @@ describe('preflight checklist data', () => {
       expect(row.response, row.challenge).toBe(row.response.toUpperCase());
     }
   });
+
+  it('derives the Angular range rather than hardcoding it', async () => {
+    const { WEBSITE_SUPPORTED_ANGULAR_MAJORS } = await import(
+      '../components/pricing/angular-support.mjs'
+    );
+    const row = AIRWORTHINESS.find((r) => r.challenge === 'Angular support');
+    expect(row?.response).toContain(String(WEBSITE_SUPPORTED_ANGULAR_MAJORS[0]));
+    expect(row?.response).toContain(String(WEBSITE_SUPPORTED_ANGULAR_MAJORS.at(-1)));
+  });
 });

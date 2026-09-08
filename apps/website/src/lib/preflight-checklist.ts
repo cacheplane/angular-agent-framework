@@ -1,3 +1,5 @@
+import { WEBSITE_SUPPORTED_ANGULAR_MAJORS } from '../components/pricing/angular-support.mjs';
+
 /**
  * The homepage preflight checklist.
  *
@@ -84,7 +86,14 @@ export const AIRWORTHINESS: readonly ChecklistRow[] = [
     badgeSrc: 'https://hvtracker.net/badge/threadplane.svg',
     href: 'https://hvtracker.net/agents/threadplane/',
   },
-  { challenge: 'Angular support', response: '20–22', unit: 'CI-TESTED', href: 'https://www.npmjs.com/package/@threadplane/langgraph' },
+  {
+    challenge: 'Angular support',
+    // Derived, not typed: bumping a supported major must update the homepage
+    // without anyone remembering to edit this file.
+    response: `${WEBSITE_SUPPORTED_ANGULAR_MAJORS[0]}–${WEBSITE_SUPPORTED_ANGULAR_MAJORS.at(-1)}`,
+    unit: 'CI-TESTED',
+    href: 'https://www.npmjs.com/package/@threadplane/langgraph',
+  },
   { challenge: 'Release provenance', response: 'SIGNED', unit: 'OIDC · SLSA', href: 'https://www.npmjs.com/package/@threadplane/chat' },
   { challenge: 'Cloud', response: 'NONE', unit: 'SELF-HOSTED', href: '/privacy' },
   { challenge: 'Signup', response: 'NONE', unit: 'npm i', href: '/docs/chat/getting-started/installation' },
