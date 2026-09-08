@@ -56,8 +56,18 @@ for (const surface of SURFACES) {
         parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav-h')),
       );
 
-      expect(variable).toBeGreaterThanOrEqual(measured);
-      expect(variable - measured).toBeLessThanOrEqual(1);
+      expect(
+        variable,
+        `--nav-h (${variable}) drifted from the rendered nav (${measured}) on ` +
+          `${surface.name} at ${step.width}px. The variable no longer describes ` +
+          `reality, so every offset built on it is wrong. Re-measure the nav.`,
+      ).toBeGreaterThanOrEqual(measured);
+      expect(
+        variable - measured,
+        `--nav-h (${variable}) overshoots the rendered nav (${measured}) by ` +
+          `${(variable - measured).toFixed(2)}px on ${surface.name} at ` +
+          `${step.width}px. Overshoot becomes dead space above the content.`,
+      ).toBeLessThanOrEqual(1);
 
       // The two checks above are self-consistency only: they confirm --nav-h
       // tracks whatever the nav happens to render, but they cannot see a
@@ -67,7 +77,14 @@ for (const surface of SURFACES) {
       // still pass. Pinning the declared value against the ladder we intend
       // catches that; it is a separate property from "does the variable match
       // what rendered."
-      expect(variable).toBe(surface.expectedNavH(step));
+      expect(
+        variable,
+        `--nav-h is ${variable} on ${surface.name} at ${step.width}px, but this ` +
+          `ladder is meant to declare ${surface.expectedNavH(step)}px. This is a ` +
+          `DESIGN change, not drift — the checks above still passed, so the ` +
+          `variable and the nav moved together. Update this table only if the ` +
+          `new ladder is intended.`,
+      ).toBe(surface.expectedNavH(step));
     });
   }
 }
