@@ -1015,16 +1015,33 @@ Append to the block added in Task 3 in `apps/website/src/styles/landing.css`:
 ```css
 /* Phone form: the same gates as an HTML list, driven by the same data.
  * The plate is hidden here instead of scrolled sideways — the .arch-stack
- * precedent from the architecture diagram. */
+ * precedent from the architecture diagram.
+ *
+ * VISUALLY hidden on desktop, never `display: none`. The plate is
+ * aria-hidden, and the five provider names exist ONLY in this list, so
+ * display:none would leave the whole band with no accessible content on
+ * desktop. Same idiom as .stage-skip above. */
 .airport-stack {
-  display: none;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 @media (max-width: 767px) {
   .airport-figure {
     display: none;
   }
   .airport-stack {
-    display: block;
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+    clip-path: none;
+    white-space: normal;
     margin-top: 8px;
   }
   .airport-head {
