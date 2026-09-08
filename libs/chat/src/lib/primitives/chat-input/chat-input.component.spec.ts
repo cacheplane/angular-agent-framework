@@ -22,6 +22,12 @@ function setSignalInput<T>(sig: unknown, value: T): void {
 }
 
 describe('submitMessage()', () => {
+  it('does not dispatch ordinary input when the adapter blocks it', () => {
+    const agent = mockAgent();
+    const blocked = { ...agent, isInputBlocked: signal(true) };
+    expect(submitMessage(blocked, 'keep my draft')).toBeNull();
+    expect(agent.submitCalls).toHaveLength(0);
+  });
   it('calls agent.submit with { message: trimmed text }', async () => {
     const agent = mockAgent();
 
@@ -100,6 +106,22 @@ describe('ChatInputComponent', () => {
     fixture = TestBed.createComponent(ChatInputComponent);
     setSignalInput(fixture.componentInstance.agent, mockAgent({ isLoading: false }));
     fixture.detectChanges();
+  });
+
+  it('disables Send and preserves the draft on Enter until the adapter releases input', () => {
+    const agent = mockAgent();
+    const blocked = signal(true);
+    setSignalInput(fixture.componentInstance.agent, { ...agent, isInputBlocked: blocked });
+    fixture.componentInstance.messageText.set('keep my draft');
+    fixture.detectChanges();
+    const button = fixture.nativeElement.querySelector('button[aria-label="Send message"]') as HTMLButtonElement;
+    expect(button.disabled).toBe(true);
+    fixture.componentInstance.onKeydown(new KeyboardEvent('keydown', { key: 'Enter' }));
+    expect(agent.submitCalls).toHaveLength(0);
+    expect(fixture.componentInstance.messageText()).toBe('keep my draft');
+    blocked.set(false);
+    fixture.detectChanges();
+    expect(button.disabled).toBe(false);
   });
 
   it('renders the pill with full border-radius', () => {

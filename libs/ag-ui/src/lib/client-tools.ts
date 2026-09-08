@@ -58,6 +58,7 @@ export function createClientToolsCapability(
   source: ClientToolsSource,
   store: ReducerStore,
   continueRun: ContinueClientToolRun,
+  beforeResolve?: () => void,
 ): ClientToolsCapability & { catalogAsAgUiTools(): Tool[] } {
   const catalog = signal<readonly ClientToolSpec[]>([]);
   const resolvedIds = signal<ReadonlySet<string>>(new Set());
@@ -135,6 +136,7 @@ export function createClientToolsCapability(
     },
 
     resolve(id: string, result: ClientToolResult): void {
+      beforeResolve?.();
       settleResult(id, result);
       void continueRun();
     },

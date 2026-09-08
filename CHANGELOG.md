@@ -1,3 +1,20 @@
+## Unreleased
+
+### Features
+
+- **ag-ui:** expose complete interrupt sessions, optional atomic persistence and authoritative recovery, and provider lifetime cleanup.
+
+### Fixes
+
+- **langgraph:** retain null-payload resume commands and combined message/state input for intentional retry without reusing an aborted signal.
+- **ag-ui:** retain exact resume decisions, roll failed state back to committed boundaries, and reject stale callbacks and concurrent recovery actions.
+
+### Breaking changes
+
+- **ag-ui:** native batches take precedence over compatibility events in `auto` mode. Select `legacy-command` or `mastra-command` explicitly for backends requiring command transport.
+- **ag-ui:** resume requires a pending batch and each native ID exactly once; scalar responses apply only to single-entry batches. New messages, regeneration, and client-tool continuation cannot abandon an unresolved interrupt.
+- **ag-ui:** uncertain resumes require authoritative reconciliation before retry. Durable client claims require an application-provided atomic store; backend duplicate-effect protection requires server idempotency.
+
 ## 0.1.0 (2026-09-08)
 
 ### 🚀 Features

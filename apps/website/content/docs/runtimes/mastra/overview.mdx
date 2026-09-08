@@ -113,7 +113,7 @@ The class supplies that payload and maps the two actions onto resume calls.
 
 <ExampleCode file="mastra.component.ts" region="approval-actions" title="mastra.component.ts — reading the interrupt and resuming" />
 
-`agent.interrupt()` carries the parsed `CUSTOM on_interrupt` payload as its `value`, and because that payload carries a tool-call id, `submit({ resume })` goes back out as `forwardedProps.command = { resume, interruptEvent: { toolCallId, runId } }` — the shape the Mastra bridge reads to reopen the suspended run.
+`agent.interruptSession().legacy?.value` carries the parsed `CUSTOM on_interrupt` payload alongside the native interrupt batch. The provider selects `interruptTransport: 'mastra-command'`, so `submit({ resume })` goes back out as `forwardedProps.command = { resume, interruptEvent: { toolCallId, runId } }` — the shape the Mastra bridge reads to reopen the suspended run.
 
 ## What the integration demonstrates
 

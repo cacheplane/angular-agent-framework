@@ -83,13 +83,11 @@ function lastRunAgentArg(stub: StubAgent): {
 }
 
 describe('submit({ resume }) — LangGraph wire shape is unchanged', () => {
-  it('sends exactly { command: { resume } } when no interrupt is pending', async () => {
+  it('rejects resume when no interrupt is pending', async () => {
     const stub = new StubAgent();
     const agent = toAgent(stub as unknown as AbstractAgent);
-    await agent.submit({ resume: { approved: true } });
-    expect(stub.runAgent).toHaveBeenCalledWith({
-      forwardedProps: { command: { resume: { approved: true } } },
-    });
+    await expect(agent.submit({ resume: { approved: true } })).rejects.toThrow('No pending interrupt');
+    expect(stub.runAgent).not.toHaveBeenCalled();
   });
 
   it('sends exactly { command: { resume } } for an on_interrupt payload without identifying fields', async () => {
@@ -102,11 +100,18 @@ describe('submit({ resume }) — LangGraph wire shape is unchanged', () => {
     } as unknown as BaseEvent);
     expect(agent.interrupt!()).toBeDefined();
 
+    stub.runAgent.mockImplementationOnce(async () => {
+      const runId = (stub.runAgent.mock.calls.at(-1) as unknown as [{ runId: string }])[0].runId;
+      stub.emit({ type: 'RUN_STARTED', runId } as BaseEvent);
+      stub.emit({ type: 'RUN_FINISHED', runId } as BaseEvent);
+      return { result: undefined, newMessages: [] };
+    });
     await agent.submit({ resume: { approved: true } });
 
-    expect(lastRunAgentArg(stub)).toEqual({
+    expect(lastRunAgentArg(stub)).toEqual(expect.objectContaining({
       forwardedProps: { command: { resume: { approved: true } } },
-    });
+    }));
+    expect(lastRunAgentArg(stub).resume).toBeUndefined();
     expect(agent.interrupt!()).toBeUndefined();
   });
 });
@@ -121,13 +126,14 @@ describe('submit({ resume }) — Mastra transcript round-trip', () => {
   // plus command.interruptEvent{toolCallId,runId}.
   it('reproduces the measured command.resume + command.interruptEvent shape', async () => {
     const stub = new StubAgent();
-    const agent = toAgent(stub as unknown as AbstractAgent);
+    const agent = toAgent(stub as unknown as AbstractAgent, { interruptTransport: 'mastra-command' });
     await replayInterruptRun(stub, agent, 'mastra-reinterrupt.sse', 'run-hitl-2');
 
     await agent.submit({ resume: { chosen_time: '2026-09-01T10:00' } });
 
     const measured = readCapturedRequest('mastra-resume-correct.request.json');
     expect(lastRunAgentArg(stub).forwardedProps).toEqual(measured['forwardedProps']);
+    expect(lastRunAgentArg(stub).resume).toBeUndefined();
     expect(lastRunAgentArg(stub).forwardedProps).toEqual({
       command: {
         resume: { chosen_time: '2026-09-01T10:00' },
@@ -215,7 +221,8 @@ describe('submit({ resume }) — AWS Strands interrupt outcome', () => {
     }];
     await agent.submit({ resume: structured });
 
-    expect(lastRunAgentArg(stub)).toEqual({ resume: structured });
+    expect(lastRunAgentArg(stub).resume).toEqual(structured);
+    expect(lastRunAgentArg(stub).forwardedProps).toBeUndefined();
   });
 
   // SYNTHETIC: entries authored with the pre-standard `id` key are renamed to
@@ -226,16 +233,17 @@ describe('submit({ resume }) — AWS Strands interrupt outcome', () => {
     await replayInterruptRun(stub, agent, 'strands-interrupt.sse', 'run-1');
 
     await agent.submit({
-      resume: [{ id: 'interrupt-1', payload: { ok: true }, metadata: { via: 'test' } }],
+      resume: [{ id: 'v1:tool_call:call_A9ckGX1LrvO82OhqZinzDsom:340a4daa-b874-5aad-8309-a63b92d507dd', payload: { ok: true }, metadata: { via: 'test' } }],
     });
 
-    expect(lastRunAgentArg(stub)).toEqual({
+    expect(lastRunAgentArg(stub)).toEqual(expect.objectContaining({
       resume: [{
-        interruptId: 'interrupt-1',
+        interruptId: 'v1:tool_call:call_A9ckGX1LrvO82OhqZinzDsom:340a4daa-b874-5aad-8309-a63b92d507dd',
         status: 'resolved',
         payload: { ok: true },
         metadata: { via: 'test' },
       }],
-    });
+    }));
+    expect(lastRunAgentArg(stub).forwardedProps).toBeUndefined();
   });
 });

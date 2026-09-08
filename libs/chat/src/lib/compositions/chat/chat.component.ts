@@ -282,7 +282,7 @@ export function isPinned(
                     <chat-message-actions
                       chatMessageControls
                       [content]="content"
-                      [disabled]="agent().isLoading()"
+                      [disabled]="agent().isLoading() || !!agent().isInputBlocked?.()"
                       (regenerate)="onRegenerate(i)"
                       (rate)="onRate(message, $event)"
                       (contentCopied)="onCopy(message, $event)"
@@ -836,7 +836,7 @@ export class ChatComponent {
    */
   submitMessage(text: string): void {
     const trimmed = text.trim();
-    if (!trimmed) return;
+    if (!trimmed || this.agent().isInputBlocked?.()) return;
     void this.agent().submit({ message: trimmed });
     this.recordSubmit();
   }
@@ -1031,6 +1031,7 @@ export class ChatComponent {
   }
 
   onA2uiAction(message: A2uiActionMessage): void {
+    if (this.agent().isInputBlocked?.()) return;
     void this.agent().submit({ message: JSON.stringify(message) });
   }
 

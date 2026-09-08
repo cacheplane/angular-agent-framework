@@ -125,6 +125,16 @@ LangGraph re-runs the interrupting node, `interrupt()` returns the resume value,
 </Step>
 </Steps>
 
+## Retrying a resume and restoring a thread
+
+`retry()` retains command-only submissions, including a resume with no message payload, and replays the captured command and update values. It does not append another user message. The values are captured when submitted, so later edits to the caller's object cannot change the retry. A retry also drops the previous request's abort signal, allowing a fresh request after that signal was aborted.
+
+Before retrying a resume whose server outcome is unknown, inspect the thread's current checkpoint. A transport failure does not prove the server rejected the decision. Checkpoint hydration restores pending interrupts when you reconnect to the same thread; retaining the thread ID and the server checkpoint is required. This adapter's retry support does not add a client claim ledger, compare-and-swap storage, or transactional rollback of streamed client state.
+
+### Migration note
+
+Command-only resumes and updates now remain available to `retry()` even when the submitted message payload was null. Code that previously resubmitted the command manually can use `retry()` after confirming it is safe to repeat. Restore an existing thread through its checkpoint before offering an approval again, and keep side effects above `interrupt()` safe to re-execute.
+
 ## Approving more than once
 
 The example pauses once per run. A workflow that needs a sign-off at each stage of a plan uses the same primitive in a loop: the approving node interrupts on the current step, the executing node advances the counter, and a conditional edge sends the run back for the next approval until the plan is exhausted.

@@ -172,8 +172,10 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     );
 
   let currentThreadId: string | null = null;
-  let lastPayload: unknown = null;
-  let lastOptions: LangGraphSubmitOptions | undefined;
+  // A resume command legitimately has a null payload. Absence of a request
+  // must be represented separately so retry does not forget the decision.
+  let lastRequest: { payload: unknown; options?: LangGraphSubmitOptions } | undefined;
+  let disposed = false;
   let abortController: AbortController | null = null;
   let historyAbortController: AbortController | null = null;
   const userAbortedControllers = new WeakSet<AbortController>();
@@ -441,8 +443,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     if (resetState) {
       invalidateQueueDrain();
       abortController?.abort();
-      lastPayload = null;
-      lastOptions = undefined;
+      lastRequest = undefined;
     }
     currentThreadId = id;
     if (resetState) {
@@ -464,6 +465,8 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
   });
 
   destroy$.subscribe(() => {
+    disposed = true;
+    lastRequest = undefined;
     developmentRuntime.dispose();
     invalidateQueueDrain();
     abortController?.abort();
@@ -718,6 +721,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     opts?: LangGraphSubmitOptions,
     requestType = 'submit',
   ): Promise<CompleteOutcome> {
+    if (disposed) return 'aborted';
     invalidateQueueDrain();
     abortController?.abort();
     const controller = new AbortController();
@@ -738,8 +742,16 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     subjects.toolProgress$.next([]);
     toolProgressMap.clear();
     canonicalMessageIds.clear();
-    lastPayload = payload ?? null;
-    lastOptions = opts;
+    const hasResume = isRecord(opts?.command) && 'resume' in opts.command;
+    const { signal: _previousSignal, ...retryOptions } = opts ?? {};
+    lastRequest = payload != null || hasResume
+      ? {
+          payload: hasResume ? structuredClone(payload ?? null) : payload,
+          options: hasResume
+            ? { ...retryOptions, command: structuredClone(opts!.command) }
+            : retryOptions,
+        }
+      : undefined;
 
     // Tracks whether at least one stream event has been processed this run.
     // Used to distinguish a mid-stream network interruption (kind:'interrupted')
@@ -1297,8 +1309,8 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     },
 
     resubmitLast: async () => {
-      if (lastPayload === null) return 'not-started';
-      return runStream(lastPayload, lastOptions, 'resubmit');
+      if (!lastRequest || disposed) return 'not-started';
+      return runStream(lastRequest.payload, lastRequest.options, 'resubmit');
     },
 
     getReasoningDurationMs: (id: string): number | undefined => {
