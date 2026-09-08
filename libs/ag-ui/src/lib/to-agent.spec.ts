@@ -79,11 +79,8 @@ describe('automatic development evidence', () => {
     developmentEvidence.events = [];
     const stub = new StubAgent();
     const agent = toAgent(stub as unknown as AbstractAgent);
-    stub.runAgent.mockImplementationOnce(async () => {
-      stub.emit({ type: 'RUN_FINISHED' } as BaseEvent);
-      return { result: undefined, newMessages: [] };
-    });
-    await agent.submit({ resume: true });
+    await expect(agent.submit({ resume: true })).rejects.toThrow('No pending interrupt');
+    expect(stub.runAgent).not.toHaveBeenCalled();
     expect(developmentEvidence.events).not.toContain('interrupt.handled');
     stub.runAgent.mockImplementationOnce(async () => {
       stub.emit({ type: 'RUN_STARTED', runId: 'paused' } as BaseEvent);
@@ -93,8 +90,9 @@ describe('automatic development evidence', () => {
     await agent.submit({});
     developmentEvidence.events = [];
     stub.runAgent.mockImplementationOnce(async () => {
-      stub.emit({ type: 'RUN_STARTED', runId: 'resumed' } as BaseEvent);
-      stub.emit({ type: 'RUN_FINISHED', runId: 'resumed' } as BaseEvent);
+      const runId = (stub.runAgent.mock.calls.at(-1) as unknown as [{ runId: string }])[0].runId;
+      stub.emit({ type: 'RUN_STARTED', runId } as BaseEvent);
+      stub.emit({ type: 'RUN_FINISHED', runId } as BaseEvent);
       return { result: undefined, newMessages: [] };
     });
     await agent.submit({ resume: true });
@@ -478,9 +476,17 @@ describe('toAgent', () => {
   it('submit({ resume }) calls runAgent with forwardedProps.command.resume and appends no message', async () => {
     const stub = new StubAgent();
     const a = toAgent(stub as unknown as AbstractAgent);
+    stub.emit({ type: 'CUSTOM', name: 'on_interrupt', value: { kind: 'approval' } } as unknown as BaseEvent);
+    stub.runAgent.mockImplementationOnce(async () => {
+      const runId = (stub.runAgent.mock.calls.at(-1) as unknown as [{ runId: string }])[0].runId;
+      stub.emit({ type: 'RUN_STARTED', runId } as BaseEvent);
+      stub.emit({ type: 'RUN_FINISHED', runId } as BaseEvent);
+      return { result: undefined, newMessages: [] };
+    });
     const before = a.messages().length;
     await a.submit({ resume: { approved: true } });
-    expect(stub.runAgent).toHaveBeenCalledWith({ forwardedProps: { command: { resume: { approved: true } } } });
+    expect(stub.runAgent).toHaveBeenCalledWith(expect.objectContaining({ forwardedProps: { command: { resume: { approved: true } } } }));
+    expect((stub.runAgent.mock.calls[0] as unknown as [{ resume?: unknown }])[0].resume).toBeUndefined();
     expect(a.messages().length).toBe(before);
     expect(a.interrupt!()).toBeUndefined();
   });
@@ -518,6 +524,13 @@ describe('toAgent', () => {
       // Arrange an active interrupt (mirrors existing interrupt tests)
       stub.emit({ type: 'CUSTOM', name: 'on_interrupt', value: { kind: 'approval' } } as unknown as BaseEvent);
       expect(a.interrupt!()).toBeDefined();
+      stub.runAgent.mockImplementationOnce(async () => {
+        expect(stub.state).toMatchObject({ reasoning_effort: 'high' });
+        const runId = (stub.runAgent.mock.calls.at(-1) as unknown as [{ runId: string }])[0].runId;
+        stub.emit({ type: 'RUN_STARTED', runId } as BaseEvent);
+        stub.emit({ type: 'RUN_FINISHED', runId } as BaseEvent);
+        return { result: undefined, newMessages: [] };
+      });
       await a.submit({ resume: 'approved', state: { reasoning_effort: 'high' } });
       expect(stub.state).toMatchObject({ reasoning_effort: 'high' });
     });
@@ -596,6 +609,13 @@ describe('toAgent', () => {
 
         if (operation === 'retry') {
           await agent.submit({ message: 'seed retry' });
+        } else if (operation === 'resume') {
+          source.runAgent.mockImplementationOnce(async () => {
+            source.emit({ type: 'RUN_STARTED', runId: 'seed-pause' } as BaseEvent);
+            source.emit({ type: 'RUN_FINISHED', runId: 'seed-pause', outcome: { type: 'interrupt', interrupts: [{ id: 'approval', value: {} }] } } as BaseEvent);
+            return { result: undefined, newMessages: [] };
+          });
+          await agent.submit({ message: 'seed resume' });
         } else if (operation === 'regenerate') {
           const seedRun = deferNextRun(source);
           const seedPending = agent.submit({ message: 'seed regenerate' });
@@ -615,7 +635,7 @@ describe('toAgent', () => {
             : operation === 'resume'
               ? agent.submit({ resume: { approved: true } })
               : agent.regenerate(1);
-        const runId = `close-${operation}`;
+        const runId = operation === 'resume' ? (source.runAgent.mock.calls.at(-1) as unknown as [{ runId: string }])[0].runId : `close-${operation}`;
         const messageId = `ai-${operation}`;
         source.emit({ type: 'RUN_STARTED' } as BaseEvent, runId);
         source.emit({ type: 'TEXT_MESSAGE_START', messageId, role: 'assistant' } as never, runId);
@@ -804,7 +824,7 @@ describe('toAgent', () => {
         source.emit({ type: 'RUN_STARTED', runId: 'run-1' } as BaseEvent);
         source.emit({ type: 'TEXT_MESSAGE_START', messageId: 'ai-reused', role: 'assistant' } as never);
         source.emit({ type: 'TEXT_MESSAGE_CONTENT', messageId: 'ai-reused', delta: 'first' } as never);
-        source.emit({ type: 'RUN_FINISHED', runId: 'run-1' } as BaseEvent);
+        source.emit({ type: 'RUN_FINISHED', runId: 'run-1', ...(operation === 'resume' ? { outcome: { type: 'interrupt', interrupts: [{ id: 'approval', value: {} }] } } : {}) } as BaseEvent);
         firstRun.resolve();
         await firstPending;
         const firstGeneration = agent.messages().find(message => message.id === 'ai-reused')!.delivery.generation;
@@ -815,7 +835,7 @@ describe('toAgent', () => {
           : operation === 'regenerate'
             ? agent.regenerate(1)
             : agent.submit({ resume: { approved: true } });
-        source.emit({ type: 'RUN_STARTED', runId: 'run-2' } as BaseEvent);
+        source.emit({ type: 'RUN_STARTED', runId: operation === 'resume' ? (source.runAgent.mock.calls.at(-1) as unknown as [{ runId: string }])[0].runId : 'run-2' } as BaseEvent);
         source.emit({ type: 'TEXT_MESSAGE_START', messageId: 'ai-reused', role: 'assistant' } as never);
         const nextDelivery = agent.messages().find(message => message.id === 'ai-reused')!.delivery;
 
@@ -837,7 +857,7 @@ describe('toAgent', () => {
         source.emit({ type: 'RUN_STARTED' } as BaseEvent, 'seed-snapshot');
         source.emit({ type: 'TEXT_MESSAGE_START', messageId: 'reused-ai', role: 'assistant' } as never, 'seed-snapshot');
         source.emit({ type: 'TEXT_MESSAGE_CONTENT', messageId: 'reused-ai', delta: 'prior' } as never, 'seed-snapshot');
-        source.emit({ type: 'RUN_FINISHED' } as BaseEvent, 'seed-snapshot');
+        source.emit({ type: 'RUN_FINISHED', ...(operation === 'resume' ? { outcome: { type: 'interrupt', interrupts: [{ id: 'approval', value: {} }] } } : {}) } as BaseEvent, 'seed-snapshot');
         seedRun.resolve();
         await seedPending;
         const priorGeneration = agent.messages().find(message => message.id === 'reused-ai')!.delivery.generation;
@@ -846,19 +866,20 @@ describe('toAgent', () => {
         const pending = operation === 'retry'
           ? agent.retry()
           : agent.submit({ resume: { approved: true } });
-        source.emit({ type: 'RUN_STARTED' } as BaseEvent, `snapshot-${operation}`);
+        const runId = operation === 'resume' ? (source.runAgent.mock.calls.at(-1) as unknown as [{ runId: string }])[0].runId : `snapshot-${operation}`;
+        source.emit({ type: 'RUN_STARTED' } as BaseEvent, runId);
         source.emit({
           type: 'MESSAGES_SNAPSHOT',
           messages: [
             { id: userId, role: 'user', content: 'hello' },
             { id: 'reused-ai', role: 'assistant', content: 'replacement' },
           ],
-        } as never, `snapshot-${operation}`);
+        } as never, runId);
         const replacement = agent.messages().find(message => message.id === 'reused-ai')!.delivery;
 
         expect(replacement.phase).toBe('streaming');
         expect(replacement.generation).not.toBe(priorGeneration);
-        source.emit({ type: 'RUN_FINISHED' } as BaseEvent, `snapshot-${operation}`);
+        source.emit({ type: 'RUN_FINISHED' } as BaseEvent, runId);
         nextRun.resolve();
         await pending;
         expect(agent.messages().find(message => message.id === 'reused-ai')?.delivery)

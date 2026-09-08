@@ -1615,7 +1615,7 @@
       {
         "name": "retry",
         "type": "() => Promise<void>",
-        "description": "Re-run the last submitted input after a failure. No-op if a run is already\n in flight or there is nothing to retry. Clears `error` and sets loading.",
+        "description": "Re-run the captured submission after a failure, including a resume command\nwith no message payload. Does not append another user message or reuse an\naborted request signal. Does not restart an in-flight request; no-op when\nnothing is saved.\nAdapters may reject unsafe resume retries until the backend outcome has\nbeen reconciled; a transport failure alone does not prove non-execution.",
         "optional": false
       },
       {
@@ -2049,7 +2049,7 @@
       {
         "name": "retry",
         "type": "() => Promise<void>",
-        "description": "Re-run the last submitted input after a failure. No-op if a run is already\n in flight or there is nothing to retry. Clears `error` and sets loading.",
+        "description": "Re-run the captured submission after a failure, including a resume command\nwith no message payload. Does not append another user message or reuse an\naborted request signal. Does not restart an in-flight request; no-op when\nnothing is saved.\nAdapters may reject unsafe resume retries until the backend outcome has\nbeen reconciled; a transport failure alone does not prove non-execution.",
         "optional": false
       },
       {

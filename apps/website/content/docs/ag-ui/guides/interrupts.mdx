@@ -116,7 +116,7 @@ The example never touches the protocol, but it is worth knowing what crosses it.
 }
 ```
 
-Two things to note. The `ag-ui-langgraph` package serializes the payload, so `value` arrives as a JSON string rather than an object; the adapter parses a string value before it stores the interrupt, so consumers read the parsed payload rather than a JSON string. And the pause is what the reducer records: it sets the `interrupt()` signal, ends the run as paused, and returns the agent to its idle status.
+The `ag-ui-langgraph` package serializes the payload, so `value` arrives as a JSON string rather than an object. The adapter parses it before exposing the interrupt. This compatibility event begins collecting a pause; the batch becomes ready to answer at a terminal event or clean transport close. State and message changes remain provisional until that boundary.
 
 Resuming travels the other way. For a payload shaped like this one — an application object with no runtime-specific identifiers — `submit({ resume })` sends `forwardedProps.command.resume`, the convention `ag-ui-langgraph` reads to resume the checkpoint.
 
@@ -124,7 +124,55 @@ Resuming travels the other way. For a payload shaped like this one — an applic
 In the graph node, `interrupt({...})` returns the resume value directly. The wrapper reads `forwarded_props.command.resume` and applies it before the graph continues.
 </Callout>
 
-Other runtimes signal a pause differently, and the adapter follows them: a `RUN_FINISHED` event carrying an interrupt outcome sets the same signal, and a resume for one of those goes out as the protocol's top-level `resume` array instead. The [event mapping reference](/docs/ag-ui/reference/event-mapping) covers the event surface in full.
+Other runtimes signal a pause differently: a `RUN_FINISHED` event carrying a native interrupt outcome records the full batch, and its response goes out as the protocol's top-level `resume` array. Native outcomes take precedence over `CUSTOM on_interrupt` in the default `auto` mode, whichever event arrives first. The [event mapping reference](/docs/ag-ui/reference/event-mapping) covers the event surface in full.
+
+## Pending batches and transport selection
+
+`interrupt()` is the runtime-neutral display projection. For a native batch its value is `{ interrupts, runId }`; use `interruptSession()` for the full batch and its lifecycle. The session includes `phase`, `generation`, `interrupts`, and, when present, the compatibility payload, originating `runId`, and saved resume `attempt`.
+
+The phases are `none`, `collecting`, `pending`, `claimed`, `resuming`, `acknowledged`, `uncertain`, and `recovery-required`. Render approval controls when the phase is `pending`. Submitting a decision claims that batch before dispatch, so a second submission cannot answer it concurrently. `RUN_STARTED` acknowledges the claim and clears the visible pending interrupt; it does not prove the resumed work completed.
+
+For one native interrupt, `submit({ resume: { approved: true } })` wraps the value as a resolved response to that interrupt. For several, supply one response per pending ID:
+
+```typescript
+await agent.submit({
+  resume: [
+    { interruptId: 'approval-1', status: 'resolved', payload: { approved: true } },
+    { interruptId: 'approval-2', status: 'cancelled' },
+  ],
+});
+```
+
+Use IDs from `interruptSession().interrupts`, not the illustrative IDs above. Every pending ID must appear exactly once; missing, duplicate, unknown, conflicting, and expired IDs are rejected. A cancelled entry cannot carry a payload. A single unwrapped value is accepted only for a single interrupt. Resume requests without a pending batch are rejected, and ordinary input cannot abandon a pending approval.
+
+To reject a decision from an old approval control, capture `const generation = agent.interruptSession().generation` when rendering it and pass `agent.submit({ resume: answer }, { interruptGeneration: generation })`. The adapter checks this optional generation before claiming the batch or changing messages and state. Read a fresh generation when rendering the next batch, even if the runtime reuses interrupt IDs.
+
+Set `interruptTransport` in `provideAgent()` or `toAgent()` options when the backend requires a specific format:
+
+| Value | Resume format |
+| --- | --- |
+| `auto` (default) | Native protocol when a native batch exists; otherwise Mastra command for a compatibility payload with `toolCallId`, or the legacy command. |
+| `protocol` | Top-level `resume` entries correlated with native interrupt IDs. |
+| `legacy-command` | `forwardedProps.command.resume`. |
+| `mastra-command` | `forwardedProps.command.resume` plus `command.interruptEvent` containing `toolCallId` and the available `runId`. Requires the compatibility payload's `toolCallId`. |
+
+## Failures, retry, and restoration
+
+A failed resume restores the committed protocol messages and state used by subsequent requests. Failed provisional messages may remain visible in the local transcript. Authoritative native snapshots define the committed boundary. A compatibility pause commits only at a terminal event or clean transport close. This client rollback cannot undo work already performed on the server.
+
+When a transport error explicitly carries `requestNotDispatched: true`, the batch returns to `pending` and `retry()` resends the exact saved decision. Submitting a replacement decision is rejected. Set that marker only when the transport can prove the request was not dispatched. A lost connection, abort after dispatch, or failure after acknowledgement can leave the result uncertain; `retry()` then requires authoritative reconciliation and does not resend automatically.
+
+Restoration is opt-in through `persistence` in the provider or adapter options. The application supplies a stable `threadId`, a scoped `namespace`, and a store with `load(key)` and atomic `compareAndSwap(key, expectedRevision, next)` methods. A missing record uses `expectedRevision: null`; a revision conflict blocks further writes. The record retains committed messages and state, the interrupt session, and the saved resume attempt. No browser storage backend is bundled.
+
+Atomic storage claims coordinate clients sharing that store. Preventing duplicate backend side effects also requires server-side idempotency; a retained attempt ID alone cannot establish that guarantee.
+
+Await `agent.ready` before rendering restored approval controls; actions also wait for hydration. An interrupted in-flight claim restores as uncertain, and an acknowledged attempt requires recovery. Configure `persistence.reconcile(record)` to obtain an authoritative backend outcome and call `agent.reconcileInterrupt()` to apply it. The callback returns `unknown`, or `pending`, `acknowledged`, or `completed` with authoritative `committed` and `session` snapshots. An unknown outcome keeps recovery blocked. The adapter does not provide a backend reconciliation endpoint, and stored client state cannot recreate a checkpoint lost by a restarted `MemorySaver` process.
+
+Providers dispose the adapter with their injector. If you create it with `toAgent()` directly, call `agent.dispose()` when finished. Disposal unsubscribes and stops local work; it does not delete or cancel backend checkpoints.
+
+### Migration note
+
+Mixed native and compatibility events now select native transport by default regardless of arrival order. Backends requiring a command format must select the matching explicit profile. Replace bare resume calls with a restored or observed pending batch, answer every native ID, and use `retry()` for a retained decision after a proven pre-dispatch failure. Recovery from an uncertain attempt requires application-provided authoritative reconciliation.
 
 ## Cross-adapter parity
 

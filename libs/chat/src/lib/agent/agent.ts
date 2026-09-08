@@ -36,8 +36,14 @@ export interface Agent<TState = unknown> {
   submit: (input: AgentSubmitInput, opts?: AgentSubmitOptions) => Promise<void>;
   stop:   () => Promise<void>;
 
-  /** Re-run the last submitted input after a failure. No-op if a run is already
-   *  in flight or there is nothing to retry. Clears `error` and sets loading. */
+  /**
+   * Re-run the captured submission after a failure, including a resume command
+   * with no message payload. Does not append another user message or reuse an
+   * aborted request signal. Does not restart an in-flight request; no-op when
+   * nothing is saved.
+   * Adapters may reject unsafe resume retries until the backend outcome has
+   * been reconciled; a transport failure alone does not prove non-execution.
+   */
   retry: () => Promise<void>;
 
   /**
@@ -52,6 +58,11 @@ export interface Agent<TState = unknown> {
   regenerate: (assistantMessageIndex: number) => Promise<void>;
 
   // Extended (optional; absent when runtime does not support)
+  /**
+   * Optional display projection of the pending interrupt. A runtime may expose
+   * a separate full batch and lifecycle surface. A cleared display projection
+   * does not by itself prove that resumed backend work completed.
+   */
   interrupt?: Signal<AgentInterrupt | undefined>;
   subagents?: Signal<Map<string, Subagent>>;
   /** Optional: client-declared, client-executed tools (see ClientToolsCapability). */

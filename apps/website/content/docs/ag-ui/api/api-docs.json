@@ -388,6 +388,18 @@
         "optional": true
       },
       {
+        "name": "interruptTransport",
+        "type": "InterruptTransport",
+        "description": "Explicit compatibility wire profile; auto prefers protocol-native outcomes.",
+        "optional": true
+      },
+      {
+        "name": "persistence",
+        "type": "AgUiInterruptPersistence",
+        "description": "Optional application-owned durable thread storage and reconciliation.",
+        "optional": true
+      },
+      {
         "name": "telemetry",
         "type": "false | AgentRuntimeTelemetrySink",
         "description": "Omit to enable automatic development-only collection. Set `false` to disable.\nAn app-owned sink replaces the automatic destination and receives the\nexisting runtime lifecycle callbacks.",
@@ -440,8 +452,14 @@
       {
         "name": "interrupt",
         "type": "Signal<AgentInterrupt | undefined>",
-        "description": "",
+        "description": "Optional display projection of the pending interrupt. A runtime may expose\na separate full batch and lifecycle surface. A cleared display projection\ndoes not by itself prove that resumed backend work completed.",
         "optional": true
+      },
+      {
+        "name": "interruptSession",
+        "type": "Signal<InterruptSessionSnapshot>",
+        "description": "Full interrupt batch and its request ownership phase.",
+        "optional": false
       },
       {
         "name": "isLoading",
@@ -456,6 +474,12 @@
         "optional": false
       },
       {
+        "name": "ready",
+        "type": "Promise<void>",
+        "description": "Resolves after persisted thread state is hydrated; actions wait for it.",
+        "optional": false
+      },
+      {
         "name": "regenerate",
         "type": "(assistantMessageIndex: number) => Promise<void>",
         "description": "Discards the assistant message at the given index AND all messages after\nit, then re-runs the agent against the trimmed conversation tail. The\npreceding user message (at index - 1) is preserved and re-submitted as\nthe agent's input. No new user message is added to the history.\n\nThrows if the message at `index` is not 'assistant' role, or if the\nagent is currently loading another response.",
@@ -464,7 +488,7 @@
       {
         "name": "retry",
         "type": "() => Promise<void>",
-        "description": "Re-run the last submitted input after a failure. No-op if a run is already\n in flight or there is nothing to retry. Clears `error` and sets loading.",
+        "description": "Re-run the captured submission after a failure, including a resume command\nwith no message payload. Does not append another user message or reuse an\naborted request signal. Does not restart an in-flight request; no-op when\nnothing is saved.\nAdapters may reject unsafe resume retries until the backend outcome has\nbeen reconciled; a transport failure alone does not prove non-execution.",
         "optional": false
       },
       {
@@ -492,16 +516,43 @@
         "optional": false
       },
       {
-        "name": "submit",
-        "type": "(input: AgentSubmitInput, opts: AgentSubmitOptions) => Promise<void>",
-        "description": "",
-        "optional": false
-      },
-      {
         "name": "toolCalls",
         "type": "Signal<ToolCall[]>",
         "description": "",
         "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "dispose",
+        "signature": "dispose(): void",
+        "description": "Unsubscribe and stop local work. Does not cancel backend checkpoints.",
+        "params": []
+      },
+      {
+        "name": "reconcileInterrupt",
+        "signature": "reconcileInterrupt(): Promise<void>",
+        "description": "Recover an uncertain attempt using the configured authoritative reconciler.",
+        "params": []
+      },
+      {
+        "name": "submit",
+        "signature": "submit(input: AgentSubmitInput, opts: AgUiSubmitOptions): Promise<void>",
+        "description": "",
+        "params": [
+          {
+            "name": "input",
+            "type": "AgentSubmitInput",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "opts",
+            "type": "AgUiSubmitOptions",
+            "description": "",
+            "optional": true
+          }
+        ]
       }
     ],
     "examples": []
@@ -539,6 +590,102 @@
     "examples": []
   },
   {
+    "name": "AgUiInterruptPersistence",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "namespace",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "reconcile",
+        "type": "(record: AgUiThreadRecord) => Promise<object | object>",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "store",
+        "type": "object",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "AgUiSubmitOptions",
+    "kind": "interface",
+    "description": "Adapter-specific submit guards in addition to cancellation.",
+    "properties": [
+      {
+        "name": "interruptGeneration",
+        "type": "number",
+        "description": "Generation captured when rendering the interrupt decision; rejects stale controls.",
+        "optional": true
+      },
+      {
+        "name": "signal",
+        "type": "AbortSignal",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "AgUiThreadRecord",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "committed",
+        "type": "ThreadSnapshot",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "namespace",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "resumeInput",
+        "type": "ThreadSnapshot",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "session",
+        "type": "InterruptSessionSnapshot",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "threadId",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "version",
+        "type": "1",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
     "name": "CustomStreamEvent",
     "kind": "interface",
     "description": "A custom event surfaced to consumers via the agent's `customEvents` signal.\nMirrors the LangGraph adapter's CustomStreamEvent shape so the chat\na2ui partial-args bridge consumes both transports identically.",
@@ -559,6 +706,108 @@
     "examples": []
   },
   {
+    "name": "InterruptSessionSnapshot",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "attempt",
+        "type": "ResumeAttempt",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "generation",
+        "type": "number",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "interrupts",
+        "type": "object[]",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "legacy",
+        "type": "AgentInterrupt",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "phase",
+        "type": "InterruptSessionPhase",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "runId",
+        "type": "string",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "ResumeAttempt",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "generation",
+        "type": "number",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "id",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "input",
+        "type": "AgentSubmitInput",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "parameters",
+        "type": "object",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "runId",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "ThreadSnapshot",
+    "kind": "interface",
+    "description": "Serializable protocol state at a confirmed run boundary.",
+    "properties": [
+      {
+        "name": "messages",
+        "type": "object | object | object | object | object | object | object[]",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "state",
+        "type": "Record<string, unknown>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
     "name": "ToAgentOptions",
     "kind": "interface",
     "description": "",
@@ -567,6 +816,18 @@
         "name": "a2uiClientCapabilities",
         "type": "object",
         "description": "A2UI client capabilities (catalog negotiation) to advertise to the agent.\nWhen set, they are seeded once into the AG-UI shared state under the\n`a2ui_client_capabilities` key, so every RunAgentInput.state carries them.\nUse `@threadplane/chat`'s `a2uiClientCapabilities()` for the renderer's\nstandard value.",
+        "optional": true
+      },
+      {
+        "name": "interruptTransport",
+        "type": "InterruptTransport",
+        "description": "Native outcomes take precedence in auto mode; select a legacy profile explicitly when required.",
+        "optional": true
+      },
+      {
+        "name": "persistence",
+        "type": "AgUiInterruptPersistence",
+        "description": "Application-owned durable storage. Requires a stable source threadId and scoped namespace.",
         "optional": true
       },
       {
@@ -583,6 +844,20 @@
     "kind": "type",
     "description": "Deterministic event branches for FakeAgent, reachable through the\nconstructor and through `provideFakeAgent({ script })`.\n\nEach branch supplies a raw AG-UI event sequence — tool calls, state\nsnapshots, custom events, anything the protocol defines. `when: 'initial'`\nmatches a turn whose history carries no tool result; `{ toolMessageFor: id }`\nmatches the follow-up turn whose history carries a tool result for that tool\ncall id. The first matching branch wins, and its `events` are wrapped in\n`RUN_STARTED` / `RUN_FINISHED`. When no branch matches, the canned token\nreply is streamed instead.",
     "signature": "readonly { events: readonly BaseEvent[]; when: \"initial\" | { toolMessageFor: string } }[]",
+    "examples": []
+  },
+  {
+    "name": "InterruptSessionPhase",
+    "kind": "type",
+    "description": "",
+    "signature": "\"none\" | \"collecting\" | \"pending\" | \"claimed\" | \"resuming\" | \"acknowledged\" | \"uncertain\" | \"recovery-required\"",
+    "examples": []
+  },
+  {
+    "name": "InterruptTransport",
+    "kind": "type",
+    "description": "",
+    "signature": "\"auto\" | \"protocol\" | \"legacy-command\" | \"mastra-command\"",
     "examples": []
   },
   {
@@ -678,7 +953,7 @@
   {
     "name": "toAgent",
     "kind": "function",
-    "description": "Wraps an AG-UI AbstractAgent into the runtime-neutral Agent contract.\n\nThe adapter subscribes to source.subscribe({ onEvent }) and reduces every\nevent into the produced Agent's signals. submit() optimistically appends the\nuser message to both our signals and the source agent's internal message\nlist, then calls source.runAgent(). stop() calls source.abortRun().\n\nSubscription cleanup: the returned Agent does NOT manage its own lifetime.\nCallers using DI should rely on the provider's destroy hook; direct callers\nof toAgent() should treat the returned object's lifecycle as tied to the\nagent instance they constructed. The subscriber registered via\nsource.subscribe() will fire for the lifetime of source.",
+    "description": "Wraps an AG-UI AbstractAgent into the runtime-neutral Agent contract.\n\nThe adapter subscribes to source.subscribe({ onEvent }) and reduces every\nevent into the produced Agent's signals. submit() optimistically appends the\nuser message to both our signals and the source agent's internal message\nlist, then calls source.runAgent(). stop() calls source.abortRun().\n\nSubscription cleanup: providers dispose the adapter with their injector.\nDirect callers must call dispose() when they no longer need the adapter.",
     "signature": "toAgent(source: AbstractAgent<>, options: ToAgentOptions): AgUiAgent<>",
     "params": [
       {

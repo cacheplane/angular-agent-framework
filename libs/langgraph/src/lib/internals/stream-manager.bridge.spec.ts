@@ -1573,6 +1573,48 @@ describe('createStreamManagerBridge', () => {
   });
 
   describe('submit outcomes and retry state', () => {
+    it('retries a failed null-payload resume with its captured command and a fresh signal', async () => {
+      const requests: Array<{ payload: unknown; command: unknown; aborted: boolean }> = [];
+      const transport: AgentTransport = {
+        async *stream(_assistantId, _threadId, payload, signal, options) {
+          requests.push({ payload, command: structuredClone(options?.command), aborted: signal?.aborted ?? false });
+          if (requests.length === 1) throw new Error('connection failed');
+          yield { type: 'values', values: { done: true } };
+        },
+      };
+      const destroy$ = new Subject<void>();
+      const controller = new AbortController();
+      const bridge = createStreamManagerBridge({
+        options: { apiUrl: '', assistantId: 'test', transport },
+        subjects: makeSubjects(), threadId$: of('thread-1'), destroy$,
+      });
+      const command = { resume: { approved: true }, update: { amount: 12 } };
+      expect(await bridge.submit(null, { command, signal: controller.signal })).toBe('error');
+      command.resume.approved = false;
+      command.update.amount = 99;
+      controller.abort();
+      expect(await bridge.resubmitLast()).toBe('success');
+      expect(requests).toEqual([
+        { payload: null, command: { resume: { approved: true }, update: { amount: 12 } }, aborted: false },
+        { payload: null, command: { resume: { approved: true }, update: { amount: 12 } }, aborted: false },
+      ]);
+      destroy$.next();
+    });
+
+    it('does not replay retained input after disposal', async () => {
+      const transport = new MockAgentTransport();
+      const destroy$ = new Subject<void>();
+      const bridge = createStreamManagerBridge({
+        options: { apiUrl: '', assistantId: 'test', transport },
+        subjects: makeSubjects(), threadId$: of('thread-1'), destroy$,
+      });
+      const run = bridge.submit({ messages: [] });
+      transport.close();
+      await run;
+      destroy$.next();
+      expect(await bridge.resubmitLast()).toBe('not-started');
+    });
+
     it('returns not-started without a retained non-null payload', async () => {
       let streamCalls = 0;
       const transport: AgentTransport = {

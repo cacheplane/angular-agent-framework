@@ -1,5 +1,5 @@
 // libs/ag-ui/src/lib/testing/provide-fake-agent.ts
-import { type Provider } from '@angular/core';
+import { DestroyRef, inject, type Provider } from '@angular/core';
 import type { FakeAgentConfig } from '@threadplane/chat/testing';
 import { AGENT } from '../provide-agent';
 import { toAgent } from '../to-agent';
@@ -53,7 +53,11 @@ export function provideFakeAgent(config: AgUiFakeAgentConfig = {}): Provider[] {
   return [
     {
       provide: AGENT,
-      useFactory: () => toAgent(new FakeAgent(config)),
+      useFactory: () => {
+        const adapter = toAgent(new FakeAgent(config));
+        inject(DestroyRef).onDestroy(() => adapter.dispose());
+        return adapter;
+      },
     },
   ];
 }
