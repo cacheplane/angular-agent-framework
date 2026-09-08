@@ -3,66 +3,74 @@
 <head>
 <meta charset="UTF-8">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'Inter',sans-serif;color:#1a1a2e;background:#fff}
-  .chapter-body p{font-size:15px;line-height:1.75;color:#333;margin-bottom:18px}
-  .chapter-body h3{font-family:'EB Garamond',serif;font-size:22px;font-weight:700;color:#1a1a2e;margin:28px 0 12px}
+  body{font-family:'Archivo',sans-serif;color:#0A0A0A;background:#fff}
+  .chapter-body p{font-size:15px;line-height:1.75;color:#0A0A0A;margin-bottom:18px}
+  /* Archivo Black is single-weight with no italic — no font-weight/font-style here. */
+  .chapter-body h3{font-family:'Archivo Black','Archivo',sans-serif;font-size:19px;color:#0A0A0A;margin:30px 0 12px;letter-spacing:-0.005em}
   .chapter-body ul{margin:0 0 18px 20px}
-  .chapter-body li{font-size:15px;line-height:1.7;color:#333;margin-bottom:6px}
-  .chapter-body pre{background:#1a1b26;color:#c8ccee;padding:20px 24px;border-radius:8px;font-size:13px;line-height:1.65;overflow-x:auto;margin:24px 0;white-space:pre-wrap}
+  .chapter-body li{font-size:15px;line-height:1.7;color:#0A0A0A;margin-bottom:6px}
+  .chapter-body pre{background:#15253E;color:#EDEFF3;padding:20px 24px;border-radius:8px;font-size:13px;line-height:1.65;overflow-x:auto;margin:24px 0;white-space:pre-wrap}
   .chapter-body code{font-family:'JetBrains Mono',monospace;font-size:13px}
-  .chapter-body strong{font-weight:600}
+  /* Navy carries emphasis; yellow never becomes type. */
+  .chapter-body strong{font-weight:700;color:#15253E}
 </style>
 </head>
 <body>
 
 <!-- Cover -->
-<div style="height:100vh;display:flex;flex-direction:column;justify-content:flex-end;padding:80px 80px 100px;background:linear-gradient(135deg, #fafbfc 0%, #eaf3ff 100%);page-break-after:always">
-  <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#004090;font-weight:700;margin-bottom:24px">Threadplane · Open source · Angular</div>
-  <h1 style="font-family:'EB Garamond',serif;font-size:52px;font-weight:800;line-height:1.1;color:#1a1a2e;margin-bottom:20px">Threadplane</h1>
-  <p style="font-family:'EB Garamond',serif;font-style:italic;font-size:20px;color:#555770;margin-bottom:40px">Production-ready chat, threads, and generative UI for AI agents</p>
-  <div style="font-size:13px;color:#8b8fa3;font-family:monospace">threadplane.ai · 2026</div>
+<div style="height:100vh;display:flex;flex-direction:column;justify-content:flex-end;padding:80px 80px 100px;background:linear-gradient(160deg, #FFFFFF 0%, #F2F2F0 100%);page-break-after:always">
+  <div style="font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#15253E;font-weight:700;margin-bottom:24px">Threadplane · Open source · Angular</div>
+  <!-- Wrapped on a measure rather than one word per line: Archivo Black is
+       heavy enough that a forced break per word leaves orphans ("to", "in")
+       and turns the cover into a slab. -->
+  <h1 style="font-family:'Archivo Black','Archivo',sans-serif;font-size:46px;line-height:1.08;letter-spacing:-0.015em;color:#0A0A0A;max-width:560px;margin-bottom:26px">Threadplane</h1>
+  <div style="width:132px;height:6px;background:#FFAF00"></div>
+  <p style="font-family:'Archivo',sans-serif;font-style:italic;font-size:19px;line-height:1.5;color:#464646;margin:26px 0 40px">Production-ready chat, threads, and generative UI for AI agents</p>
+  <div style="font-size:13px;color:#737373;font-family:'JetBrains Mono',monospace">threadplane.ai · 2026</div>
 </div>
 
 <!-- TOC -->
 <div style="padding:80px;page-break-after:always">
-  <h2 style="font-family:'EB Garamond',serif;font-size:32px;font-weight:700;color:#1a1a2e;margin-bottom:32px">Contents</h2>
-  
-    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid #e6e8ee;font-size:15px;color:#555770">
-      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">01</span>
+  <h2 style="font-family:'Archivo Black','Archivo',sans-serif;font-size:32px;color:#0A0A0A;margin-bottom:18px;letter-spacing:-0.01em">Contents</h2>
+  <div style="width:72px;height:6px;background:#FFAF00"></div>
+  <div style="margin-top:30px">
+    <div style="display:flex;align-items:baseline;gap:12px;padding:11px 0;border-bottom:1px solid #E5E5E5;font-size:15px;color:#0A0A0A">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#15253E;font-weight:700;min-width:26px">01</span>
       <span style="flex:1">Streaming State Management</span>
     </div>
-    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid #e6e8ee;font-size:15px;color:#555770">
-      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">02</span>
+    <div style="display:flex;align-items:baseline;gap:12px;padding:11px 0;border-bottom:1px solid #E5E5E5;font-size:15px;color:#0A0A0A">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#15253E;font-weight:700;min-width:26px">02</span>
       <span style="flex:1">Thread Persistence</span>
     </div>
-    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid #e6e8ee;font-size:15px;color:#555770">
-      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">03</span>
+    <div style="display:flex;align-items:baseline;gap:12px;padding:11px 0;border-bottom:1px solid #E5E5E5;font-size:15px;color:#0A0A0A">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#15253E;font-weight:700;min-width:26px">03</span>
       <span style="flex:1">Tool-Call Rendering</span>
     </div>
-    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid #e6e8ee;font-size:15px;color:#555770">
-      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">04</span>
+    <div style="display:flex;align-items:baseline;gap:12px;padding:11px 0;border-bottom:1px solid #E5E5E5;font-size:15px;color:#0A0A0A">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#15253E;font-weight:700;min-width:26px">04</span>
       <span style="flex:1">Human Approval Flows</span>
     </div>
-    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid #e6e8ee;font-size:15px;color:#555770">
-      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">05</span>
+    <div style="display:flex;align-items:baseline;gap:12px;padding:11px 0;border-bottom:1px solid #E5E5E5;font-size:15px;color:#0A0A0A">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#15253E;font-weight:700;min-width:26px">05</span>
       <span style="flex:1">Generative UI</span>
     </div>
-    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid #e6e8ee;font-size:15px;color:#555770">
-      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">06</span>
+    <div style="display:flex;align-items:baseline;gap:12px;padding:11px 0;border-bottom:1px solid #E5E5E5;font-size:15px;color:#0A0A0A">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#15253E;font-weight:700;min-width:26px">06</span>
       <span style="flex:1">Deterministic Testing</span>
-    </div>
+    </div></div>
 </div>
 
 <!-- Chapters -->
 
     <section style="padding:80px;page-break-before:always">
-      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 1</div>
-      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Streaming State Management</h2>
-      <div class="chapter-body"><p># Streaming State Management</p>
-<p>Server-sent events don't play nicely with Angular's change detection. Zone.js patches `EventSource`, but the resulting microtask scheduling creates timing issues—tokens arrive faster than digest cycles complete, leading to dropped renders or, worse, accumulated state that suddenly flushes in a visual stutter. Teams typically respond by wrapping streams in `NgZone.run()`, manually calling `detectChanges()`, or building elaborate buffer-and-flush mechanisms. All of these approaches share a common failure mode: they work in development and break under production load.</p>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#15253E;font-weight:700;margin-bottom:16px">Chapter 01</div>
+      <h2 style="font-family:'Archivo Black','Archivo',sans-serif;font-size:32px;color:#0A0A0A;margin-bottom:18px;line-height:1.15;letter-spacing:-0.01em">Streaming State Management</h2>
+      <div style="width:72px;height:6px;background:#FFAF00"></div>
+      <div class="chapter-body" style="margin-top:30px"><p>Server-sent events don't play nicely with Angular's change detection. Zone.js patches `EventSource`, but the resulting microtask scheduling creates timing issues—tokens arrive faster than digest cycles complete, leading to dropped renders or, worse, accumulated state that suddenly flushes in a visual stutter. Teams typically respond by wrapping streams in `NgZone.run()`, manually calling `detectChanges()`, or building elaborate buffer-and-flush mechanisms. All of these approaches share a common failure mode: they work in development and break under production load.</p>
 <p>The root issue isn't Zone.js itself—it's the impedance mismatch between push-based streaming and Angular's pull-based change detection model. When your LangGraph agent streams 50 tokens per second, you need state primitives that coalesce updates intelligently while remaining reactive enough to drive smooth UI. Custom solutions invariably choose wrong: either they batch too aggressively (laggy typing effect) or too little (CPU saturation from excess renders).</p>
 <h3>Signals as the Synchronization Primitive</h3>
 <p>The `agent()` function returns an Angular signals-based interface that sidesteps these problems entirely. Rather than exposing raw event streams that require manual subscription management, it provides computed signals that update atomically as tokens arrive:</p>
@@ -92,10 +100,10 @@ export class ChatComponent {
 <p>Streaming state management in Angular isn't inherently difficult. It becomes difficult when you fight the framework's reactivity model instead of leveraging it. Signals provide the coalescing, the timing, and the change detection integration. Your job is to read them.</p></div>
     </section>
     <section style="padding:80px;page-break-before:always">
-      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 2</div>
-      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Thread Persistence</h2>
-      <div class="chapter-body"><p># Thread Persistence</p>
-<p>Demos work with ephemeral state. Production agents need conversation history that survives page refreshes, tab switches, and navigation—wired to LangGraph's MemorySaver backend.</p>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#15253E;font-weight:700;margin-bottom:16px">Chapter 02</div>
+      <h2 style="font-family:'Archivo Black','Archivo',sans-serif;font-size:32px;color:#0A0A0A;margin-bottom:18px;line-height:1.15;letter-spacing:-0.01em">Thread Persistence</h2>
+      <div style="width:72px;height:6px;background:#FFAF00"></div>
+      <div class="chapter-body" style="margin-top:30px"><p>Demos work with ephemeral state. Production agents need conversation history that survives page refreshes, tab switches, and navigation—wired to LangGraph's MemorySaver backend.</p>
 <h3>Why Stateless Agent UIs Fail in Production</h3>
 <p>Every agent demo you've seen starts fresh on page load. That's fine for a conference talk. In production, users expect continuity. They start a conversation, close their laptop, resume tomorrow, and pick up where they left off. Without thread persistence, you're forcing users to re-explain context every session. Worse, you're wasting LLM tokens reconstructing state the backend already has.</p>
 <p>LangGraph's MemorySaver stores complete conversation history server-side, keyed by thread ID. Your frontend's job is simple: remember which thread the user was talking to and reconnect on mount.</p>
@@ -162,10 +170,10 @@ export class ChatComponent {
 Thread persistence is table stakes for production agent UIs. The framework gives you the primitives. Wire them correctly, and users get the continuity they expect.</div>
     </section>
     <section style="padding:80px;page-break-before:always">
-      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 3</div>
-      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Tool-Call Rendering</h2>
-      <div class="chapter-body"><p># Tool-Call Rendering</p>
-<p>LangGraph agents don't just generate text—they invoke tools mid-stream, and your UI needs to reflect that execution state in real time. This means showing steps as they appear, displaying final results, and collapsing completed calls into browsable history. Getting this wrong creates a UI that feels broken during the most interesting parts of agent behavior.</p>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#15253E;font-weight:700;margin-bottom:16px">Chapter 03</div>
+      <h2 style="font-family:'Archivo Black','Archivo',sans-serif;font-size:32px;color:#0A0A0A;margin-bottom:18px;line-height:1.15;letter-spacing:-0.01em">Tool-Call Rendering</h2>
+      <div style="width:72px;height:6px;background:#FFAF00"></div>
+      <div class="chapter-body" style="margin-top:30px"><p>LangGraph agents don't just generate text—they invoke tools mid-stream, and your UI needs to reflect that execution state in real time. This means showing steps as they appear, displaying final results, and collapsing completed calls into browsable history. Getting this wrong creates a UI that feels broken during the most interesting parts of agent behavior.</p>
 <h3>The Raw Stream Problem</h3>
 <p>Tool call events arrive as discrete chunks in the SSE stream. A single tool invocation might produce five or six events: an initial call with arguments, multiple intermediate steps as the tool executes, and a final result. The raw payload includes nested metadata, partial JSON for arguments that stream incrementally, and status fields that change meaning depending on tool type.</p>
 <p>Hand-parsing these events is fragile. You end up maintaining state machines to track which call is active, handling out-of-order delivery, and writing defensive code for malformed chunks. Testing becomes painful because you need to simulate realistic streaming sequences. Every edge case—interrupted calls, parallel tool execution, retry logic—adds branching complexity.</p>
@@ -196,10 +204,10 @@ Thread persistence is table stakes for production agent UIs. The framework gives
 <p>Steps arrive incrementally. A step might appear with an initial status, then update moments later with results. Your rendering logic should handle these transitions without flicker or layout shift. Test with slow network simulation to catch timing-dependent bugs that don't surface on localhost.</p></div>
     </section>
     <section style="padding:80px;page-break-before:always">
-      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 4</div>
-      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Human Approval Flows</h2>
-      <div class="chapter-body"><p># Human Approval Flows (Interrupts)</p>
-<p>Production agents that modify external state—sending emails, initiating payments, deploying infrastructure—require human oversight before execution. LangGraph provides the `interrupt()` primitive for this purpose: a mechanism that pauses graph execution at designated checkpoints and waits for explicit human authorization before proceeding.</p>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#15253E;font-weight:700;margin-bottom:16px">Chapter 04</div>
+      <h2 style="font-family:'Archivo Black','Archivo',sans-serif;font-size:32px;color:#0A0A0A;margin-bottom:18px;line-height:1.15;letter-spacing:-0.01em">Human Approval Flows</h2>
+      <div style="width:72px;height:6px;background:#FFAF00"></div>
+      <div class="chapter-body" style="margin-top:30px"><p>Production agents that modify external state—sending emails, initiating payments, deploying infrastructure—require human oversight before execution. LangGraph provides the `interrupt()` primitive for this purpose: a mechanism that pauses graph execution at designated checkpoints and waits for explicit human authorization before proceeding.</p>
 <h3>The LangGraph Interrupt Pattern</h3>
 <p>When a LangGraph node calls `interrupt()`, execution halts and the graph emits an interrupt event containing the pending action's metadata. The graph remains suspended until it receives a `Command.RESUME` with one of three directives: proceed with the original action, proceed with modified parameters, or abort entirely. This checkpoint-based approach ensures that no consequential action executes without explicit human consent.</p>
 <p>The challenge lies in surfacing this interrupt state to users and capturing their response without introducing fragile infrastructure. Polling-based solutions waste resources and introduce latency. Custom WebSocket implementations require maintaining connection state, handling reconnections, and synchronizing interrupt lifecycle across multiple browser tabs. Both approaches scatter interrupt logic across services, components, and connection handlers.</p>
@@ -247,10 +255,10 @@ export class DeploymentChatComponent {
 <p>Cancellation should not leave the agent in an undefined state. The graph must handle abort commands cleanly, the UI must reflect the cancellation immediately, and subsequent user messages should resume normal conversation flow. Test this path explicitly—it executes more frequently in production than most teams anticipate.</p></div>
     </section>
     <section style="padding:80px;page-break-before:always">
-      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 5</div>
-      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Generative UI</h2>
-      <div class="chapter-body"><p># Generative UI</p>
-<p>Text responses hit a ceiling. When your data analysis agent returns a markdown table, users copy-paste into spreadsheets. When your booking agent describes available slots, users re-enter the same information into a form. The gap between agent output and user action creates friction that compounds across every interaction.</p>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#15253E;font-weight:700;margin-bottom:16px">Chapter 05</div>
+      <h2 style="font-family:'Archivo Black','Archivo',sans-serif;font-size:32px;color:#0A0A0A;margin-bottom:18px;line-height:1.15;letter-spacing:-0.01em">Generative UI</h2>
+      <div style="width:72px;height:6px;background:#FFAF00"></div>
+      <div class="chapter-body" style="margin-top:30px"><p>Text responses hit a ceiling. When your data analysis agent returns a markdown table, users copy-paste into spreadsheets. When your booking agent describes available slots, users re-enter the same information into a form. The gap between agent output and user action creates friction that compounds across every interaction.</p>
 <p>Production agents close this gap by emitting structured UI specifications alongside their responses. The agent doesn't return "Here are your results in a table" — it returns a render spec that becomes a live, interactive table component.</p>
 <h3>The Custom Event Pattern</h3>
 <p>LangGraph agents emit structured data through custom events during stream execution. Your agent code decides when to emit UI specifications:</p>
@@ -298,10 +306,10 @@ for row in process_rows():
 <p><strong>Production checkpoint:</strong> Can your agent emit UI components without tight coupling to the frontend codebase? If adding a new visualization requires changes to both agent and frontend in lockstep, the integration is too brittle for production iteration speed.</p></div>
     </section>
     <section style="padding:80px;page-break-before:always">
-      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 6</div>
-      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Deterministic Testing</h2>
-      <div class="chapter-body"><p># Deterministic Testing</p>
-<p>Agent UIs are notoriously difficult to test. Every call to a live LLM introduces variability—different token sequences, timing variations, occasional model updates that subtly change output format. The result is flaky tests, slow CI pipelines, and an inability to reproduce the exact edge case a user reported. Teams ship agent features with low confidence because their test suites can't verify behavior deterministically.</p>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#15253E;font-weight:700;margin-bottom:16px">Chapter 06</div>
+      <h2 style="font-family:'Archivo Black','Archivo',sans-serif;font-size:32px;color:#0A0A0A;margin-bottom:18px;line-height:1.15;letter-spacing:-0.01em">Deterministic Testing</h2>
+      <div style="width:72px;height:6px;background:#FFAF00"></div>
+      <div class="chapter-body" style="margin-top:30px"><p>Agent UIs are notoriously difficult to test. Every call to a live LLM introduces variability—different token sequences, timing variations, occasional model updates that subtly change output format. The result is flaky tests, slow CI pipelines, and an inability to reproduce the exact edge case a user reported. Teams ship agent features with low confidence because their test suites can't verify behavior deterministically.</p>
 <h3>Why Live LLM Testing Fails</h3>
 <p>Testing against real LLM APIs introduces three fundamental problems. First, response content varies between runs. The same prompt might yield slightly different phrasing, breaking snapshot tests or exact-match assertions. Second, latency compounds. A single agent interaction might take 2-5 seconds; a test suite with 50 agent tests becomes a 4-minute bottleneck. Third, you can't manufacture edge cases on demand. How do you test interrupt handling if the model decides not to request human input? How do you verify your tool call UI when the model skips the tool entirely?</p>
 <p>Deterministic testing requires control over the event stream itself.</p>

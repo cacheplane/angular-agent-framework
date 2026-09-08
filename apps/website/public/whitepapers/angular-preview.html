@@ -3,66 +3,74 @@
 <head>
 <meta charset="UTF-8">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'Inter',sans-serif;color:#1a1a2e;background:#fff}
-  .chapter-body p{font-size:15px;line-height:1.75;color:#333;margin-bottom:18px}
-  .chapter-body h3{font-family:'EB Garamond',serif;font-size:22px;font-weight:700;color:#1a1a2e;margin:28px 0 12px}
+  body{font-family:'Archivo',sans-serif;color:#0A0A0A;background:#fff}
+  .chapter-body p{font-size:15px;line-height:1.75;color:#0A0A0A;margin-bottom:18px}
+  /* Archivo Black is single-weight with no italic — no font-weight/font-style here. */
+  .chapter-body h3{font-family:'Archivo Black','Archivo',sans-serif;font-size:19px;color:#0A0A0A;margin:30px 0 12px;letter-spacing:-0.005em}
   .chapter-body ul{margin:0 0 18px 20px}
-  .chapter-body li{font-size:15px;line-height:1.7;color:#333;margin-bottom:6px}
-  .chapter-body pre{background:#1a1b26;color:#c8ccee;padding:20px 24px;border-radius:8px;font-size:13px;line-height:1.65;overflow-x:auto;margin:24px 0;white-space:pre-wrap}
+  .chapter-body li{font-size:15px;line-height:1.7;color:#0A0A0A;margin-bottom:6px}
+  .chapter-body pre{background:#15253E;color:#EDEFF3;padding:20px 24px;border-radius:8px;font-size:13px;line-height:1.65;overflow-x:auto;margin:24px 0;white-space:pre-wrap}
   .chapter-body code{font-family:'JetBrains Mono',monospace;font-size:13px}
-  .chapter-body strong{font-weight:600}
+  /* Navy carries emphasis; yellow never becomes type. */
+  .chapter-body strong{font-weight:700;color:#15253E}
 </style>
 </head>
 <body>
 
 <!-- Cover -->
-<div style="height:100vh;display:flex;flex-direction:column;justify-content:flex-end;padding:80px 80px 100px;background:linear-gradient(135deg, #fafbfc 0%, #eaf3ff 100%);page-break-after:always">
-  <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#004090;font-weight:700;margin-bottom:24px">Threadplane · Angular Agent UI Guide</div>
-  <h1 style="font-family:'EB Garamond',serif;font-size:52px;font-weight:800;line-height:1.1;color:#1a1a2e;margin-bottom:20px">The<br>Enterprise<br>Guide<br>to<br>Agent<br>UI<br>in<br>Angular</h1>
-  <p style="font-family:'EB Garamond',serif;font-style:italic;font-size:20px;color:#555770;margin-bottom:40px">Ship LangGraph and AG-UI-compatible agents without building the plumbing</p>
-  <div style="font-size:13px;color:#8b8fa3;font-family:monospace">threadplane.ai · 2026</div>
+<div style="height:100vh;display:flex;flex-direction:column;justify-content:flex-end;padding:80px 80px 100px;background:linear-gradient(160deg, #FFFFFF 0%, #F2F2F0 100%);page-break-after:always">
+  <div style="font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#15253E;font-weight:700;margin-bottom:24px">Threadplane · Angular Agent UI Guide</div>
+  <!-- Wrapped on a measure rather than one word per line: Archivo Black is
+       heavy enough that a forced break per word leaves orphans ("to", "in")
+       and turns the cover into a slab. -->
+  <h1 style="font-family:'Archivo Black','Archivo',sans-serif;font-size:46px;line-height:1.08;letter-spacing:-0.015em;color:#0A0A0A;max-width:560px;margin-bottom:26px">The Enterprise Guide to Agent UI in Angular</h1>
+  <div style="width:132px;height:6px;background:#FFAF00"></div>
+  <p style="font-family:'Archivo',sans-serif;font-style:italic;font-size:19px;line-height:1.5;color:#464646;margin:26px 0 40px">Ship LangGraph and AG-UI-compatible agents without building the plumbing</p>
+  <div style="font-size:13px;color:#737373;font-family:'JetBrains Mono',monospace">threadplane.ai · 2026</div>
 </div>
 
 <!-- TOC -->
 <div style="padding:80px;page-break-after:always">
-  <h2 style="font-family:'EB Garamond',serif;font-size:32px;font-weight:700;color:#1a1a2e;margin-bottom:32px">Contents</h2>
-  
-    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid #e6e8ee;font-size:15px;color:#555770">
-      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">01</span>
+  <h2 style="font-family:'Archivo Black','Archivo',sans-serif;font-size:32px;color:#0A0A0A;margin-bottom:18px;letter-spacing:-0.01em">Contents</h2>
+  <div style="width:72px;height:6px;background:#FFAF00"></div>
+  <div style="margin-top:30px">
+    <div style="display:flex;align-items:baseline;gap:12px;padding:11px 0;border-bottom:1px solid #E5E5E5;font-size:15px;color:#0A0A0A">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#15253E;font-weight:700;min-width:26px">01</span>
       <span style="flex:1">The Last-Mile Problem</span>
     </div>
-    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid #e6e8ee;font-size:15px;color:#555770">
-      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">02</span>
+    <div style="display:flex;align-items:baseline;gap:12px;padding:11px 0;border-bottom:1px solid #E5E5E5;font-size:15px;color:#0A0A0A">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#15253E;font-weight:700;min-width:26px">02</span>
       <span style="flex:1">The agent() API</span>
     </div>
-    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid #e6e8ee;font-size:15px;color:#555770">
-      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">03</span>
+    <div style="display:flex;align-items:baseline;gap:12px;padding:11px 0;border-bottom:1px solid #E5E5E5;font-size:15px;color:#0A0A0A">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#15253E;font-weight:700;min-width:26px">03</span>
       <span style="flex:1">Thread Persistence & Memory</span>
     </div>
-    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid #e6e8ee;font-size:15px;color:#555770">
-      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">04</span>
+    <div style="display:flex;align-items:baseline;gap:12px;padding:11px 0;border-bottom:1px solid #E5E5E5;font-size:15px;color:#0A0A0A">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#15253E;font-weight:700;min-width:26px">04</span>
       <span style="flex:1">Interrupt & Approval Flows</span>
     </div>
-    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid #e6e8ee;font-size:15px;color:#555770">
-      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">05</span>
+    <div style="display:flex;align-items:baseline;gap:12px;padding:11px 0;border-bottom:1px solid #E5E5E5;font-size:15px;color:#0A0A0A">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#15253E;font-weight:700;min-width:26px">05</span>
       <span style="flex:1">Full LangGraph Feature Coverage</span>
     </div>
-    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid #e6e8ee;font-size:15px;color:#555770">
-      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">06</span>
+    <div style="display:flex;align-items:baseline;gap:12px;padding:11px 0;border-bottom:1px solid #E5E5E5;font-size:15px;color:#0A0A0A">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#15253E;font-weight:700;min-width:26px">06</span>
       <span style="flex:1">Deterministic Testing</span>
-    </div>
+    </div></div>
 </div>
 
 <!-- Chapters -->
 
     <section style="padding:80px;page-break-before:always">
-      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 1</div>
-      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">The Last-Mile Problem</h2>
-      <div class="chapter-body"><p># The Last-Mile Problem</p>
-<p>You've built the backend. The LangGraph agent handles multi-step reasoning, calls tools, maintains conversation memory, and streams responses token by token. You've tested it with curl, watched it work in LangGraph Studio, maybe even built a quick React prototype. The agent architecture is solid.</p>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#15253E;font-weight:700;margin-bottom:16px">Chapter 01</div>
+      <h2 style="font-family:'Archivo Black','Archivo',sans-serif;font-size:32px;color:#0A0A0A;margin-bottom:18px;line-height:1.15;letter-spacing:-0.01em">The Last-Mile Problem</h2>
+      <div style="width:72px;height:6px;background:#FFAF00"></div>
+      <div class="chapter-body" style="margin-top:30px"><p>You've built the backend. The LangGraph agent handles multi-step reasoning, calls tools, maintains conversation memory, and streams responses token by token. You've tested it with curl, watched it work in LangGraph Studio, maybe even built a quick React prototype. The agent architecture is solid.</p>
 <p>Then you integrate it with your Angular application.</p>
 <h3>Zone Pollution Is Architectural, Not Configurable</h3>
 <p>The first symptom appears quickly: performance degradation during streaming. Every SSE event triggers zone.js change detection. A typical LLM response generates hundreds of token events over several seconds. Each event runs through `Zone.wrap()`, schedules a microtask, and triggers a full change detection cycle. Your application becomes unresponsive while the agent is responding.</p>
@@ -82,10 +90,10 @@
 <p>The gap between a working demo and production-safe Angular integration is measured in weeks of engineering time, repeated across every team building agent-powered features. The backend streaming problem was solved. The frontend streaming problem keeps getting re-solved.</p></div>
     </section>
     <section style="padding:80px;page-break-before:always">
-      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 2</div>
-      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">The agent() API</h2>
-      <div class="chapter-body"><p># The agent() API</p>
-<p>The `agent()` function is the primary interface for streaming LangGraph agents into Angular components. It returns a `LangGraphAgent` instance containing reactive signals that update automatically as the agent stream progresses. No subscriptions. No cleanup. No zone gymnastics.</p>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#15253E;font-weight:700;margin-bottom:16px">Chapter 02</div>
+      <h2 style="font-family:'Archivo Black','Archivo',sans-serif;font-size:32px;color:#0A0A0A;margin-bottom:18px;line-height:1.15;letter-spacing:-0.01em">The agent() API</h2>
+      <div style="width:72px;height:6px;background:#FFAF00"></div>
+      <div class="chapter-body" style="margin-top:30px"><p>The `agent()` function is the primary interface for streaming LangGraph agents into Angular components. It returns a `LangGraphAgent` instance containing reactive signals that update automatically as the agent stream progresses. No subscriptions. No cleanup. No zone gymnastics.</p>
 <h3>Signal Architecture</h3>
 <p>Calling `agent()` returns an object with typed signals covering the full agent lifecycle:</p>
 <ul><li><strong>`messages()`</strong> — The accumulated message history as `Message[]`, updated with each stream chunk</li>
@@ -148,10 +156,10 @@ export class ChatComponent {
 <p>The Angular signals-based design eliminates the subscription lifecycle entirely. When the component destroys, the signals become inert. No `takeUntilDestroyed()`. No `ngOnDestroy`. The framework handles it.</p></div>
     </section>
     <section style="padding:80px;page-break-before:always">
-      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 3</div>
-      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Thread Persistence & Memory</h2>
-      <div class="chapter-body"><p># Thread Persistence & Memory</p>
-<p>Production agent applications are stateful. Users expect to close a browser tab, return hours later, and resume exactly where they left off. This requires tight coordination between LangGraph's checkpoint system and your Angular frontend's thread management.</p>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#15253E;font-weight:700;margin-bottom:16px">Chapter 03</div>
+      <h2 style="font-family:'Archivo Black','Archivo',sans-serif;font-size:32px;color:#0A0A0A;margin-bottom:18px;line-height:1.15;letter-spacing:-0.01em">Thread Persistence & Memory</h2>
+      <div style="width:72px;height:6px;background:#FFAF00"></div>
+      <div class="chapter-body" style="margin-top:30px"><p>Production agent applications are stateful. Users expect to close a browser tab, return hours later, and resume exactly where they left off. This requires tight coordination between LangGraph's checkpoint system and your Angular frontend's thread management.</p>
 <h3>The Thread Lifecycle</h3>
 <p>LangGraph's `MemorySaver` backend persists conversation state against a `threadId`. Every message, tool call, and state mutation is checkpointed. The frontend's job is simple: track which `threadId` the user is working with and ensure it survives page reloads.</p>
 <p>The `agent()` surface exposes this through two mechanisms. First, `threadId` accepts a signal containing the current thread identifier—pass `undefined` to create a new conversation. Second, `onThreadId` fires when LangGraph assigns an ID to a newly created thread.</p>
@@ -223,10 +231,10 @@ export class MultiThreadChat {
 The `MemorySaver` backend and Angular's signal-based reactivity create a clean separation of concerns. The backend owns durability; the frontend owns navigation. Keep that boundary crisp.</div>
     </section>
     <section style="padding:80px;page-break-before:always">
-      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 4</div>
-      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Interrupt & Approval Flows</h2>
-      <div class="chapter-body"><p># Interrupt & Approval Flows</p>
-<p>Agents that modify external systems—sending emails, executing database writes, triggering deployments—require human oversight. Autonomous execution without checkpoints creates liability, compliance violations, and irreversible mistakes. LangGraph's `interrupt()` primitive solves this at the graph level, pausing execution mid-stream until a human provides explicit authorization. `@threadplane/langgraph` surfaces this as a reactive signal, making approval workflows native to Angular's change detection without polling, websockets, or custom resume endpoints.</p>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#15253E;font-weight:700;margin-bottom:16px">Chapter 04</div>
+      <h2 style="font-family:'Archivo Black','Archivo',sans-serif;font-size:32px;color:#0A0A0A;margin-bottom:18px;line-height:1.15;letter-spacing:-0.01em">Interrupt & Approval Flows</h2>
+      <div style="width:72px;height:6px;background:#FFAF00"></div>
+      <div class="chapter-body" style="margin-top:30px"><p>Agents that modify external systems—sending emails, executing database writes, triggering deployments—require human oversight. Autonomous execution without checkpoints creates liability, compliance violations, and irreversible mistakes. LangGraph's `interrupt()` primitive solves this at the graph level, pausing execution mid-stream until a human provides explicit authorization. `@threadplane/langgraph` surfaces this as a reactive signal, making approval workflows native to Angular's change detection without polling, websockets, or custom resume endpoints.</p>
 <h3>How LangGraph Interrupt Works</h3>
 <p>When a LangGraph node calls `interrupt()`, the graph halts execution and persists its current state to the configured checkpointer. The interrupt payload—containing context about the pending action—is sent to the client as part of the stream. Execution remains suspended until the client sends a resume command with one of three directives: approve the action as-is, provide edited parameters, or cancel entirely.</p>
 <p>The resume payload structure is straightforward:</p>
@@ -283,10 +291,10 @@ export class CustomApprovalComponent {
 <p>Human-in-the-loop isn't optional for production agents. `@threadplane/langgraph` makes it reactive, type-safe, and compatible with Angular's rendering model—approval flows become UI state, not infrastructure problems.</p></div>
     </section>
     <section style="padding:80px;page-break-before:always">
-      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 5</div>
-      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Full LangGraph Feature Coverage</h2>
-      <div class="chapter-body"><p># Full LangGraph Feature Coverage</p>
-<p>Most Angular LLM integrations handle the basics: send a message, stream tokens, render a response. The moment you need tool calls, subgraphs, or multi-agent coordination, you're writing raw SSE parsers and manually reconciling state. @threadplane/langgraph exists specifically to avoid that cliff—every LangGraph feature surfaces through the same reactive signals your components already consume.</p>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#15253E;font-weight:700;margin-bottom:16px">Chapter 05</div>
+      <h2 style="font-family:'Archivo Black','Archivo',sans-serif;font-size:32px;color:#0A0A0A;margin-bottom:18px;line-height:1.15;letter-spacing:-0.01em">Full LangGraph Feature Coverage</h2>
+      <div style="width:72px;height:6px;background:#FFAF00"></div>
+      <div class="chapter-body" style="margin-top:30px"><p>Most Angular LLM integrations handle the basics: send a message, stream tokens, render a response. The moment you need tool calls, subgraphs, or multi-agent coordination, you're writing raw SSE parsers and manually reconciling state. @threadplane/langgraph exists specifically to avoid that cliff—every LangGraph feature surfaces through the same reactive signals your components already consume.</p>
 <h3>Tool Call Streaming</h3>
 <p>LangGraph emits tool invocations as structured events mid-stream. Rather than parsing `tool_call` chunks yourself, the agent ref exposes them directly:</p>
 <pre><code>readonly chat = agent({
@@ -342,10 +350,10 @@ const graphState = this.chat.langGraphState();
 <p>Full feature coverage eliminates that bifurcation. Tool calls, subgraphs, time travel, and multi-agent coordination all flow through the same `agent()` call. When LangGraph adds capabilities, they surface through existing signals rather than requiring new integration code. Your components stay declarative. Your state stays reactive. The complexity lives in the library, not your application.</p></div>
     </section>
     <section style="padding:80px;page-break-before:always">
-      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 6</div>
-      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Deterministic Testing</h2>
-      <div class="chapter-body"><p># Deterministic Testing</p>
-<p>Agent UIs are notoriously difficult to test. Real LLM calls introduce latency measured in seconds, non-deterministic outputs, rate limits, and network dependencies that make CI pipelines slow and flaky. A test that passes locally might fail in CI because the model returned a slightly different response, or the API throttled your request, or the stream took longer than your timeout.</p>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#15253E;font-weight:700;margin-bottom:16px">Chapter 06</div>
+      <h2 style="font-family:'Archivo Black','Archivo',sans-serif;font-size:32px;color:#0A0A0A;margin-bottom:18px;line-height:1.15;letter-spacing:-0.01em">Deterministic Testing</h2>
+      <div style="width:72px;height:6px;background:#FFAF00"></div>
+      <div class="chapter-body" style="margin-top:30px"><p>Agent UIs are notoriously difficult to test. Real LLM calls introduce latency measured in seconds, non-deterministic outputs, rate limits, and network dependencies that make CI pipelines slow and flaky. A test that passes locally might fail in CI because the model returned a slightly different response, or the API throttled your request, or the stream took longer than your timeout.</p>
 <p>The solution is deterministic mocking at the transport layer. Threadplane provides two complementary approaches: `MockAgentTransport` for scripting realistic SSE event sequences, and `mockLangGraphAgent()` for direct signal manipulation when you need fine-grained control.</p>
 <h3>MockAgentTransport: Scripted Event Sequences</h3>
 <p>`MockAgentTransport` replaces `FetchStreamTransport` in tests, emitting a predetermined sequence of SSE events without any network calls. You script exactly what the agent receives—message chunks, tool calls, interrupts, errors—and the transport replays them synchronously or with configurable delays.</p>

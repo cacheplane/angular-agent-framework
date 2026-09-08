@@ -3,62 +3,70 @@
 <head>
 <meta charset="UTF-8">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'Inter',sans-serif;color:#1a1a2e;background:#fff}
-  .chapter-body p{font-size:15px;line-height:1.75;color:#333;margin-bottom:18px}
-  .chapter-body h3{font-family:'EB Garamond',serif;font-size:22px;font-weight:700;color:#1a1a2e;margin:28px 0 12px}
+  body{font-family:'Archivo',sans-serif;color:#0A0A0A;background:#fff}
+  .chapter-body p{font-size:15px;line-height:1.75;color:#0A0A0A;margin-bottom:18px}
+  /* Archivo Black is single-weight with no italic — no font-weight/font-style here. */
+  .chapter-body h3{font-family:'Archivo Black','Archivo',sans-serif;font-size:19px;color:#0A0A0A;margin:30px 0 12px;letter-spacing:-0.005em}
   .chapter-body ul{margin:0 0 18px 20px}
-  .chapter-body li{font-size:15px;line-height:1.7;color:#333;margin-bottom:6px}
-  .chapter-body pre{background:#1a1b26;color:#c8ccee;padding:20px 24px;border-radius:8px;font-size:13px;line-height:1.65;overflow-x:auto;margin:24px 0;white-space:pre-wrap}
+  .chapter-body li{font-size:15px;line-height:1.7;color:#0A0A0A;margin-bottom:6px}
+  .chapter-body pre{background:#15253E;color:#EDEFF3;padding:20px 24px;border-radius:8px;font-size:13px;line-height:1.65;overflow-x:auto;margin:24px 0;white-space:pre-wrap}
   .chapter-body code{font-family:'JetBrains Mono',monospace;font-size:13px}
-  .chapter-body strong{font-weight:600}
+  /* Navy carries emphasis; yellow never becomes type. */
+  .chapter-body strong{font-weight:700;color:#15253E}
 </style>
 </head>
 <body>
 
 <!-- Cover -->
-<div style="height:100vh;display:flex;flex-direction:column;justify-content:flex-end;padding:80px 80px 100px;background:linear-gradient(135deg, #fafbfc 0%, #f3e8ff 100%);page-break-after:always">
-  <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#004090;font-weight:700;margin-bottom:24px">@threadplane/chat · Enterprise Guide</div>
-  <h1 style="font-family:'EB Garamond',serif;font-size:52px;font-weight:800;line-height:1.1;color:#1a1a2e;margin-bottom:20px">The<br>Enterprise<br>Guide<br>to<br>Agent<br>Chat<br>Interfaces<br>in<br>Angular</h1>
-  <p style="font-family:'EB Garamond',serif;font-style:italic;font-size:20px;color:#555770;margin-bottom:40px">Production agent chat UI in days, not sprints</p>
-  <div style="font-size:13px;color:#8b8fa3;font-family:monospace">threadplane.ai · 2026</div>
+<div style="height:100vh;display:flex;flex-direction:column;justify-content:flex-end;padding:80px 80px 100px;background:linear-gradient(160deg, #FFFFFF 0%, #F2F2F0 100%);page-break-after:always">
+  <div style="font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#15253E;font-weight:700;margin-bottom:24px">@threadplane/chat · Enterprise Guide</div>
+  <!-- Wrapped on a measure rather than one word per line: Archivo Black is
+       heavy enough that a forced break per word leaves orphans ("to", "in")
+       and turns the cover into a slab. -->
+  <h1 style="font-family:'Archivo Black','Archivo',sans-serif;font-size:46px;line-height:1.08;letter-spacing:-0.015em;color:#0A0A0A;max-width:560px;margin-bottom:26px">The Enterprise Guide to Agent Chat Interfaces in Angular</h1>
+  <div style="width:132px;height:6px;background:#FFAF00"></div>
+  <p style="font-family:'Archivo',sans-serif;font-style:italic;font-size:19px;line-height:1.5;color:#464646;margin:26px 0 40px">Production agent chat UI in days, not sprints</p>
+  <div style="font-size:13px;color:#737373;font-family:'JetBrains Mono',monospace">threadplane.ai · 2026</div>
 </div>
 
 <!-- TOC -->
 <div style="padding:80px;page-break-after:always">
-  <h2 style="font-family:'EB Garamond',serif;font-size:32px;font-weight:700;color:#1a1a2e;margin-bottom:32px">Contents</h2>
-  
-    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid #e6e8ee;font-size:15px;color:#555770">
-      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">01</span>
+  <h2 style="font-family:'Archivo Black','Archivo',sans-serif;font-size:32px;color:#0A0A0A;margin-bottom:18px;letter-spacing:-0.01em">Contents</h2>
+  <div style="width:72px;height:6px;background:#FFAF00"></div>
+  <div style="margin-top:30px">
+    <div style="display:flex;align-items:baseline;gap:12px;padding:11px 0;border-bottom:1px solid #E5E5E5;font-size:15px;color:#0A0A0A">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#15253E;font-weight:700;min-width:26px">01</span>
       <span style="flex:1">The Sprint Tax</span>
     </div>
-    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid #e6e8ee;font-size:15px;color:#555770">
-      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">02</span>
+    <div style="display:flex;align-items:baseline;gap:12px;padding:11px 0;border-bottom:1px solid #E5E5E5;font-size:15px;color:#0A0A0A">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#15253E;font-weight:700;min-width:26px">02</span>
       <span style="flex:1">Batteries-Included Components</span>
     </div>
-    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid #e6e8ee;font-size:15px;color:#555770">
-      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">03</span>
+    <div style="display:flex;align-items:baseline;gap:12px;padding:11px 0;border-bottom:1px solid #E5E5E5;font-size:15px;color:#0A0A0A">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#15253E;font-weight:700;min-width:26px">03</span>
       <span style="flex:1">Theming & Design System Integration</span>
     </div>
-    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid #e6e8ee;font-size:15px;color:#555770">
-      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">04</span>
+    <div style="display:flex;align-items:baseline;gap:12px;padding:11px 0;border-bottom:1px solid #E5E5E5;font-size:15px;color:#0A0A0A">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#15253E;font-weight:700;min-width:26px">04</span>
       <span style="flex:1">Generative UI in Chat</span>
     </div>
-    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid #e6e8ee;font-size:15px;color:#555770">
-      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">05</span>
+    <div style="display:flex;align-items:baseline;gap:12px;padding:11px 0;border-bottom:1px solid #E5E5E5;font-size:15px;color:#0A0A0A">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#15253E;font-weight:700;min-width:26px">05</span>
       <span style="flex:1">Debug Tooling</span>
-    </div>
+    </div></div>
 </div>
 
 <!-- Chapters -->
 
     <section style="padding:80px;page-break-before:always">
-      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 1</div>
-      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">The Sprint Tax</h2>
-      <div class="chapter-body"><p># The Sprint Tax</p>
-<p>Every team building an Angular agent application eventually builds the same chat UI from scratch. Message list, input box, streaming token display, auto-scroll, loading states, error handling. It takes 4-6 weeks. Then they iterate on it for another 4-6 weeks. Meanwhile, the agent backend is ready and waiting.</p>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#15253E;font-weight:700;margin-bottom:16px">Chapter 01</div>
+      <h2 style="font-family:'Archivo Black','Archivo',sans-serif;font-size:32px;color:#0A0A0A;margin-bottom:18px;line-height:1.15;letter-spacing:-0.01em">The Sprint Tax</h2>
+      <div style="width:72px;height:6px;background:#FFAF00"></div>
+      <div class="chapter-body" style="margin-top:30px"><p>Every team building an Angular agent application eventually builds the same chat UI from scratch. Message list, input box, streaming token display, auto-scroll, loading states, error handling. It takes 4-6 weeks. Then they iterate on it for another 4-6 weeks. Meanwhile, the agent backend is ready and waiting.</p>
 <p>This isn't a skill gap. It's a structural inefficiency baked into how we approach agent interfaces.</p>
 <h3>The Inventory</h3>
 <p>Here's what every production chat UI actually needs:</p>
@@ -86,10 +94,10 @@
 <p>The sprint tax is optional. Stop paying it.</p></div>
     </section>
     <section style="padding:80px;page-break-before:always">
-      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 2</div>
-      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Batteries-Included Components</h2>
-      <div class="chapter-body"><p># Batteries-Included Components</p>
-<p>@threadplane/chat ships two component tiers: headless primitives that encapsulate behavior without styling opinions, and prebuilt compositions that deliver production-ready interfaces with minimal configuration. The separation lets teams adopt complete solutions immediately while preserving escape hatches for custom requirements.</p>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#15253E;font-weight:700;margin-bottom:16px">Chapter 02</div>
+      <h2 style="font-family:'Archivo Black','Archivo',sans-serif;font-size:32px;color:#0A0A0A;margin-bottom:18px;line-height:1.15;letter-spacing:-0.01em">Batteries-Included Components</h2>
+      <div style="width:72px;height:6px;background:#FFAF00"></div>
+      <div class="chapter-body" style="margin-top:30px"><p>@threadplane/chat ships two component tiers: headless primitives that encapsulate behavior without styling opinions, and prebuilt compositions that deliver production-ready interfaces with minimal configuration. The separation lets teams adopt complete solutions immediately while preserving escape hatches for custom requirements.</p>
 <h3>The Headless Tier</h3>
 <p>Headless components own behavior and state management but emit no styled markup. They expose content projection slots and structural directives for complete template control.</p>
 <p>`<chat-message-list>` manages scroll position, virtualization hints, and message grouping logic. It consumes `Message[]` from the agent surface and handles the complexity of streaming message updates—partial content, role transitions, and optimistic UI states. Your templates define how each message renders.</p>
@@ -123,10 +131,10 @@ export class SupportComponent {
 <p>Migration between tiers is mechanical: prebuilt components are compositions of headless primitives with styling applied. Extracting customization points means identifying which primitive to expose and which styling to preserve. The agent contract remains constant across tiers—your backend integration stays unchanged regardless of which component tier renders the interface.</p></div>
     </section>
     <section style="padding:80px;page-break-before:always">
-      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 3</div>
-      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Theming & Design System Integration</h2>
-      <div class="chapter-body"><p># Theming & Design System Integration</p>
-<p>A chat interface that looks like a demo is a liability in production. Users notice when components don't match the rest of the application—inconsistent border radius, wrong font stack, off-brand colors. These details erode trust in the product and in the AI features you're shipping.</p>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#15253E;font-weight:700;margin-bottom:16px">Chapter 03</div>
+      <h2 style="font-family:'Archivo Black','Archivo',sans-serif;font-size:32px;color:#0A0A0A;margin-bottom:18px;line-height:1.15;letter-spacing:-0.01em">Theming & Design System Integration</h2>
+      <div style="width:72px;height:6px;background:#FFAF00"></div>
+      <div class="chapter-body" style="margin-top:30px"><p>A chat interface that looks like a demo is a liability in production. Users notice when components don't match the rest of the application—inconsistent border radius, wrong font stack, off-brand colors. These details erode trust in the product and in the AI features you're shipping.</p>
 <p>@threadplane/chat exposes its visual design decisions through CSS custom properties, giving you control over appearance without touching component internals or maintaining forks.</p>
 <h3>The CSS Custom Property API</h3>
 <p>Every visual decision in @threadplane/chat maps to a custom property. The components read these values at runtime, so overriding them in your stylesheet changes the rendered output immediately.</p>
@@ -173,10 +181,10 @@ export class SupportComponent {
 <p>Tokens handle 80% of enterprise theming needs. The headless tier handles the rest.</p></div>
     </section>
     <section style="padding:80px;page-break-before:always">
-      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 4</div>
-      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Generative UI in Chat</h2>
-      <div class="chapter-body"><p># Generative UI in Chat</p>
-<p>Text is a bottleneck. When a financial agent needs to present quarterly results, streaming prose about revenue figures wastes cognitive load. When a scheduling agent confirms a booking, a wall of text obscures the actionable details. The most capable agent interfaces solve this by rendering structured UI directly in the message stream—tables, forms, approval cards—alongside conversational text.</p>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#15253E;font-weight:700;margin-bottom:16px">Chapter 04</div>
+      <h2 style="font-family:'Archivo Black','Archivo',sans-serif;font-size:32px;color:#0A0A0A;margin-bottom:18px;line-height:1.15;letter-spacing:-0.01em">Generative UI in Chat</h2>
+      <div style="width:72px;height:6px;background:#FFAF00"></div>
+      <div class="chapter-body" style="margin-top:30px"><p>Text is a bottleneck. When a financial agent needs to present quarterly results, streaming prose about revenue figures wastes cognitive load. When a scheduling agent confirms a booking, a wall of text obscures the actionable details. The most capable agent interfaces solve this by rendering structured UI directly in the message stream—tables, forms, approval cards—alongside conversational text.</p>
 <h3>Structured UI in the Message Stream</h3>
 <p>@threadplane/chat treats generative UI as a first-class message type. When an agent emits a UI specification instead of text, the chat renders it inline using @threadplane/render. From the user's perspective, the conversation flows naturally: the agent explains context in prose, then presents a rendered component for interaction.</p>
 <p>This works because the Agent contract exposes messages as a heterogeneous stream. Text messages render as text. UI messages resolve to Angular components through a registry. The chat component handles both transparently.</p>
@@ -209,10 +217,10 @@ provideRender({ registry })
 <p>This matters for perceived latency. Users see structure immediately, then watch it fill in—progress feels continuous rather than blocked on complete responses.</p></div>
     </section>
     <section style="padding:80px;page-break-before:always">
-      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 5</div>
-      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Debug Tooling</h2>
-      <div class="chapter-body"><p># Debug Tooling</p>
-<p>Debugging agent chat is hard. The message stream is opaque, tool call state transitions happen in milliseconds, and interrupt flows have timing edge cases that only surface under load. You can't step through a streaming conversation the way you step through synchronous code.</p>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#15253E;font-weight:700;margin-bottom:16px">Chapter 05</div>
+      <h2 style="font-family:'Archivo Black','Archivo',sans-serif;font-size:32px;color:#0A0A0A;margin-bottom:18px;line-height:1.15;letter-spacing:-0.01em">Debug Tooling</h2>
+      <div style="width:72px;height:6px;background:#FFAF00"></div>
+      <div class="chapter-body" style="margin-top:30px"><p>Debugging agent chat is hard. The message stream is opaque, tool call state transitions happen in milliseconds, and interrupt flows have timing edge cases that only surface under load. You can't step through a streaming conversation the way you step through synchronous code.</p>
 <p>`<chat-debug>` is @threadplane/chat's built-in debug panel—a developer overlay that surfaces agent state, raw message events, tool call history, and interrupt state in real time. One component, zero configuration.</p>
 <h3>What chat-debug Shows</h3>
 <p>The debug panel exposes four primary views:</p>
