@@ -165,10 +165,12 @@
 }
 
 /* Dark section scope (homepage proof band + FinalCTA dark variant).
- * Values mirror libs/design-tokens/src/lib/dark.ts — the website hardwires
- * the light theme in TS, so dark sections re-scope the CSS variables instead.
- * If dark.ts changes, update here. Treatment B (spec): the canvas is a subtle
- * vertical gradient, and a 1px accent seam marks the light→dark boundary. */
+ * The ACCENTS mirror libs/design-tokens/src/lib/dark.ts. The SURFACES
+ * deliberately do not: this band is website-only and takes the ATC scope
+ * navy, while dark.ts stays neutral because @threadplane/chat and the cockpit
+ * consume it and a navy ground there would seam against embedded chat.
+ * Treatment B (spec): vertical gradient canvas, 1px accent seam at the
+ * light→dark boundary. */
 [data-ui="section"][data-surface="dark"] {
   --color-canvas: rgb(17, 17, 17);
   --color-surface: rgb(28, 28, 28);
@@ -180,14 +182,14 @@
   --color-text-secondary: rgb(200, 200, 200);
   --color-text-muted: rgb(160, 160, 160);
   --color-text-inverted: rgb(17, 17, 17);
-  --color-accent: #64c3fd;
-  --color-accent-hover: #8dd4ff;
-  --color-accent-glow: rgba(100, 195, 253, 0.25);
-  --color-accent-border: rgba(100, 195, 253, 0.2);
-  --color-accent-border-hover: rgba(100, 195, 253, 0.35);
-  --color-accent-surface: rgba(100, 195, 253, 0.08);
+  --color-accent: var(--color-signal);
+  --color-accent-hover: #FFC233;
+  --color-accent-glow: rgba(255, 175, 0, 0.25);
+  --color-accent-border: rgba(255, 175, 0, 0.22);
+  --color-accent-border-hover: rgba(255, 175, 0, 0.4);
+  --color-accent-surface: rgba(255, 175, 0, 0.1);
 
-  background: linear-gradient(180deg, #161616 0%, #0e0e0e 100%);
+  background: linear-gradient(180deg, #1b2e4d 0%, #15253e 100%);
   color: var(--color-text-primary);
   position: relative;
 }
@@ -202,8 +204,8 @@
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(100, 195, 253, 0.55) 30%,
-    rgba(100, 195, 253, 0.55) 70%,
+    rgba(255, 175, 0, 0.55) 30%,
+    rgba(255, 175, 0, 0.55) 70%,
     transparent
   );
   pointer-events: none;
@@ -260,10 +262,17 @@
   font-size: 16px;
 }
 [data-ui="button"][data-variant="primary"] {
-  background: var(--color-accent);
-  color: var(--color-text-inverted);
-  border: 1px solid var(--color-accent);
+  background: var(--color-signal);
+  color: var(--color-ink);
+  border: 1px solid var(--color-signal);
   box-shadow: var(--shadow-sm);
+}
+/* On the yellow hero block the fill inverts — a yellow button on a yellow
+ * ground has nothing to sit against. */
+[data-ui="section"][data-surface="signal"] [data-ui="button"][data-variant="primary"] {
+  background: var(--color-ink);
+  color: var(--color-signal);
+  border-color: var(--color-ink);
 }
 [data-ui="button"][data-variant="secondary"] {
   background: var(--color-surface);
@@ -280,16 +289,21 @@
 /* Keyboard focus ring.
  *
  * Without this the UA default applies — `outline: auto 1px rgb(0, 95, 204)` in
- * Chrome — which is a thin blue hairline drawn against the primary button's
- * own `--color-accent` (#004090) fill. Effectively invisible, and the place it
- * matters most is the one place focus lands programmatically: closing the
- * install dialog returns focus to the "Install Threadplane" trigger, and the
- * keyboard user could not see where they were.
+ * Chrome — a thin blue hairline drawn straight against the primary button's
+ * fill. Effectively invisible, and the place it matters most is the one place
+ * focus lands programmatically: closing the install dialog returns focus to
+ * the "Install Threadplane" trigger, and the keyboard user could not see where
+ * they were.
  *
- * The offset ring is `--color-accent`, which the dark section scope above
- * re-points to #64c3fd, so it stays high-contrast on both surfaces. The inner
- * `--color-surface` halo separates ring from fill on `primary`, where fill and
- * ring are otherwise the same colour family. Held by a style contract. */
+ * The offset ring is `--color-accent`, which every section scope re-points, so
+ * it stays high-contrast on all three grounds: scope navy (#15253E) against
+ * the signal-yellow fill on white, aviation yellow inside the dark band, and
+ * ink inside the signal scope, where the primary button inverts to an ink
+ * fill. The inner `--color-surface` halo is what separates ring from fill in
+ * the two cases where both land in the same colour family — yellow ring on
+ * yellow fill in the dark band, ink ring on ink fill in the signal scope —
+ * because `--color-surface` re-points with the scope too (dark grey, then the
+ * signal yellow). Held by a style contract. */
 [data-ui="button"]:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
@@ -360,7 +374,13 @@
 [data-ui="logo-mark-icon"] {
   display: block;
   flex: none;
-  color: inherit;
+  /* PlaneMark's path is fill="currentColor", so the signal arrives via color.
+     The wordmark beside it keeps --color-text-primary. */
+  color: var(--color-signal);
+}
+/* On the yellow hero block the mark would be yellow on yellow. */
+[data-ui="section"][data-surface="signal"] [data-ui="logo-mark-icon"] {
+  color: var(--color-ink);
 }
 [data-ui="logo-mark"][data-size="sm"] > [data-ui="logo-mark-icon"] {
   width: 15px;
