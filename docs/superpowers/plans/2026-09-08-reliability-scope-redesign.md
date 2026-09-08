@@ -436,6 +436,27 @@ git commit -m "feat(website): the proof band is framed as a climb, with a pitch 
 
 ## Task 5: Compatibility becomes its own section
 
+> **Superseded during execution (2026-09-08).** This task as written keeps a
+> `COMPATIBILITY_MORE_COUNT = 3` badge. Review found that impossible to state
+> honestly: the badge renders only inside the Agent runtimes group, but one of
+> the three hidden entries — Azure OpenAI — is a model provider, so the section
+> claimed three more *runtimes* and one was not. Its trigger was also a string
+> comparison against display copy, so rewording a label would have silently
+> removed it.
+>
+> All three hidden marks already existed on disk (`providers/azure.svg`,
+> `runtimes/pydantic.svg`, `runtimes/microsoft.svg`), so the shipped version
+> names all twelve and deletes the count entirely. Read the steps below for the
+> structure; ignore every reference to `COMPATIBILITY_MORE_COUNT` and
+> `.compatibility-more`.
+>
+> Two other things review caught here, both shipped: each group's `<ul>` needs
+> `aria-labelledby` pointing at its label (the old markup had it and the move
+> dropped it), and the spec must pin group and item counts independently —
+> iterating `COMPATIBILITY_GROUPS` is tautological, and deleting the whole
+> Protocols group left every test green.
+
+
 The logo row leaves the dark band. This is what makes the logos legible — they are dark marks drawn for light grounds, so on a light section they need no treatment at all and there is no filter to guard.
 
 **Files:**
