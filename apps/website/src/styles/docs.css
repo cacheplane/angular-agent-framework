@@ -1646,9 +1646,27 @@ body:has([data-website-workspace-host]) {
   animation: blink 0.6s infinite;
 }
 .arch-flow-console-panel {
+  /* Hardcoded dark ground. This is NOT a [data-ui="section"][data-surface="dark"]
+   * scope, so nothing inside inherits that scope's re-pointed --color-* values
+   * and the light-surface tokens land here unchanged — which is how the source
+   * badges ended up carrying near-black scope navy on near-black. The badges
+   * below read from this local on-dark palette instead of the global tokens.
+   * Every ratio quoted is measured against the composited badge ground (tint
+   * over #1a1b26), never against white: aviation yellow is INK on this ground
+   * at 7.0:1, where on white it is a fill only at 1.84:1. */
+  --console-ground: #1a1b26;
+  --console-ink-angular: #ff9e9e;
+  --console-fill-angular: rgba(221, 0, 49, 0.14);
+  --console-ink-transport: #c3b0ff;
+  --console-fill-transport: rgba(139, 123, 232, 0.14);
+  --console-ink-langgraph: var(--color-signal);
+  --console-fill-langgraph: rgba(255, 175, 0, 0.14);
+  --console-ink-signal: #5fe3b0;
+  --console-fill-signal: rgba(16, 185, 129, 0.14);
+
   flex: 1;
   padding: 12px;
-  background: #1a1b26;
+  background: var(--console-ground);
   overflow: auto;
   font-family: var(--font-mono);
   font-size: 10px;
@@ -1683,21 +1701,22 @@ body:has([data-website-workspace-host]) {
   min-width: 62px;
   text-align: center;
 }
+/* 8px bold on a dark ground, so each variant clears 4.5:1 with margin. */
 .arch-flow-log-source[data-source="angular"] {
-  background: rgba(221, 0, 49, 0.08);
-  color: #c62828;
+  background: var(--console-fill-angular);
+  color: var(--console-ink-angular); /* 8.14:1 */
 }
 .arch-flow-log-source[data-source="transport"] {
-  background: rgba(100, 80, 200, 0.08);
-  color: #5e35b1;
+  background: var(--console-fill-transport);
+  color: var(--console-ink-transport); /* 7.40:1 */
 }
 .arch-flow-log-source[data-source="langgraph"] {
-  background: rgba(255, 175, 0, 0.12);
-  color: var(--color-accent);
+  background: var(--console-fill-langgraph);
+  color: var(--console-ink-langgraph); /* 7.03:1 */
 }
 .arch-flow-log-source[data-source="signal"] {
-  background: rgba(16, 185, 129, 0.08);
-  color: #059669;
+  background: var(--console-fill-signal);
+  color: var(--console-ink-signal); /* 8.57:1 */
 }
 .arch-flow-log-message {
   color: #a9b1d6;
