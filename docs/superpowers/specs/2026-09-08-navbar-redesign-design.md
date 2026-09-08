@@ -78,9 +78,25 @@ Row contents, left to right: logo, the four triggers, then right-aligned GitHub 
 mouse path between trigger and panel does not dismiss it. Click also toggles, which is
 what makes touch and keyboard work.
 
-**One shared panel container** animates its size between triggers rather than each
-trigger owning an independent panel. Panel width is the bar's content width, not
-full-bleed.
+**Each trigger owns its own panel**, rendered next to that trigger so the panel is
+the next thing in the tab order after the trigger that opened it. Only one is ever
+mounted.
+
+This replaces the shared morphing container this spec originally called for, on
+measurement rather than taste. All three panels are the same width by construction
+— the shell is `left: 0; right: 0` — so a shared container could only animate
+height, and at 1440px the heights are Libraries 190px, Docs 256.8px, Solutions
+256.8px. Docs and Solutions are identical because `.nav-panel-cols` is a stretch
+grid whose tallest column sets the row height. So four of the six trigger-to-trigger
+transitions have nothing to animate, and the morph buys one 67px tween in one
+direction. Against that: an always-mounted container needs `inert` plus
+`aria-hidden` when closed (a `height: 0` container does **not** remove its links
+from the tab order), `inert` is discrete so it cannot be transitioned without
+`transition-behavior: allow-discrete` or a `transitionend` state machine, and a
+crossfade needs both panels mounted at once — which breaks every unqualified
+`.nav-panel` locator in `e2e/nav-panels.spec.ts`. The panel gets a 140ms entrance
+animation instead, which addresses the actual visual complaint: the caret glides
+while the panel snapped.
 
 **Semantics.** The panel holds links, so it is a disclosure and not a menu: triggers get
 `aria-expanded` and `aria-controls`, the panel is a plain region, Tab moves through the
