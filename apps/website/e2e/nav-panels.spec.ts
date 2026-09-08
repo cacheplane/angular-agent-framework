@@ -17,6 +17,13 @@ test.describe('desktop nav panels', () => {
 
     const items = page.locator('.nav-panel .nav-panel-item');
     await expect(items).toHaveCount(5); // four libraries plus the footer link
+    // The panel's entrance animation translates it into place over 140ms; the
+    // boxes below are read one at a time, so sampling mid-animation would
+    // catch each item at a different point along that transform. Let it settle
+    // first so the geometry assertions below reflect the resting layout.
+    await page.locator('.nav-panel').evaluate((el) =>
+      Promise.all(el.getAnimations().map((animation) => animation.finished)),
+    );
 
     const boxes = [];
     for (let index = 0; index < 4; index += 1) {
@@ -68,5 +75,46 @@ test.describe('desktop nav panels', () => {
       }).length,
     );
     expect(bordered).toBe(0);
+  });
+
+  test('moves focus into the panel it just opened', async ({ page }) => {
+    await page.getByRole('button', { name: 'Libraries' }).click();
+    await page.keyboard.press('Tab');
+
+    const focusedInsidePanel = await page.evaluate(() =>
+      Boolean(document.activeElement?.closest('.nav-panel')),
+    );
+    expect(focusedInsidePanel).toBe(true);
+  });
+
+  test('opens on hover after a grace period and survives the move into the panel', async ({ page }) => {
+    const trigger = page.getByRole('button', { name: 'Libraries' });
+    // A plain `.hover()` jumps the pointer straight to the target's center in
+    // one step, so it never actually crosses the dead zone below the trigger
+    // row — the exact gap this test exists to cover. `mouse.move` with
+    // `steps` dispatches intermediate mousemove events along the path, which
+    // is what makes the dead zone's mouseleave/mouseenter pair fire for real.
+    const triggerBox = await trigger.boundingBox();
+    if (!triggerBox) throw new Error('Trigger has no box');
+    await page.mouse.move(
+      triggerBox.x + triggerBox.width / 2,
+      triggerBox.y + triggerBox.height / 2,
+    );
+    await expect(page.locator('.nav-panel')).toBeVisible({ timeout: 2000 });
+
+    // The dead zone between the trigger row and the panel belongs to neither
+    // element; crossing it schedules a close that entering the panel must cancel.
+    const itemBox = await page
+      .locator('.nav-panel .nav-panel-item')
+      .first()
+      .boundingBox();
+    if (!itemBox) throw new Error('Panel item has no box');
+    await page.mouse.move(
+      itemBox.x + itemBox.width / 2,
+      itemBox.y + itemBox.height / 2,
+      { steps: 15 },
+    );
+    await page.waitForTimeout(400);
+    await expect(page.locator('.nav-panel')).toBeVisible();
   });
 });

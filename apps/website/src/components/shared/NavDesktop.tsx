@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useId, useRef, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import {
   trackCtaClick,
@@ -211,35 +211,45 @@ export function NavDesktop() {
             {trigger.label}
           </Link>
         ) : (
-          <button
-            key={trigger.id}
-            type="button"
-            ref={(node) => {
-              if (node) triggerRefs.current.set(trigger.id, node);
-              else triggerRefs.current.delete(trigger.id);
-            }}
-            onMouseEnter={() => scheduleOpen(trigger.id)}
-            onClick={() => {
-              clearTimers();
-              setOpenId((current) =>
-                current === trigger.id ? null : trigger.id
-              );
-            }}
-            aria-expanded={openId === trigger.id}
-            aria-controls={
-              openId === trigger.id ? panelId(trigger.id) : undefined
-            }
-            className="text-sm font-mono transition-colors nav-link nav-trigger"
-          >
-            {trigger.label}
-            <ChevronDown
-              size={14}
-              strokeWidth={2}
-              aria-hidden="true"
-              data-open={openId === trigger.id || undefined}
-              className="nav-trigger-caret"
-            />
-          </button>
+          <Fragment key={trigger.id}>
+            <button
+              type="button"
+              ref={(node) => {
+                if (node) triggerRefs.current.set(trigger.id, node);
+                else triggerRefs.current.delete(trigger.id);
+              }}
+              onMouseEnter={() => scheduleOpen(trigger.id)}
+              onClick={() => {
+                clearTimers();
+                setOpenId((current) =>
+                  current === trigger.id ? null : trigger.id
+                );
+              }}
+              aria-expanded={openId === trigger.id}
+              aria-controls={
+                openId === trigger.id ? panelId(trigger.id) : undefined
+              }
+              className="text-sm font-mono transition-colors nav-link nav-trigger"
+            >
+              {trigger.label}
+              <ChevronDown
+                size={14}
+                strokeWidth={2}
+                aria-hidden="true"
+                data-open={openId === trigger.id || undefined}
+                className="nav-trigger-caret"
+              />
+            </button>
+            {openId === trigger.id ? (
+              <div
+                className="nav-panel-shell"
+                onMouseEnter={clearTimers}
+                onMouseLeave={scheduleClose}
+              >
+                <Panel panel={trigger.panel} id={panelId(trigger.id)} />
+              </div>
+            ) : null}
+          </Fragment>
         )
       )}
 
@@ -274,20 +284,6 @@ export function NavDesktop() {
       >
         Talk to Us
       </Button>
-
-      {NAV_TRIGGERS.filter((trigger) => trigger.kind === 'panel').map(
-        (trigger) =>
-          trigger.kind === 'panel' && openId === trigger.id ? (
-            <div
-              key={trigger.id}
-              className="nav-panel-shell"
-              onMouseEnter={clearTimers}
-              onMouseLeave={scheduleClose}
-            >
-              <Panel panel={trigger.panel} id={panelId(trigger.id)} />
-            </div>
-          ) : null
-      )}
     </div>
   );
 }
