@@ -396,15 +396,11 @@ import { Container } from '../ui/Container';
 import { Section } from '../ui/Section';
 import { AdapterGuideLink } from './AdapterGuideLink';
 import {
-  APRON_A,
-  APRON_B,
   CHART_ID,
   CONCOURSES,
   DISCLAIMER,
   EYEBROW,
   FIELD,
-  GATES_A,
-  GATES_B,
   HEADLINE,
   LINK_A_Y,
   LINK_B_Y,
@@ -417,8 +413,6 @@ import {
   PROVIDERS,
   PROVIDER_ROW,
   ROT,
-  ROW1,
-  ROW2,
   RWY_N,
   RWY_S,
   SCALE_BAR,
@@ -455,10 +449,11 @@ function TaxiwayLetter({ x, y, ch }: { x: number; y: number; ch: string }) {
 }
 
 /** A stand: the stub off the concourse, the white box, the mark, the callsign. */
-function Stand({ gate, up }: { gate: Gate; up: boolean }) {
-  const row = up ? ROW1 : ROW2;
-  const cy = row.box;
-  const tick = up ? row.stubTop : row.stubBot;
+type Row = (typeof CONCOURSES)[number]['row'];
+
+function Stand({ gate, row, above }: { gate: Gate; row: Row; above: boolean }) {
+  const cy = row.standCy;
+  const tick = above ? row.stubTop : row.stubBot;
   const iw = gate.w ?? gate.s;
   return (
     <g data-stand={gate.gate}>
@@ -489,7 +484,7 @@ function Stand({ gate, up }: { gate: Gate; up: boolean }) {
         <text className="ap-gate-id" x={gate.x - R + 8.5} y={cy - R - 0.5} textAnchor="middle">
           {gate.gate}
         </text>
-        <text className="ap-callsign" x={gate.x} y={row.name} textAnchor="middle">
+        <text className="ap-callsign" x={gate.x} y={row.labelY} textAnchor="middle">
           {gate.name}
         </text>
       </g>
@@ -527,14 +522,14 @@ function Plate() {
       <path className="ap-tick" d={ticks.join(' ')} />
 
       <g transform={`rotate(${ROT} ${PIVOT.x} ${PIVOT.y})`}>
-        {[APRON_A, APRON_B].map((a) => (
+        {CONCOURSES.map(({ id, apron }) => (
           <rect
-            key={a.y0}
+            key={id}
             className="ap-apron"
-            x={a.x0}
-            y={a.y0}
-            width={a.x1 - a.x0}
-            height={a.y1 - a.y0}
+            x={apron.x0}
+            y={apron.y0}
+            width={apron.x1 - apron.x0}
+            height={apron.y1 - apron.y0}
           />
         ))}
 
@@ -592,8 +587,11 @@ function Plate() {
           </g>
         ))}
 
-        {GATES_A.map((g) => <Stand key={g.gate} gate={g} up />)}
-        {GATES_B.map((g) => <Stand key={g.gate} gate={g} up={false} />)}
+        {CONCOURSES.flatMap((c) =>
+          c.gates.map((g) => (
+            <Stand key={g.gate} gate={g} row={c.row} above={c.gatesAbove} />
+          )),
+        )}
       </g>
 
       {/* Below the neat line is outside the airport. */}
