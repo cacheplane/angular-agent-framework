@@ -2108,8 +2108,12 @@
   margin: 0;
   padding: 0;
 }
-.preflight-air {
-  margin-top: 22px;
+/* The Airworthiness heading follows the two columns, so it — not its list —
+ * is what needs the separation. Putting the margin on the list instead left
+ * the heading butted flat against the last Threadplane row (measured: 0px)
+ * while pushing it away from the rows it labels. */
+.preflight-cols + .preflight-col-head {
+  margin-top: 38px;
 }
 .preflight-row {
   display: flex;
