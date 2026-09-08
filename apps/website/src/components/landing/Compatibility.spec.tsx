@@ -1,64 +1,61 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
-import { Compatibility, COMPATIBILITY_GROUPS } from './Compatibility';
+import { Compatibility } from './Compatibility';
+import { GATES_A, GATES_B, PROVIDERS } from '../../lib/airport-diagram';
 
 describe('Compatibility', () => {
-  it('renders a light section with a stable id', () => {
+  it('renders the signal surface with the ids the homepage spine depends on', () => {
+    // e2e/website.spec.ts asserts homepage order by heading id. Renaming
+    // either of these turns that spec red for a reason nobody will guess.
     const { container } = render(<Compatibility />);
     const section = container.querySelector('[data-ui="section"]');
-    expect(section?.getAttribute('data-surface')).toBe('tinted');
+    expect(section?.getAttribute('data-surface')).toBe('signal');
     expect(section?.getAttribute('id')).toBe('compatibility');
     expect(section?.getAttribute('aria-labelledby')).toBe('compatibility-heading');
+    expect(container.querySelector('#compatibility-heading')?.textContent).toBe(
+      'Every stack has a gate.',
+    );
   });
 
-  it('lists twelve integrations across three groups', () => {
+  it('names every gate and every provider in text, not only as a picture', () => {
+    // The marks are decorative, so the accessible content is these names. If
+    // the SVG were the only carrier the section would be empty to a reader.
     render(<Compatibility />);
-    // The suite otherwise iterates the same constant the component renders
-    // from, so it cannot see content disappear: a reviewer deleted the whole
-    // Protocols group — LangGraph and AG-UI, the two with first-party
-    // adapters — and every other test stayed green.
-    expect(COMPATIBILITY_GROUPS).toHaveLength(3);
-    expect(COMPATIBILITY_GROUPS.map((g) => g.label)).toEqual([
-      'Model providers',
-      'Agent runtimes',
-      'Protocols',
-    ]);
-    expect(COMPATIBILITY_GROUPS.flatMap((g) => g.items)).toHaveLength(12);
-    for (const name of ['LangGraph', 'AG-UI', 'OpenAI', 'Anthropic']) {
-      expect(screen.getByText(name)).toBeTruthy();
+    for (const g of [...GATES_A, ...GATES_B]) {
+      expect(screen.getAllByText(g.name).length).toBeGreaterThan(0);
+    }
+    for (const p of PROVIDERS) {
+      expect(screen.getAllByText(p.name).length).toBeGreaterThan(0);
     }
   });
 
-  it('groups every item under a labelled heading', () => {
+  it('shows both adapters as the two concourses', () => {
     render(<Compatibility />);
-    for (const group of COMPATIBILITY_GROUPS) {
-      expect(screen.getByText(group.label)).toBeTruthy();
-      for (const item of group.items) expect(screen.getByText(item.name)).toBeTruthy();
-    }
-    // The label is a bare <p>, so the list only carries an accessible name if
-    // aria-labelledby actually points at it.
-    for (const group of COMPATIBILITY_GROUPS) {
-      expect(screen.getByRole('list', { name: group.label })).toBeTruthy();
+    expect(screen.getAllByText('@threadplane/langgraph').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('@threadplane/ag-ui').length).toBeGreaterThan(0);
+  });
+
+  it('marks every logo decorative, since the visible name carries the meaning', () => {
+    const { container } = render(<Compatibility />);
+    const marks = container.querySelectorAll('image, img.airport-mark');
+    expect(marks.length).toBeGreaterThan(0);
+    for (const m of Array.from(marks)) {
+      expect(m.getAttribute('aria-hidden')).toBe('true');
     }
   });
 
   it('states compatibility in words and never implies a customer', () => {
     const { container } = render(<Compatibility />);
-    // The claim used to exist only as alt="" plus a spec comment. A reader
-    // could not see it. Now it is on the page.
     expect(screen.getByText(/Compatibility, not endorsement/)).toBeTruthy();
     expect(container.textContent).not.toMatch(/trusted by|customers|our clients|powered by/i);
   });
 
-  it('marks every logo decorative, since the visible name carries the meaning', () => {
+  it('says Threadplane never talks to model providers, not that it never sees them', () => {
+    // never-SEES is a data claim the docs do not support; never-TALKS-TO is
+    // structural. This is the same failure mode #1067 had to correct.
     const { container } = render(<Compatibility />);
-    const logos = container.querySelectorAll('img.compatibility-logo');
-    const withLogos = COMPATIBILITY_GROUPS.flatMap((g) => g.items).filter((i) => i.logoSrc);
-    expect(logos).toHaveLength(withLogos.length);
-    for (const img of Array.from(logos)) {
-      expect(img.getAttribute('aria-hidden')).toBe('true');
-      expect(img.getAttribute('alt')).toBe('');
-    }
+    expect(container.textContent).toMatch(/never talks to them/i);
+    expect(container.textContent).not.toMatch(/never sees/i);
   });
 
   it('links to the adapter guide', () => {
