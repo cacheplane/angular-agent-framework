@@ -1,5 +1,6 @@
 import { Hero } from '../components/landing/Hero';
 import { Reliability } from '../components/landing/Reliability';
+import { Compatibility } from '../components/landing/Compatibility';
 import { EnterpriseArchitecture } from '../components/landing/EnterpriseArchitecture';
 import { Stage } from '../components/landing/Stage';
 import { TeamsBlock } from '../components/landing/TeamsBlock';
@@ -31,6 +32,7 @@ export default function HomePage() {
     <>
       <Hero />
       <Reliability />
+      <Compatibility />
       <EnterpriseArchitecture />
 
       {/* The four capability beats (stream, persist, approve, render): stills

@@ -2,7 +2,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
-import { Reliability, PROOF_CELLS, RIBBON_ITEMS, RIBBON_MORE_COUNT } from './Reliability';
+import { Reliability, PROOF_CELLS } from './Reliability';
 import { HERO_TRUST_LINE, RELIABILITY_RECEIPTS } from '../../lib/positioning';
 
 describe('Reliability', () => {
@@ -69,29 +69,13 @@ describe('Reliability', () => {
     expect(ladder?.textContent).toBe('');
   });
 
-  it('carries the works-with line as a compatibility claim with an adapter link', () => {
-    const { container } = render(<Reliability />);
-    expect(RIBBON_ITEMS).toHaveLength(8);
-    expect(screen.getByText('Works with')).toBeTruthy();
-    for (const item of RIBBON_ITEMS) expect(screen.getByText(item.name)).toBeTruthy();
-    expect(screen.getByText(`+ ${RIBBON_MORE_COUNT} more`)).toBeTruthy();
-    const logos = container.querySelectorAll('img.reliability-logo');
-    expect(logos).toHaveLength(RIBBON_ITEMS.length);
-    for (const img of Array.from(logos)) {
-      expect(img.getAttribute('aria-hidden')).toBe('true');
-      expect(img.getAttribute('alt')).toBe('');
-    }
-    expect(container.textContent).not.toMatch(/trusted by|customers|our clients|powered by/i);
-    expect(screen.getByRole('link', { name: 'Choose an adapter →' }).getAttribute('href')).toBe('/docs/choosing-an-adapter');
-    expect(screen.getByRole('list', { name: 'Works with' })).toBeTruthy();
-  });
-
   it('orders the ladder, cells, then receipts', () => {
     const { container } = render(<Reliability />);
     const children = container.querySelector('.proof-strip-grid')!.children;
     expect(children[1].getAttribute('class')).toBe('proof-ladder');
     expect(children[2].className).toBe('proof-strip-cells');
     expect(children[3].className).toBe('reliability-receipts');
+    expect(children).toHaveLength(4);
   });
 
   it('links every number and receipt to a human-readable page, never a raw API', () => {
