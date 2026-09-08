@@ -32,6 +32,14 @@ export function useNavSurface(pathname: string): {
     const sentinel = sentinelRef.current;
     if (!sentinel || typeof IntersectionObserver !== 'function') return undefined;
 
+    // Optimistic: assume top-of-page before the observer's first (async)
+    // callback lands, because the common case is a fresh load at scroll 0 and
+    // waiting would flash solid over the hero. The cost is the inverse flash
+    // when a hero route mounts already scrolled — a #hash deep link or
+    // back-navigation with scroll restoration. Seeding from
+    // getBoundingClientRect() instead would fix both; that is deliberately
+    // deferred to the task that wires this into Nav.tsx, where it can be
+    // verified in a real browser rather than guessed at in jsdom.
     setAtTop(true);
     const observer = new IntersectionObserver(
       (entries) => {

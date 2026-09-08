@@ -6,6 +6,7 @@ import { useNavSurface } from './useNavSurface';
 
 let observerCallback: ((entries: { isIntersecting: boolean }[]) => void) | null = null;
 const disconnect = vi.fn();
+const observe = vi.fn();
 
 function Probe({ pathname }: { pathname: string }) {
   const { surface, sentinelRef } = useNavSurface(pathname);
@@ -21,15 +22,14 @@ describe('useNavSurface', () => {
   beforeEach(() => {
     observerCallback = null;
     disconnect.mockClear();
+    observe.mockClear();
     vi.stubGlobal(
       'IntersectionObserver',
       class {
         constructor(callback: (entries: { isIntersecting: boolean }[]) => void) {
           observerCallback = callback;
         }
-        observe() {
-          // no-op: not exercised in these tests
-        }
+        observe = observe;
         disconnect = disconnect;
       },
     );
@@ -42,6 +42,13 @@ describe('useNavSurface', () => {
   it('is transparent at rest on a hero route', () => {
     render(<Probe pathname="/" />);
     expect(screen.getByTestId('surface').textContent).toBe('transparent');
+  });
+
+  it('observes the sentinel element it handed back', () => {
+    render(<Probe pathname="/" />);
+    const sentinel = screen.getByTestId('sentinel');
+    expect(observe).toHaveBeenCalledOnce();
+    expect(observe).toHaveBeenCalledWith(sentinel);
   });
 
   it('is solid on a route with no hero, and observes nothing there', () => {
