@@ -143,7 +143,6 @@
   font-family: var(--font-display);
   font-size: var(--text-h2);
   line-height: var(--text-h2--line-height);
-  font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
   margin-bottom: 20px;
@@ -248,7 +247,6 @@
   font-family: var(--font-display);
   font-size: var(--text-h2);
   line-height: var(--text-h2--line-height);
-  font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
   margin-bottom: 20px;
@@ -333,10 +331,8 @@
   font-family: var(--font-display);
   font-size: 28px;
   line-height: 1.15;
-  font-weight: 700;
   color: var(--color-text-primary);
   margin-bottom: 12px;
-  font-style: italic;
 }
 .wp-cover-desc {
   font-family: var(--font-sans);
@@ -385,7 +381,6 @@
   font-family: var(--font-display);
   font-size: var(--text-h2);
   line-height: var(--text-h2--line-height);
-  font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
   margin-bottom: 20px;
@@ -448,7 +443,6 @@
 .pilot-step-num {
   font-family: var(--font-display);
   font-size: 44px;
-  font-weight: 700;
   line-height: 0.9;
   letter-spacing: -0.03em;
   color: var(--color-border);
@@ -493,7 +487,6 @@
 .teams-report-title {
   font-family: var(--font-display);
   font-size: 26px;
-  font-weight: 700;
   line-height: 1.1;
   margin: 8px 0 6px;
   color: var(--color-text-primary);
@@ -570,12 +563,10 @@
   font-family: var(--font-display);
   font-size: var(--text-h2);
   line-height: var(--text-h2--line-height);
-  font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
   margin-bottom: 16px;
   letter-spacing: -0.015em;
-  font-style: italic;
 }
 .final-cta-subtext {
   font-family: var(--font-sans);
@@ -608,8 +599,6 @@
   right: -30px;
   bottom: -70px;
   font-family: var(--font-display);
-  font-style: italic;
-  font-weight: 800;
   font-size: 210px;
   line-height: 1;
   letter-spacing: -0.04em;
@@ -697,7 +686,6 @@
   font-family: var(--font-display);
   font-size: var(--text-h2);
   line-height: var(--text-h2--line-height);
-  font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
   letter-spacing: -0.015em;
@@ -916,7 +904,6 @@
 .render-show-heading {
   font-family: var(--font-display);
   font-size: clamp(26px, 3.5vw, 42px);
-  font-weight: 800;
   line-height: 1.1;
   color: var(--color-text-primary);
 }
@@ -964,7 +951,6 @@
 .lg-show-heading {
   font-family: var(--font-display);
   font-size: clamp(26px, 3.5vw, 42px);
-  font-weight: 800;
   line-height: 1.1;
   color: var(--color-text-primary);
 }
@@ -1012,7 +998,6 @@
 .chat-show-heading {
   font-family: var(--font-display);
   font-size: clamp(26px, 3.5vw, 42px);
-  font-weight: 800;
   line-height: 1.1;
   color: var(--color-text-primary);
 }
@@ -1057,8 +1042,6 @@
   right: -40px;
   top: -78px;
   font-family: var(--font-display);
-  font-style: italic;
-  font-weight: 800;
   font-size: clamp(150px, 21vw, 300px);
   line-height: 0.76;
   letter-spacing: -0.04em;
@@ -1164,7 +1147,6 @@
 .proof-strip-value {
   font-family: var(--font-display);
   font-size: 58px;
-  font-weight: 700;
   line-height: 0.9;
   letter-spacing: -0.028em;
   color: var(--color-text-primary);
@@ -1530,7 +1512,6 @@
   font-family: var(--font-display);
   font-size: 30px;
   line-height: 1.08;
-  font-weight: 500;
   color: var(--color-text-primary);
   margin: 0;
 }

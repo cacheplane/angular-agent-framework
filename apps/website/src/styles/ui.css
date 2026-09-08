@@ -358,7 +358,6 @@
   align-items: center;
   gap: 8px;
   font-family: var(--font-display);
-  font-weight: 700;
   color: var(--color-text-primary);
   line-height: 1;
 }
@@ -368,19 +367,38 @@
 [data-ui="logo-mark"][data-size="md"] {
   font-size: 16px;
 }
-/* The glyph is an SVG filled with currentColor, so it inherits the wordmark's
- * color. Sized in px rather than em: the wordmark is Garamond, whose em box
- * would make the plane read smaller beside it than it measures. */
+/* The mark is the ATC app icon in miniature: a signal-yellow squircle with an
+ * ink glyph. A bare yellow glyph on the white nav would be 1.84:1 — yellow is
+ * a fill in this system, never an icon colour on a light ground. Inside the
+ * tile the same glyph is ink-on-yellow, 10.73:1.
+ *
+ * PlaneMark's path is fill="currentColor", so `color` paints the glyph and
+ * `background` the tile; the wordmark beside it keeps --color-text-primary and
+ * is sized in px rather than em so the tile does not track the wordmark's em
+ * box.
+ *
+ * `border-box`, not `content-box`, and the difference is load-bearing. The
+ * logo is what sets the nav's content-row height at the two smaller steps, so
+ * padding on a content-box icon grows the whole nav: measured 58/66/81 →
+ * 64/72/81, against a `--nav-h` of 58/66/81 that e2e/nav-height.spec.ts pins
+ * to the rendered nav within 1px. Border-box insets the glyph instead of
+ * inflating the box, so the tile stays exactly the 15/18px below and every
+ * offset built on --nav-h is untouched. Grow the tile only by raising those
+ * two sizes AND re-measuring --nav-h. */
 [data-ui="logo-mark-icon"] {
   display: block;
   flex: none;
-  /* PlaneMark's path is fill="currentColor", so the signal arrives via color.
-     The wordmark beside it keeps --color-text-primary. */
-  color: var(--color-signal);
-}
-/* On the yellow hero block the mark would be yellow on yellow. */
-[data-ui="section"][data-surface="signal"] [data-ui="logo-mark-icon"] {
   color: var(--color-ink);
+  background: var(--color-signal);
+  border-radius: 5px;
+  padding: 3px;
+  box-sizing: border-box;
+}
+/* On the yellow block the squircle inverts — a yellow tile on a yellow ground
+ * has nothing to sit against. */
+[data-ui="section"][data-surface="signal"] [data-ui="logo-mark-icon"] {
+  color: var(--color-signal);
+  background: var(--color-ink);
 }
 [data-ui="logo-mark"][data-size="sm"] > [data-ui="logo-mark-icon"] {
   width: 15px;
@@ -524,7 +542,6 @@
   font-family: var(--font-display);
   font-size: var(--text-h2);
   line-height: var(--text-h2--line-height);
-  font-weight: 700;
   letter-spacing: -0.015em;
   color: var(--color-text-primary);
   margin: 0;

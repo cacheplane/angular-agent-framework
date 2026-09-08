@@ -163,9 +163,9 @@ body:has([data-website-workspace-host]) {
 
 .docs-prose { overflow-wrap: break-word; word-break: break-word; max-width: 100%; }
 .docs-prose > * { max-width: 100%; }
-.docs-prose h1 { font-size: 1.875rem; font-weight: 700; margin-top: 0; margin-bottom: 1rem; font-family: var(--font-display); }
-.docs-prose h2 { font-size: 1.5rem; font-weight: 600; margin-top: 2.5rem; margin-bottom: 1rem; font-family: var(--font-display); }
-.docs-prose h3 { font-size: 1.25rem; font-weight: 600; margin-top: 2rem; margin-bottom: 0.75rem; font-family: var(--font-display); }
+.docs-prose h1 { font-size: 1.875rem; margin-top: 0; margin-bottom: 1rem; font-family: var(--font-display); }
+.docs-prose h2 { font-size: 1.5rem; margin-top: 2.5rem; margin-bottom: 1rem; font-family: var(--font-display); }
+.docs-prose h3 { font-size: 1.25rem; margin-top: 2rem; margin-bottom: 0.75rem; font-family: var(--font-display); }
 .docs-prose p { line-height: 1.75; margin-bottom: 1.25rem; }
 .docs-prose ul, .docs-prose ol {
   margin-bottom: 1.25rem;
@@ -571,7 +571,6 @@ body:has([data-website-workspace-host]) {
 }
 .mdx-card-title {
   font-family: var(--font-display);
-  font-weight: 700;
   font-size: 0.95rem;
   color: var(--color-text-primary);
   margin-bottom: 4px;

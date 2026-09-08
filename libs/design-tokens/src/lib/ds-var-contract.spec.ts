@@ -26,13 +26,15 @@ const TOKENS_CSS = resolve(__dirname, 'tokens.css');
  *    aviation-yellow retheme's brand colors, and `--ds-font-display` /
  *    `--ds-font-diagram` are the retheme's font faces, replacing
  *    `--ds-font-serif` — a name this list previously guarded and the retheme
- *    retires. Its one surviving use is the fallback in workspace.css, behind
- *    `var(--font-display)` (see Task 5). A repo-wide grep finds ZERO
- *    references to any of the reserved names above outside
- *    libs/design-tokens/ as of 2026-09-07 — that is expected, not a mistake,
- *    because cockpit/example adoption has not landed yet. Do NOT remove them because the grep above comes up empty;
- *    they must stay guarded so the names are ready when a consumer needs
- *    them.
+ *    retires. `--ds-font-serif` is now fully retired: the workspace.css
+ *    fallback that briefly outlived it has since been repaired, so the name
+ *    has zero references repo-wide.
+ *
+ *    A repo-wide grep likewise finds ZERO references to any of the reserved
+ *    names above outside libs/design-tokens/ as of 2026-09-07 — that is
+ *    expected, not a mistake, because cockpit/example adoption has not landed
+ *    yet. Do NOT remove them because the grep comes up empty; they must stay
+ *    guarded so the names are ready when a consumer needs them.
  */
 const CONSUMER_REFERENCED = [
   '--ds-accent',
@@ -101,14 +103,54 @@ describe('--ds-* consumer contract', () => {
  */
 describe('no dangling --ds-* references', () => {
   /**
-   * Pre-dates the retheme (already dangling at 218ac1c41) and is a real bug in
-   * its own right: `background: var(--ds-surface-subtle)` with no fallback
-   * resolves to nothing. Listed rather than hidden so it stays visible; remove
-   * this entry when workspace.css:209 is fixed or the token is added.
+   * Dangling names this branch inherited rather than introduced. Listed rather
+   * than hidden, so they stay visible and countable.
+   *
+   * `--ds-surface-subtle` pre-dates the retheme (already dangling at 218ac1c41)
+   * and is a real bug in its own right: `background: var(--ds-surface-subtle)`
+   * with no fallback resolves to nothing. Remove this entry when
+   * workspace.css:209 is fixed or the token is added.
+   *
+   * The other thirteen all come from one committed static artifact,
+   * apps/website/public/whitepapers/chat-preview.html, emitted by the
+   * whitepaper generator against a `--ds-color-*` / `--ds-font-*-*` naming
+   * scheme this repo's tokens have never defined. They also pre-date the
+   * retheme; they were simply invisible until CONSUMER_ROOTS widened to the
+   * whole repo below. The fix belongs in the generator, not here.
    */
-  const KNOWN_PRE_EXISTING = new Set(['--ds-surface-subtle']);
+  const KNOWN_PRE_EXISTING = new Set([
+    '--ds-surface-subtle',
+    // The thirteen from whitepapers/chat-preview.html:
+    '--ds-color-brand-primary',
+    '--ds-color-feedback-error',
+    '--ds-color-feedback-success',
+    '--ds-color-surface-elevated',
+    '--ds-color-surface-elevated-dark',
+    '--ds-color-surface-sunken',
+    '--ds-color-text-muted',
+    '--ds-color-text-primary',
+    '--ds-color-text-primary-dark',
+    '--ds-font-family-body',
+    '--ds-font-size-md',
+    '--ds-line-height-normal',
+    '--ds-spacing-base',
+  ]);
 
-  const CONSUMER_ROOTS = ['libs/workspace-react', 'cockpit', 'examples', 'apps/website/src'];
+  /**
+   * The whole repo, not a hand-kept list of directories. The previous roots
+   * missed libs/chat, libs/example-layouts, libs/design-tokens,
+   * apps/website/public and apps/website/e2e — so a dangling reference in any
+   * of them was invisible to the guard that exists to catch exactly that.
+   */
+  const CONSUMER_ROOTS = ['libs', 'apps', 'cockpit', 'examples'];
+
+  /**
+   * This file is not a consumer. Its docblocks quote `var(--ds-font-serif)` and
+   * `var(--ds-surface-subtle)` as prose about names that are retired or broken,
+   * and once `libs` became a root the grep began reading its own commentary
+   * back as evidence — so documenting a retired name would re-break the guard.
+   */
+  const SELF = 'ds-var-contract.spec.ts';
 
   it('every --ds-* a consumer references is defined in tokens.css', () => {
     const repoRoot = resolve(__dirname, '../../../..');
@@ -127,7 +169,16 @@ describe('no dangling --ds-* references', () => {
       try {
         found = execFileSync(
           'grep',
-          ['-rhoE', '--exclude-dir=node_modules', 'var\\(--ds-[a-z0-9-]+', dir],
+          [
+            '-rhoE',
+            '--exclude-dir=node_modules',
+            '--exclude-dir=.next',
+            '--exclude-dir=dist',
+            '--exclude-dir=coverage',
+            `--exclude=${SELF}`,
+            'var\\(--ds-[a-z0-9-]+',
+            dir,
+          ],
           { encoding: 'utf-8' },
         );
       } catch (error) {

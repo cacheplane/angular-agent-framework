@@ -33,7 +33,6 @@
   font-family: var(--font-display);
   font-size: var(--text-h1);
   line-height: var(--text-h1--line-height);
-  font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
   margin-bottom: 16px;
@@ -292,7 +291,6 @@
   font-family: var(--font-display);
   font-size: var(--text-h1);
   line-height: var(--text-h1--line-height);
-  font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
   margin-bottom: 16px;
@@ -340,7 +338,6 @@
   font-family: var(--font-display);
   font-size: var(--text-h1);
   line-height: var(--text-h1--line-height);
-  font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
   margin-bottom: 24px;
@@ -374,7 +371,6 @@
   font-family: var(--font-display);
   font-size: var(--text-h2);
   line-height: var(--text-h2--line-height);
-  font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
   letter-spacing: -0.015em;
@@ -448,7 +444,6 @@
   font-family: var(--font-display);
   font-size: var(--text-h2);
   line-height: var(--text-h2--line-height);
-  font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
   letter-spacing: -0.015em;
@@ -505,7 +500,6 @@
 .sol-page-arch-title {
   font-family: var(--font-display);
   font-size: 22px;
-  font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
 }
@@ -531,7 +525,6 @@
 .sol-page-metric {
   font-family: var(--font-display);
   font-size: 40px;
-  font-weight: 700;
   line-height: 0.9;
   letter-spacing: -0.02em;
   color: var(--color-text-primary);
@@ -550,7 +543,6 @@
   font-family: var(--font-display);
   font-size: var(--text-h1);
   line-height: var(--text-h1--line-height);
-  font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
   margin-bottom: 24px;
@@ -585,7 +577,6 @@
   font-family: var(--font-display);
   font-size: var(--text-h1);
   line-height: var(--text-h1--line-height);
-  font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
   margin-bottom: 24px;
@@ -694,7 +685,6 @@
   font-family: var(--font-display);
   font-size: var(--text-h2);
   line-height: var(--text-h2--line-height);
-  font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
   letter-spacing: -0.015em;
@@ -758,7 +748,6 @@
   font-family: var(--font-display);
   font-size: var(--text-h1);
   line-height: var(--text-h1--line-height);
-  font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
   margin-bottom: 24px;
@@ -795,7 +784,6 @@
   font-family: var(--font-display);
   font-size: var(--text-h1);
   line-height: var(--text-h1--line-height);
-  font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
   margin-bottom: 24px;
@@ -832,7 +820,6 @@
   font-family: var(--font-display);
   font-size: var(--text-h1);
   line-height: var(--text-h1--line-height);
-  font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
   margin-bottom: 24px;
@@ -890,7 +877,6 @@
   font-family: var(--font-display);
   font-size: var(--text-h1);
   line-height: var(--text-h1--line-height);
-  font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
   margin-bottom: 24px;
@@ -946,7 +932,6 @@
   font-family: var(--font-display);
   font-size: var(--text-h1);
   line-height: var(--text-h1--line-height);
-  font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--color-text-primary);
   margin: 0 0 16px;
@@ -1014,7 +999,6 @@
   font-family: var(--font-display);
   font-size: var(--text-h1);
   line-height: var(--text-h1--line-height);
-  font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--color-text-primary);
   margin: 0 0 24px;
@@ -1048,7 +1032,6 @@
   font-family: var(--font-display);
   font-size: var(--text-h1);
   line-height: var(--text-h1--line-height);
-  font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
   margin-bottom: 16px;
@@ -1089,7 +1072,6 @@
 }
 .pricing-page-h1 {
   font-family: var(--font-display);
-  font-weight: 700;
   font-size: var(--text-h1);
   line-height: var(--text-h1--line-height);
   color: var(--color-text-primary);
@@ -1161,7 +1143,6 @@
   font-family: var(--font-display);
   font-size: var(--text-h1);
   line-height: var(--text-h1--line-height);
-  font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
   margin-bottom: 16px;
@@ -1240,7 +1221,6 @@
   font-family: var(--font-display);
   font-size: var(--text-h1);
   line-height: var(--text-h1--line-height);
-  font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
   margin-bottom: 16px;
@@ -1272,7 +1252,6 @@
   font-family: var(--font-display);
   font-size: var(--text-h1);
   line-height: var(--text-h1--line-height);
-  font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
   margin-bottom: 16px;

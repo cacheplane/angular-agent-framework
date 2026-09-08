@@ -94,7 +94,6 @@
 }
 .pricing-plan-price-amount {
   font-family: var(--font-display);
-  font-weight: 700;
   font-size: 30px;
   color: var(--color-text-primary);
   line-height: 1;
@@ -365,7 +364,6 @@
   font-family: var(--font-display);
   font-size: var(--text-h2);
   line-height: var(--text-h2--line-height);
-  font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
   letter-spacing: -0.015em;
@@ -442,7 +440,6 @@
   font-family: var(--font-display);
   font-size: var(--text-h2);
   line-height: var(--text-h2--line-height);
-  font-weight: 700;
   letter-spacing: -0.02em;
   margin: 0;
 }
@@ -548,7 +545,6 @@
   font-family: var(--font-display);
   font-size: var(--text-h2);
   line-height: var(--text-h2--line-height);
-  font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
   margin-bottom: 12px;
@@ -581,7 +577,6 @@
   font-family: var(--font-display);
   font-size: var(--text-h2);
   line-height: var(--text-h2--line-height);
-  font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
   margin-bottom: 12px;
