@@ -78,6 +78,15 @@ function readNamedStep(job, name) {
 }
 
 describe('CI workflow', () => {
+  it('verifies stage scrolling and interaction against the matching local replay build', async () => {
+    const workflow = await readFile('.github/workflows/ci.yml', 'utf8');
+    const step = readNamedStep(readJobBlock(workflow, 'website-e2e'), 'Stage scroll verification (scroll-craft harness)');
+    assert.match(step, /NEXT_PUBLIC_STAGE_DEMO_ORIGIN: http:\/\/localhost:4200/);
+    assert.match(step, /nx serve examples-chat-angular --configuration=production --port=4200/);
+    assert.match(step, /nx build website --configuration=production --skip-nx-cache/);
+    assert.match(step, /STAGE_LIVE_FRAME=true BASE_URL=http:\/\/127\.0\.0\.1:4308/);
+    assert.match(step, /scroll-craft\/verify-home\.mjs/);
+  });
   it('scopes every vercel promote to the team that owns the deployment', async () => {
     const workflow = await readFile('.github/workflows/ci.yml', 'utf8');
     const promotes = workflow

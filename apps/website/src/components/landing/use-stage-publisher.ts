@@ -16,7 +16,7 @@ import {
 export type { StageMilestone } from '../../lib/stage-beats';
 
 export const STAGE_DEMO_ORIGIN = new URL(
-  process.env['NEXT_PUBLIC_STAGE_DEMO_ORIGIN'] || 'https://demo.threadplane.ai'
+  process.env.NEXT_PUBLIC_STAGE_DEMO_ORIGIN || 'https://demo.threadplane.ai'
 ).origin;
 export const STAGE_DEMO_URL = `${STAGE_DEMO_ORIGIN}/stage?t=0`;
 export const STAGE_MESSAGE_TYPE = 'tplane-stage';
