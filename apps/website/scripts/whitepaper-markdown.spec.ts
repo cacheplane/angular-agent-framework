@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { mdToHTML, escapeHtml } from './generate-whitepaper';
+import { mdToHTML, escapeHtml } from './whitepaper-markdown';
 
 /**
  * `mdToHTML` turns the model's markdown into the whitepaper body. It has
