@@ -170,7 +170,7 @@ const trip = injectAgent(TRIP);       // AgUiAgent<TripState>
 const support = injectAgent(SUPPORT); // AgUiAgent<SupportState>
 ```
 
-The ref form also aliases the shared token that the no-argument `injectAgent()` reads. That token can only point at one agent, so when several refs are provided at the same level the **last** `provideAgent(ref, …)` call wins — inject by ref whenever an injector provides more than one agent. See [provideAgent()](/docs/ag-ui/api/provide-agent) for the full rule.
+The ref form also aliases the shared token that the no-argument `injectAgent()` reads. That token can only point at one agent, so when several refs are provided at the same level the **last** `provideAgent(ref, …)` call wins — inject by ref whenever an injector provides more than one agent. Development builds emit a one-time `console.warn` naming the refs involved when an injector level registers more than one, so the aliasing is visible while you build. See [provideAgent()](/docs/ag-ui/api/provide-agent) for the full rule.
 
 Use `provideFakeAgent()` when you need the UI to run without a backend:
 

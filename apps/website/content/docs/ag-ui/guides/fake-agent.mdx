@@ -1,5 +1,5 @@
 ---
-description: Run the chat UI with no backend using provideFakeAgent(), what the canned stream contains, and when to construct FakeAgent with a script instead.
+description: Run the chat UI with no backend using provideFakeAgent(), what the canned stream contains, and how to script exact AG-UI events instead.
 ---
 
 # Fake Agent
@@ -97,11 +97,40 @@ That gives you the same `Agent` contract as `provideFakeAgent()`.
 | `tokens` | `string[]` | A short canned greeting | Emitted as text deltas in order. |
 | `reasoningTokens` | `string[]` | `[]` | Emitted before text deltas. |
 | `delayMs` | `number` | `60` | Delay between events after the initial start delay. |
-| `script` | `readonly { when: 'initial' \| { toolMessageFor: string }; events: readonly BaseEvent[] }[]` | `[]` | Constructor only — not part of `FakeAgentConfig`, so `provideFakeAgent()` cannot set it. Supplies a raw AG-UI event sequence per branch, wrapped in `RUN_STARTED` / `RUN_FINISHED`. |
+| `script` | `FakeAgentScript` | `[]` | Raw AG-UI event branches that replace the canned reply, each wrapped in `RUN_STARTED` / `RUN_FINISHED`. Accepted by the constructor and by `provideFakeAgent()`. |
+
+## Scripting exact events
+
+Set `script` when the canned text reply is not enough — tool calls, shared state, custom events, and interrupts all reach the UI through it, with no backend and no direct construction:
+
+```ts
+import { EventType, type BaseEvent } from '@ag-ui/client';
+import { provideFakeAgent } from '@threadplane/ag-ui';
+
+providers: [
+  provideFakeAgent({
+    delayMs: 0,
+    script: [
+      {
+        when: 'initial',
+        events: [
+          {
+            type: EventType.CUSTOM,
+            name: 'on_interrupt',
+            value: { kind: 'approval', amount: 42 },
+          } as BaseEvent,
+        ],
+      },
+    ],
+  }),
+]
+```
+
+`when: 'initial'` matches a turn whose history carries no tool result. `{ toolMessageFor: 'tool-1' }` matches the follow-up turn whose history carries a tool result for `tool-1`, which is what resolving a client tool produces — so a two-branch script plays a tool call and then the reply that follows it. The first matching branch wins; when none matches, the canned token reply streams instead.
 
 ## What it does not do
 
-`provideFakeAgent()` does not call a model, execute tools, persist history, or simulate interrupts. Constructed directly, `FakeAgent` accepts a `script` of raw AG-UI events for tests that need an exact stream, so tool calls, state, and interrupts are reachable that way.
+`provideFakeAgent()` does not call a model, execute tools, or persist history. It streams what you give it: a canned token reply by default, or the exact events in `script`.
 
 It is deliberately small. Use it to keep UI work moving, not to validate backend behavior.
 

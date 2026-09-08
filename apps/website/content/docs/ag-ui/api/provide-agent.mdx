@@ -115,6 +115,18 @@ const support = injectAgent(SUPPORT); // the support agent
 
 <Callout type="warning" title="The ref-less injectAgent() resolves the last ref provided">
 The ref form also aliases the shared token so that the no-argument `injectAgent()` keeps working. That token can only point at one agent, so when several refs are provided at the same injector level the **last** `provideAgent(ref, …)` call wins. In the example above, a bare `injectAgent()` returns the support agent. Always inject by ref when an injector provides more than one agent.
+
+Development builds do not leave this silent. The first time such an injector builds one of its agents, the adapter emits a single `console.warn` naming every ref registered at that level and the one the ref-less `injectAgent()` resolves:
+
+```text
+[@threadplane/ag-ui] provideAgent() was called with more than one AgentRef at the
+same injector level (trip, support). The ref-less injectAgent() reads a single
+shared token, so it resolves the last ref provided (support) and the others are
+reachable only by ref. Inject by ref — injectAgent(ref) — when an injector
+provides more than one agent.
+```
+
+The warning is development-only (`isDevMode()`), fires once per injector, and never changes what DI hands back: each ref keeps its own agent. Refs provided at different injector levels — one in the application config, another in a component's `providers` — do not collide and do not warn.
 </Callout>
 
 With a single ref the alias is exact: one instance, one config evaluation, reachable both as `injectAgent(TRIP)` and as `injectAgent()`.

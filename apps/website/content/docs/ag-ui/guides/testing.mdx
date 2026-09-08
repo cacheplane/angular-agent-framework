@@ -1,5 +1,5 @@
 ---
-description: Test AG-UI components with provideFakeAgent(), the neutral mockAgent(), or a scripted AbstractAgent, and know which double covers which surface.
+description: Test AG-UI components with provideFakeAgent() and its event script, the neutral mockAgent(), or a hand-written AbstractAgent, and know which double covers which surface.
 ---
 
 # Testing
@@ -53,13 +53,14 @@ export class ChatHost {
 </Tab>
 </Tabs>
 
-The component is byte-identical to production — only the provider changes. `FakeAgentConfig` (`{ tokens?, reasoningTokens?, delayMs? }`) lives in `@threadplane/chat/testing`:
+The component is byte-identical to production — only the provider changes. `provideFakeAgent()` accepts `AgUiFakeAgentConfig`: the shared `FakeAgentConfig` from `@threadplane/chat/testing` plus the AG-UI-only `script`.
 
 | Option | Type | Notes |
 | --- | --- | --- |
 | `tokens` | `string[]` | Emitted as streamed text deltas, in order. |
 | `reasoningTokens` | `string[]` | Emitted before text deltas to exercise reasoning UI. |
 | `delayMs` | `number` | Delay between streamed events. |
+| `script` | `FakeAgentScript` | Raw AG-UI event branches that replace the canned reply. See [Testing tool calls, state, and custom events](#testing-tool-calls-state-and-custom-events). |
 
 For the underlying `FakeAgent` class and its canned event sequence, see [Fake Agent](/docs/ag-ui/guides/fake-agent).
 
@@ -109,7 +110,64 @@ expect(m.status()).toBe('running');
 
 ## Testing tool calls, state, and custom events
 
-`provideFakeAgent()` only produces `RUN_*`, `REASONING_MESSAGE_*`, and `TEXT_MESSAGE_*` events — it never emits `TOOL_CALL_*`, `STATE_SNAPSHOT`/`STATE_DELTA`, or `CUSTOM`. To exercise the reducer's headline non-text features — tool-call rendering, shared state, citations, custom events — either pass a `script` of raw events to a directly-constructed `FakeAgent`, or script your own `AbstractAgent` and feed it through `toAgent()`. The adapter reduces your scripted events into `toolCalls()`, `state()`, and `customEvents()` exactly as it would real wire events.
+By default `provideFakeAgent()` produces only `RUN_*`, `REASONING_MESSAGE_*`, and `TEXT_MESSAGE_*` events. To exercise the reducer's headline non-text features — tool-call rendering, shared state, citations, custom events, interrupts — pass a `script` of raw events. It is part of the config `provideFakeAgent()` accepts, so the whole surface stays reachable through DI:
+
+```typescript
+import { describe, it, expect } from 'vitest';
+import { TestBed } from '@angular/core/testing';
+import { EventType, type BaseEvent } from '@ag-ui/client';
+import { provideFakeAgent, injectAgent } from '@threadplane/ag-ui';
+
+describe('scripted provideFakeAgent()', () => {
+  it('reduces tool calls, state, and custom events', async () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideFakeAgent({
+          delayMs: 0,
+          script: [
+            {
+              when: 'initial',
+              events: [
+                {
+                  type: EventType.TOOL_CALL_START,
+                  toolCallId: 'search-1',
+                  toolCallName: 'search',
+                } as BaseEvent,
+                {
+                  type: EventType.TOOL_CALL_ARGS,
+                  toolCallId: 'search-1',
+                  delta: '{"q":"Angular"}',
+                } as BaseEvent,
+                { type: EventType.TOOL_CALL_END, toolCallId: 'search-1' } as BaseEvent,
+                {
+                  type: EventType.STATE_SNAPSHOT,
+                  snapshot: { topic: 'billing' },
+                } as BaseEvent,
+                {
+                  type: EventType.CUSTOM,
+                  name: 'analysis_progress',
+                  value: { pct: 100 },
+                } as BaseEvent,
+              ],
+            },
+          ],
+        }),
+      ],
+    });
+
+    const agent = TestBed.runInInjectionContext(() => injectAgent());
+    await agent.submit({ message: 'find docs' });
+
+    expect(agent.toolCalls()[0]).toMatchObject({ name: 'search', args: { q: 'Angular' } });
+    expect(agent.state()).toMatchObject({ topic: 'billing' });
+    expect(agent.customEvents()).toContainEqual({ name: 'analysis_progress', data: { pct: 100 } });
+  });
+});
+```
+
+A `CUSTOM` event named `on_interrupt` populates `agent.interrupt()` instead of `customEvents()`; see the [Interrupts guide](/docs/ag-ui/guides/interrupts). A second branch keyed `{ toolMessageFor: 'search-1' }` plays on the follow-up run that resolving a client tool starts, so an approve-then-continue turn is scriptable end to end.
+
+When you need control the script does not give you — per-event timing, mid-stream errors, an observable you drive by hand — script your own `AbstractAgent` and feed it through `toAgent()`. The adapter reduces those events the same way.
 
 ```typescript
 import { describe, it, expect } from 'vitest';
@@ -153,4 +211,4 @@ describe('scripted AG-UI events', () => {
 });
 ```
 
-`customEvents()` is the AG-UI-specific signal — `toAgent()` returns an `AgUiAgent`, so it is reachable directly here without a cast. A `CUSTOM` event named `on_interrupt` would instead populate `agent.interrupt()`; see the [Interrupts guide](/docs/ag-ui/guides/interrupts).
+`customEvents()` is the AG-UI-specific signal — `toAgent()` returns an `AgUiAgent`, so it is reachable directly here without a cast, exactly as it is through `injectAgent()`.

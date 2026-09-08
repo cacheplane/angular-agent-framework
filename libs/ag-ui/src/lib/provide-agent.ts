@@ -1,4 +1,4 @@
-import { InjectionToken, inject, type Provider } from '@angular/core';
+import { InjectionToken, inject, isDevMode, type Provider } from '@angular/core';
 import { HttpAgent } from '@ag-ui/client';
 import type { AgentRef, AgentRuntimeTelemetrySink } from '@threadplane/chat';
 import { toAgent, ɵtoAgentWithProtectedErrors, type AgUiAgent } from './to-agent';
@@ -63,6 +63,39 @@ function isAgentRef<T>(x: unknown): x is AgentRef<T> {
 }
 
 /**
+ * @internal — one entry per ref-form `provideAgent()` call, in registration
+ * order. Multi providers do not merge across injectors, so the resolved array
+ * names exactly the refs registered at the injector that resolves it.
+ */
+const AGENT_REF_DEBUG_NAMES = new InjectionToken<string[]>('AG_UI_AGENT_REF_DEBUG_NAMES');
+
+/** @internal — one warning per injector, not one per agent built there. */
+const warnedRefNameSets = new WeakSet<object>();
+
+/**
+ * @internal — development-only notice that the shared `AGENT` alias is
+ * ambiguous at this injector level. Must run inside an injection context.
+ */
+function warnOnAmbiguousSharedAlias(): void {
+  if (!isDevMode()) return;
+  const names = inject(AGENT_REF_DEBUG_NAMES, { optional: true });
+  if (names === null || names.length < 2 || warnedRefNameSets.has(names)) return;
+  warnedRefNameSets.add(names);
+  console.warn(
+    `[@threadplane/ag-ui] provideAgent() was called with more than one AgentRef at the same ` +
+      `injector level (${names.join(', ')}). The ref-less injectAgent() reads a single shared ` +
+      `token, so it resolves the last ref provided (${names[names.length - 1]}) and the others ` +
+      `are reachable only by ref. Inject by ref — injectAgent(ref) — when an injector provides ` +
+      `more than one agent.`,
+  );
+}
+
+/** @internal — the name shown in the ambiguity warning. */
+function refDebugName<T>(ref: AgentRef<T>): string {
+  return String(ref.token).replace(/^InjectionToken\s+/, '');
+}
+
+/**
  * Provides an Agent instance wired through HttpAgent and toAgent.
  * Constructs an HttpAgent from config and wraps it in the runtime-neutral
  * Agent contract via toAgent(). Returns a provider array suitable for
@@ -83,7 +116,9 @@ function isAgentRef<T>(x: unknown): x is AgentRef<T> {
  * distinct agents. The ref-less `injectAgent()` resolves a single shared token,
  * which can only point at one of them: when more than one ref is provided at
  * the same level the **last** call wins. Always inject by ref when an injector
- * provides more than one agent.
+ * provides more than one agent. Development builds emit a one-time
+ * `console.warn` naming the refs involved when an injector level registers more
+ * than one, so the silent last-ref-wins aliasing is visible during development.
  *
  * @example Typed state via AgentRef
  * ```ts
@@ -117,7 +152,14 @@ export function provideAgent<T = Record<string, unknown>>(
   // instance, one config evaluation); with several refs AGENT can only mean one
   // thing, so the last call wins.
   return [
-    { provide: ref.token, useFactory: () => buildAgUiAgent(configOrFactory) },
+    { provide: AGENT_REF_DEBUG_NAMES, multi: true, useValue: refDebugName(ref) },
+    {
+      provide: ref.token,
+      useFactory: () => {
+        warnOnAmbiguousSharedAlias();
+        return buildAgUiAgent(configOrFactory);
+      },
+    },
     { provide: AGENT, useExisting: ref.token },
   ];
 }
