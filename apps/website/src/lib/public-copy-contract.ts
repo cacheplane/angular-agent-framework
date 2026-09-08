@@ -62,8 +62,15 @@ export const RETIRED_POSITIONING: readonly string[] = [
   'thread plane for enterprise agents',
 ];
 
-/** Routes retired in favour of the canonical policy. */
-export const RETIRED_ROUTE_PATTERN = /\/docs\/telemetry|\/api\/markdown\/telemetry/u;
+/**
+ * Routes retired from the public site.
+ *
+ * `/docs/telemetry` went in favour of the canonical policy. The three chat
+ * configuration pages went with `provideChat()` / `CHAT_CONFIG`, which the
+ * library no longer ships: `<chat>` is configured through its inputs.
+ */
+export const RETIRED_ROUTE_PATTERN =
+  /\/docs\/telemetry|\/api\/markdown\/telemetry|\/docs\/chat\/api\/provide-chat|\/docs\/chat\/api\/chat-config|\/docs\/chat\/guides\/configuration|\/api\/markdown\/chat\/api\/provide-chat|\/api\/markdown\/chat\/api\/chat-config|\/api\/markdown\/chat\/guides\/configuration/u;
 
 /**
  * Public routes that are intentionally absent from the sitemap.

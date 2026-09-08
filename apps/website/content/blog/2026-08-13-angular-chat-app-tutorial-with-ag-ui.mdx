@@ -167,14 +167,12 @@ npm install @threadplane/chat @threadplane/ag-ui @ag-ui/client @ag-ui/core marke
 The provider is one line, because AG-UI's connection surface is one URL:
 
 ```ts
-import { provideChat } from '@threadplane/chat';
 import { provideAgent } from '@threadplane/ag-ui';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
     provideAgent({ url: 'http://localhost:8000/agent' }),
-    provideChat({ assistantName: 'Librarian' }),
   ],
 };
 ```

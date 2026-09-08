@@ -121,15 +121,13 @@ const type = getMessageType(message); // 'human' | 'ai' | 'tool' | 'system' | 'f
 Runtime-neutral messages have a `content` property that is either a `string` or a `ContentBlock[]`. The library exports a `messageContent()` utility that flattens either shape to a string:
 
 ```typescript
-import type { BaseMessage } from '@langchain/core/messages';
-
 // If content is a string, returns it directly.
 // If content is a block array, concatenates the visible text blocks
 // (`text` and `output_text`) and skips reasoning, tool-use, and image blocks.
-function messageContent(message: BaseMessage): string
+function messageContent(message: { content: unknown }): string
 ```
 
-Note the parameter type: `messageContent()` consumes the LangChain `BaseMessage` shape, not the runtime-neutral `Message` handed to a `chatMessageTemplate`. Pass it a message from a LangChain-shaped source, not one straight out of `agent.messages()`.
+The parameter is structural: the function reads nothing but `content`. Pass it the `Message` handed to a `chatMessageTemplate` straight out of `agent.messages()`, or a LangChain `BaseMessage` from a LangChain-shaped source. Both type-check, and neither needs a cast.
 
 For custom templates, access `message.content` directly and narrow the type in the component class. Angular template expressions have no `typeof` operator, so the check has to live in a method:
 

@@ -1925,7 +1925,7 @@
       },
       {
         "name": "messageContent",
-        "type": "(message: BaseMessage<>) => string",
+        "type": "(message: object) => string",
         "description": "",
         "optional": false
       },
@@ -2072,12 +2072,12 @@
       },
       {
         "name": "humanContent",
-        "signature": "humanContent(message: unknown): string",
+        "signature": "humanContent(message: object): string",
         "description": "Renderable content for a human-role message bubble. Most human\nmessages are typed prompts and pass through `messageContent`\nunchanged. A2UI action messages (e.g. form submits, button clicks\non a rendered surface) flow through the same submit channel and\nland in the message stream as a HumanMessage whose content is a\nJSON-serialized `A2uiActionMessage`. Showing the raw JSON as if\nthe user typed it leaks the protocol; per the A2UI spec\nthose events resemble tool calls more than user utterances.\n\n`a2uiActionLabel` returns a short human-readable label for\nrecognized action shapes (\"Search flights\", \"Selected flight UA123\",\netc.) — or null for any non-action content, in which case we fall\nback to the original text.",
         "params": [
           {
             "name": "message",
-            "type": "unknown",
+            "type": "object",
             "description": "",
             "optional": false
           }
@@ -4002,7 +4002,7 @@
       {
         "name": "resolvedRegistry",
         "type": "Signal<Readonly<Record<string, Type<unknown> | RenderViewEntry>>>",
-        "description": "",
+        "description": "Most specific wins: the `[viewRegistry]` input, then a registry provided by\nan ancestor injector, then the built-in markdown views.",
         "optional": false
       },
       {
@@ -6468,32 +6468,6 @@
     "examples": []
   },
   {
-    "name": "ChatConfig",
-    "kind": "interface",
-    "description": "Application-wide options for provideChat. Every field is optional;\nthe values are exposed to all chat components in the tree via the\n`CHAT_CONFIG` injection token, so you set them once at bootstrap instead of\nthreading props through every component.",
-    "properties": [
-      {
-        "name": "assistantName",
-        "type": "string",
-        "description": "Shared assistant display name for consumers that read CHAT_CONFIG (default: \"Assistant\").",
-        "optional": true
-      },
-      {
-        "name": "avatarLabel",
-        "type": "string",
-        "description": "Shared AI avatar label for consumers that read CHAT_CONFIG (default: \"A\").",
-        "optional": true
-      },
-      {
-        "name": "renderRegistry",
-        "type": "AngularRegistry",
-        "description": "Shared render registry for consumers that read CHAT_CONFIG.",
-        "optional": true
-      }
-    ],
-    "examples": []
-  },
-  {
     "name": "ChatLifecycle",
     "kind": "interface",
     "description": "",
@@ -8468,7 +8442,7 @@
     "name": "ContentType",
     "kind": "type",
     "description": "",
-    "signature": "\"pending\" | \"markdown\" | \"json-render\" | \"a2ui\" | \"mixed\"",
+    "signature": "\"pending\" | \"markdown\" | \"json-render\" | \"a2ui\"",
     "examples": []
   },
   {
@@ -8591,13 +8565,6 @@
     "examples": []
   },
   {
-    "name": "CHAT_CONFIG",
-    "kind": "const",
-    "description": "",
-    "signature": "InjectionToken<ChatConfig>",
-    "examples": []
-  },
-  {
     "name": "CHAT_LIFECYCLE",
     "kind": "const",
     "description": "",
@@ -8614,7 +8581,7 @@
   {
     "name": "MARKDOWN_VIEW_REGISTRY",
     "kind": "const",
-    "description": "DI token for the markdown view registry consumed by <chat-streaming-md>\nand <md-children>. Maps MarkdownNode.type strings (e.g. \"paragraph\",\n\"heading\") to Angular components that render that node type.\n\n`<chat-streaming-md>` provides the runtime registry on its component-level\ninjector — either the consumer-supplied [viewRegistry] input, or\n`cacheplaneMarkdownViews` (the default) — so descendant <md-children>\ncomponents resolve the right components for each node.",
+    "description": "DI token for the markdown view registry consumed by <chat-streaming-md>\nand <md-children>. Maps MarkdownNode.type strings (e.g. \"paragraph\",\n\"heading\") to Angular components that render that node type.\n\n`<chat-streaming-md>` provides the resolved registry on its component-level\ninjector so descendant <md-children> components resolve the right component\nfor each node. It resolves most-specific-first: the `[viewRegistry]` input,\nthen a registry provided by an ancestor injector (application root or route),\nthen `cacheplaneMarkdownViews` (the default). Providing this token at the\napplication root is therefore a supported app-wide override.",
     "signature": "InjectionToken<Readonly<Record<string, Type<unknown> | RenderViewEntry>>>",
     "examples": []
   },
@@ -9418,13 +9385,13 @@
   {
     "name": "messageContent",
     "kind": "function",
-    "description": "Extracts a human-readable string from a message's content.\n\n`BaseMessage.content` is `string | MessageContentComplex[]`. Reasoning-\ncapable models (OpenAI gpt-5/o-series, Anthropic) emit complex arrays of\ntyped blocks: `{type:'text',text}`, `{type:'reasoning',...}`, tool-use\nblocks, etc. We render only the visible text portions and skip anything\nelse. Stringifying the whole array would dump raw JSON like\n`[{\"type\":\"text\",...}]` into the chat bubble.",
-    "signature": "messageContent(message: BaseMessage<>): string",
+    "description": "Extracts a human-readable string from a message's content.\n\nMessage content is either a plain string or an array of typed blocks.\nReasoning-capable models (OpenAI gpt-5/o-series, Anthropic) emit complex\narrays: `{type:'text',text}`, `{type:'reasoning',...}`, tool-use blocks, etc.\nOnly the visible text portions are rendered and anything else is skipped.\nStringifying the whole array would dump raw JSON like `[{\"type\":\"text\",...}]`\ninto the chat bubble.\n\nThe parameter is structural on purpose. This function reads nothing but\n`.content`, and callers hold either the runtime-neutral `Message` from\n`agent.messages()` or a LangChain `BaseMessage` depending on where the\nmessage came from. Both satisfy `{ content: unknown }`, so neither has to\ncast.",
+    "signature": "messageContent(message: object): string",
     "params": [
       {
         "name": "message",
-        "type": "BaseMessage<>",
-        "description": "",
+        "type": "object",
+        "description": "Any object carrying a `content` field.",
         "optional": false
       }
     ],
@@ -9530,27 +9497,6 @@
       "description": ""
     },
     "examples": []
-  },
-  {
-    "name": "provideChat",
-    "kind": "function",
-    "description": "Bootstrap `@threadplane/chat` in an Angular application or standalone\ncomponent tree.\n\nCall this once inside `bootstrapApplication` (or the `providers` array of a\nroot `ApplicationConfig`). It registers the shared ChatConfig token\nso every chat component in the tree can read the render registry, avatar\nlabel, and assistant display name without explicit prop threading.",
-    "signature": "provideChat(config: ChatConfig): EnvironmentProviders",
-    "params": [
-      {
-        "name": "config",
-        "type": "ChatConfig",
-        "description": "Options bag that controls the chat feature set:\n  - `renderRegistry` — shared AngularRegistry wiring tool-view\n    components to their names; pass the value returned by\n    `defineAngularRegistry` from `\\@threadplane/render`.\n  - `avatarLabel` — short label shown in the AI avatar bubble (default `\"A\"`).\n  - `assistantName` — display name shown above assistant messages\n    (default `\"Assistant\"`).",
-        "optional": false
-      }
-    ],
-    "returns": {
-      "type": "EnvironmentProviders",
-      "description": ""
-    },
-    "examples": [
-      "```ts\n// main.ts\nimport { bootstrapApplication } from '@angular/platform-browser';\nimport { provideChat } from '@threadplane/chat';\nimport { defineAngularRegistry, provideRender } from '@threadplane/render';\nimport { DayCardComponent } from './day-card.component';\n\nconst registry = defineAngularRegistry({ day_card: DayCardComponent });\n\nbootstrapApplication(AppComponent, {\n  providers: [\n    provideChat({ renderRegistry: registry, avatarLabel: 'AI' }),\n    provideRender({ registry }),\n  ],\n});\n```"
-    ]
   },
   {
     "name": "renderMarkdown",
@@ -9771,7 +9717,7 @@
   {
     "name": "tools",
     "kind": "function",
-    "description": "Collect named client tools into a frozen, name-keyed registry.\n\nThe overload is generic over the entire map (`const M`) so that each tool's\nprecise type (FunctionToolDef`<S,R>`, ViewToolDef`<S,C>`, or\nAskToolDef`<S,C>`) and every literal key are preserved in the\nClientToolRegistry passed to `provideChat`. This lets downstream\nconsumers look up individual tools without losing generic information.",
+    "description": "Collect named client tools into a frozen, name-keyed registry.\n\nThe overload is generic over the entire map (`const M`) so that each tool's\nprecise type (FunctionToolDef`<S,R>`, ViewToolDef`<S,C>`, or\nAskToolDef`<S,C>`) and every literal key are preserved in the\nClientToolRegistry passed to the `clientTools` input. This lets downstream\nconsumers look up individual tools without losing generic information.",
     "signature": "tools(map: M): Readonly<M>",
     "params": [
       {

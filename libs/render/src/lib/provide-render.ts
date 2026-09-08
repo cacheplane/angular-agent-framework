@@ -11,8 +11,8 @@ export const RENDER_CONFIG = new InjectionToken<RenderConfig>('RENDER_CONFIG');
  *
  * Registers the shared {@link RenderConfig} token and the internal
  * `RenderLifecycleService` that coordinates mount/unmount events across
- * dynamically rendered components. Call this once alongside `provideChat` in
- * `bootstrapApplication` (or the root `ApplicationConfig`).
+ * dynamically rendered components. Call this once in `bootstrapApplication`
+ * (or the root `ApplicationConfig`).
  *
  * @param config Options bag that controls the render feature set:
  *   - `registry` — component registry returned by {@link defineAngularRegistry};
@@ -27,7 +27,6 @@ export const RENDER_CONFIG = new InjectionToken<RenderConfig>('RENDER_CONFIG');
  * // main.ts
  * import { bootstrapApplication } from '@angular/platform-browser';
  * import { defineAngularRegistry, provideRender } from '@threadplane/render';
- * import { provideChat } from '@threadplane/chat';
  * import { DayCardComponent } from './day-card.component';
  *
  * const registry = defineAngularRegistry({ day_card: DayCardComponent });
@@ -35,7 +34,6 @@ export const RENDER_CONFIG = new InjectionToken<RenderConfig>('RENDER_CONFIG');
  * bootstrapApplication(AppComponent, {
  *   providers: [
  *     provideRender({ registry }),
- *     provideChat({ renderRegistry: registry }),
  *   ],
  * });
  * ```

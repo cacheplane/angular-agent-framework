@@ -55,3 +55,44 @@ describe('website next.config redirects', () => {
     }
   });
 });
+
+/**
+ * `provideChat()` / `ChatConfig` / `CHAT_CONFIG` were removed from
+ * `@threadplane/chat` — no shipped component ever injected the token, so the
+ * three pages that documented them described a no-op. Their URLs were indexed
+ * and linked, so each has to land on a page that still exists.
+ */
+describe('website next.config redirects for the removed chat configuration API', () => {
+  const retired = [
+    '/docs/chat/api/provide-chat',
+    '/docs/chat/api/chat-config',
+    '/docs/chat/guides/configuration',
+  ];
+
+  it('permanently redirects each retired page to chat installation', async () => {
+    const redirects = await config.redirects!();
+
+    for (const source of retired) {
+      const rule = redirects.find(
+        (r: { source: string }) => r.source === source
+      );
+      expect(rule, `missing redirect for ${source}`).toBeTruthy();
+      expect(rule.destination).toBe('/docs/chat/getting-started/installation');
+      expect(rule.permanent).toBe(true);
+    }
+  });
+
+  it('redirects the markdown mirror of each retired page', async () => {
+    const redirects = await config.redirects!();
+
+    for (const source of retired) {
+      const mirror = source.replace('/docs/', '/api/markdown/');
+      const rule = redirects.find((r: { source: string }) => r.source === mirror);
+      expect(rule, `missing redirect for ${mirror}`).toBeTruthy();
+      expect(rule.destination).toBe(
+        '/api/markdown/chat/getting-started/installation'
+      );
+      expect(rule.permanent).toBe(true);
+    }
+  });
+});

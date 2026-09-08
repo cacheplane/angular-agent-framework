@@ -38,7 +38,7 @@ That wrapper is the piece that translates LangGraph's own stream into the protoc
 
 ### Providing the agent
 
-`provideAgent()` from `@threadplane/ag-ui` registers the agent once for the whole application, and `provideChat({})` registers the chat configuration, here left at its defaults. Your own application passes `{ url: 'https://your-backend.example.com/agent' }` directly; this example passes a factory because it resolves its endpoint at runtime from the host that serves the demo.
+`provideAgent()` from `@threadplane/ag-ui` registers the agent once for the whole application, and it is the only provider the `<chat>` composition requires. Your own application passes `{ url: 'https://your-backend.example.com/agent' }` directly; this example passes a factory because it resolves its endpoint at runtime from the host that serves the demo.
 
 <ExampleCode file="app.config.ts" />
 

@@ -67,7 +67,7 @@ This is an application-side shim rather than a framework change: the key stays p
 
 ### Providing the agent
 
-`provideAgent()` from `@threadplane/langgraph` registers the agent at the application root, and `provideChat({})` registers the chat defaults. The example resolves its connection at runtime because the host that serves the demo decides which runtime is attached; your own application passes `apiUrl` and `assistantId` directly.
+`provideAgent()` from `@threadplane/langgraph` registers the agent at the application root, and it is the only provider the `<chat>` composition requires. The example resolves its connection at runtime because the host that serves the demo decides which runtime is attached; your own application passes `apiUrl` and `assistantId` directly.
 
 <ExampleCode file="app.config.ts" />
 

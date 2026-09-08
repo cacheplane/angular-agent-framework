@@ -14,12 +14,17 @@ import { CHAT_HOST_TOKENS, ensureChatRootStyles } from '../../styles/chat-tokens
   imports: [ChatComponent, ChatLauncherButtonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [CHAT_HOST_TOKENS, `
-    :host { position: fixed; bottom: 1rem; right: 1rem; z-index: var(--tplane-chat-z-overlay-content, 30); }
+    :host {
+      position: fixed;
+      bottom: var(--tplane-chat-launcher-offset-y);
+      right: var(--tplane-chat-launcher-offset-x);
+      z-index: var(--tplane-chat-z-overlay-content, 30);
+    }
     .chat-popup__launcher { position: relative; }
     .chat-popup__window {
       position: fixed;
       bottom: 5rem;
-      right: 1rem;
+      right: var(--tplane-chat-launcher-offset-x);
       width: 24rem;
       height: 600px;
       max-height: calc(100vh - 6rem);

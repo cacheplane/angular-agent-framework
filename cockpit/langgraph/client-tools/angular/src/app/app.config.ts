@@ -1,7 +1,6 @@
 import { injectCockpitRuntimeConnection } from '@threadplane/cockpit-telemetry';
 import { ApplicationConfig } from '@angular/core';
 import { provideAgent } from '@threadplane/langgraph';
-import { provideChat } from '@threadplane/chat';
 import { CLIENT_TOOLS_AGENT_REF } from './agent-ref';
 
 export const appConfig: ApplicationConfig = {
@@ -17,6 +16,5 @@ export const appConfig: ApplicationConfig = {
         clientOptions: connection.clientOptions,
       };
     }),
-    provideChat({}),
   ],
 };

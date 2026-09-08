@@ -137,6 +137,10 @@ const GEOMETRY_TOKENS = `
   --tplane-chat-radius-card: 8px;
   --tplane-chat-radius-button: 8px;
   --tplane-chat-radius-launcher: 9999px;
+  /* Distance from the viewport corner to the <chat-popup> launcher. The popup
+     window tracks the horizontal offset so both move together. */
+  --tplane-chat-launcher-offset-x: 1rem;
+  --tplane-chat-launcher-offset-y: 1rem;
   --tplane-chat-max-width: 48rem;
   --tplane-chat-citation-radius: 6px;
 `;

@@ -53,13 +53,11 @@ katex                      ^0.16.0 || ^0.17.0 (optional)
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideChat } from '@threadplane/chat';
 import { provideAgent } from '@threadplane/langgraph';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideAgent({ apiUrl: '/api/langgraph', assistantId: 'agent' }),
-    provideChat({}),
   ],
 };
 ```

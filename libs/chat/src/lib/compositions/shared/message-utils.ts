@@ -1,16 +1,23 @@
-import type { BaseMessage } from '@langchain/core/messages';
-
 /**
  * Extracts a human-readable string from a message's content.
  *
- * `BaseMessage.content` is `string | MessageContentComplex[]`. Reasoning-
- * capable models (OpenAI gpt-5/o-series, Anthropic) emit complex arrays of
- * typed blocks: `{type:'text',text}`, `{type:'reasoning',...}`, tool-use
- * blocks, etc. We render only the visible text portions and skip anything
- * else. Stringifying the whole array would dump raw JSON like
- * `[{"type":"text",...}]` into the chat bubble.
+ * Message content is either a plain string or an array of typed blocks.
+ * Reasoning-capable models (OpenAI gpt-5/o-series, Anthropic) emit complex
+ * arrays: `{type:'text',text}`, `{type:'reasoning',...}`, tool-use blocks, etc.
+ * Only the visible text portions are rendered and anything else is skipped.
+ * Stringifying the whole array would dump raw JSON like `[{"type":"text",...}]`
+ * into the chat bubble.
+ *
+ * The parameter is structural on purpose. This function reads nothing but
+ * `.content`, and callers hold either the runtime-neutral `Message` from
+ * `agent.messages()` or a LangChain `BaseMessage` depending on where the
+ * message came from. Both satisfy `{ content: unknown }`, so neither has to
+ * cast.
+ *
+ * @param message Any object carrying a `content` field.
+ * @returns The concatenated visible text, or `''` when there is none.
  */
-export function messageContent(message: BaseMessage): string {
+export function messageContent(message: { content: unknown }): string {
   return extractText(message.content);
 }
 

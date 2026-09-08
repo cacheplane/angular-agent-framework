@@ -53,13 +53,13 @@ describe('mdx heading components', () => {
 
   it('derives the label from nested nodes, not [object Object]', () => {
     const { container } = render(
-      <H3 id="wire-providechat">
-        Wire <code>provideChat()</code> first
+      <H3 id="wire-provideagent">
+        Wire <code>provideAgent()</code> first
       </H3>,
     );
 
     expect(container.querySelector('a.heading-anchor')?.getAttribute('aria-label')).toBe(
-      'Link to Wire provideChat() first',
+      'Link to Wire provideAgent() first',
     );
   });
 

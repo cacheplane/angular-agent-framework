@@ -58,15 +58,14 @@ every required peer for you, so the install command above is enough.
 | `@threadplane/render` | `0.0.66` | yes |
 | `@threadplane/a2ui` | `0.0.66` | yes |
 | `@json-render/core` | `^0.16.0` | yes |
-| `@langchain/core` | `^1.1.33` | yes |
 | `rxjs` | `~7.8.0` | yes |
 | `marked` | `^15.0.0 \|\| ^16.0.0` | yes |
 | `zod` | `^3.25.0` | yes |
 | `katex` | `^0.16.0 \|\| ^0.17.0` | optional |
 
 Installing `@threadplane/chat` therefore also brings in `@threadplane/telemetry`,
-`@threadplane/render`, `@threadplane/a2ui`, `@json-render/core`,
-`@langchain/core`, `rxjs`, `marked`, and `zod`.
+`@threadplane/render`, `@threadplane/a2ui`, `@json-render/core`, `rxjs`,
+`marked`, and `zod`.
 </Callout>
 
 ## 2. Configure the runtime
@@ -89,16 +88,9 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-That is the only provider `<chat>` needs.
-
-<Callout type="warning" title="provideChat() does not configure the built-in components">
-`provideChat()` parks a `ChatConfig` object on the `CHAT_CONFIG` injection token
-for your own components to read. No component in `@threadplane/chat` injects that
-token, so calling it changes nothing about what `<chat>` renders — including
-`assistantName` and `avatarLabel`, which no built-in component displays. Call it
-only when your own wrappers inject `CHAT_CONFIG`. See
-[Configuration](/docs/chat/guides/configuration).
-</Callout>
+That is the only provider `<chat>` needs. There is no separate chat provider:
+everything the built-in components render is driven by their inputs, and their
+appearance by the `--tplane-chat-*` custom properties.
 
 ## 3. Render your first chat
 
@@ -131,6 +123,6 @@ carries the conformance runners and fixtures, not `mockAgent()`.
 
 ## What's next
 
-- [Configuration](/docs/chat/guides/configuration)
+- [Theming](/docs/chat/guides/theming)
 - [ChatComponent](/docs/chat/components/chat)
 - [Choosing an adapter](/docs/choosing-an-adapter)

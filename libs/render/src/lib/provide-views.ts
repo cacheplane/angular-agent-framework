@@ -10,7 +10,7 @@ export const VIEW_REGISTRY = new InjectionToken<ViewRegistry>('VIEW_REGISTRY');
  *
  * @param registry Map of spec element types to the components that render them,
  *   typically built with `views()` / `withViews()`.
- * @returns Environment providers to spread into `providers` / `provideChat`.
+ * @returns Environment providers to spread into the `providers` array.
  * @example
  * ```ts
  * bootstrapApplication(App, {

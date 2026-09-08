@@ -30,7 +30,7 @@ The last line matters more than the graph does: `graph = build_deployment_runtim
 
 ### Pointing the app at a deployment
 
-`provideAgent()` registers the agent once for the whole application, which is where every deployment-specific value belongs. The example resolves its connection details at runtime from the host that serves the demo, which is why its factory reads them rather than hard-coding them. It sits alongside `provideChat({})`, which supplies the chat composition's own providers.
+`provideAgent()` registers the agent once for the whole application, which is where every deployment-specific value belongs. The example resolves its connection details at runtime from the host that serves the demo, which is why its factory reads them rather than hard-coding them. It is the only provider `<chat>` requires.
 
 <ExampleCode file="app.config.ts" />
 
@@ -41,7 +41,6 @@ provideAgent({
   apiUrl: 'https://your-deployment.langgraph.app',
   assistantId: 'deployment-runtime',
 }),
-provideChat({}),
 ```
 
 `clientOptions` is the third value the example forwards. It tunes the LangGraph SDK client behind the default transport, and it accepts two keys: `apiKey`, and `maxRetries` for how many times a failed request is retried with exponential backoff before the error reaches your UI.

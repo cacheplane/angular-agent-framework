@@ -1,7 +1,6 @@
 import { injectCockpitRuntimeConnection } from '@threadplane/cockpit-telemetry';
 import { ApplicationConfig } from '@angular/core';
 import { provideAgent } from '@threadplane/langgraph';
-import { provideChat } from '@threadplane/chat';
 import { SUBGRAPHS_AGENT } from './agent-ref';
 
 export const appConfig: ApplicationConfig = {
@@ -29,6 +28,5 @@ export const appConfig: ApplicationConfig = {
         transcriptNodeNames: ['answer'],
       };
     }),
-    provideChat({}),
   ],
 };

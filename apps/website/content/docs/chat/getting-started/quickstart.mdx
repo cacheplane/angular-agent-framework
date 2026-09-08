@@ -46,7 +46,7 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-`provideAgent()` is the only provider `<chat>` requires. `provideChat()` exists too, but it only parks values on the `CHAT_CONFIG` token for your own components to read — no built-in component injects it, so adding it changes nothing about what renders.
+`provideAgent()` is the only provider `<chat>` requires. There is no separate chat provider: everything `<chat>` renders is driven by its inputs.
 
 </Step>
 <Step title="Render the chat">

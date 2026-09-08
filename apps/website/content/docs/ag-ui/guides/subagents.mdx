@@ -74,7 +74,7 @@ The AG-UI encoder serializes pydantic `ag_ui.core` event classes, so the subclas
 
 ### The agent provider
 
-`provideAgent()` registers the agent once for the whole application, and `provideChat({})` registers the configuration the `<chat>` composition reads, here left at its defaults. Nothing in either provider is subagent-specific. The example passes a factory because it resolves its endpoint at runtime from the host that serves the demo. Your own application does not need the factory.
+`provideAgent()` registers the agent once for the whole application, and it is the only provider the `<chat>` composition requires. Nothing about it is subagent-specific. The example passes a factory because it resolves its endpoint at runtime from the host that serves the demo. Your own application does not need the factory.
 
 <ExampleCode file="app.config.ts" />
 

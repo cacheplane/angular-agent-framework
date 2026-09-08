@@ -483,11 +483,8 @@ export class ChatComponent {
    * etc.) — or null for any non-action content, in which case we fall
    * back to the original text.
    */
-  protected humanContent(message: unknown): string {
-    // Cast: `messageContent` is typed against LangChain's BaseMessage, but
-    // templates iterate the chat-lib's looser `Message` shape. Either type
-    // is fine at runtime (`extractText` only reads `.content`).
-    const raw = messageContent(message as Parameters<typeof messageContent>[0]);
+  protected humanContent(message: { content: unknown }): string {
+    const raw = messageContent(message);
     return a2uiActionLabel(raw) ?? raw;
   }
 

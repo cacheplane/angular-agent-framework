@@ -60,7 +60,7 @@ interface ContentClassifier {
 ## ContentType
 
 ```typescript
-type ContentType = 'pending' | 'markdown' | 'json-render' | 'a2ui' | 'mixed';
+type ContentType = 'pending' | 'markdown' | 'json-render' | 'a2ui';
 ```
 
 | Value | Meaning |
@@ -69,7 +69,8 @@ type ContentType = 'pending' | 'markdown' | 'json-render' | 'a2ui' | 'mixed';
 | `markdown` | Plain text / markdown prose |
 | `json-render` | JSON spec detected (first non-whitespace is `{`) |
 | `a2ui` | A2UI payload detected via `---a2ui_JSON---` prefix, parsed as JSONL messages |
-| `mixed` | Reserved. The current implementation never emits this value. |
+
+The union has no member for interleaved content: prose with inline JSON-render specs classifies as `markdown` and the markdown path renders the embedded specs in place.
 
 ### a2uiSurfaces
 

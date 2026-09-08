@@ -81,7 +81,7 @@ The agent handed to the bridge is wrapped first, which is what makes the subagen
 
 ### The agent provider
 
-`provideAgent()` registers the agent once for the whole application, and `provideChat({})` registers the configuration the `<chat>` composition reads, here left at its defaults. Neither is Mastra-specific: this is the same config every AG-UI example uses. The example passes a factory because it resolves its endpoint at runtime from the host that serves the demo.
+`provideAgent()` registers the agent once for the whole application, and it is the only provider the `<chat>` composition requires. Nothing about it is Mastra-specific: this is the same config every AG-UI example uses. The example passes a factory because it resolves its endpoint at runtime from the host that serves the demo.
 
 <ExampleCode file="app.config.ts" />
 

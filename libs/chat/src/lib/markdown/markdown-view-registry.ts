@@ -7,10 +7,12 @@ import type { ViewRegistry } from '@threadplane/render';
  * and <md-children>. Maps MarkdownNode.type strings (e.g. "paragraph",
  * "heading") to Angular components that render that node type.
  *
- * `<chat-streaming-md>` provides the runtime registry on its component-level
- * injector — either the consumer-supplied [viewRegistry] input, or
- * `cacheplaneMarkdownViews` (the default) — so descendant <md-children>
- * components resolve the right components for each node.
+ * `<chat-streaming-md>` provides the resolved registry on its component-level
+ * injector so descendant <md-children> components resolve the right component
+ * for each node. It resolves most-specific-first: the `[viewRegistry]` input,
+ * then a registry provided by an ancestor injector (application root or route),
+ * then `cacheplaneMarkdownViews` (the default). Providing this token at the
+ * application root is therefore a supported app-wide override.
  */
 export const MARKDOWN_VIEW_REGISTRY = new InjectionToken<ViewRegistry>(
   'MARKDOWN_VIEW_REGISTRY',

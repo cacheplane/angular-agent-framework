@@ -297,7 +297,6 @@ export const docsConfig: DocsLibrary[] = [
             section: 'guides',
           },
           { title: 'Streaming', slug: 'streaming', section: 'guides' },
-          { title: 'Configuration', slug: 'configuration', section: 'guides' },
           {
             title: 'Error Handling',
             slug: 'error-handling',
@@ -407,8 +406,6 @@ export const docsConfig: DocsLibrary[] = [
         id: 'api',
         color: 'blue',
         pages: [
-          { title: 'provideChat()', slug: 'provide-chat', section: 'api' },
-          { title: 'ChatConfig', slug: 'chat-config', section: 'api' },
           { title: 'mockAgent()', slug: 'mock-agent', section: 'api' },
           {
             title: 'createContentClassifier()',

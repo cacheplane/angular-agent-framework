@@ -49,7 +49,7 @@ Most of the LangGraph examples register their agent in `app.config.ts`. This one
 
 <ExampleCode file="app.config.ts" />
 
-The `onThreadId` callback is per-instance state, so the agent is provided at the component instead. `provideChat({})` is all that stays at the application root.
+The `onThreadId` callback is per-instance state, so the agent is provided at the component instead, and the application root carries no chat providers at all.
 
 ### The thread bookkeeping the sidebar reads
 
