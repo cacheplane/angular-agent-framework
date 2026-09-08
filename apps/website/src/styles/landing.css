@@ -1089,56 +1089,9 @@
 .proof-strip-cell {
   position: relative;
   /* Grid items default to min-width:auto; the long mono source URLs would then
-   * push the four columns past the container. */
+   * push the columns past the container. */
   min-width: 0;
-  background: var(--color-surface);
-  background-image: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.9),
-    rgba(251, 251, 251, 0.4)
-  );
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: 26px 24px 22px;
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.04),
-    0 12px 28px -12px rgba(28, 28, 28, 0.14);
-}
-/* On the dark band the paper gradient inverts: a faint lift off the surface
- * token rather than a white sheet. The token re-scope in ui.css handles the
- * rest (background, border, text). */
-[data-ui="section"][data-surface="dark"] .proof-strip-cell {
-  background-image: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.05),
-    rgba(255, 255, 255, 0.01)
-  );
-  border-color: var(--color-border-strong);
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.35),
-    0 16px 34px -16px rgba(0, 0, 0, 0.6);
-}
-/* 1px top highlight so the card reads as paper, not an outline. */
-.proof-strip-cell::before {
-  content: '';
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 1px;
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.9),
-    transparent
-  );
-}
-[data-ui="section"][data-surface="dark"] .proof-strip-cell::before {
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.16),
-    transparent
-  );
+  padding: 0 20px 0 0;
 }
 .proof-strip-value {
   font-family: var(--font-display);
