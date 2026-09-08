@@ -1068,8 +1068,8 @@
   );
   pointer-events: none;
 }
-/* The rail header stacks ABOVE the cells here: four big Garamond numerals need
- * the full container width to stay on one line. */
+/* The rail header stacks ABOVE the checklist here: the checklist's two columns
+ * need the full container width to keep every row on one line. */
 .proof-strip-grid {
   position: relative;
   display: grid;
@@ -1078,132 +1078,17 @@
 .proof-strip-grid > [data-ui="section-header"] {
   max-width: 620px;
 }
-.proof-strip-cells {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  /* Asymmetric on purpose. With the cards gone, whitespace is the ONLY grouping
-   * cue, and a symmetric 20px made the gap between one cell's source link and
-   * the next cell's numeral no larger than the gaps inside a cell — so the
-   * rhythm argued for the wrong grouping wherever the grid stacks (≤900px and
-   * ≤560px). The row gutter has to beat the intra-cell spacing; the column
-   * gutter is the old card padding expressed as a gap, which is what
-   * column-gap is for. */
-  gap: 44px 40px;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.proof-strip-cell {
-  /* Grid items default to min-width:auto; the long mono source URLs would then
-   * push the columns past the container. */
-  min-width: 0;
-}
-.proof-strip-value {
-  font-family: var(--font-display);
-  font-size: 58px;
-  line-height: 0.9;
-  letter-spacing: -0.028em;
-  color: var(--color-text-primary);
-  margin: 0;
-}
-.proof-strip-suffix {
-  font-size: 18px;
-  font-weight: 500;
-  letter-spacing: 0;
-  color: var(--color-text-muted);
-}
-.proof-strip-badge {
-  height: 52px;
-  width: auto;
-  display: block;
-}
-.proof-strip-caption {
-  font-family: var(--font-sans);
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--color-text-secondary);
-  margin: 12px 0 0;
-}
-.proof-strip-source {
-  display: inline-block;
-  max-width: 100%;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
-  margin-top: 9px;
-  overflow-wrap: anywhere;
-}
-[data-ui="section"][data-surface="dark"] .proof-strip-source {
-  color: var(--color-accent);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  text-decoration-color: var(--color-accent-border-hover);
-}
-[data-ui="section"][data-surface="dark"] .proof-strip-source:hover {
-  color: var(--color-accent-hover);
-  text-decoration-color: currentColor;
-}
-/* Reliability receipts: a second line under the four cells, same grammar,
- * smaller type. Reliability.tsx. Always rendered inside the dark #proof
- * band, so --color-text-* and --color-accent already resolve to the dark
- * re-scope from ui.css without any extra [data-surface="dark"] scoping. */
-.reliability-receipts {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  list-style: none;
-  margin: 0;
-  padding: 24px 0 0;
-  border-top: 1px solid var(--color-border);
-}
-.reliability-receipt {
-  min-width: 0;
-}
-.reliability-receipt-claim {
-  font-family: var(--font-sans);
-  font-size: 15px;
-  font-weight: 600;
-  line-height: 1.4;
-  color: var(--color-text-primary);
-  margin: 0;
-}
-.reliability-receipt-detail {
-  font-family: var(--font-sans);
-  font-size: 13px;
-  line-height: 1.5;
-  color: var(--color-text-secondary);
-  margin: 6px 0 0;
-}
 @media (max-width: 900px) {
   .proof-strip-grid {
-    /* Has to stay clear of the cells' 44px row gutter. At the old 32px the gap
-     * between two ROWS of figures beat the gap between the figures block and
-     * the receipts block — the same grouping inversion .proof-strip-cells
-     * above argues against, just one level up. */
+    /* Above the usual 32px on purpose: the gap between the framing copy and
+     * the block beneath it has to beat the spacing inside that block, or the
+     * rhythm argues for the wrong grouping once the grid stacks. */
     gap: 48px;
-  }
-  .proof-strip-cells {
-    grid-template-columns: repeat(2, 1fr);
   }
   .proof-strip-watermark {
     font-size: 130px;
     right: -16px;
     top: -46px;
-  }
-  .reliability-receipts {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-@media (max-width: 640px) {
-  .reliability-receipts {
-    grid-template-columns: 1fr;
-  }
-}
-@media (max-width: 560px) {
-  .proof-strip-cells {
-    grid-template-columns: 1fr;
   }
 }
 
@@ -2117,40 +2002,6 @@
   text-align: center;
 }
 
-/* Attitude indicator between the framing copy and the figures. Hairlines only:
- * it is a divider first and an instrument second, and the section's problem
- * was too many competing layers. */
-.proof-ladder {
-  display: block;
-  /* Spans the full content width rather than a capped 700px. Capped and
-   * left-aligned, the instrument's waterline landed well left of the band's
-   * centre and the whole thing read as stray marks; full width makes it a
-   * divider whose waterline is centred, which is what it is for. The strokes
-   * hold their weight at any scale via vector-effect below. */
-  width: 100%;
-  height: auto;
-  margin: 4px 0 26px;
-}
-/* The svg is width:100% over a 700-wide viewBox, so below 700px the whole
- * drawing scales down — and the stroke would scale with it, putting the rungs
- * at roughly 0.5 CSS px at 375, which at 30% white is effectively invisible.
- * non-scaling-stroke holds the hairline at any scale. It has to live on the
- * lines, not the <g>: vector-effect is not an inherited property, so setting
- * it on the group is a no-op for the children. */
-.proof-ladder-rungs line {
-  stroke: rgba(255, 255, 255, 0.3);
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
-}
-.proof-ladder-wing line {
-  stroke: var(--color-signal);
-  stroke-width: 2.5;
-  vector-effect: non-scaling-stroke;
-}
-.proof-ladder-dot {
-  fill: var(--color-signal);
-}
-
 /* Compatibility — light ground on purpose: these marks are drawn for light
  * backgrounds and were invisible on the dark band. */
 .compatibility-groups {
@@ -2221,4 +2072,147 @@
   font-size: 12.5px;
   color: var(--color-text-muted);
   margin: 0;
+}
+
+/* Preflight checklist.
+ *
+ * Plain flex rows: every row starts at its column's left edge and its first
+ * child is a fixed 16px box, so the boxes share one edge by construction. Do
+ * NOT reach for `display: contents` here — it breaks the moment one row is an
+ * <li> rather than an <a>, and it weakens the link's semantics. */
+.preflight {
+  margin-top: 26px;
+}
+.preflight-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 48px;
+}
+.preflight-col-head {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin: 0;
+  padding-bottom: 12px;
+}
+.preflight-col-head.is-ours {
+  color: var(--color-signal);
+}
+.preflight-col-head.is-yours {
+  color: var(--color-text-muted);
+}
+.preflight-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.preflight-air {
+  margin-top: 22px;
+}
+.preflight-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  height: 33px;
+  text-decoration: none;
+}
+.preflight-box {
+  flex: 0 0 16px;
+  height: 16px;
+  box-sizing: border-box;
+  /* Deliberately NOT var(--color-border-strong): that resolves to
+   * rgba(255,255,255,.2) in the dark scope, and the empty Yours boxes are the
+   * section's whole argument — they cannot be the faintest thing on the band.
+   * .35 is the value the approved prototype was reviewed at. */
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  border-radius: 3px;
+  display: grid;
+  place-items: center;
+  transition: border-color 180ms ease, background-color 180ms ease;
+}
+.preflight-box svg {
+  width: 10px;
+  height: 10px;
+  display: block;
+  opacity: 0;
+  transform: scale(0.5);
+  stroke: var(--color-ink);
+  transition: opacity 150ms ease, transform 200ms cubic-bezier(0.2, 1.5, 0.4, 1);
+}
+.preflight-row.is-done .preflight-box {
+  border-color: var(--color-signal);
+  background-color: var(--color-signal);
+}
+.preflight-row.is-done .preflight-box svg {
+  opacity: 1;
+  transform: scale(1);
+}
+.preflight-challenge {
+  flex: 0 0 auto;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+.preflight-dots {
+  flex: 1 1 auto;
+  min-width: 12px;
+  border-bottom: 1px dotted var(--color-border);
+  margin-bottom: 4px;
+}
+.preflight-response {
+  flex: 0 0 auto;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  color: var(--color-text-muted);
+  transition: color 180ms ease;
+}
+.preflight-row.is-done .preflight-response {
+  color: var(--color-signal);
+}
+.preflight-yours .preflight-response {
+  font-weight: 400;
+}
+/* Airworthiness responses are figures, so they take the display face and a
+ * larger size; the unit stays mono beside them. */
+.preflight-air .preflight-response {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: var(--color-text-muted);
+}
+.preflight-air .preflight-row.is-done .preflight-response {
+  color: var(--color-text-primary);
+}
+.preflight-unit {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+.preflight-badge {
+  flex: 0 0 auto;
+  display: block;
+}
+a.preflight-row:hover .preflight-challenge {
+  color: #ffffff;
+}
+@media (prefers-reduced-motion: reduce) {
+  .preflight-box,
+  .preflight-box svg,
+  .preflight-response {
+    transition: none;
+  }
+}
+@media (max-width: 820px) {
+  .preflight-cols {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
 }
