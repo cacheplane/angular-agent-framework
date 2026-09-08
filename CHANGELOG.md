@@ -1,3 +1,64 @@
+## 0.1.0 (2026-09-08)
+
+### 🚀 Features
+
+- one route family — every capability is a docs page ([#1010](https://github.com/cacheplane/angular-agent-framework/pull/1010))
+- **ag-ui:** scriptable provideFakeAgent() and a duplicate-AgentRef warning ([#1053](https://github.com/cacheplane/angular-agent-framework/pull/1053))
+- **chat:** public scrollToBottom() on ChatComponent; the stage pins through it ([#1045](https://github.com/cacheplane/angular-agent-framework/pull/1045))
+- ⚠️  **chat:** remove provideChat(), fix app-level markdown registry overrides, and three API cleanups ([#1055](https://github.com/cacheplane/angular-agent-framework/pull/1055))
+- **docs:** ExampleCode include + guards; retire the walkthrough renderer ([#1025](https://github.com/cacheplane/angular-agent-framework/pull/1025))
+- **examples/chat:** executable approval tools behind the hero's pause ([#1011](https://github.com/cacheplane/angular-agent-framework/pull/1011))
+- **examples/chat:** /stage — the real chat beside the real devtools, seekable to any recorded time (live-stage plan 2 of 3) ([#1030](https://github.com/cacheplane/angular-agent-framework/pull/1030))
+- **growth:** add inspectable company research pilot ([#1009](https://github.com/cacheplane/angular-agent-framework/pull/1009))
+- **growth:** explain company capture failures ([#1015](https://github.com/cacheplane/angular-agent-framework/pull/1015))
+- **growth:** attribute campaign sends per template with a bounded Resend tag ([#1020](https://github.com/cacheplane/angular-agent-framework/pull/1020))
+- **growth:** enrich install activations and report developer journeys ([#1027](https://github.com/cacheplane/angular-agent-framework/pull/1027))
+- **growth:** integrate gated Dawn company enrichment ([#1028](https://github.com/cacheplane/angular-agent-framework/pull/1028))
+- **growth:** cut over company enrichment to Dawn ([#1041](https://github.com/cacheplane/angular-agent-framework/pull/1041))
+- **growth:** schedule founder emails on Pacific business mornings ([#1044](https://github.com/cacheplane/angular-agent-framework/pull/1044))
+- **lifecycle:** founder session offer as step one, one-word unsubscribe link ([#1012](https://github.com/cacheplane/angular-agent-framework/pull/1012))
+- **lifecycle:** add optional bounded Firecrawl company capture ([#1017](https://github.com/cacheplane/angular-agent-framework/pull/1017))
+- **lifecycle:** integrate self-hosted Firecrawl browser scraper ([#1019](https://github.com/cacheplane/angular-agent-framework/pull/1019))
+- **lifecycle:** fulfillment mail in the campaign register ([#1018](https://github.com/cacheplane/angular-agent-framework/pull/1018))
+- **lifecycle:** print the business postal address in every email footer ([#1021](https://github.com/cacheplane/angular-agent-framework/pull/1021))
+- **website:** homepage restructure (live-stage plan 1 of 3) ([#1024](https://github.com/cacheplane/angular-agent-framework/pull/1024))
+- **website:** whitepaper block and toast on the form kit; old form CSS removed ([#1026](https://github.com/cacheplane/angular-agent-framework/pull/1026))
+- **website:** the stage on the homepage — one real run, scrubbed by scroll (live-stage plan 3 of 3) ([#1032](https://github.com/cacheplane/angular-agent-framework/pull/1032))
+- **website:** the stage rail is a completeness ledger ([#1043](https://github.com/cacheplane/angular-agent-framework/pull/1043))
+- **website:** the social card shows the product, and the brand gets a real mark ([#1047](https://github.com/cacheplane/angular-agent-framework/pull/1047))
+- **website:** retire the last stale positioning from the brand assets ([#1051](https://github.com/cacheplane/angular-agent-framework/pull/1051))
+- **website:** architecture diagram — the UI layer between your users and your agents ([#1048](https://github.com/cacheplane/angular-agent-framework/pull/1048))
+- **website:** the homepage closes on a quiet open-source strip ([#1057](https://github.com/cacheplane/angular-agent-framework/pull/1057))
+- **website:** ATC theme spike — aviation yellow, Archivo Black, scope navy ([#1058](https://github.com/cacheplane/angular-agent-framework/pull/1058), [#15253](https://github.com/cacheplane/angular-agent-framework/issues/15253), [#004090](https://github.com/cacheplane/angular-agent-framework/issues/004090), [#1048](https://github.com/cacheplane/angular-agent-framework/issues/1048), [#963](https://github.com/cacheplane/angular-agent-framework/issues/963), [#1057](https://github.com/cacheplane/angular-agent-framework/issues/1057))
+
+### 🩹 Fixes
+
+- **growth:** validate telemetry and align PostHog dashboards ([#1050](https://github.com/cacheplane/angular-agent-framework/pull/1050))
+- **langgraph:** lifecycle token, error kind, root registry, required interrupt, awaitable mock transport ([#1054](https://github.com/cacheplane/angular-agent-framework/pull/1054))
+- **libs:** make the type-tests targets runnable again ([#1064](https://github.com/cacheplane/angular-agent-framework/pull/1064))
+- **lifecycle:** ground company research in substantive evidence ([add9e6801](https://github.com/cacheplane/angular-agent-framework/commit/add9e6801))
+- ⚠️  **middleware:** server_tools router default; Python emit_custom_event helper ([#1052](https://github.com/cacheplane/angular-agent-framework/pull/1052))
+- **render:** honor every ActionBinding field, per-item visible, real element lifecycle and state paths ([#1056](https://github.com/cacheplane/angular-agent-framework/pull/1056))
+- **render:** resolve repeated element readiness and props in the row's own scope ([#1062](https://github.com/cacheplane/angular-agent-framework/pull/1062))
+- **website:** pin the stage hold one millisecond inside it so the frame reports pause ([#1034](https://github.com/cacheplane/angular-agent-framework/pull/1034), [#1032](https://github.com/cacheplane/angular-agent-framework/issues/1032))
+- **website:** ATC theme follow-ups — favicon, social cards, whitepapers ([#1059](https://github.com/cacheplane/angular-agent-framework/pull/1059), [#004090](https://github.com/cacheplane/angular-agent-framework/issues/004090), [#15253](https://github.com/cacheplane/angular-agent-framework/issues/15253))
+- **website:** give arch-flow console badges an on-dark palette ([#1060](https://github.com/cacheplane/angular-agent-framework/pull/1060), [#1](https://github.com/cacheplane/angular-agent-framework/issues/1), [#15253](https://github.com/cacheplane/angular-agent-framework/issues/15253))
+
+### ⚠️  Breaking Changes
+
+- **chat:** remove provideChat(), fix app-level markdown registry overrides, and three API cleanups  ([#1055](https://github.com/cacheplane/angular-agent-framework/pull/1055))
+- **middleware:** server_tools router default; Python emit_custom_event helper  ([#1052](https://github.com/cacheplane/angular-agent-framework/pull/1052))
+  the default is now 'server_tools'. Rename your server tool
+  node to server_tools and drop the override, or keep the override pointing at
+  whatever name your node uses. There is no shim. The Python package's
+  route_after_agent() keeps tools_node="tools"; Python LangGraph has no such
+  namespace collision.
+  Two integration specs record the behavior: one invokes a graph whose ToolNode
+  is named server_tools with no override and asserts the tool actually ran (it
+  failed with "Branch condition returned unknown or null destination" before the
+  fix), and one pins the addNode('tools', …) throw so the reason is written down.
+  Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+
 ## 0.0.66 (2026-09-05)
 
 ### 🚀 Features

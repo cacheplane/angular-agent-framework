@@ -1,6 +1,6 @@
 # Release Process
 
-The six publishable libraries (`@threadplane/chat`, `@threadplane/langgraph`, `@threadplane/ag-ui`, `@threadplane/render`, `@threadplane/a2ui`, `@threadplane/telemetry`) ship together at a synchronized version via Nx Release. During the `0.0.x` exploratory phase, only patch bumps are used.
+The six publishable libraries (`@threadplane/chat`, `@threadplane/langgraph`, `@threadplane/ag-ui`, `@threadplane/render`, `@threadplane/a2ui`, `@threadplane/telemetry`) ship together at a synchronized version via Nx Release. Releases use **minor** bumps (`0.1.0` → `0.2.0` → …). **Never cut `1.0.0` without explicit approval from the repository owner, every time.**
 
 Nx updates internal dependency and peer ranges with the synchronized release. `preserveMatchingDependencyRanges` is disabled so a prior `^0.0.x` peer range cannot block the next patch or leave companion packages on incompatible versions. External dependency ranges remain unchanged.
 
@@ -25,7 +25,7 @@ git checkout main && git pull
 
 # 1. Version bump. Runs preVersionCommand (builds all six projects), rewrites every
 #    package.json, updates package-lock.json, and stages the result.
-npx nx release version --specifier=patch
+npx nx release version --specifier=minor
 
 # 2. Regenerate the public agent-context files. They embed the release
 #    version, and the Website unit suite fails the release commit until
@@ -110,7 +110,7 @@ Always sanity-check before a real release. Dry-run each subcommand — the
 one-shot `nx release patch --dry-run` fails the same way the real command does:
 
 ```bash
-npx nx release version --specifier=patch --dry-run
+npx nx release version --specifier=minor --dry-run
 npx nx release changelog 0.0.57 --dry-run   # bare version; check the printed tag URL
 ```
 
@@ -132,11 +132,13 @@ Anything above `0` means main has unpublished commits.
 
 `Publish` workflow accepts `workflow_dispatch` with a `dry-run` input (default `true`). Trigger from the GitHub Actions UI to verify CI's publish path without actually shipping.
 
-## Why patch-only during 0.0.x
+## Versioning policy
 
-While the API is still settling we bump only the patch component (`0.0.1` → `0.0.2` → `0.0.3`). This signals to consumers that breaking changes can land in any release; lock to an exact version.
+Releases bump the **minor** component (`0.1.0` → `0.2.0` → …). Breaking changes can still land in any release while the major is `0`, so consumers should lock to an exact version; the changelog names the breaking entries.
 
-When the API stabilizes enough to make compatibility promises, transition to `0.1.0` and start using minor/major bumps with conventional-commit-driven semver.
+`1.0.0` is a deliberate gate, not something to infer from scope or stability: **ask the repository owner and wait for an explicit yes before cutting it.**
+
+Through `v0.0.66` the project used patch-only bumps. That ended on 2026-09-08, when a backlog of breaking changes made the patch counter actively misleading.
 
 ## Internal peer dependencies
 
