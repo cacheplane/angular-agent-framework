@@ -60,7 +60,7 @@ be understood and tested on their own:
 | File | Responsibility | Depends on |
 | --- | --- | --- |
 | `nav-config.ts` | The IA as data: triggers, panel columns, items, icons, analytics ids, hero-route list | `docs-config`, `demos`, `positioning` |
-| `NavDesktop.tsx` | The bar, the trigger row, the shared panel container, hover/keyboard state | `nav-config`, `LibraryMark` |
+| `NavDesktop.tsx` | The bar, the trigger row, a per-trigger panel, hover/keyboard state | `nav-config`, `LibraryMark` |
 | `NavMobile.tsx` | The drill-in stack, focus trap, scroll lock, level transitions | `nav-config`, `DocsContextContent` |
 | `useNavSurface.ts` | Whether the bar is transparent or solid on this route at this scroll position | `nav-config` |
 | `Nav.tsx` | Shell: reads the route, picks desktop or mobile, owns nothing else | all of the above |
@@ -97,6 +97,12 @@ crossfade needs both panels mounted at once — which breaks every unqualified
 `.nav-panel` locator in `e2e/nav-panels.spec.ts`. The panel gets a 140ms entrance
 animation instead, which addresses the actual visual complaint: the caret glides
 while the panel snapped.
+
+**Width and alignment — known gap.** The panel shell is `left: 0; right: 0` against the
+padding box of the bar's inner row, so the bar's `px-8` gutter falls *inside* the panel.
+The panel's first item therefore starts at x=24 (its own padding) while the logo starts
+at x=32, and nothing in the panel lines up with anything in the bar. Not fixed here;
+tracked as a follow-up because it is a visual-polish decision, not a defect.
 
 **Semantics.** The panel holds links, so it is a disclosure and not a menu: triggers get
 `aria-expanded` and `aria-controls`, the panel is a plain region, Tab moves through the
