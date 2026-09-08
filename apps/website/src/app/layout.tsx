@@ -24,12 +24,12 @@ const garamond = EB_Garamond({
   subsets: ['latin'],
   weight: ['400', '700', '800'],
   style: ['normal', 'italic'],
-  variable: '--font-garamond',
+  variable: '--font-display',
 });
 
 const inter = Inter({
   subsets: ['latin'],
-  variable: '--font-inter',
+  variable: '--font-sans',
 });
 
 const mono = JetBrains_Mono({

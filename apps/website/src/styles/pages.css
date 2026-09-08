@@ -30,7 +30,7 @@
   margin-bottom: 16px;
 }
 .docs-index-h1 {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: var(--text-h1);
   line-height: var(--text-h1--line-height);
   font-weight: 700;
@@ -40,7 +40,7 @@
   letter-spacing: -0.02em;
 }
 .docs-index-subtitle {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body-lg);
   line-height: var(--text-body-lg--line-height);
   color: var(--color-text-secondary);
@@ -133,7 +133,7 @@
   flex: 0 0 auto;
 }
 .docs-index-card-title {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 18px;
   line-height: 1.3;
   font-weight: 600;
@@ -154,7 +154,7 @@
   margin-top: 2px;
 }
 .docs-index-card-blurb {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body);
   line-height: var(--text-body--line-height);
   color: var(--color-text-secondary);
@@ -166,7 +166,7 @@
 }
 .docs-index-cta {
   /* raw font stack, not the `.family` var — see the font-exception note atop ui.css */
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 14px;
   font-weight: 600;
   color: var(--color-accent);
@@ -196,7 +196,7 @@
   white-space: nowrap;
 }
 .docs-index-helper {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 14px;
   color: var(--color-text-secondary);
   margin: 0;
@@ -219,7 +219,7 @@
   margin: 0 auto;
 }
 .docs-index-search-heading {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 22px;
   line-height: 1.3;
   font-weight: 600;
@@ -228,7 +228,7 @@
   margin-bottom: 12px;
 }
 .docs-index-search-button {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body);
   line-height: var(--text-body--line-height);
   color: var(--color-text-secondary);
@@ -289,7 +289,7 @@
   margin-bottom: 16px;
 }
 .about-h1 {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: var(--text-h1);
   line-height: var(--text-h1--line-height);
   font-weight: 700;
@@ -299,7 +299,7 @@
   letter-spacing: -0.02em;
 }
 .about-body {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body-lg);
   line-height: var(--text-body-lg--line-height);
   color: var(--color-text-secondary);
@@ -311,7 +311,7 @@
   margin-bottom: 0;
 }
 .about-h2 {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: var(--text-h2);
   color: var(--color-text-primary);
   margin: 0;
@@ -337,7 +337,7 @@
   margin-bottom: 16px;
 }
 .sol-index-h1 {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: var(--text-h1);
   line-height: var(--text-h1--line-height);
   font-weight: 700;
@@ -347,7 +347,7 @@
   letter-spacing: -0.02em;
 }
 .sol-index-hero-body {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body-lg);
   line-height: var(--text-body-lg--line-height);
   color: var(--color-text-secondary);
@@ -371,7 +371,7 @@
   margin-bottom: 12px;
 }
 .sol-index-h2 {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: var(--text-h2);
   line-height: var(--text-h2--line-height);
   font-weight: 700;
@@ -395,7 +395,7 @@
   flex-direction: column;
 }
 .sol-index-card-title {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 22px;
   line-height: 1.25;
   font-weight: 600;
@@ -405,7 +405,7 @@
   white-space: pre-line;
 }
 .sol-index-card-subtitle {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body);
   line-height: var(--text-body--line-height);
   color: var(--color-text-secondary);
@@ -420,7 +420,7 @@
   margin-bottom: 16px;
 }
 .sol-index-cta {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 14px;
   font-weight: 600;
   color: var(--color-accent);
@@ -445,7 +445,7 @@
   background: var(--color-border);
 }
 .sol-page-h2 {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: var(--text-h2);
   line-height: var(--text-h2--line-height);
   font-weight: 700;
@@ -457,7 +457,7 @@
   margin-bottom: 16px;
 }
 .sol-page-section-intro {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body-lg);
   line-height: var(--text-body-lg--line-height);
   color: var(--color-text-secondary);
@@ -478,7 +478,7 @@
   margin: 0 auto;
 }
 .sol-page-card-h3 {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 18px;
   line-height: 1.3;
   font-weight: 600;
@@ -487,7 +487,7 @@
   margin-bottom: 10px;
 }
 .sol-page-card-body {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body);
   line-height: var(--text-body--line-height);
   color: var(--color-text-secondary);
@@ -503,14 +503,14 @@
   margin-bottom: 12px;
 }
 .sol-page-arch-title {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: 22px;
   font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
 }
 .sol-page-role {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body);
   line-height: var(--text-body--line-height);
   color: var(--color-text-secondary);
@@ -520,7 +520,7 @@
   margin-bottom: 16px;
 }
 .sol-page-arch-cta {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 14px;
   font-weight: 600;
   color: var(--color-accent);
@@ -529,7 +529,7 @@
   text-decoration: none;
 }
 .sol-page-metric {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: 40px;
   font-weight: 700;
   line-height: 0.9;
@@ -547,7 +547,7 @@
   margin-bottom: 16px;
 }
 .sol-page-h1 {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: var(--text-h1);
   line-height: var(--text-h1--line-height);
   font-weight: 700;
@@ -558,7 +558,7 @@
   white-space: pre-line;
 }
 .sol-page-hero-subtitle {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body-lg);
   line-height: var(--text-body-lg--line-height);
   color: var(--color-text-secondary);
@@ -582,7 +582,7 @@
   margin-bottom: 16px;
 }
 .pilot-h1 {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: var(--text-h1);
   line-height: var(--text-h1--line-height);
   font-weight: 700;
@@ -592,7 +592,7 @@
   letter-spacing: -0.02em;
 }
 .pilot-hero-subtitle {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body-lg);
   line-height: var(--text-body-lg--line-height);
   color: var(--color-text-secondary);
@@ -691,7 +691,7 @@
   background: var(--color-border);
 }
 .pilot-h2 {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: var(--text-h2);
   line-height: var(--text-h2--line-height);
   font-weight: 700;
@@ -716,7 +716,7 @@
   padding: 10px 0;
 }
 .pilot-outcome-claim {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 15px;
   line-height: 1.5;
   color: var(--color-text-primary);
@@ -741,7 +741,7 @@
   text-align: center;
 }
 .pilot-contact-body {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body-lg);
   line-height: var(--text-body-lg--line-height);
   color: var(--color-text-secondary);
@@ -755,7 +755,7 @@
   text-align: center;
 }
 .render-page-h1 {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: var(--text-h1);
   line-height: var(--text-h1--line-height);
   font-weight: 700;
@@ -765,7 +765,7 @@
   letter-spacing: -0.02em;
 }
 .render-page-hero-subtitle {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body-lg);
   line-height: var(--text-body-lg--line-height);
   color: var(--color-text-secondary);
@@ -792,7 +792,7 @@
   text-align: center;
 }
 .chat-page-h1 {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: var(--text-h1);
   line-height: var(--text-h1--line-height);
   font-weight: 700;
@@ -802,7 +802,7 @@
   letter-spacing: -0.02em;
 }
 .chat-page-hero-subtitle {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body-lg);
   line-height: var(--text-body-lg--line-height);
   color: var(--color-text-secondary);
@@ -829,7 +829,7 @@
   text-align: center;
 }
 .ag-ui-page-h1 {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: var(--text-h1);
   line-height: var(--text-h1--line-height);
   font-weight: 700;
@@ -839,7 +839,7 @@
   letter-spacing: -0.02em;
 }
 .ag-ui-page-hero-subtitle {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body-lg);
   line-height: var(--text-body-lg--line-height);
   color: var(--color-text-secondary);
@@ -869,7 +869,7 @@
   margin-bottom: 24px;
 }
 .ag-ui-page-langgraph-note {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 13px;
   color: var(--color-text-muted);
   margin: 0 auto;
@@ -887,7 +887,7 @@
   text-align: center;
 }
 .langgraph-page-h1 {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: var(--text-h1);
   line-height: var(--text-h1--line-height);
   font-weight: 700;
@@ -897,7 +897,7 @@
   letter-spacing: -0.02em;
 }
 .langgraph-page-hero-subtitle {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body-lg);
   line-height: var(--text-body-lg--line-height);
   color: var(--color-text-secondary);
@@ -943,7 +943,7 @@
   margin-bottom: 16px;
 }
 .blog-index-h1 {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: var(--text-h1);
   line-height: var(--text-h1--line-height);
   font-weight: 700;
@@ -952,7 +952,7 @@
   margin: 0 0 16px;
 }
 .blog-index-subtitle {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body-lg);
   line-height: var(--text-body-lg--line-height);
   color: var(--color-text-secondary);
@@ -967,7 +967,7 @@
   border-radius: 12px;
 }
 .blog-index-empty-text {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body-lg);
   line-height: var(--text-body-lg--line-height);
   color: var(--color-text-secondary);
@@ -1011,7 +1011,7 @@
   margin-bottom: 24px;
 }
 .blog-post-h1 {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: var(--text-h1);
   line-height: var(--text-h1--line-height);
   font-weight: 700;
@@ -1020,7 +1020,7 @@
   margin: 0 0 24px;
 }
 .blog-post-subtitle {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body-lg);
   line-height: var(--text-body-lg--line-height);
   color: var(--color-text-secondary);
@@ -1045,7 +1045,7 @@
   margin-bottom: 16px;
 }
 .error-page-h1 {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: var(--text-h1);
   line-height: var(--text-h1--line-height);
   font-weight: 700;
@@ -1055,7 +1055,7 @@
   letter-spacing: -0.02em;
 }
 .error-page-body {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body-lg);
   line-height: var(--text-body-lg--line-height);
   color: var(--color-text-secondary);
@@ -1088,7 +1088,7 @@
   margin-bottom: 16px;
 }
 .pricing-page-h1 {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: var(--text-h1);
   line-height: var(--text-h1--line-height);
@@ -1100,7 +1100,7 @@
   max-width: 760px;
   margin: 20px auto 0;
   color: var(--color-text-secondary);
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body-lg);
   line-height: 1.65;
 }
@@ -1116,7 +1116,7 @@
   border-radius: var(--radius-lg);
   background: var(--color-surface-tinted);
   color: var(--color-text-secondary);
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 13px;
   line-height: 1.45;
 }
@@ -1158,7 +1158,7 @@
 
 /* Contact page — app/contact/page.tsx */
 .contact-page-h1 {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: var(--text-h1);
   line-height: var(--text-h1--line-height);
   font-weight: 700;
@@ -1177,7 +1177,7 @@
   margin-bottom: 16px;
 }
 .contact-band-lede {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body-lg);
   line-height: var(--text-body-lg--line-height);
   color: var(--color-text-secondary);
@@ -1185,7 +1185,7 @@
   max-width: 48ch;
 }
 .contact-band-note {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body);
   line-height: var(--text-body--line-height);
   color: var(--color-text-primary);
@@ -1210,7 +1210,7 @@
   padding: 0 12px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-full);
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 13px;
   color: var(--color-text-primary);
   text-decoration: none;
@@ -1237,7 +1237,7 @@
   margin-bottom: 16px;
 }
 .nf-h1 {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: var(--text-h1);
   line-height: var(--text-h1--line-height);
   font-weight: 700;
@@ -1247,7 +1247,7 @@
   letter-spacing: -0.02em;
 }
 .nf-body {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body-lg);
   line-height: var(--text-body-lg--line-height);
   color: var(--color-text-secondary);
@@ -1269,7 +1269,7 @@
   margin-bottom: 16px;
 }
 .privacy-h1 {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: var(--text-h1);
   line-height: var(--text-h1--line-height);
   font-weight: 700;
@@ -1279,7 +1279,7 @@
   letter-spacing: -0.02em;
 }
 .privacy-h2 {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: var(--text-h2);
   color: var(--color-text-primary);
   margin: 0;
@@ -1287,7 +1287,7 @@
   margin-bottom: 12px;
 }
 .privacy-body {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body-lg);
   line-height: var(--text-body-lg--line-height);
   color: var(--color-text-secondary);

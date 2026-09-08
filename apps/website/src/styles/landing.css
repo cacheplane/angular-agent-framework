@@ -14,7 +14,7 @@
   margin-bottom: 16px;
 }
 .hero-heading {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: var(--text-h1);
   line-height: var(--text-h1--line-height);
   font-weight: 700;
@@ -28,7 +28,7 @@
   display: block;
 }
 .hero-subhead {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body-lg);
   line-height: var(--text-body-lg--line-height);
   color: var(--color-text-secondary);
@@ -98,7 +98,7 @@
 }
 .hero-trust {
   margin: 12px 0 0;
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 13px;
   color: var(--color-text-muted);
 }
@@ -126,7 +126,7 @@
   margin-bottom: 16px;
 }
 .feature-block-heading {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: var(--text-h2);
   line-height: var(--text-h2--line-height);
   font-weight: 700;
@@ -136,7 +136,7 @@
   letter-spacing: -0.015em;
 }
 .feature-block-body {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body-lg);
   line-height: var(--text-body-lg--line-height);
   color: var(--color-text-secondary);
@@ -144,7 +144,7 @@
   margin-bottom: 24px;
 }
 .feature-block-cta {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 15px;
   font-weight: 600;
   color: var(--color-accent);
@@ -179,7 +179,7 @@
   padding: 9px 0;
 }
 .feature-block-row-claim {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 15px;
   line-height: 1.45;
   color: var(--color-text-primary);
@@ -231,7 +231,7 @@
   margin-bottom: 16px;
 }
 .wp-heading {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: var(--text-h2);
   line-height: var(--text-h2--line-height);
   font-weight: 700;
@@ -254,7 +254,7 @@
   padding: 9px 0;
 }
 .wp-row-claim {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 15px;
   line-height: 1.45;
   color: var(--color-text-primary);
@@ -280,7 +280,7 @@
   margin-top: 4px;
   font-size: 13px;
   color: var(--color-text-muted);
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
 }
 .wp-already a {
   color: var(--color-accent);
@@ -316,7 +316,7 @@
   margin-bottom: 14px;
 }
 .wp-cover-title {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: 28px;
   line-height: 1.15;
   font-weight: 700;
@@ -325,7 +325,7 @@
   font-style: italic;
 }
 .wp-cover-desc {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 14px;
   line-height: 1.5;
   color: var(--color-text-secondary);
@@ -368,7 +368,7 @@
   background: var(--color-border);
 }
 .pilot-heading {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: var(--text-h2);
   line-height: var(--text-h2--line-height);
   font-weight: 700;
@@ -378,7 +378,7 @@
   letter-spacing: -0.015em;
 }
 .pilot-subhead {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body-lg);
   line-height: var(--text-body-lg--line-height);
   color: var(--color-text-secondary);
@@ -404,7 +404,7 @@
   padding: 9px 0;
 }
 .pilot-row-claim {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 15px;
   line-height: 1.45;
   color: var(--color-text-primary);
@@ -432,7 +432,7 @@
   border-bottom: none;
 }
 .pilot-step-num {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: 44px;
   font-weight: 700;
   line-height: 0.9;
@@ -440,13 +440,13 @@
   color: var(--color-border);
 }
 .pilot-step-title {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 15.5px;
   font-weight: 600;
   color: var(--color-text-primary);
 }
 .pilot-step-body {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 14px;
   line-height: 1.5;
   color: var(--color-text-secondary);
@@ -477,7 +477,7 @@
   margin: 6px 0 0;
 }
 .teams-report-title {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: 26px;
   font-weight: 700;
   line-height: 1.1;
@@ -485,7 +485,7 @@
   color: var(--color-text-primary);
 }
 .teams-report-desc {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 14px;
   line-height: 1.5;
   color: var(--color-text-secondary);
@@ -522,7 +522,7 @@
   margin-bottom: 0;
 }
 .recent-articles-heading {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 14px;
   font-style: italic;
   font-weight: 400;
@@ -553,7 +553,7 @@
   text-align: center;
 }
 .final-cta-heading {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: var(--text-h2);
   line-height: var(--text-h2--line-height);
   font-weight: 700;
@@ -564,7 +564,7 @@
   font-style: italic;
 }
 .final-cta-subtext {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body-lg);
   line-height: var(--text-body-lg--line-height);
   color: var(--color-text-secondary);
@@ -579,7 +579,7 @@
   margin-bottom: 16px;
 }
 .final-cta-caption {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-caption);
   color: var(--color-text-muted);
   margin: 0;
@@ -593,7 +593,7 @@
   position: absolute;
   right: -30px;
   bottom: -70px;
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-style: italic;
   font-weight: 800;
   font-size: 210px;
@@ -680,7 +680,7 @@
   margin-bottom: 16px;
 }
 .home-faq-heading {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: var(--text-h2);
   line-height: var(--text-h2--line-height);
   font-weight: 700;
@@ -713,7 +713,7 @@
   gap: 4px;
 }
 .backends-grid-name {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 14px;
   font-weight: 600;
   color: var(--color-text-primary);
@@ -767,7 +767,7 @@
   gap: 5px;
 }
 .demo-modal__tab {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 12px;
   font-weight: 600;
   padding: 6px 12px;
@@ -807,12 +807,12 @@
   background: var(--color-surface);
 }
 .demo-modal__hint {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 12px;
   color: var(--color-text-muted);
 }
 .demo-modal__open-link {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 12px;
   font-weight: 600;
   color: var(--color-accent);
@@ -900,7 +900,7 @@
   margin-bottom: 14px;
 }
 .render-show-heading {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: clamp(26px, 3.5vw, 42px);
   font-weight: 800;
   line-height: 1.1;
@@ -948,7 +948,7 @@
   margin-bottom: 14px;
 }
 .lg-show-heading {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: clamp(26px, 3.5vw, 42px);
   font-weight: 800;
   line-height: 1.1;
@@ -996,7 +996,7 @@
   margin-bottom: 14px;
 }
 .chat-show-heading {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: clamp(26px, 3.5vw, 42px);
   font-weight: 800;
   line-height: 1.1;
@@ -1042,7 +1042,7 @@
   position: absolute;
   right: -40px;
   top: -78px;
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-style: italic;
   font-weight: 800;
   font-size: clamp(150px, 21vw, 300px);
@@ -1148,7 +1148,7 @@
   );
 }
 .proof-strip-value {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: 58px;
   font-weight: 700;
   line-height: 0.9;
@@ -1168,7 +1168,7 @@
   display: block;
 }
 .proof-strip-caption {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 14px;
   line-height: 1.5;
   color: var(--color-text-secondary);
@@ -1212,7 +1212,7 @@
   min-width: 0;
 }
 .reliability-receipt-claim {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 15px;
   font-weight: 600;
   line-height: 1.4;
@@ -1220,7 +1220,7 @@
   margin: 0;
 }
 .reliability-receipt-detail {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 13px;
   line-height: 1.5;
   color: var(--color-text-secondary);
@@ -1268,7 +1268,7 @@
   object-fit: contain;
 }
 .reliability-works-with-name {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 500;
   color: var(--color-text-secondary);
@@ -1513,7 +1513,7 @@
   color: #fff;
 }
 .stage-claim {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: 30px;
   line-height: 1.08;
   font-weight: 500;
@@ -1685,7 +1685,7 @@
   gap: 12px;
 }
 .stack-diagram-body {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body-lg);
   line-height: var(--text-body-lg--line-height);
   color: var(--color-text-secondary);
@@ -1713,7 +1713,7 @@
   min-width: 1024px;
 }
 .arch-figure text {
-  font-family: var(--font-inter);
+  font-family: var(--font-diagram);
   font-size: 13.5px;
   fill: var(--color-text-primary);
 }
@@ -1819,7 +1819,7 @@
   padding: 0;
   display: grid;
   gap: 6px;
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 13px;
   color: var(--color-text-secondary);
 }
@@ -1881,7 +1881,7 @@
 }
 .arch-stack-label {
   text-align: left;
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 11px;
   letter-spacing: 0.14em;
   font-weight: 700;
@@ -1913,7 +1913,7 @@
   height: 20px;
 }
 .arch-stack-title {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 15px;
   font-weight: 600;
   margin: 0;
@@ -1929,7 +1929,7 @@
   margin: 8px 0 0;
   padding: 0;
   list-style: none;
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 13px;
   color: var(--color-text-secondary);
   display: grid;
@@ -1942,7 +1942,7 @@
   margin: 10px 0 0;
   padding: 0;
   list-style: none;
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 500;
 }
@@ -2002,14 +2002,14 @@
   max-width: 420px;
 }
 .home-concept-title {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 1rem;
   font-weight: 600;
   color: var(--color-text-primary);
   margin: 0;
 }
 .home-concept-sentence {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 0.9rem;
   line-height: 1.55;
   color: var(--color-text-secondary);
@@ -2139,7 +2139,7 @@
      live control looking double-exposed. */
   background: rgb(248 248 248);
   color: #111;
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 15px;
   font-weight: 600;
   text-decoration: none;

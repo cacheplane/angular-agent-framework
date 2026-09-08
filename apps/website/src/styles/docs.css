@@ -163,9 +163,9 @@ body:has([data-website-workspace-host]) {
 
 .docs-prose { overflow-wrap: break-word; word-break: break-word; max-width: 100%; }
 .docs-prose > * { max-width: 100%; }
-.docs-prose h1 { font-size: 1.875rem; font-weight: 700; margin-top: 0; margin-bottom: 1rem; font-family: var(--font-garamond); }
-.docs-prose h2 { font-size: 1.5rem; font-weight: 600; margin-top: 2.5rem; margin-bottom: 1rem; font-family: var(--font-garamond); }
-.docs-prose h3 { font-size: 1.25rem; font-weight: 600; margin-top: 2rem; margin-bottom: 0.75rem; font-family: var(--font-garamond); }
+.docs-prose h1 { font-size: 1.875rem; font-weight: 700; margin-top: 0; margin-bottom: 1rem; font-family: var(--font-display); }
+.docs-prose h2 { font-size: 1.5rem; font-weight: 600; margin-top: 2.5rem; margin-bottom: 1rem; font-family: var(--font-display); }
+.docs-prose h3 { font-size: 1.25rem; font-weight: 600; margin-top: 2rem; margin-bottom: 0.75rem; font-family: var(--font-display); }
 .docs-prose p { line-height: 1.75; margin-bottom: 1.25rem; }
 .docs-prose ul, .docs-prose ol {
   margin-bottom: 1.25rem;
@@ -366,14 +366,14 @@ body:has([data-website-workspace-host]) {
   flex-shrink: 0;
 }
 .mdx-callout-title {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 600;
   color: var(--callout-tone-text);
 }
 .mdx-callout-body {
   padding: 12px 14px;
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 15px;
   line-height: 1.6;
   color: var(--color-text-secondary);
@@ -406,7 +406,7 @@ body:has([data-website-workspace-host]) {
   padding: 7px 14px;
   border-radius: var(--radius-md);
   border: 1px solid var(--callout-tone-text, var(--color-accent));
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 600;
   line-height: 1.2;
@@ -521,14 +521,14 @@ body:has([data-website-workspace-host]) {
   padding-bottom: 8px;
 }
 .mdx-step-title {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 17px;
   font-weight: 600;
   color: var(--color-text-primary);
   margin-bottom: 4px;
 }
 .mdx-step-body {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 16px;
   line-height: 1.6;
   color: var(--color-text-secondary);
@@ -570,7 +570,7 @@ body:has([data-website-workspace-host]) {
   margin-bottom: 6px;
 }
 .mdx-card-title {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 0.95rem;
   color: var(--color-text-primary);
@@ -582,7 +582,7 @@ body:has([data-website-workspace-host]) {
   margin-top: 2px;
 }
 .mdx-card-body {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 0.85rem;
   line-height: 1.5;
   color: var(--color-text-secondary);
@@ -759,7 +759,7 @@ body:has([data-website-workspace-host]) {
   margin-bottom: 8px;
 }
 .mdx-chip-title {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 600;
   color: var(--color-text-primary);
@@ -830,7 +830,7 @@ body:has([data-website-workspace-host]) {
 .tp-diagram-node[data-meta="mono"] .tp-diagram-meta { font-family: var(--font-mono); }
 .tp-diagram-dot { fill: var(--color-border); }
 .tp-diagram-caption {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 13px;
   color: var(--color-text-muted);
   text-align: center;
@@ -863,13 +863,13 @@ body:has([data-website-workspace-host]) {
   fill: var(--color-text-primary);
 }
 .tp-diagram-node[data-title="sans"] .tp-diagram-title {
-  font-family: var(--font-inter);
+  font-family: var(--font-diagram);
   font-size: 11px;
   font-weight: 600;
   fill: var(--color-text-secondary);
 }
 .tp-diagram-meta {
-  font-family: var(--font-inter);
+  font-family: var(--font-diagram);
   font-size: 10.5px;
   fill: var(--color-text-muted);
 }
@@ -1047,7 +1047,7 @@ body:has([data-website-workspace-host]) {
   min-width: 0;
 }
 .docs-control-plane-search-label {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 0.8rem;
 }
 .docs-control-plane-search-kbd {
@@ -1105,7 +1105,7 @@ body:has([data-website-workspace-host]) {
   width: 100%;
   border: none;
   outline: none;
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 0.95rem;
   color: var(--color-text-primary);
   background: transparent;
@@ -1151,7 +1151,7 @@ body:has([data-website-workspace-host]) {
 
 /* Content hits: a section heading, its page, and why it matched. */
 .docs-search-group-label {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -1162,7 +1162,7 @@ body:has([data-website-workspace-host]) {
 .docs-search-result-snippet {
   flex-basis: 100%;
   width: 100%;
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 12px;
   line-height: 1.5;
   color: var(--color-text-secondary);
@@ -1233,7 +1233,7 @@ body:has([data-website-workspace-host]) {
  * links inside each li, and when only the links carried 13px the first two
  * separators inherited body's 16px/24px and floated 3px high. */
 .website-workspace-host [data-workspace-trail] ol[data-workspace-trail-list] {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 13px;
   line-height: 1.5;
   color: var(--color-text-muted);
@@ -1288,7 +1288,7 @@ body:has([data-website-workspace-host]) {
   width: 100%;
   text-align: left;
   padding: 8px 12px;
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 13px;
   color: var(--color-text-primary);
   background: transparent;
@@ -1730,7 +1730,7 @@ body:has([data-website-workspace-host]) {
   margin-bottom: 8px;
 }
 .docs-prevnext-title {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 16px;
   font-weight: 600;
   color: var(--color-accent);
@@ -1860,7 +1860,7 @@ body:has([data-website-workspace-host]) {
   background: var(--color-accent-surface);
 }
 .docs-control-plane [data-control-plane-rail-label] {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 10px;
   line-height: 1;
   font-weight: 600;
@@ -1902,7 +1902,7 @@ body:has([data-website-workspace-host]) {
   color: var(--color-text-muted);
   background: transparent;
   cursor: pointer;
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 12px;
   font-weight: 600;
   letter-spacing: normal;
@@ -1925,7 +1925,7 @@ body:has([data-website-workspace-host]) {
   margin: 0;
   padding: 8px;
   color: var(--color-text-muted);
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 12px;
   line-height: 1.2;
   font-weight: 600;
@@ -1946,7 +1946,7 @@ body:has([data-website-workspace-host]) {
   justify-content: space-between;
 }
 .docs-sidebar-lib-trigger-label {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 13px;
 }
 /* Library-neutral pages: the picker is an invitation, not a statement. */
@@ -1972,7 +1972,7 @@ body:has([data-website-workspace-host]) {
   display: block;
   padding: 7px 9px 4px;
   color: var(--color-text-muted);
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 10.5px;
   font-weight: 700;
   letter-spacing: 0.07em;
@@ -1994,7 +1994,7 @@ body:has([data-website-workspace-host]) {
   text-align: left;
   text-decoration: none;
 }
-.docs-sidebar-lib-item-title { font-family: var(--font-inter); }
+.docs-sidebar-lib-item-title { font-family: var(--font-sans); }
 .docs-sidebar-top-links,
 .docs-sidebar-section-links { display: flex; flex-direction: column; }
 .docs-sidebar-top-links { margin: 0 8px 8px; }
@@ -2003,7 +2003,7 @@ body:has([data-website-workspace-host]) {
   margin: 1px 0;
   padding: 7px 9px;
   border-radius: 7px;
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 13px;
   line-height: 1.35;
   text-decoration: none;
@@ -2019,7 +2019,7 @@ body:has([data-website-workspace-host]) {
   align-items: center;
   justify-content: space-between;
   color: var(--color-text-muted);
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 12px;
   font-weight: 600;
 }
@@ -2067,7 +2067,7 @@ body:has([data-website-workspace-host]) {
   color: var(--color-surface);
   background: var(--color-text-primary);
   box-shadow: var(--shadow-sm);
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 11px;
   font-weight: 500;
   line-height: 1;
@@ -2113,7 +2113,7 @@ body:has([data-website-workspace-host]) {
 /* Docs table of contents: complete rounded active/hover surfaces. */
 .docs-toc:focus { outline: none; }
 .docs-toc-label {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 12px;
   font-weight: 600;
 }
@@ -2162,7 +2162,7 @@ body:has([data-website-workspace-host]) {
   color: var(--color-surface);
   background: var(--color-text-primary);
   box-shadow: var(--shadow-sm);
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 11px;
   font-weight: 500;
   line-height: 1;
@@ -2220,7 +2220,7 @@ body:has([data-website-workspace-host]) {
   display: flex;
   align-items: center;
   color: var(--color-text-secondary);
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 12px;
   text-decoration: none;
 }

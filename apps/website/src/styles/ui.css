@@ -96,8 +96,8 @@
 }
 
 /*
- * FONTS: every font-family in apps/website CSS is var(--font-inter),
- * var(--font-mono), or var(--font-garamond) — never a raw stack.
+ * FONTS: every font-family in apps/website CSS is var(--font-sans),
+ * var(--font-mono), or var(--font-display) — never a raw stack.
  *
  * layout.tsx loads the fonts via next/font, which defines those three
  * vars on <html> with self-hosted, size-adjusted stacks ("Inter",
@@ -109,6 +109,13 @@
  * more mixed stacks. theme.css also defines the same var names from
  * the design tokens; next/font's <html>-level values win, which is now
  * the intended resolution, and they guarantee the vars always resolve.
+ *
+ * --font-diagram is diagram-only and MUST keep being supplied by next/font in
+ * layout.tsx. theme.css emits it as a raw `Inter, ...` stack, which next/font's
+ * hashed family never matches — so if the loader is removed, diagrams silently
+ * fall back to system-ui, every glyph width shifts, and
+ * e2e/home-architecture.spec.ts (which measures text runs against their cards)
+ * is the only thing that will notice.
  */
 /* UI primitive — Pill */
 [data-ui="pill"] {
@@ -208,7 +215,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-weight: 600;
   line-height: 1;
   border-radius: var(--radius-md);
@@ -287,7 +294,7 @@
   gap: 16px;
   padding: 20px 0;
   cursor: pointer;
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 17px;
   font-weight: 600;
   color: var(--color-text-primary);
@@ -300,7 +307,7 @@
 }
 [data-ui="faq-item"] > div {
   padding-bottom: 20px;
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 16px;
   line-height: 1.6;
   color: var(--color-text-secondary);
@@ -311,7 +318,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-weight: 700;
   color: var(--color-text-primary);
   line-height: 1;
@@ -449,7 +456,7 @@
   margin-bottom: 12px;
 }
 [data-ui="tab-group-tab"] {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 600;
   padding: 8px 14px;
@@ -469,7 +476,7 @@
   margin-bottom: 16px;
 }
 [data-ui="section-header"] .section-header-heading {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: var(--text-h2);
   line-height: var(--text-h2--line-height);
   font-weight: 700;
@@ -478,7 +485,7 @@
   margin: 0;
 }
 [data-ui="section-header"] .section-header-aside {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 15px;
   line-height: 1.6;
   font-style: italic;

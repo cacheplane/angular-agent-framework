@@ -45,7 +45,7 @@
   transform: translateY(-50%);
   background: var(--color-accent);
   color: #fff;
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -70,7 +70,7 @@
   color: var(--color-accent);
 }
 .pricing-plan-journey {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 12px;
   font-weight: 700;
   color: var(--color-text-muted);
@@ -78,7 +78,7 @@
 }
 .pricing-plan-name {
   margin: 0 0 18px;
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: 34px;
   line-height: 1;
   color: var(--color-text-primary);
@@ -93,7 +93,7 @@
   flex-wrap: wrap;
 }
 .pricing-plan-price-amount {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 30px;
   color: var(--color-text-primary);
@@ -116,7 +116,7 @@
   margin: 6px 0 20px;
   min-height: 88px;
   color: var(--color-text-secondary);
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 13px;
   line-height: 1.55;
 }
@@ -133,7 +133,7 @@
   display: flex;
   align-items: flex-start;
   gap: 9px;
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 12px;
   line-height: 1.45;
   color: var(--color-text-secondary);
@@ -173,7 +173,7 @@
 .pricing-section-heading {
   margin: 0 0 14px;
   color: var(--color-text-primary);
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: clamp(30px, 4vw, 44px);
   line-height: 1.08;
   letter-spacing: -0.02em;
@@ -181,7 +181,7 @@
 .pricing-section-body {
   margin: 0;
   color: var(--color-text-secondary);
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 16px;
   line-height: 1.65;
 }
@@ -206,7 +206,7 @@
   justify-content: center;
   gap: 8px;
   color: var(--color-text-primary);
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   line-height: 1.4;
 }
 .pricing-boundary-block[data-accent] {
@@ -231,7 +231,7 @@
   border-left: 3px solid var(--color-accent);
   background: var(--color-surface);
   color: var(--color-text-secondary);
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 14px;
   line-height: 1.6;
 }
@@ -247,7 +247,7 @@
   border-collapse: separate;
   border-spacing: 0;
   color: var(--color-text-secondary);
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 12px;
   line-height: 1.45;
 }
@@ -340,14 +340,14 @@
   margin-bottom: 4px;
 }
 .enterprise-band-heading {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: var(--text-h2);
   line-height: var(--text-h2--line-height);
   color: var(--color-text-primary);
   margin: 0;
 }
 .enterprise-band-lede {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body-lg);
   line-height: var(--text-body-lg--line-height);
   color: var(--color-text-secondary);
@@ -362,7 +362,7 @@
   margin-bottom: 16px;
 }
 .pricing-faq-heading {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: var(--text-h2);
   line-height: var(--text-h2--line-height);
   font-weight: 700;
@@ -397,7 +397,7 @@
   color: var(--color-text-muted);
 }
 .post-card-title {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-h3);
   line-height: var(--text-h3--line-height);
   font-weight: var(--text-h3--font-weight);
@@ -439,7 +439,7 @@
   margin-bottom: 32px;
 }
 .featured-post-card-title {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: var(--text-h2);
   line-height: var(--text-h2--line-height);
   font-weight: 700;
@@ -447,7 +447,7 @@
   margin: 0;
 }
 .featured-post-card-description {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body-lg);
   line-height: var(--text-body-lg--line-height);
   color: var(--color-text-secondary);
@@ -545,7 +545,7 @@
   margin: 0 auto;
 }
 .sol-demo-heading {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: var(--text-h2);
   line-height: var(--text-h2--line-height);
   font-weight: 700;
@@ -555,7 +555,7 @@
   letter-spacing: -0.015em;
 }
 .sol-demo-caption {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body-lg);
   line-height: var(--text-body-lg--line-height);
   color: var(--color-text-secondary);
@@ -563,7 +563,7 @@
   max-width: 62ch;
 }
 .sol-demo-note {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body);
   color: var(--color-text-muted);
   margin: 14px 0 0;
@@ -578,7 +578,7 @@
   margin: 0 auto;
 }
 .sol-code-heading {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: var(--text-h2);
   line-height: var(--text-h2--line-height);
   font-weight: 700;
