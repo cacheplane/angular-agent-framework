@@ -8,7 +8,17 @@ if (!process.env['ANTHROPIC_API_KEY'] && loadEnvFile && fs.existsSync('.env')) {
   loadEnvFile('.env');
 }
 
-const client = new Anthropic();
+/**
+ * Constructed on first use rather than at import time. The module also exports
+ * pure helpers (mdToHTML, escapeHtml) that a unit spec imports, and building a
+ * client at import throws in a browser-like test environment — which is why
+ * those helpers had no spec while shipping three text-deleting bugs.
+ */
+let client: Anthropic | undefined;
+function anthropic(): Anthropic {
+  client ??= new Anthropic();
+  return client;
+}
 const MODEL = process.env['ANTHROPIC_MODEL'] ?? 'claude-opus-4-5';
 
 const CURRENT_API_CONTEXT = `You are writing public technical whitepapers for Threadplane Threadplane.
@@ -583,19 +593,28 @@ const signalRule = (width: number) =>
  * elements — which render as NOTHING — so the shipped PDF read "` ` manages
  * scroll position" with the component name silently gone.
  */
-function escapeHtml(text: string): string {
+export function escapeHtml(text: string): string {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-function mdToHTML(md: string): string {
+/**
+ * Marks a lifted-out fenced block. A Private Use Area character rather than
+ * NUL: it cannot appear in prose, and unlike a control character it does not
+ * trip `no-control-regex`.
+ */
+const FENCE_SENTINEL = '\uE000';
+
+export function mdToHTML(md: string): string {
   // Fenced blocks are lifted out first so their contents are escaped exactly
-  // once and never re-processed by the inline rules below.
+  // once and never re-processed by the inline rules below. The sentinel is a
+  // Private Use Area character rather than NUL: it cannot appear in prose, and
+  // unlike a control character it does not trip `no-control-regex`.
   const fenced: string[] = [];
   const withoutFences = md.replace(
     /```[\w]*\n([\s\S]*?)```/g,
     (_match, code: string) => {
       fenced.push(`<pre><code>${escapeHtml(code)}</code></pre>`);
-      return `\u0000FENCE${fenced.length - 1}\u0000`;
+      return `${FENCE_SENTINEL}FENCE${fenced.length - 1}${FENCE_SENTINEL}`;
     },
   );
 
@@ -614,12 +633,24 @@ function mdToHTML(md: string): string {
     .replace(/(<li>[^\n]+<\/li>\n?)+/g, match => `<ul>${match}</ul>`)
     .split('\n\n')
     .map(block => {
-      if (block.startsWith('<h') || block.startsWith('<ul') || block.startsWith('<pre')) return block;
+      // The fence sentinel must count as pre-formatted here. It does not start
+      // with `<pre`, so without this the restored block lands inside a <p> —
+      // and `<p><pre>` is invalid, so the browser auto-closes the paragraph and
+      // leaves a stray `</p>`, which is the exact artifact this rewrite exists
+      // to remove.
+      if (
+        block.startsWith(FENCE_SENTINEL) ||
+        block.startsWith('<h') ||
+        block.startsWith('<ul') ||
+        block.startsWith('<pre')
+      ) {
+        return block;
+      }
       const trimmed = block.trim();
       return trimmed ? `<p>${trimmed}</p>` : '';
     })
     .join('\n')
-    .replace(/\u0000FENCE(\d+)\u0000/g, (_match, index: string) => fenced[Number(index)]);
+    .replace(/\uE000FENCE(\d+)\uE000/g, (_match, index: string) => fenced[Number(index)]);
 }
 
 // ── HTML builder ─────────────────────────────────────────────────────────
@@ -717,7 +748,7 @@ async function generateChapter(
   chapter: WhitepaperConfig['chapters'][0],
 ): Promise<string> {
   console.log(`  Generating: ${chapter.title}...`);
-  const message = await client.messages.create({
+  const message = await anthropic().messages.create({
     model: MODEL,
     max_tokens: 1500,
     system: CURRENT_API_CONTEXT,
