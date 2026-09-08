@@ -1427,15 +1427,15 @@ wheels = [
 
 [[package]]
 name = "threadplane-middleware"
-version = "0.0.1"
+version = "0.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "langchain-core" },
     { name = "langgraph" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/01/5f/fee360e3547bede9388bb72a9ad20ca811935582b989c78dafeaae57558a/threadplane_middleware-0.0.1.tar.gz", hash = "sha256:60c931d0248ed2e701a3aa1330c6fd647e611a949500269c5ba82f3607102cef", size = 95505, upload-time = "2026-06-16T20:55:18.335Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f7/87/1b8f5bfbc8144847133ff8e30084546b37607d148a8ace9c5a171354a10e/threadplane_middleware-0.1.0.tar.gz", hash = "sha256:66d550d267b38301e24e0e2eab4df1b83af533272e0b276f6757b13fed184ec7", size = 99030, upload-time = "2026-09-08T19:54:04.607Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/72/55/28e6b752f3f53f2c5d2c2fa3ef27ac62a255a3b29376384f2dfc96d8acb0/threadplane_middleware-0.0.1-py3-none-any.whl", hash = "sha256:c14e49d506e8bd3078f54df381c150d390f2d129f844694d8f5154a2cd8710ea", size = 4315, upload-time = "2026-06-16T20:55:19.044Z" },
+    { url = "https://files.pythonhosted.org/packages/da/c3/e29d9e4d56beb2c8745725b620b7bcb4841469cf7f5014bff3589da5702f/threadplane_middleware-0.1.0-py3-none-any.whl", hash = "sha256:c5682ec2a380a19ec9bfc408f808b031b37acf3a87488988493c0ecbb3f3f602", size = 6872, upload-time = "2026-09-08T19:54:03.149Z" },
 ]
 
 [[package]]
