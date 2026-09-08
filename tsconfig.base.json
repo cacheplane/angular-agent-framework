@@ -15,6 +15,15 @@
     "noImplicitOverride": true,
     "noImplicitReturns": true,
     "noUnusedLocals": true,
+    // TypeScript 7 drops `baseUrl`, and since TypeScript 5.0 the `paths` below
+    // no longer need it (they resolve against this file's directory). It cannot
+    // go yet: Nx's buildable-library executors (`@nx/angular:package`,
+    // `@nx/js:tsc`) write a generated tsconfig under `tmp/<projectRoot>/build/`
+    // that re-declares `paths` with workspace-root-relative dist outputs such as
+    // `dist/libs/telemetry/browser`. Those entries are non-relative, so without a
+    // `baseUrl` TypeScript reports TS5090 and discards the whole `paths` map,
+    // and every library that depends on another library fails to compile.
+    // Removing this needs an Nx fix (or the Nx TS-solution setup) first.
     "baseUrl": ".",
     "paths": {
       "@threadplane/design-tokens": ["libs/design-tokens/src/index.ts"],

@@ -2,9 +2,6 @@
   "extends": "./tsconfig.lib.json",
   "compilerOptions": {
     "noEmit": true,
-    // This target runs the workspace `tsc` (newer than the build compilers),
-    // which errors on the inherited baseUrl unless deprecations are ignored.
-    "ignoreDeprecations": "6.0",
     // Type-specs import sibling libraries through tsconfig paths; with noEmit
     // the rootDir only has to be wide enough to contain them.
     "rootDir": "../..",
