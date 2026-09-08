@@ -167,6 +167,19 @@ an accessibility concession.
 
 The drop shadow currently on `.nav-bar` is removed in both states.
 
+**Known gap: the bar is solid for one hydration on first load.** `Nav` is a client
+component, but Next still server-renders it, and the first render has no layout to
+read — so the SSR HTML ships `solid` and the flip to `transparent` waits on
+hydration. Measured against `next dev` with a per-frame sampler: ~250ms of white
+bar over the yellow hero, then a 200ms fade. Production will be faster than the
+dev number but not zero.
+
+Server-rendering `transparent` for hero routes would fix the common case and
+reintroduce the inverse one — a page restored already-scrolled would ship
+transparent over white content. It also risks a hydration mismatch. Left as-is
+deliberately; **judge it on the deployed preview**, since that is the only place
+the real timing exists, and it is already a required manual gate for this feature.
+
 **Hero routes** are an exported list in `nav-config.ts`. **This work ships with `/` as the
 only entry.** `/langgraph`, `/render`, `/chat`, and `/ag-ui` open on white today; listing
 them before their heroes exist would render navy-on-white links over a white page with no
