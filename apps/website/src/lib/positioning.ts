@@ -62,16 +62,22 @@ export const HERO_TRUST_LINE = `MIT · ${formatAngularRange(WEBSITE_SUPPORTED_AN
  */
 export const GITHUB_REPO_URL = 'https://github.com/cacheplane/angular-agent-framework';
 
-// ── The open-source strip (the slim dark band after the stage). One sentence,
-// the licence, the repo. Bold in what it says, quiet in how it looks: the
-// point is that there is no catch, and the remedy for disagreeing with us is
-// a fork — so it must not read as another sales pitch. ──────────────────────
+// ── The open-source band (the dark full stop after the stage). An eyebrow,
+// two words, the licence and the repo. It used to be the quietest band on the
+// page; it is now loud on purpose, because the offer — no catch, and the
+// remedy for disagreeing with us is a fork — is one of the strongest things
+// the product has to say. ───────────────────────────────────────────────────
 export const OPEN_SOURCE_STRIP = {
-  /** The sentence, up to the part that carries the emphasis. */
-  lead: 'Yes, this is all free. Don’t like something?',
-  /** Rendered italic at the end of the same line. */
-  emphasis: 'Fork us.',
-  /** The licence tag beside the action. */
+  /**
+   * The US transponder code for VFR flight not receiving ATC services —
+   * flying with nobody controlling you, which is the offer exactly. It is
+   * texture, not information: the headline carries the whole meaning, so a
+   * reader who does not fly loses nothing.
+   */
+  eyebrow: 'Squawk 1200',
+  /** Two words at up to 116px. The band's entire argument. */
+  headline: 'Fork us.',
+  /** The bare licence, set in mono after the action. */
   licence: 'MIT',
   cta: 'Fork on GitHub',
 } as const;

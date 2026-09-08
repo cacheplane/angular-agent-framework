@@ -616,58 +616,77 @@
   }
 }
 
-/* OpenSourceStrip — components/landing/OpenSourceStrip.tsx
- *
- * A strip, not a section: the sentence sits at the left edge of the page
- * container and the action at the right, so it reads as an aside between the
- * stage and the teams block. It deliberately undercuts the tight section
- * rhythm (48–80px) — at that height the band still reads as a full closing
- * beat, which is the volume this replaced. The [data-tight] selector is two
- * attributes, so the override has to carry both to win. */
-[data-ui="section"][data-tight].open-source-strip {
-  padding-top: clamp(28px, 3.2vw, 44px);
-  padding-bottom: clamp(28px, 3.2vw, 44px);
+/* The Fork us band — components/landing/OpenSourceStrip.tsx.
+ * No padding override: the band takes the standard --spacing-section-y, which
+ * is where its ~461px comes from. The dark surface already sets position:
+ * relative, but the runway depends on it, so it is set here too rather than
+ * inherited from a rule that could change for unrelated reasons. */
+.open-source-strip {
+  position: relative;
 }
-.open-source-strip-inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px 32px;
-  flex-wrap: wrap;
+.open-source-strip-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  /* The Eyebrow primitive pins 1.4; this rule is hand-rolled for the tighter
+     11px/.18em the band wants, so it has to carry the line-height too rather
+     than inherit the body's. */
+  line-height: 1.4;
+  color: var(--color-signal);
+  margin: 0 0 22px;
 }
-.open-source-strip-line {
-  /* Body-scale editorial copy, not display type: it carries an italic <em>,
-     and Archivo Black has no italic. --font-sans (Archivo) does. */
-  font-family: var(--font-sans);
-  font-size: 23px;
-  line-height: 1.35;
+.open-source-strip-headline {
+  /* --font-display is available here now: the italic <em> this line used to
+     carry is gone, and Archivo Black has no italic. */
+  font-family: var(--font-display);
   font-weight: 400;
-  letter-spacing: -0.005em;
+  font-size: clamp(56px, 8.5vw, 116px);
+  line-height: 0.9;
+  letter-spacing: -0.04em;
   color: var(--color-text-primary);
   margin: 0;
-}
-.open-source-strip-line em {
-  font-style: italic;
 }
 .open-source-strip-actions {
   display: flex;
   align-items: center;
-  gap: 18px;
-  flex: none;
+  gap: 20px;
+  margin-top: 38px;
 }
 .open-source-strip-licence {
-  font-family: var(--font-sans);
-  font-size: 12px;
-  letter-spacing: 0.02em;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: var(--color-text-muted);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-pill, 999px);
-  padding: 4px 10px;
   white-space: nowrap;
 }
+/* The runway centreline. A fixed 46px dash on a 92px period rather than a
+ * proportional one, so it reads as the same painted marking at every width. */
+.open-source-strip-runway {
+  /* Decorative and layered over the band's bottom padding, so it must not
+     swallow a text-selection drag — the dark surface's top seam
+     (ui.css, [data-surface="dark"]::before) sets this for the same reason. */
+  pointer-events: none;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 30px;
+  height: 6px;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(255, 175, 0, 0.5) 0 46px,
+    transparent 46px 92px
+  );
+}
 @media (max-width: 640px) {
-  .open-source-strip-line {
-    font-size: 21px;
+  .open-source-strip-headline {
+    font-size: clamp(44px, 13vw, 56px);
+  }
+  .open-source-strip-actions {
+    flex-wrap: wrap;
+    gap: 14px;
   }
 }
 

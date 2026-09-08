@@ -40,8 +40,8 @@ export default function HomePage() {
           (live-stage spec §3, §8). Copy lives in STAGE_RAIL (positioning.ts). */}
       <Stage proof={STAGE_PROOF} />
 
-      {/* The open-source beat: a slim dark strip, not a second CTA. Copy lives
-          in OPEN_SOURCE_STRIP (positioning.ts). */}
+      {/* The open-source full stop: a loud dark band with one fork CTA. Copy
+          lives in OPEN_SOURCE_STRIP (positioning.ts). */}
       <OpenSourceStrip />
       <TeamsBlock formPolicy={formPolicy} />
       <HomeFAQ />
