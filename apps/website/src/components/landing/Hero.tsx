@@ -27,7 +27,7 @@ export function Hero() {
   const closeInstall = useCallback(() => setInstallOpen(false), []);
 
   return (
-    <Section surface="canvas" ariaLabelledBy="hero-heading">
+    <Section surface="signal" ariaLabelledBy="hero-heading">
       <Container>
         <div className="hero-stack">
           <Eyebrow tone="accent" className="hero-eyebrow">{HERO_EYEBROW}</Eyebrow>
@@ -59,7 +59,7 @@ export function Hero() {
             </a>
           </div>
           <HeroDemo />
-          <p className="hero-trust">{HERO_TRUST_LINE}</p>
+          <p className="hero-trust hero-strip">{HERO_TRUST_LINE}</p>
         </div>
       </Container>
       <InstallDialog open={installOpen} onClose={closeInstall} />
