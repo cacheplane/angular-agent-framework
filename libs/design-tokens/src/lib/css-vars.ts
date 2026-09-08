@@ -47,6 +47,11 @@ export function cssVars(theme: Theme) {
 
     // Raw brand colors (invariant)
     '--ds-accent-light': brand.accentLight,
+    '--ds-signal': brand.signal,
+    '--ds-signal-strong': brand.signalStrong,
+    '--ds-scope': brand.scope,
+    '--ds-alert': brand.alert,
+    '--ds-ink': brand.ink,
     '--ds-angular-red': brand.angularRed,
     '--ds-render-green': brand.renderGreen,
     '--ds-chat-purple': brand.chatPurple,

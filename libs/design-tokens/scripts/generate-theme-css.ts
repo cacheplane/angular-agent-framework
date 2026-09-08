@@ -80,6 +80,11 @@ function buildThemeBlock(): string {
   lines.push('');
   lines.push('  /* Brand */');
   lines.push(`  --color-accent-light: ${brand.accentLight};`);
+  lines.push(`  --color-signal: ${brand.signal};`);
+  lines.push(`  --color-signal-strong: ${brand.signalStrong};`);
+  lines.push(`  --color-scope: ${brand.scope};`);
+  lines.push(`  --color-alert: ${brand.alert};`);
+  lines.push(`  --color-ink: ${brand.ink};`);
   lines.push(`  --color-angular-red: ${brand.angularRed};`);
   lines.push(`  --color-render-green: ${brand.renderGreen};`);
   lines.push(`  --color-chat-purple: ${brand.chatPurple};`);
@@ -203,6 +208,11 @@ function buildTokensBlock(theme: ThemeOverrides): string {
   lines.push(`  --ds-text-muted: ${theme.textMuted};`);
   lines.push(`  --ds-text-inverted: ${theme.textInverted};`);
   lines.push(`  --ds-sidebar-bg: ${theme.sidebarBg};`);
+  lines.push(`  --ds-signal: ${brand.signal};`);
+  lines.push(`  --ds-signal-strong: ${brand.signalStrong};`);
+  lines.push(`  --ds-scope: ${brand.scope};`);
+  lines.push(`  --ds-alert: ${brand.alert};`);
+  lines.push(`  --ds-ink: ${brand.ink};`);
   lines.push(`  --ds-angular-red: ${brand.angularRed};`);
   lines.push(`  --ds-render-green: ${brand.renderGreen};`);
   lines.push(`  --ds-chat-purple: ${brand.chatPurple};`);

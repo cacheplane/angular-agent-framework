@@ -42,6 +42,11 @@
 
   /* Brand */
   --color-accent-light: #FFAF00;
+  --color-signal: #FFAF00;
+  --color-signal-strong: #FFB700;
+  --color-scope: #15253E;
+  --color-alert: #FF3200;
+  --color-ink: #0A0A0A;
   --color-angular-red: #DD0031;
   --color-render-green: #1a7a40;
   --color-chat-purple: #5a00c8;

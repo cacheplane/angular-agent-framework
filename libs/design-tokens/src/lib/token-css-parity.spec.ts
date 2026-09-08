@@ -18,6 +18,11 @@ const CSS_VAR_BY_PATH: Record<string, string> = {
   // Brand (theme-invariant)
   'brand.accent': '--color-accent',
   'brand.accentLight': '--color-accent-light',
+  'brand.signal': '--color-signal',
+  'brand.signalStrong': '--color-signal-strong',
+  'brand.scope': '--color-scope',
+  'brand.alert': '--color-alert',
+  'brand.ink': '--color-ink',
   'brand.angularRed': '--color-angular-red',
   'brand.renderGreen': '--color-render-green',
   'brand.chatPurple': '--color-chat-purple',
