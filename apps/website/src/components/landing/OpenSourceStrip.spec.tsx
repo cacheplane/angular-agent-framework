@@ -14,13 +14,17 @@ vi.mock('../../lib/analytics/client', () => ({
 beforeEach(() => trackCtaClickMock.mockClear());
 
 describe('OpenSourceStrip', () => {
-  it('renders the whole sentence as the section heading, emphasis included', () => {
-    render(<OpenSourceStrip />);
+  it('makes the headline alone the section heading', () => {
+    const { container } = render(<OpenSourceStrip />);
     const heading = screen.getByRole('heading', { level: 2 });
-    expect(heading.textContent).toBe(
-      `${OPEN_SOURCE_STRIP.lead} ${OPEN_SOURCE_STRIP.emphasis}`,
+    // Two words, not a sentence: the section's accessible name is the offer.
+    expect(heading.textContent).toBe(OPEN_SOURCE_STRIP.headline);
+    expect(heading.querySelector('em')).toBeNull();
+    // The eyebrow stays readable rather than aria-hidden, matching how
+    // SectionHeader treats its own eyebrows.
+    expect(container.querySelector('.open-source-strip-eyebrow')?.textContent).toBe(
+      OPEN_SOURCE_STRIP.eyebrow,
     );
-    expect(heading.querySelector('em')?.textContent).toBe(OPEN_SOURCE_STRIP.emphasis);
   });
 
   it('names the section by that heading', () => {
@@ -30,13 +34,15 @@ describe('OpenSourceStrip', () => {
     expect(container.querySelector('#open-source-heading')).toBeTruthy();
   });
 
-  it('sits on the dark surface at the tight rhythm', () => {
+  it('sits on the dark surface at the FULL rhythm, not the tight one', () => {
     const { container } = render(<OpenSourceStrip />);
     const section = container.querySelector('[data-ui="section"]');
     expect(section?.getAttribute('data-surface')).toBe('dark');
-    // The strip's own padding override keys off [data-tight]; dropping the
-    // prop silently restores the full 48-80px band this replaced.
-    expect(section?.getAttribute('data-tight')).toBe('true');
+    // Deliberately absent. This band used to be the page's quiet beat and a
+    // guard here asserted data-tight="true" to keep it that way; the section
+    // is now a full stop, and it gets its ~461px from the standard section
+    // padding rather than from any override of its own.
+    expect(section?.getAttribute('data-tight')).toBeNull();
     expect(section?.classList.contains('open-source-strip')).toBe(true);
   });
 
@@ -56,7 +62,7 @@ describe('OpenSourceStrip', () => {
     );
   });
 
-  it('is the page’s quiet beat: one action, no second CTA', () => {
+  it('offers one action and no second CTA', () => {
     const { container } = render(<OpenSourceStrip />);
     expect(container.querySelectorAll('a').length).toBe(1);
   });
@@ -70,5 +76,16 @@ describe('OpenSourceStrip', () => {
       surface: 'home',
       destination_url: GITHUB_REPO_URL,
     });
+  });
+
+  it('marks the runway decorative and puts it outside the container', () => {
+    const { container } = render(<OpenSourceStrip />);
+    const runway = container.querySelector('.open-source-strip-runway');
+    expect(runway?.getAttribute('aria-hidden')).toBe('true');
+    expect(runway?.textContent).toBe('');
+    // It spans the section, not the container, so it must not be nested in
+    // one — inside, the container's gutters would clip the marking short.
+    expect(runway?.closest('[data-ui="container"]')).toBeNull();
+    expect(runway?.parentElement?.getAttribute('data-ui')).toBe('section');
   });
 });
