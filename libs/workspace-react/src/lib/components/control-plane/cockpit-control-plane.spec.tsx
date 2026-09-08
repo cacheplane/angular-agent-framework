@@ -145,7 +145,7 @@ describe('CockpitControlPlane', () => {
     ]) {
       const declarations = declarationsFor(cockpitCss, selector);
       expect(declarations).toMatch(
-        /font-family:\s*var\(--font-inter,\s*var\(--ds-font-sans\)\)/
+        /font-family:\s*var\(--font-sans,\s*var\(--ds-font-sans\)\)/
       );
       expect(declarations).toMatch(/font-size:\s*12px/);
       expect(declarations).toMatch(/font-weight:\s*600/);

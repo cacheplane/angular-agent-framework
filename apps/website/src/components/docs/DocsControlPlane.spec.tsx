@@ -50,7 +50,7 @@ describe('DocsControlPlane', () => {
       '[data-docs-control-plane-context] [data-control-plane-section-heading]',
     ]) {
       const declarations = declarationsFor(docsCss, selector);
-      expect(declarations).toMatch(/font-family:\s*var\(--font-inter\)/);
+      expect(declarations).toMatch(/font-family:\s*var\(--font-sans\)/);
       expect(declarations).toMatch(/font-size:\s*12px/);
       expect(declarations).toMatch(/font-weight:\s*600/);
       expect(declarations).toMatch(/letter-spacing:\s*normal/);

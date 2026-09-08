@@ -205,7 +205,7 @@
   padding: 10px 0;
   font-size: 15px;
   font-weight: 500;
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   background: transparent;
   color: var(--color-text-muted);
   border: none;
@@ -240,7 +240,7 @@
   line-height: 24px;
   min-height: 44px;
   text-decoration: none;
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   color: var(--color-text-secondary);
   background: transparent;
 }
@@ -286,7 +286,7 @@
   color: var(--color-accent);
   background: var(--color-accent-surface);
   text-decoration: none;
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-weight: 600;
 }
 .nav-mobile-section-toggle {
@@ -301,7 +301,7 @@
   padding: 12px 14px;
   min-height: 48px;
   border-radius: 8px;
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 16px;
   line-height: 24px;
   color: var(--color-text-primary);
@@ -323,7 +323,7 @@
   min-height: 48px;
   color: var(--color-text-secondary);
   text-decoration: none;
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
 }
 .nav-mobile-github-link {
   display: flex;
@@ -334,7 +334,7 @@
   min-height: 48px;
   color: var(--color-text-secondary);
   text-decoration: none;
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 16px;
 }
 .nav-mobile-cta-wrap {
@@ -421,9 +421,8 @@
   margin-bottom: 8px;
 }
 .toast-title {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: 1.05rem;
-  font-weight: 700;
   color: var(--color-text-primary);
   line-height: 1.3;
   margin-bottom: 6px;
@@ -461,7 +460,7 @@
   font-size: 12px;
   color: var(--color-text-muted);
   text-decoration: underline;
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
 }
 
 /* Mobile docs-search entry (polish arc PR 3) — button reset to match the

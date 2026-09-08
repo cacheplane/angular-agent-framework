@@ -23,7 +23,7 @@
   --color-border-strong: rgb(200, 200, 200);
 
   /* Text */
-  --color-text-primary: rgb(28, 28, 28);
+  --color-text-primary: #0A0A0A;
   --color-text-secondary: rgb(70, 70, 70);
   --color-text-muted: rgb(115, 115, 115);
   --color-text-inverted: rgb(255, 255, 255);
@@ -33,22 +33,29 @@
   --color-sidebar-bg: rgba(255, 255, 255, 0.45);
 
   /* Accent family */
-  --color-accent: #004090;
-  --color-accent-hover: #003070;
-  --color-accent-glow: rgba(0, 64, 144, 0.2);
-  --color-accent-border: rgba(0, 64, 144, 0.15);
-  --color-accent-border-hover: rgba(0, 64, 144, 0.3);
-  --color-accent-surface: rgba(0, 64, 144, 0.06);
+  --color-accent: #15253E;
+  --color-accent-hover: #0E1B2E;
+  --color-accent-glow: rgba(255, 175, 0, 0.28);
+  --color-accent-border: rgba(255, 175, 0, 0.35);
+  --color-accent-border-hover: rgba(255, 175, 0, 0.55);
+  --color-accent-surface: rgba(255, 175, 0, 0.10);
 
   /* Brand */
-  --color-accent-light: #64C3FD;
+  --color-accent-light: #FFAF00;
+  /* signal aliases accent-light, scope aliases accent — deliberate: dark.ts derives its accent from accentLight, so both names must exist. Prefer signal/scope in new work. */
+  --color-signal: #FFAF00;
+  --color-signal-strong: #FFB700;
+  --color-scope: #15253E;
+  --color-alert: #FF3200;
+  --color-ink: #0A0A0A;
   --color-angular-red: #DD0031;
   --color-render-green: #1a7a40;
   --color-chat-purple: #5a00c8;
 
   /* Fonts */
-  --font-garamond: "EB Garamond", Georgia, serif;
-  --font-inter: Inter, system-ui, sans-serif;
+  --font-display: "Archivo Black", system-ui, sans-serif;
+  --font-sans: Archivo, system-ui, sans-serif;
+  --font-diagram: Inter, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
   /* Type scale */
@@ -81,7 +88,7 @@
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.10), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.10), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-focus: 0 0 0 3px rgba(0, 64, 144, 0.25);
+  --shadow-focus: 0 0 0 3px rgba(21, 37, 62, 0.30);
 
   /* Space scale */
   --spacing-section-y: clamp(64px, 8vw, 120px);

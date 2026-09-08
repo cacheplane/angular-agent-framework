@@ -37,7 +37,7 @@ export function cssVars(theme: Theme) {
     '--ds-bg': t.bg,
     '--ds-sidebar-bg': t.sidebarBg,
 
-    // Accent family (theme-variant — semantic accent points to navy in light, bright-blue in dark)
+    // Accent family (theme-variant — the interactive ink: scope navy in light, aviation yellow in dark)
     '--ds-accent': t.accent,
     '--ds-accent-hover': t.accentHover,
     '--ds-accent-glow': t.accentGlow,
@@ -47,13 +47,19 @@ export function cssVars(theme: Theme) {
 
     // Raw brand colors (invariant)
     '--ds-accent-light': brand.accentLight,
+    '--ds-signal': brand.signal,
+    '--ds-signal-strong': brand.signalStrong,
+    '--ds-scope': brand.scope,
+    '--ds-alert': brand.alert,
+    '--ds-ink': brand.ink,
     '--ds-angular-red': brand.angularRed,
     '--ds-render-green': brand.renderGreen,
     '--ds-chat-purple': brand.chatPurple,
 
     // Typography (invariant)
-    '--ds-font-serif': typography.fontSerif,
+    '--ds-font-display': typography.fontDisplay,
     '--ds-font-sans': typography.fontSans,
+    '--ds-font-diagram': typography.fontDiagram,
     '--ds-font-mono': typography.fontMono,
 
     // Shadows (invariant)

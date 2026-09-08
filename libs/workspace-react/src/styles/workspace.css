@@ -23,7 +23,7 @@
 .workspace-prose h1,
 .workspace-prose h2,
 .workspace-prose h3 {
-  font-family: var(--font-garamond), var(--ds-font-serif);
+  font-family: var(--font-display), var(--ds-font-display);
   color: var(--ds-text-primary);
   letter-spacing: -0.01em;
 }
@@ -43,7 +43,7 @@
   margin: 1.5rem 0 0.5rem;
 }
 .workspace-prose .workspace-api-heading {
-  font-family: var(--font-inter), var(--ds-font-sans);
+  font-family: var(--font-sans), var(--ds-font-sans);
   letter-spacing: normal;
   text-transform: none;
 }
@@ -471,7 +471,7 @@
   color: var(--ds-text-muted);
   background: transparent;
   cursor: pointer;
-  font-family: var(--font-inter, var(--ds-font-sans));
+  font-family: var(--font-sans, var(--ds-font-sans));
   font-size: 12px;
   font-weight: 600;
   letter-spacing: normal;
@@ -495,7 +495,7 @@
   margin: 0;
   padding: 8px;
   color: var(--ds-text-muted);
-  font-family: var(--font-inter, var(--ds-font-sans));
+  font-family: var(--font-sans, var(--ds-font-sans));
   font-size: 12px;
   line-height: 1.2;
   font-weight: 600;

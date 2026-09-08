@@ -96,8 +96,8 @@
 }
 
 /*
- * FONTS: every font-family in apps/website CSS is var(--font-inter),
- * var(--font-mono), or var(--font-garamond) — never a raw stack.
+ * FONTS: every font-family in apps/website CSS is var(--font-sans),
+ * var(--font-mono), or var(--font-display) — never a raw stack.
  *
  * layout.tsx loads the fonts via next/font, which defines those three
  * vars on <html> with self-hosted, size-adjusted stacks ("Inter",
@@ -109,6 +109,13 @@
  * more mixed stacks. theme.css also defines the same var names from
  * the design tokens; next/font's <html>-level values win, which is now
  * the intended resolution, and they guarantee the vars always resolve.
+ *
+ * --font-diagram is diagram-only and MUST keep being supplied by next/font in
+ * layout.tsx. theme.css emits it as a raw `Inter, ...` stack, which next/font's
+ * hashed family never matches — so if the loader is removed, diagrams silently
+ * fall back to system-ui, every glyph width shifts, and
+ * e2e/home-architecture.spec.ts (which measures text runs against their cards)
+ * is the only thing that will notice.
  */
 /* UI primitive — Pill */
 [data-ui="pill"] {
@@ -158,10 +165,12 @@
 }
 
 /* Dark section scope (homepage proof band + FinalCTA dark variant).
- * Values mirror libs/design-tokens/src/lib/dark.ts — the website hardwires
- * the light theme in TS, so dark sections re-scope the CSS variables instead.
- * If dark.ts changes, update here. Treatment B (spec): the canvas is a subtle
- * vertical gradient, and a 1px accent seam marks the light→dark boundary. */
+ * The ACCENTS mirror libs/design-tokens/src/lib/dark.ts. The SURFACES
+ * deliberately do not: this band is website-only and takes the ATC scope
+ * navy, while dark.ts stays neutral because @threadplane/chat and the cockpit
+ * consume it and a navy ground there would seam against embedded chat.
+ * Treatment B (spec): vertical gradient canvas, 1px accent seam at the
+ * light→dark boundary. */
 [data-ui="section"][data-surface="dark"] {
   --color-canvas: rgb(17, 17, 17);
   --color-surface: rgb(28, 28, 28);
@@ -173,14 +182,14 @@
   --color-text-secondary: rgb(200, 200, 200);
   --color-text-muted: rgb(160, 160, 160);
   --color-text-inverted: rgb(17, 17, 17);
-  --color-accent: #64c3fd;
-  --color-accent-hover: #8dd4ff;
-  --color-accent-glow: rgba(100, 195, 253, 0.25);
-  --color-accent-border: rgba(100, 195, 253, 0.2);
-  --color-accent-border-hover: rgba(100, 195, 253, 0.35);
-  --color-accent-surface: rgba(100, 195, 253, 0.08);
+  --color-accent: var(--color-signal);
+  --color-accent-hover: #FFC233;
+  --color-accent-glow: rgba(255, 175, 0, 0.25);
+  --color-accent-border: rgba(255, 175, 0, 0.22);
+  --color-accent-border-hover: rgba(255, 175, 0, 0.4);
+  --color-accent-surface: rgba(255, 175, 0, 0.1);
 
-  background: linear-gradient(180deg, #161616 0%, #0e0e0e 100%);
+  background: linear-gradient(180deg, #1b2e4d 0%, #15253e 100%);
   color: var(--color-text-primary);
   position: relative;
 }
@@ -195,11 +204,36 @@
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(100, 195, 253, 0.55) 30%,
-    rgba(100, 195, 253, 0.55) 70%,
+    rgba(255, 175, 0, 0.55) 30%,
+    rgba(255, 175, 0, 0.55) 70%,
     transparent
   );
   pointer-events: none;
+}
+
+/* Signal section scope (the ATC hero block).
+ * Aviation yellow is a FILL: this scope flips the ink to near-black rather
+ * than tinting the yellow, because #FFAF00 carries text at 1.84:1 on white
+ * and 10.73:1 under #0A0A0A. Same re-scoping mechanism as the dark surface
+ * above. */
+[data-ui="section"][data-surface="signal"] {
+  --color-canvas: var(--color-signal);
+  --color-surface: var(--color-signal);
+  --color-surface-tinted: var(--color-signal-strong);
+  --color-border: rgba(10, 10, 10, 0.18);
+  --color-border-strong: rgba(10, 10, 10, 0.32);
+  --color-text-primary: var(--color-ink);
+  --color-text-secondary: rgba(10, 10, 10, 0.78);
+  --color-text-muted: rgba(10, 10, 10, 0.6);
+  --color-text-inverted: var(--color-signal);
+  --color-accent: var(--color-ink);
+  --color-accent-hover: #000000;
+  --color-accent-surface: rgba(10, 10, 10, 0.08);
+  --color-accent-border: rgba(10, 10, 10, 0.25);
+  --shadow-focus: 0 0 0 3px rgba(10, 10, 10, 0.45);
+
+  background: var(--color-signal);
+  color: var(--color-text-primary);
 }
 
 /* UI primitive — Button */
@@ -208,7 +242,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-weight: 600;
   line-height: 1;
   border-radius: var(--radius-md);
@@ -228,10 +262,17 @@
   font-size: 16px;
 }
 [data-ui="button"][data-variant="primary"] {
-  background: var(--color-accent);
-  color: var(--color-text-inverted);
-  border: 1px solid var(--color-accent);
+  background: var(--color-signal);
+  color: var(--color-ink);
+  border: 1px solid var(--color-signal);
   box-shadow: var(--shadow-sm);
+}
+/* On the yellow hero block the fill inverts — a yellow button on a yellow
+ * ground has nothing to sit against. */
+[data-ui="section"][data-surface="signal"] [data-ui="button"][data-variant="primary"] {
+  background: var(--color-ink);
+  color: var(--color-signal);
+  border-color: var(--color-ink);
 }
 [data-ui="button"][data-variant="secondary"] {
   background: var(--color-surface);
@@ -248,16 +289,21 @@
 /* Keyboard focus ring.
  *
  * Without this the UA default applies — `outline: auto 1px rgb(0, 95, 204)` in
- * Chrome — which is a thin blue hairline drawn against the primary button's
- * own `--color-accent` (#004090) fill. Effectively invisible, and the place it
- * matters most is the one place focus lands programmatically: closing the
- * install dialog returns focus to the "Install Threadplane" trigger, and the
- * keyboard user could not see where they were.
+ * Chrome — a thin blue hairline drawn straight against the primary button's
+ * fill. Effectively invisible, and the place it matters most is the one place
+ * focus lands programmatically: closing the install dialog returns focus to
+ * the "Install Threadplane" trigger, and the keyboard user could not see where
+ * they were.
  *
- * The offset ring is `--color-accent`, which the dark section scope above
- * re-points to #64c3fd, so it stays high-contrast on both surfaces. The inner
- * `--color-surface` halo separates ring from fill on `primary`, where fill and
- * ring are otherwise the same colour family. Held by a style contract. */
+ * The offset ring is `--color-accent`, which every section scope re-points, so
+ * it stays high-contrast on all three grounds: scope navy (#15253E) against
+ * the signal-yellow fill on white, aviation yellow inside the dark band, and
+ * ink inside the signal scope, where the primary button inverts to an ink
+ * fill. The inner `--color-surface` halo is what separates ring from fill in
+ * the two cases where both land in the same colour family — yellow ring on
+ * yellow fill in the dark band, ink ring on ink fill in the signal scope —
+ * because `--color-surface` re-points with the scope too (dark grey, then the
+ * signal yellow). Held by a style contract. */
 [data-ui="button"]:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
@@ -287,7 +333,7 @@
   gap: 16px;
   padding: 20px 0;
   cursor: pointer;
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 17px;
   font-weight: 600;
   color: var(--color-text-primary);
@@ -300,7 +346,7 @@
 }
 [data-ui="faq-item"] > div {
   padding-bottom: 20px;
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 16px;
   line-height: 1.6;
   color: var(--color-text-secondary);
@@ -311,8 +357,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-family: var(--font-garamond);
-  font-weight: 700;
+  font-family: var(--font-display);
   color: var(--color-text-primary);
   line-height: 1;
 }
@@ -322,13 +367,38 @@
 [data-ui="logo-mark"][data-size="md"] {
   font-size: 16px;
 }
-/* The glyph is an SVG filled with currentColor, so it inherits the wordmark's
- * color. Sized in px rather than em: the wordmark is Garamond, whose em box
- * would make the plane read smaller beside it than it measures. */
+/* The mark is the ATC app icon in miniature: a signal-yellow squircle with an
+ * ink glyph. A bare yellow glyph on the white nav would be 1.84:1 — yellow is
+ * a fill in this system, never an icon colour on a light ground. Inside the
+ * tile the same glyph is ink-on-yellow, 10.73:1.
+ *
+ * PlaneMark's path is fill="currentColor", so `color` paints the glyph and
+ * `background` the tile; the wordmark beside it keeps --color-text-primary and
+ * is sized in px rather than em so the tile does not track the wordmark's em
+ * box.
+ *
+ * `border-box`, not `content-box`, and the difference is load-bearing. The
+ * logo is what sets the nav's content-row height at the two smaller steps, so
+ * padding on a content-box icon grows the whole nav: measured 58/66/81 →
+ * 64/72/81, against a `--nav-h` of 58/66/81 that e2e/nav-height.spec.ts pins
+ * to the rendered nav within 1px. Border-box insets the glyph instead of
+ * inflating the box, so the tile stays exactly the 15/18px below and every
+ * offset built on --nav-h is untouched. Grow the tile only by raising those
+ * two sizes AND re-measuring --nav-h. */
 [data-ui="logo-mark-icon"] {
   display: block;
   flex: none;
-  color: inherit;
+  color: var(--color-ink);
+  background: var(--color-signal);
+  border-radius: 5px;
+  padding: 3px;
+  box-sizing: border-box;
+}
+/* On the yellow block the squircle inverts — a yellow tile on a yellow ground
+ * has nothing to sit against. */
+[data-ui="section"][data-surface="signal"] [data-ui="logo-mark-icon"] {
+  color: var(--color-signal);
+  background: var(--color-ink);
 }
 [data-ui="logo-mark"][data-size="sm"] > [data-ui="logo-mark-icon"] {
   width: 15px;
@@ -449,7 +519,7 @@
   margin-bottom: 12px;
 }
 [data-ui="tab-group-tab"] {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 600;
   padding: 8px 14px;
@@ -469,16 +539,15 @@
   margin-bottom: 16px;
 }
 [data-ui="section-header"] .section-header-heading {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: var(--text-h2);
   line-height: var(--text-h2--line-height);
-  font-weight: 700;
   letter-spacing: -0.015em;
   color: var(--color-text-primary);
   margin: 0;
 }
 [data-ui="section-header"] .section-header-aside {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 15px;
   line-height: 1.6;
   font-style: italic;

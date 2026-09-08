@@ -118,7 +118,7 @@ describe('ApiMode', () => {
       'utf8'
     );
     expect(css).toMatch(
-      /\.workspace-prose \.workspace-api-heading\s*\{[\s\S]*font-family:\s*var\(--font-inter\),\s*var\(--ds-font-sans\)[\s\S]*letter-spacing:\s*normal/
+      /\.workspace-prose \.workspace-api-heading\s*\{[\s\S]*font-family:\s*var\(--font-sans\),\s*var\(--ds-font-sans\)[\s\S]*letter-spacing:\s*normal/
     );
   });
 

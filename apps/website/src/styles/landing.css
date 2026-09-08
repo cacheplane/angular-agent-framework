@@ -14,21 +14,21 @@
   margin-bottom: 16px;
 }
 .hero-heading {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: var(--text-h1);
   line-height: var(--text-h1--line-height);
-  font-weight: 700;
+  font-weight: 400; /* Archivo Black ships a single weight */
   color: var(--color-text-primary);
   margin: 0;
   margin-bottom: 24px;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.032em;
 }
 /* One line per thought; the space between the spans keeps textContent equal to HERO_H1. */
 .hero-heading-line {
   display: block;
 }
 .hero-subhead {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body-lg);
   line-height: var(--text-body-lg--line-height);
   color: var(--color-text-secondary);
@@ -41,19 +41,33 @@
  * with box-decoration-break: clone, so the sweep follows the text across line
  * wraps (an absolutely-positioned box renders one broken block when the
  * phrase wraps — which it does at every width below ~1200px). */
+/* Highlighter wash — aviation yellow doing the job yellow actually does on
+ * paper. Safe anywhere on a light surface because it is a FILL sitting under
+ * --color-text-primary ink, never a text colour itself. Used by the hero and
+ * by the four library pages (/langgraph, /chat, /ag-ui, /render). */
 .marker-highlight {
   color: var(--color-text-primary);
   font-weight: 600;
   background: linear-gradient(
     100deg,
-    rgba(0, 64, 144, 0.14),
-    rgba(0, 64, 144, 0.08) 85%
+    rgba(255, 175, 0, 0.55),
+    rgba(255, 175, 0, 0.32) 85%
   );
   border-radius: 4px;
   padding: 1px 5px 3px;
   margin: -1px -5px -3px;
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
+}
+/* Inside the signal block the wash would be yellow on yellow. The emphasis
+ * becomes a solid ink underline instead. */
+[data-ui="section"][data-surface="signal"] .marker-highlight {
+  background: none;
+  font-weight: 700;
+  border-radius: 0;
+  box-shadow: inset 0 -3px 0 var(--color-ink);
+  padding: 1px 2px 3px;
+  margin: -1px -2px -3px;
 }
 
 .hero-cta-row {
@@ -98,7 +112,7 @@
 }
 .hero-trust {
   margin: 12px 0 0;
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 13px;
   color: var(--color-text-muted);
 }
@@ -126,17 +140,16 @@
   margin-bottom: 16px;
 }
 .feature-block-heading {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: var(--text-h2);
   line-height: var(--text-h2--line-height);
-  font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
   margin-bottom: 20px;
   letter-spacing: -0.015em;
 }
 .feature-block-body {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body-lg);
   line-height: var(--text-body-lg--line-height);
   color: var(--color-text-secondary);
@@ -144,7 +157,7 @@
   margin-bottom: 24px;
 }
 .feature-block-cta {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 15px;
   font-weight: 600;
   color: var(--color-accent);
@@ -179,7 +192,7 @@
   padding: 9px 0;
 }
 .feature-block-row-claim {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 15px;
   line-height: 1.45;
   color: var(--color-text-primary);
@@ -231,10 +244,9 @@
   margin-bottom: 16px;
 }
 .wp-heading {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: var(--text-h2);
   line-height: var(--text-h2--line-height);
-  font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
   margin-bottom: 20px;
@@ -254,7 +266,7 @@
   padding: 9px 0;
 }
 .wp-row-claim {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 15px;
   line-height: 1.45;
   color: var(--color-text-primary);
@@ -280,7 +292,7 @@
   margin-top: 4px;
   font-size: 13px;
   color: var(--color-text-muted);
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
 }
 .wp-already a {
   color: var(--color-accent);
@@ -316,16 +328,14 @@
   margin-bottom: 14px;
 }
 .wp-cover-title {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: 28px;
   line-height: 1.15;
-  font-weight: 700;
   color: var(--color-text-primary);
   margin-bottom: 12px;
-  font-style: italic;
 }
 .wp-cover-desc {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 14px;
   line-height: 1.5;
   color: var(--color-text-secondary);
@@ -368,17 +378,16 @@
   background: var(--color-border);
 }
 .pilot-heading {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: var(--text-h2);
   line-height: var(--text-h2--line-height);
-  font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
   margin-bottom: 20px;
   letter-spacing: -0.015em;
 }
 .pilot-subhead {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body-lg);
   line-height: var(--text-body-lg--line-height);
   color: var(--color-text-secondary);
@@ -404,7 +413,7 @@
   padding: 9px 0;
 }
 .pilot-row-claim {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 15px;
   line-height: 1.45;
   color: var(--color-text-primary);
@@ -432,21 +441,20 @@
   border-bottom: none;
 }
 .pilot-step-num {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: 44px;
-  font-weight: 700;
   line-height: 0.9;
   letter-spacing: -0.03em;
   color: var(--color-border);
 }
 .pilot-step-title {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 15.5px;
   font-weight: 600;
   color: var(--color-text-primary);
 }
 .pilot-step-body {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 14px;
   line-height: 1.5;
   color: var(--color-text-secondary);
@@ -477,15 +485,14 @@
   margin: 6px 0 0;
 }
 .teams-report-title {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: 26px;
-  font-weight: 700;
   line-height: 1.1;
   margin: 8px 0 6px;
   color: var(--color-text-primary);
 }
 .teams-report-desc {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 14px;
   line-height: 1.5;
   color: var(--color-text-secondary);
@@ -522,7 +529,7 @@
   margin-bottom: 0;
 }
 .recent-articles-heading {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 14px;
   font-style: italic;
   font-weight: 400;
@@ -553,18 +560,16 @@
   text-align: center;
 }
 .final-cta-heading {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: var(--text-h2);
   line-height: var(--text-h2--line-height);
-  font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
   margin-bottom: 16px;
   letter-spacing: -0.015em;
-  font-style: italic;
 }
 .final-cta-subtext {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body-lg);
   line-height: var(--text-body-lg--line-height);
   color: var(--color-text-secondary);
@@ -579,7 +584,7 @@
   margin-bottom: 16px;
 }
 .final-cta-caption {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-caption);
   color: var(--color-text-muted);
   margin: 0;
@@ -593,16 +598,14 @@
   position: absolute;
   right: -30px;
   bottom: -70px;
-  font-family: var(--font-garamond);
-  font-style: italic;
-  font-weight: 800;
+  font-family: var(--font-display);
   font-size: 210px;
   line-height: 1;
   letter-spacing: -0.04em;
   background: linear-gradient(
     160deg,
-    rgba(100, 195, 253, 0.14),
-    rgba(100, 195, 253, 0.03) 70%
+    rgba(255, 175, 0, 0.14),
+    rgba(255, 175, 0, 0.03) 70%
   );
   -webkit-background-clip: text;
   background-clip: text;
@@ -639,7 +642,9 @@
   flex-wrap: wrap;
 }
 .open-source-strip-line {
-  font-family: var(--font-garamond);
+  /* Body-scale editorial copy, not display type: it carries an italic <em>,
+     and Archivo Black has no italic. --font-sans (Archivo) does. */
+  font-family: var(--font-sans);
   font-size: 23px;
   line-height: 1.35;
   font-weight: 400;
@@ -657,7 +662,7 @@
   flex: none;
 }
 .open-source-strip-licence {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 12px;
   letter-spacing: 0.02em;
   color: var(--color-text-muted);
@@ -680,10 +685,9 @@
   margin-bottom: 16px;
 }
 .home-faq-heading {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: var(--text-h2);
   line-height: var(--text-h2--line-height);
-  font-weight: 700;
   color: var(--color-text-primary);
   margin: 0;
   letter-spacing: -0.015em;
@@ -713,7 +717,7 @@
   gap: 4px;
 }
 .backends-grid-name {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 14px;
   font-weight: 600;
   color: var(--color-text-primary);
@@ -767,7 +771,7 @@
   gap: 5px;
 }
 .demo-modal__tab {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 12px;
   font-weight: 600;
   padding: 6px 12px;
@@ -807,12 +811,12 @@
   background: var(--color-surface);
 }
 .demo-modal__hint {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 12px;
   color: var(--color-text-muted);
 }
 .demo-modal__open-link {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 12px;
   font-weight: 600;
   color: var(--color-accent);
@@ -900,9 +904,8 @@
   margin-bottom: 14px;
 }
 .render-show-heading {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: clamp(26px, 3.5vw, 42px);
-  font-weight: 800;
   line-height: 1.1;
   color: var(--color-text-primary);
 }
@@ -948,9 +951,8 @@
   margin-bottom: 14px;
 }
 .lg-show-heading {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: clamp(26px, 3.5vw, 42px);
-  font-weight: 800;
   line-height: 1.1;
   color: var(--color-text-primary);
 }
@@ -968,7 +970,7 @@
 }
 .lg-show-card-head {
   padding: 10px 20px;
-  background: rgba(0, 64, 144, 0.04);
+  background: rgba(255, 175, 0, 0.08);
   border-bottom: 1px solid var(--color-border);
 }
 .lg-show-card-title {
@@ -996,9 +998,8 @@
   margin-bottom: 14px;
 }
 .chat-show-heading {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: clamp(26px, 3.5vw, 42px);
-  font-weight: 800;
   line-height: 1.1;
   color: var(--color-text-primary);
 }
@@ -1042,16 +1043,14 @@
   position: absolute;
   right: -40px;
   top: -78px;
-  font-family: var(--font-garamond);
-  font-style: italic;
-  font-weight: 800;
+  font-family: var(--font-display);
   font-size: clamp(150px, 21vw, 300px);
   line-height: 0.76;
   letter-spacing: -0.04em;
   background: linear-gradient(
     160deg,
-    rgba(100, 195, 253, 0.11),
-    rgba(100, 195, 253, 0.02) 70%
+    rgba(255, 175, 0, 0.11),
+    rgba(255, 175, 0, 0.02) 70%
   );
   -webkit-background-clip: text;
   background-clip: text;
@@ -1069,8 +1068,8 @@
   height: 560px;
   background: radial-gradient(
     closest-side,
-    rgba(100, 195, 253, 0.13),
-    rgba(100, 195, 253, 0.04) 55%,
+    rgba(255, 175, 0, 0.13),
+    rgba(255, 175, 0, 0.04) 55%,
     transparent 75%
   );
   pointer-events: none;
@@ -1148,9 +1147,8 @@
   );
 }
 .proof-strip-value {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: 58px;
-  font-weight: 700;
   line-height: 0.9;
   letter-spacing: -0.028em;
   color: var(--color-text-primary);
@@ -1168,7 +1166,7 @@
   display: block;
 }
 .proof-strip-caption {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 14px;
   line-height: 1.5;
   color: var(--color-text-secondary);
@@ -1212,7 +1210,7 @@
   min-width: 0;
 }
 .reliability-receipt-claim {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 15px;
   font-weight: 600;
   line-height: 1.4;
@@ -1220,7 +1218,7 @@
   margin: 0;
 }
 .reliability-receipt-detail {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 13px;
   line-height: 1.5;
   color: var(--color-text-secondary);
@@ -1268,7 +1266,7 @@
   object-fit: contain;
 }
 .reliability-works-with-name {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 500;
   color: var(--color-text-secondary);
@@ -1513,10 +1511,9 @@
   color: #fff;
 }
 .stage-claim {
-  font-family: var(--font-garamond);
+  font-family: var(--font-display);
   font-size: 30px;
   line-height: 1.08;
-  font-weight: 500;
   color: var(--color-text-primary);
   margin: 0;
 }
@@ -1685,7 +1682,7 @@
   gap: 12px;
 }
 .stack-diagram-body {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body-lg);
   line-height: var(--text-body-lg--line-height);
   color: var(--color-text-secondary);
@@ -1713,7 +1710,7 @@
   min-width: 1024px;
 }
 .arch-figure text {
-  font-family: var(--font-inter);
+  font-family: var(--font-diagram);
   font-size: 13.5px;
   fill: var(--color-text-primary);
 }
@@ -1819,7 +1816,7 @@
   padding: 0;
   display: grid;
   gap: 6px;
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 13px;
   color: var(--color-text-secondary);
 }
@@ -1881,7 +1878,7 @@
 }
 .arch-stack-label {
   text-align: left;
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 11px;
   letter-spacing: 0.14em;
   font-weight: 700;
@@ -1913,7 +1910,7 @@
   height: 20px;
 }
 .arch-stack-title {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 15px;
   font-weight: 600;
   margin: 0;
@@ -1929,7 +1926,7 @@
   margin: 8px 0 0;
   padding: 0;
   list-style: none;
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 13px;
   color: var(--color-text-secondary);
   display: grid;
@@ -1942,7 +1939,7 @@
   margin: 10px 0 0;
   padding: 0;
   list-style: none;
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 500;
 }
@@ -2002,14 +1999,14 @@
   max-width: 420px;
 }
 .home-concept-title {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 1rem;
   font-weight: 600;
   color: var(--color-text-primary);
   margin: 0;
 }
 .home-concept-sentence {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 0.9rem;
   line-height: 1.55;
   color: var(--color-text-secondary);
@@ -2139,7 +2136,7 @@
      live control looking double-exposed. */
   background: rgb(248 248 248);
   color: #111;
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 15px;
   font-weight: 600;
   text-decoration: none;
@@ -2196,4 +2193,21 @@
   color: var(--color-accent);
   font-weight: 600;
   text-decoration: none;
+}
+
+/* The frequency strip — the ATC player's bottom bar. Full-bleed scope navy
+ * closing the yellow block, set in mono because the instrument-panel cue is
+ * doing as much work here as the colour is. */
+.hero-strip {
+  margin: 32px calc(50% - 50vw) 0;
+  width: 100vw;
+  padding: 10px var(--spacing-container-x);
+  background: var(--color-scope);
+  color: #ffffff;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
 }

@@ -22,7 +22,7 @@
   gap: 6px;
 }
 [data-ui="field-label"] {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 500;
   color: var(--color-text-primary);
@@ -33,7 +33,7 @@
 }
 [data-ui="field-help"] {
   margin: 0;
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 12px;
   color: var(--color-text-muted);
 }
@@ -42,7 +42,7 @@
   align-items: center;
   gap: 6px;
   margin: 0;
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 12px;
   color: var(--color-status-error);
 }
@@ -66,7 +66,7 @@
   box-sizing: border-box;
   height: var(--form-control-height);
   padding: 0 14px;
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body);
   color: var(--color-text-primary);
   background: var(--color-surface);
@@ -141,7 +141,7 @@ select[data-ui="form-control"] {
 }
 [data-ui="form-disclosure"] {
   margin: 0;
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 12px;
   line-height: 1.45;
   color: var(--color-text-muted);
@@ -180,7 +180,7 @@ select[data-ui="form-control"] {
   align-items: flex-start;
   padding: 14px 16px;
   border-radius: var(--form-control-radius);
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: var(--text-body);
   line-height: var(--text-body--line-height);
   color: var(--color-text-primary);

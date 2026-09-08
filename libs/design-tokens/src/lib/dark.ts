@@ -4,6 +4,12 @@ import { baseTokens } from './base.ts';
  * Theme-variant tokens resolved for the dark theme.
  * Neutral-dark palette aligned to @threadplane/chat lib's dark aesthetic so embedded
  * chat surfaces unify with cockpit chrome (no iframe color seam).
+ *
+ * The website's `[data-surface="dark"]` scope diverges from this on purpose:
+ * it mirrors these ACCENTS but swaps the SURFACES for the ATC scope navy,
+ * which is safe there because nothing embeds chat inside that band. See the
+ * docblock above that rule in apps/website/src/styles/ui.css. Keep the two in
+ * step on accents; expect them to differ on surfaces.
  */
 export const darkOverrides = Object.freeze({
   // Surfaces
@@ -24,13 +30,17 @@ export const darkOverrides = Object.freeze({
   bg: 'rgb(17, 17, 17)',
   sidebarBg: 'rgba(28, 28, 28, 0.65)',
 
-  // Semantic accent maps to the bright-blue brand color (readable on dark surfaces)
+  // Semantic accent maps to aviation yellow: 10.24:1 on `canvas` and 9.24:1 on
+  // `surface`, the two grounds it actually lands on here. (8.33:1 is the ratio
+  // against the website's scope navy #15253E — a different surface entirely.)
+  // `accent` derives from the brand token; the tints below must be re-derived
+  // with it or they silently keep the previous hue.
   accent: baseTokens.brand.accentLight,
-  accentHover: '#8dd4ff',
-  accentGlow: 'rgba(100, 195, 253, 0.25)',
-  accentBorder: 'rgba(100, 195, 253, 0.2)',
-  accentBorderHover: 'rgba(100, 195, 253, 0.35)',
-  accentSurface: 'rgba(100, 195, 253, 0.08)',
+  accentHover: '#FFC233',
+  accentGlow: 'rgba(255, 175, 0, 0.25)',
+  accentBorder: 'rgba(255, 175, 0, 0.22)',
+  accentBorderHover: 'rgba(255, 175, 0, 0.4)',
+  accentSurface: 'rgba(255, 175, 0, 0.1)',
 } as const);
 
 export type DarkOverrides = typeof darkOverrides;

@@ -20,18 +20,24 @@
 :root {
   /* Colors */
   --ds-bg: rgb(17, 17, 17);
-  --ds-accent: #64C3FD;
-  --ds-accent-hover: #8dd4ff;
-  --ds-accent-light: #64C3FD;
-  --ds-accent-glow: rgba(100, 195, 253, 0.25);
-  --ds-accent-border: rgba(100, 195, 253, 0.2);
-  --ds-accent-border-hover: rgba(100, 195, 253, 0.35);
-  --ds-accent-surface: rgba(100, 195, 253, 0.08);
+  --ds-accent: #FFAF00;
+  --ds-accent-hover: #FFC233;
+  --ds-accent-light: #FFAF00;
+  --ds-accent-glow: rgba(255, 175, 0, 0.25);
+  --ds-accent-border: rgba(255, 175, 0, 0.22);
+  --ds-accent-border-hover: rgba(255, 175, 0, 0.4);
+  --ds-accent-surface: rgba(255, 175, 0, 0.1);
   --ds-text-primary: rgb(245, 245, 245);
   --ds-text-secondary: rgb(200, 200, 200);
   --ds-text-muted: rgb(160, 160, 160);
   --ds-text-inverted: rgb(17, 17, 17);
   --ds-sidebar-bg: rgba(28, 28, 28, 0.65);
+  /* Brand (invariant — identical in tokens.css and tokens-dark.css) */
+  --ds-signal: #FFAF00;
+  --ds-signal-strong: #FFB700;
+  --ds-scope: #15253E;
+  --ds-alert: #FF3200;
+  --ds-ink: #0A0A0A;
   --ds-angular-red: #DD0031;
   --ds-render-green: #1a7a40;
   --ds-chat-purple: #5a00c8;
@@ -45,8 +51,9 @@
   --ds-border-strong: rgb(60, 60, 60);
 
   /* Typography */
-  --ds-font-serif: "EB Garamond", Georgia, serif;
-  --ds-font-sans: Inter, system-ui, sans-serif;
+  --ds-font-display: "Archivo Black", system-ui, sans-serif;
+  --ds-font-sans: Archivo, system-ui, sans-serif;
+  --ds-font-diagram: Inter, system-ui, sans-serif;
   --ds-font-mono: "JetBrains Mono", ui-monospace, monospace;
 
   /* Typography — type scale */
@@ -72,7 +79,7 @@
   --ds-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
   --ds-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.10), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --ds-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.10), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --ds-shadow-focus: 0 0 0 3px rgba(0, 64, 144, 0.25);
+  --ds-shadow-focus: 0 0 0 3px rgba(21, 37, 62, 0.30);
 
   /* Radius */
   --ds-radius-sm: 6px;

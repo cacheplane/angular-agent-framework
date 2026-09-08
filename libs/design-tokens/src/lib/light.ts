@@ -17,7 +17,7 @@ export const lightOverrides = Object.freeze({
   borderStrong: 'rgb(200, 200, 200)',
 
   // Text
-  textPrimary: 'rgb(28, 28, 28)',
+  textPrimary: '#0A0A0A',
   textSecondary: 'rgb(70, 70, 70)',
   textMuted: 'rgb(115, 115, 115)',
   textInverted: 'rgb(255, 255, 255)',
@@ -26,13 +26,17 @@ export const lightOverrides = Object.freeze({
   bg: 'rgb(255, 255, 255)',
   sidebarBg: 'rgba(255, 255, 255, 0.45)',
 
-  // Semantic accent maps to the navy brand color (unchanged — cockpit identity)
+  // Semantic accent is the interactive INK (links, focus, borders) and stays
+  // dark: aviation yellow is 1.84:1 on white and cannot carry text. The tints
+  // below are backgrounds, so they carry the yellow instead — which is the
+  // shape [data-ui="pill"][data-variant="accent"] already has: accent-surface
+  // behind, accent ink on top.
   accent: baseTokens.brand.accent,
-  accentHover: '#003070',
-  accentGlow: 'rgba(0, 64, 144, 0.2)',
-  accentBorder: 'rgba(0, 64, 144, 0.15)',
-  accentBorderHover: 'rgba(0, 64, 144, 0.3)',
-  accentSurface: 'rgba(0, 64, 144, 0.06)',
+  accentHover: '#0E1B2E',
+  accentGlow: 'rgba(255, 175, 0, 0.28)',
+  accentBorder: 'rgba(255, 175, 0, 0.35)',
+  accentBorderHover: 'rgba(255, 175, 0, 0.55)',
+  accentSurface: 'rgba(255, 175, 0, 0.10)',
 } as const);
 
 export type LightOverrides = typeof lightOverrides;

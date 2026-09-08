@@ -80,6 +80,12 @@ function buildThemeBlock(): string {
   lines.push('');
   lines.push('  /* Brand */');
   lines.push(`  --color-accent-light: ${brand.accentLight};`);
+  lines.push('  /* signal aliases accent-light, scope aliases accent — deliberate: dark.ts derives its accent from accentLight, so both names must exist. Prefer signal/scope in new work. */');
+  lines.push(`  --color-signal: ${brand.signal};`);
+  lines.push(`  --color-signal-strong: ${brand.signalStrong};`);
+  lines.push(`  --color-scope: ${brand.scope};`);
+  lines.push(`  --color-alert: ${brand.alert};`);
+  lines.push(`  --color-ink: ${brand.ink};`);
   lines.push(`  --color-angular-red: ${brand.angularRed};`);
   lines.push(`  --color-render-green: ${brand.renderGreen};`);
   lines.push(`  --color-chat-purple: ${brand.chatPurple};`);
@@ -87,8 +93,9 @@ function buildThemeBlock(): string {
   // Fonts
   lines.push('');
   lines.push('  /* Fonts */');
-  lines.push(`  --font-garamond: ${typography.fontSerif};`);
-  lines.push(`  --font-inter: ${typography.fontSans};`);
+  lines.push(`  --font-display: ${typography.fontDisplay};`);
+  lines.push(`  --font-sans: ${typography.fontSans};`);
+  lines.push(`  --font-diagram: ${typography.fontDiagram};`);
   lines.push(`  --font-mono: ${typography.fontMono};`);
 
   // Type scale — Tailwind v4 composite text tokens.
@@ -99,7 +106,7 @@ function buildThemeBlock(): string {
   // composite objects in typography.ts.
   //
   // `family` is deliberately not emitted: those values are already
-  // `var(--font-garamond)` and friends, and Tailwind's --text-* bundle has no
+  // `var(--font-display)` and friends, and Tailwind's --text-* bundle has no
   // font-family sub-key. `eyebrow.transform` is likewise a plain
   // `text-transform` keyword, not a token. Both are excluded in
   // token-css-parity.spec.ts with that reasoning.
@@ -203,6 +210,13 @@ function buildTokensBlock(theme: ThemeOverrides): string {
   lines.push(`  --ds-text-muted: ${theme.textMuted};`);
   lines.push(`  --ds-text-inverted: ${theme.textInverted};`);
   lines.push(`  --ds-sidebar-bg: ${theme.sidebarBg};`);
+
+  lines.push('  /* Brand (invariant — identical in tokens.css and tokens-dark.css) */');
+  lines.push(`  --ds-signal: ${brand.signal};`);
+  lines.push(`  --ds-signal-strong: ${brand.signalStrong};`);
+  lines.push(`  --ds-scope: ${brand.scope};`);
+  lines.push(`  --ds-alert: ${brand.alert};`);
+  lines.push(`  --ds-ink: ${brand.ink};`);
   lines.push(`  --ds-angular-red: ${brand.angularRed};`);
   lines.push(`  --ds-render-green: ${brand.renderGreen};`);
   lines.push(`  --ds-chat-purple: ${brand.chatPurple};`);
@@ -218,8 +232,9 @@ function buildTokensBlock(theme: ThemeOverrides): string {
 
   lines.push('');
   lines.push('  /* Typography */');
-  lines.push(`  --ds-font-serif: ${typography.fontSerif};`);
+  lines.push(`  --ds-font-display: ${typography.fontDisplay};`);
   lines.push(`  --ds-font-sans: ${typography.fontSans};`);
+  lines.push(`  --ds-font-diagram: ${typography.fontDiagram};`);
   lines.push(`  --ds-font-mono: ${typography.fontMono};`);
 
   lines.push('');
@@ -287,8 +302,11 @@ export function generateTokensCss(): string {
 /**
  * Dark twin of tokens.css, from darkOverrides. Exists because the cockpit
  * example apps were designed dark: their var(--ds-*, fallback) fallbacks are
- * hand-copies of darkOverrides (verified value-by-value, 2026-08-30, with
- * minor drift - e.g. accentBorder 0.25 vs the token's 0.2). Wiring THIS file
+ * hand-copies of darkOverrides (verified value-by-value, 2026-08-30). As of
+ * 2026-09-07 those fallbacks are still the pre-ATC blue - e.g.
+ * var(--ds-accent, #64c3fd) against a darkOverrides.accent of #FFAF00 - so
+ * they have diverged from the tokens by HUE, not by a rounding nit, and are
+ * effectively decorative until the cockpit is reviewed. Wiring THIS file
  * in makes those fallbacks dead text; wiring the light tokens.css would flip
  * deliberately-dark apps to light.
  */

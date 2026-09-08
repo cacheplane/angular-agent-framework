@@ -18,13 +18,19 @@ const CSS_VAR_BY_PATH: Record<string, string> = {
   // Brand (theme-invariant)
   'brand.accent': '--color-accent',
   'brand.accentLight': '--color-accent-light',
+  'brand.signal': '--color-signal',
+  'brand.signalStrong': '--color-signal-strong',
+  'brand.scope': '--color-scope',
+  'brand.alert': '--color-alert',
+  'brand.ink': '--color-ink',
   'brand.angularRed': '--color-angular-red',
   'brand.renderGreen': '--color-render-green',
   'brand.chatPurple': '--color-chat-purple',
 
   // Font families
-  'typography.fontSerif': '--font-garamond',
-  'typography.fontSans': '--font-inter',
+  'typography.fontDisplay': '--font-display',
+  'typography.fontSans': '--font-sans',
+  'typography.fontDiagram': '--font-diagram',
   'typography.fontMono': '--font-mono',
 
   // Type scale — size
@@ -100,7 +106,7 @@ const CSS_VAR_BY_PATH: Record<string, string> = {
 const EXCLUDED: ReadonlyArray<{ prefix: string; why: string }> = [
   {
     prefix: 'typography.h1.family',
-    why: 'value is already `var(--font-garamond)` — a var about a var buys nothing',
+    why: 'value is already `var(--font-display)` — a var about a var buys nothing',
   },
   { prefix: 'typography.h2.family', why: 'see h1.family' },
   { prefix: 'typography.h3.family', why: 'see h1.family' },
