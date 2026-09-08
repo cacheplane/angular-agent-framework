@@ -2107,6 +2107,8 @@ git commit -m "chore(website): delete the demo dropdown and mobile tab strip"
 Before opening a PR, confirm each of these ran and passed — not that it should pass:
 
 - [ ] `npx nx test website` — full unit suite
+
+  Observed during Task 1: `src/app/docs/docs-structured-data.spec.tsx` timed out at 5000ms in a full-suite run and passed in isolation. It is untouched by this branch, so it is load-related rather than a regression here — but do not wave it away if it recurs. Reproduce it in isolation before calling it a flake, and read the raw failure window rather than the loudest grep hit.
 - [ ] `npx nx lint website` — no errors
 - [ ] `npx nx e2e website` — full Playwright suite
 - [ ] `npx nx build website` — production build
