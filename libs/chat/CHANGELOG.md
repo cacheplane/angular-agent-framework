@@ -4,6 +4,9 @@
 
 ### Removed
 
+- **`@langchain/core` is no longer a peer dependency.** `messageContent()` now takes
+  any `{ content: unknown }`, so nothing in the published package imports LangChain.
+  Keep installing it for `@threadplane/langgraph`, which still requires it.
 - **`provideChat()`, `ChatConfig`, and `CHAT_CONFIG` are gone.** No component in the library ever injected the token, so calling `provideChat({})` configured nothing: `renderRegistry`, `avatarLabel`, and `assistantName` were values only your own wrappers could read back. Delete the call and the import; `provideAgent()` from your runtime adapter is the only provider the chat components require, and everything they render is driven by component inputs. If you were reading `CHAT_CONFIG` from your own components, define your own injection token for those values.
 
 ### Fixed
