@@ -1,10 +1,18 @@
 import { InjectionToken, Signal } from '@angular/core';
+import type { AgentErrorKind } from '@threadplane/chat';
 
 export interface AgentLifecycle {
   /** Epoch ms of the first stream chunk arrival. Resets on switchThread(). */
   readonly streamStartedAt: Signal<number | null>;
-  /** Epoch ms + classification of the most recent stream error. Resets on switchThread(). */
-  readonly streamErrorAt: Signal<{ at: number; classification: string } | null>;
+  /**
+   * Epoch ms + failure class of the most recent stream error. Resets on switchThread().
+   *
+   * `kind` is the {@link AgentErrorKind} of the normalized `AgentError`
+   * (`connection` | `auth` | `server` | `interrupted` | `aborted`) — the same
+   * value `agent.error()?.kind` carries. For a failure the runtime could not
+   * normalize it falls back to the error's constructor name.
+   */
+  readonly streamErrorAt: Signal<{ at: number; kind: AgentErrorKind | string } | null>;
   /** Epoch ms of the first interrupt$ non-null in this stream. Resets on switchThread(). */
   readonly interruptReceivedAt: Signal<number | null>;
   /** Epoch ms of the most recent submit({ resume }) call. Resets on switchThread(). */

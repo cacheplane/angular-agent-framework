@@ -36,7 +36,7 @@ import type { BagTemplate, InferBag } from '@langchain/langgraph-sdk';
 import type {
   AgentEvent,
   AgentCheckpoint,
-  AgentError,
+  AgentErrorKind,
   AgentInterrupt,
   AgentStatus,
   Message,
@@ -49,7 +49,7 @@ import type {
   AgentSubmitOptions,
   MessageDelivery,
 } from '@threadplane/chat';
-import { staticDelivery } from '@threadplane/chat';
+import { AgentError, staticDelivery } from '@threadplane/chat';
 
 import {
   AgentOptions,
@@ -246,7 +246,7 @@ export function agent<
   // Eight signals tracking key transitions for telemetry/observability.
   // All reset together via resetLifecycle(); see switchThread() below.
   const lcStreamStartedAt      = signal<number | null>(null);
-  const lcStreamErrorAt        = signal<{ at: number; classification: string } | null>(null);
+  const lcStreamErrorAt        = signal<{ at: number; kind: AgentErrorKind | string } | null>(null);
   const lcInterruptReceivedAt  = signal<number | null>(null);
   const lcInterruptResolvedAt  = signal<number | null>(null);
   const lcThreadCreatedAt      = signal<number | null>(null);
@@ -265,11 +265,13 @@ export function agent<
     toolCallCompletedAt: lcToolCallCompletedAt,
   };
 
-  // Register with optional lifecycle registry. External instrumentation
-  // (e.g. cockpit-telemetry) provides AgentLifecycleRegistry to receive
-  // per-agent lifecycles created within this injection context.
-  const lifecycleRegistry = inject(AgentLifecycleRegistry, { optional: true });
-  lifecycleRegistry?.register(lifecycle);
+  // Register with the root lifecycle registry. It is `providedIn: 'root'`, so
+  // every agent registers regardless of which injector built it, and external
+  // instrumentation (e.g. cockpit-telemetry) sees them all. Registration is
+  // scoped to this agent's injector lifetime.
+  const lifecycleRegistry = inject(AgentLifecycleRegistry);
+  lifecycleRegistry.register(lifecycle);
+  destroyRef.onDestroy(() => lifecycleRegistry.unregister(lifecycle));
 
   function resetLifecycle(): void {
     lcStreamStartedAt.set(null);
@@ -291,11 +293,17 @@ export function agent<
   messages$.pipe(takeUntil(destroy$)).subscribe(m => {
     if (lcStreamStartedAt() === null && m.length > 0) lcStreamStartedAt.set(Date.now());
   });
-  // Stream error: capture timestamp + classification (Error name or 'unknown').
+  // Stream error: capture timestamp + failure class. The bridge normalizes every
+  // failure through toAgentError(), so `kind` is the actionable AgentErrorKind;
+  // anything that slipped past normalization falls back to a constructor name.
   error$.pipe(takeUntil(destroy$)).subscribe(e => {
     if (e == null) return;
-    const classification = e instanceof Error ? e.name : typeof e === 'string' ? 'string' : 'unknown';
-    lcStreamErrorAt.set({ at: Date.now(), classification });
+    const kind = e instanceof AgentError
+      ? e.kind
+      : e instanceof Error
+        ? e.name
+        : typeof e === 'string' ? 'string' : 'unknown';
+    lcStreamErrorAt.set({ at: Date.now(), kind });
   });
   // First non-null interrupt within this thread.
   interrupt$.pipe(takeUntil(destroy$)).subscribe(ix => {

@@ -48,17 +48,20 @@ describe('ChatComponent', () => {
     fixture.detectChanges();
 
     const stream = fixture.componentInstance.chat.submit({ message: 'Hello' });
-    transport.emit([
+    await transport.emit([
       {
         type: 'values',
         messages: [{ type: 'ai', content: 'Hi there' }],
       },
     ]);
-    transport.close();
+    await transport.close();
     await stream;
     fixture.detectChanges();
 
+    // submit() appends the user message optimistically, so the streamed
+    // assistant reply is the last entry, not the only one.
     expect(fixture.componentInstance.chat.messages()).toEqual([
+      expect.objectContaining({ role: 'user', content: 'Hello' }),
       expect.objectContaining({ role: 'assistant', content: 'Hi there' }),
     ]);
     expect(fixture.componentInstance.chat.status()).toBe('idle');
@@ -69,7 +72,7 @@ describe('ChatComponent', () => {
     fixture.detectChanges();
 
     const stream = fixture.componentInstance.chat.submit({ message: 'Hello' });
-    transport.emitError(new Error('not found'));
+    await transport.emitError(new Error('not found'));
     await stream;
     fixture.detectChanges();
 
@@ -85,9 +88,10 @@ describe('ChatComponent', () => {
 |--------|-------------|
 | `constructor(script?: StreamEvent[][])` | Optionally seeds scripted event batches for manual stepping (defaults to `[]`). |
 | `nextBatch()` | Returns the next scripted event batch. |
-| `emit(events)` | Pushes one or more `StreamEvent` objects into the active stream. |
-| `emitError(err)` | Makes the active stream reject with `err`. The runtime catches it, so `submit()` still resolves — assert on `status()` and `error()` instead of on a rejected promise. |
-| `close()` | Closes the active stream after queued events drain. |
+| `emit(events)` | Pushes one or more `StreamEvent` objects into the active stream. Returns a promise that resolves once the adapter has consumed the batch. |
+| `emitError(err)` | Makes the active stream reject with `err`. The runtime catches it, so `submit()` still resolves — assert on `status()` and `error()` instead of on a rejected promise. Returns a promise that resolves once the stream has thrown. |
+| `close()` | Closes the active stream after queued events drain. Returns a promise that resolves once the run has finished. |
+| `flush()` | Resolves once everything emitted so far has been consumed, without emitting anything new. |
 | `isStreaming()` | Returns whether a stream is currently active. |
 
 Messages inside a `values` event are raw LangGraph messages, so their role comes from `type` (`'human'`, `'ai'`, `'tool'`, `'system'`), not from a `role` field. The projector reads `_getType()` or the raw `type` and falls back to `'ai'`; a `role` key is never read.
@@ -97,6 +101,15 @@ The transport also records calls in `streams`, `createdQueuedRuns`, `cancelledRu
 <Callout type="tip" title="Deterministic tests">
   `MockAgentTransport` emits only when your test calls `emit()`, `emitError()`,
   or `close()`. This makes stream state and payload assertions deterministic.
+</Callout>
+
+<Callout type="warning" title="Await every emit">
+  `emit()`, `emitError()`, `close()` and `flush()` are asynchronous. `stream()`
+  is an async generator, so nothing has reached the signals at the moment
+  `emit()` returns. Await the promise before asserting — a spec that reads
+  signals synchronously after an emit reads stale state and passes or fails for
+  the wrong reason. `flush()` covers the same wait when the agent was driven by
+  something other than an emit.
 </Callout>
 
 ## What's Next

@@ -374,12 +374,11 @@ describe('createStreamManagerBridge', () => {
       });
 
       const submitted = bridge.submit({});
-      transport.emit([{
+      await transport.emit([{
         type: 'messages',
         messages: [{ id: 'ai-1', type: 'ai', content: 'hel' }],
         messageMetadata: { langgraph_node: 'model' },
       }]);
-      await new Promise(resolve => setTimeout(resolve, 0));
 
       const streaming = bridge.getMessageDelivery('ai-1');
       expect(streaming).toEqual({
@@ -411,20 +410,18 @@ describe('createStreamManagerBridge', () => {
       });
 
       void bridge.submit({});
-      transport.emit([{
+      await transport.emit([{
         type: 'messages',
         messages: [{ id: 'revision-ai', type: 'ai', content: 'a' }],
         messageMetadata: { langgraph_node: 'model' },
       }]);
-      await new Promise(resolve => setTimeout(resolve, 0));
       const afterFirstChunk = bridge.deliveryRevision();
 
-      transport.emit([{
+      await transport.emit([{
         type: 'messages',
         messages: [{ id: 'revision-ai', type: 'ai', content: 'b' }],
         messageMetadata: { langgraph_node: 'model' },
       }]);
-      await new Promise(resolve => setTimeout(resolve, 0));
 
       expect(bridge.deliveryRevision()).toBe(afterFirstChunk);
       await bridge.stop();
@@ -444,12 +441,11 @@ describe('createStreamManagerBridge', () => {
       await new Promise(resolve => setTimeout(resolve, 0));
 
       const submitted = bridge.submit({});
-      transport.emit([{
+      await transport.emit([{
         type: 'messages',
         messages: [{ id: 'streamed-id', type: 'ai', content: 'final answer' }],
         messageMetadata: { langgraph_node: 'model' },
       }]);
-      await new Promise(resolve => setTimeout(resolve, 0));
       const streaming = bridge.getMessageDelivery('streamed-id');
 
       transport.history = [{
@@ -998,12 +994,11 @@ describe('createStreamManagerBridge', () => {
       });
 
       const submitted = bridge.submit({});
-      transport.emit([{
+      await transport.emit([{
         type: 'messages',
         messages: [{ id: 'ai-aborted', type: 'ai', content: 'partial' }],
         messageMetadata: { langgraph_node: 'model' },
       }]);
-      await new Promise(resolve => setTimeout(resolve, 0));
       await bridge.stop();
       transport.close();
 
@@ -1397,21 +1392,19 @@ describe('createStreamManagerBridge', () => {
       });
 
       void bridge.submit({});
-      transport.emit([{
+      await transport.emit([{
         type: 'messages',
         messages: [{ id: 'ai-tool-call', type: 'ai', content: 'search', tool_calls: [{ id: 'call-1', name: 'search', args: {} }] }],
         messageMetadata: { langgraph_node: 'model' },
       }]);
-      await new Promise(resolve => setTimeout(resolve, 0));
       expect(bridge.getMessageDelivery('ai-tool-call').phase).toBe('streaming');
 
       transport.emit([{ type: 'values', values: { toolStepComplete: true } }]);
-      transport.emit([{
+      await transport.emit([{
         type: 'messages',
         messages: [{ id: 'ai-final', type: 'ai', content: 'search complete' }],
         messageMetadata: { langgraph_node: 'model' },
       }]);
-      await new Promise(resolve => setTimeout(resolve, 0));
 
       expect(bridge.getMessageDelivery('ai-tool-call')).toMatchObject({
         phase: 'complete',
@@ -1434,7 +1427,7 @@ describe('createStreamManagerBridge', () => {
       });
 
       void bridge.submit({});
-      transport.emit([{
+      await transport.emit([{
         type: 'messages',
         messages: [{
           id: 'tool-chunk-a', type: 'ai', content: 'hel',
@@ -1449,7 +1442,6 @@ describe('createStreamManagerBridge', () => {
         }],
         messageMetadata: { langgraph_node: 'model' },
       }]);
-      await new Promise(resolve => setTimeout(resolve, 0));
 
       expect(subjects.messages$.value).toEqual([
         expect.objectContaining({
@@ -1484,7 +1476,7 @@ describe('createStreamManagerBridge', () => {
       });
 
       const submitted = bridge.submit({});
-      transport.emit([{
+      await transport.emit([{
         type: 'messages',
         messages: [{ id: 'chunk-event-1', type: 'ai', content: 'hel' }],
         messageMetadata: { langgraph_node: 'model' },
@@ -1493,7 +1485,6 @@ describe('createStreamManagerBridge', () => {
         messages: [{ id: 'chunk-event-2', type: 'ai', content: 'lo' }],
         messageMetadata: { langgraph_node: 'model' },
       }]);
-      await new Promise(resolve => setTimeout(resolve, 0));
 
       expect(subjects.messages$.value).toEqual([
         expect.objectContaining({ id: 'chunk-event-1', content: 'hello' }),
@@ -1535,7 +1526,7 @@ describe('createStreamManagerBridge', () => {
         });
 
         const submitted = bridge.submit({});
-        transport.emit([{
+        await transport.emit([{
           type: 'messages',
           messages: [{
             id: 'ai-earlier', type: 'ai', content: '',
@@ -1553,7 +1544,6 @@ describe('createStreamManagerBridge', () => {
           messages: [{ id: 'ai-active', type: 'ai', content: 'partial' }],
           messageMetadata: { langgraph_node: 'model' },
         }]);
-        await new Promise(resolve => setTimeout(resolve, 0));
 
         if (outcome === 'error') {
           transport.emit([{ type: 'error', error: new Error('failed') }]);
@@ -2508,7 +2498,7 @@ describe('createStreamManagerBridge', () => {
         });
 
         void bridge.submit({});
-        transport.emit([{
+        await transport.emit([{
           type,
           messages: [
             { id: 'historical-ai', type: 'ai', content: 'old answer' },
@@ -2516,7 +2506,6 @@ describe('createStreamManagerBridge', () => {
             { id: 'active-ai', type: 'ai', content: 'new answer' },
           ],
         }]);
-        await new Promise(resolve => setTimeout(resolve, 0));
 
         expect(bridge.getMessageDelivery('historical-ai')).toEqual({
           generation: 'historical-ai',
@@ -2551,7 +2540,7 @@ describe('createStreamManagerBridge', () => {
         const historicalDelivery = bridge.getMessageDelivery('historical-enriched-ai');
 
         void bridge.submit({});
-        transport.emit([{
+        await transport.emit([{
           type,
           messages: [
             {
@@ -2565,7 +2554,6 @@ describe('createStreamManagerBridge', () => {
             { id: 'active-enriched-ai', type: 'ai', content: 'new answer' },
           ],
         }]);
-        await new Promise(resolve => setTimeout(resolve, 0));
 
         expect(subjects.messages$.value.find(message =>
           (message as unknown as { id?: string }).id === 'historical-enriched-ai'
@@ -3525,13 +3513,12 @@ describe('createStreamManagerBridge', () => {
     });
 
     const done = bridge.submit({});
-    transport.emit([{
+    await transport.emit([{
       type: 'messages|research:abc123' as StreamEvent['type'],
       namespace: ['research:abc123'],
       messages: [{ id: 'child-ai', type: 'ai', content: 'brief' }],
       messageMetadata: { checkpoint_ns: 'research:abc123' },
     } satisfies StreamEvent]);
-    await new Promise(r => setTimeout(r, 0));
     expect(subjects.subagents$.value.get('research:abc123')?.status()).toBe('running');
 
     transport.emit([{ type: 'values', data: { done: true } } as StreamEvent]);

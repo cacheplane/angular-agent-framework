@@ -162,7 +162,20 @@ describe('AGENT_LIFECYCLE', () => {
     const err = ref.lifecycle.streamErrorAt();
     expect(err).not.toBeNull();
     expect(err!.at).toBeGreaterThan(0);
-    expect(typeof err!.classification).toBe('string');
+    // The runtime normalizes every failure to an AgentError, so `kind` carries
+    // the actionable AgentErrorKind — never the useless constructor name.
+    expect(err!.kind).toBe('server');
+  });
+
+  it('streamErrorAt kind mirrors the AgentError kind for an HTTP failure', async () => {
+    const transport = new MockAgentTransport();
+    configureAgent({ apiUrl: '', assistantId: 'a', transport });
+    const ref = getAgent();
+    void ref.submit({ message: 'hi' }).catch(() => undefined);
+    transport.emitError(new Error('HTTP 401: unauthorized'));
+    await tick();
+    expect(ref.lifecycle.streamErrorAt()!.kind).toBe('auth');
+    expect(ref.error()?.kind).toBe('auth');
   });
 
   it('all signals reset to null on switchThread(null)', async () => {

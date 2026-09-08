@@ -2,14 +2,14 @@
   {
     "name": "AgentLifecycleRegistry",
     "kind": "class",
-    "description": "Optional registry that collects per-instance agent lifecycles within\nan Angular injection context. External instrumentation packages\n(e.g. cockpit-telemetry) provide this token and read from it.\n\n`@threadplane/langgraph` does NOT provide this itself — the configured agent\ninstance writes to the registry only when an external consumer has provided it.",
+    "description": "Application-wide registry of every live agent's AgentLifecycle.\n\nIt is `providedIn: 'root'`, so it always exists and every agent registers\ninto the same instance regardless of which injector built it — an agent\ncreated in a route or component injector is still visible from the root.\nExternal instrumentation packages read `lifecycles()` to observe every agent\nin the application without owning the provider graph.\n\nRegistration is scoped to the agent's lifetime: an agent unregisters when the\ninjector that created it is destroyed, so `lifecycles()` never accumulates\nlifecycles for agents that are gone.",
     "params": [],
     "examples": [],
     "properties": [
       {
         "name": "lifecycles",
         "type": "Signal<readonly AgentLifecycle[]>",
-        "description": "Reactive list of registered lifecycles.",
+        "description": "Reactive list of the lifecycles of every currently live agent.",
         "optional": false
       }
     ],
@@ -18,6 +18,19 @@
         "name": "register",
         "signature": "register(lifecycle: AgentLifecycle): void",
         "description": "",
+        "params": [
+          {
+            "name": "lifecycle",
+            "type": "AgentLifecycle",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "unregister",
+        "signature": "unregister(lifecycle: AgentLifecycle): void",
+        "description": "Drop a lifecycle when its agent's injector is destroyed.",
         "params": [
           {
             "name": "lifecycle",
@@ -563,7 +576,7 @@
   {
     "name": "MockAgentTransport",
     "kind": "class",
-    "description": "Test transport for deterministic agent testing without a real LangGraph server.\n\nScript event batches upfront, then emit them manually or step through them\nin your test specs. Supports error injection and close control.",
+    "description": "Test transport for deterministic agent testing without a real LangGraph server.\n\nScript event batches upfront, then emit them manually or step through them\nin your test specs. Supports error injection and close control.\n\n`emit()`, `emitError()`, `close()` and `flush()` are awaitable: the returned\npromise settles once the adapter has consumed everything queued so far (and\none macrotask later, so throttled signal writes have landed), which removes\nthe hand-rolled `await new Promise(resolve => setTimeout(resolve, 0))` flush\nfrom specs.",
     "params": [
       {
         "name": "script",
@@ -573,7 +586,7 @@
       }
     ],
     "examples": [
-      "```typescript\nconst transport = new MockAgentTransport([\n  [{ type: 'values', messages: [aiMsg('Hello')] }],\n  [{ type: 'values', messages: [aiMsg('Done')] }],\n]);\n```"
+      "```typescript\nconst transport = new MockAgentTransport([\n  [{ type: 'values', messages: [aiMsg('Hello')] }],\n  [{ type: 'values', messages: [aiMsg('Done')] }],\n]);\nawait transport.emit(transport.nextBatch());\n```"
     ],
     "properties": [
       {
@@ -641,8 +654,8 @@
       },
       {
         "name": "close",
-        "signature": "close(): void",
-        "description": "Close the stream. Remaining queued events are drained before completion.",
+        "signature": "close(): Promise<void>",
+        "description": "Close the stream. Remaining queued events are drained before completion.\nResolves once the run has finished.",
         "params": []
       },
       {
@@ -684,8 +697,8 @@
       },
       {
         "name": "emit",
-        "signature": "emit(events: StreamEvent[]): void",
-        "description": "Manually emit events into the stream.",
+        "signature": "emit(events: StreamEvent[]): Promise<void>",
+        "description": "Manually emit events into the stream.\n\nAwait the returned promise: it resolves once the adapter has pulled this\nbatch out of the stream (or the run has ended), so signals are settled and\nassertions read live state rather than the value from before the emit.",
         "params": [
           {
             "name": "events",
@@ -697,8 +710,8 @@
       },
       {
         "name": "emitError",
-        "signature": "emitError(err: Error): void",
-        "description": "Inject an error into the stream.",
+        "signature": "emitError(err: Error): Promise<void>",
+        "description": "Inject an error into the stream. Resolves once the stream has thrown.",
         "params": [
           {
             "name": "err",
@@ -707,6 +720,12 @@
             "optional": false
           }
         ]
+      },
+      {
+        "name": "flush",
+        "signature": "flush(): Promise<void>",
+        "description": "Resolve once everything emitted so far has been consumed, without emitting\nanything new. Useful after driving the agent by some other route (a\n`submit()`, a `switchThread()`) that has to reach the transport first.",
+        "params": []
       },
       {
         "name": "getHistory",
@@ -975,7 +994,7 @@
       {
         "name": "streamErrorAt",
         "type": "Signal<object | null>",
-        "description": "Epoch ms + classification of the most recent stream error. Resets on switchThread().",
+        "description": "Epoch ms + failure class of the most recent stream error. Resets on switchThread().\n\n`kind` is the AgentErrorKind of the normalized `AgentError`\n(`connection` | `auth` | `server` | `interrupted` | `aborted`) — the same\nvalue `agent.error()?.kind` carries. For a failure the runtime could not\nnormalize it falls back to the error's constructor name.",
         "optional": false
       },
       {
@@ -1512,8 +1531,8 @@
       {
         "name": "interrupt",
         "type": "Signal<AgentInterrupt | undefined>",
-        "description": "",
-        "optional": true
+        "description": "Current human-in-the-loop pause, or `undefined` when the run is not paused.\n\nNarrowed from the neutral `Agent` contract, where `interrupt` is optional\nbecause a runtime without human-in-the-loop support omits it. The LangGraph\nadapter always provides it, so `injectAgent().interrupt()` type-checks\ndirectly under `strictNullChecks` — no `?.()` needed.",
+        "optional": false
       },
       {
         "name": "isLoading",
@@ -1946,7 +1965,7 @@
       {
         "name": "interrupt",
         "type": "WritableSignal<AgentInterrupt | undefined>",
-        "description": "",
+        "description": "Current human-in-the-loop pause, or `undefined` when the run is not paused.\n\nNarrowed from the neutral `Agent` contract, where `interrupt` is optional\nbecause a runtime without human-in-the-loop support omits it. The LangGraph\nadapter always provides it, so `injectAgent().interrupt()` type-checks\ndirectly under `strictNullChecks` — no `?.()` needed.",
         "optional": false
       },
       {
@@ -2499,7 +2518,7 @@
   {
     "name": "provideAgent",
     "kind": "function",
-    "description": "Wire the LangGraph adapter into Angular's dependency injection.\n\nRegisters a singleton `LangGraphAgent` constructed from `config`. Retrieve it\nin any component with `injectAgent()`. Provide this at the application root\n(`app.config.ts`) for an app-wide agent.\n\nTo use a different agent in a component subtree, re-provide\n`provideAgent({...})` in that component's `providers: []` array —\nAngular's hierarchical DI scopes the singleton accordingly.\n\n**Static vs factory config.** Pass a plain `AgentConfig` object when the\nconfig is known up front. Pass a `() => AgentConfig` factory when the config\ndepends on runtime/DI state — the factory runs inside an Angular injection\ncontext, so it may call `inject()` to read services, route params, or\ncomponent-scoped signals.\n\n**Typed state via AgentRef.** Pass a typed ref as the first argument to flow\nthe state shape from `provideAgent` to `injectAgent` without repeating the\ngeneric at every call site.\n\n**Several agents at one injector level.** Each `provideAgent(ref, …)` call\nbuilds its own agent from its own config, so two (or more) refs may be\nprovided side by side in a single `providers` array and `injectAgent(refA)`\n/ `injectAgent(refB)` return distinct agents. The ref-less `injectAgent()`\nresolves a single shared token, which can only point at one of them: when\nmore than one ref is provided at the same level the **last** call wins.\nAlways inject by ref when an injector provides more than one agent.",
+    "description": "Wire the LangGraph adapter into Angular's dependency injection.\n\nRegisters a singleton `LangGraphAgent` constructed from `config`. Retrieve it\nin any component with `injectAgent()`. Provide this at the application root\n(`app.config.ts`) for an app-wide agent.\n\nTo use a different agent in a component subtree, re-provide\n`provideAgent({...})` in that component's `providers: []` array —\nAngular's hierarchical DI scopes the singleton accordingly.\n\n**Static vs factory config.** Pass a plain `AgentConfig` object when the\nconfig is known up front. Pass a `() => AgentConfig` factory when the config\ndepends on runtime/DI state — the factory runs inside an Angular injection\ncontext, so it may call `inject()` to read services, route params, or\ncomponent-scoped signals.\n\n**Typed state via AgentRef.** Pass a typed ref as the first argument to flow\nthe state shape from `provideAgent` to `injectAgent` without repeating the\ngeneric at every call site.\n\n**Several agents at one injector level.** Each `provideAgent(ref, …)` call\nbuilds its own agent from its own config, so two (or more) refs may be\nprovided side by side in a single `providers` array and `injectAgent(refA)`\n/ `injectAgent(refB)` return distinct agents. The ref-less `injectAgent()`\nresolves a single shared token, which can only point at one of them: when\nmore than one ref is provided at the same level the **last** call wins, and\nresolving it in dev mode logs a `console.warn` naming every competing ref.\nThe `AGENT_LIFECYCLE` token follows the same rule. Always inject by ref when\nan injector provides more than one agent.\n\n**Lifecycle token.** Every form also provides `AGENT_LIFECYCLE`, so\n`inject(AGENT_LIFECYCLE)` returns the same object as `injectAgent().lifecycle`\nwithout reaching for the agent itself.",
     "signature": "provideAgent(ref: AgentRef<T>, configOrFactory: AgentConfig<T, BagTemplate> | () => AgentConfig<T>): Provider[]",
     "params": [
       {

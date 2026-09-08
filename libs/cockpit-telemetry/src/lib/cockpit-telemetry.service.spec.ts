@@ -18,7 +18,7 @@ function makeAgentLifecycle(): AgentLifecycle & {
   const interruptResolvedAt = signal<number | null>(null);
   return {
     streamStartedAt: streamStartedAt.asReadonly(),
-    streamErrorAt: signal<{ at: number; classification: string } | null>(null).asReadonly(),
+    streamErrorAt: signal<{ at: number; kind: string } | null>(null).asReadonly(),
     interruptReceivedAt: signal<number | null>(null).asReadonly(),
     interruptResolvedAt: interruptResolvedAt.asReadonly(),
     threadCreatedAt: signal<number | null>(null).asReadonly(),

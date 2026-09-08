@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { InjectionToken, inject } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { createAgentRef } from '@threadplane/chat';
@@ -130,6 +130,53 @@ describe('provideAgent', () => {
       expect(transportA.streams.length).toBe(1);
       expect(transportB.streams.length).toBe(0);
       agentA.stop();
+    });
+
+    it('warns in dev mode when several refs share one injector level, and keeps refs distinct', () => {
+      const REF_A = createAgentRef<StateA>('warn-a');
+      const REF_B = createAgentRef<StateB>('warn-b');
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      try {
+        TestBed.configureTestingModule({
+          providers: [
+            provideAgent(REF_A, { apiUrl: '', assistantId: 'graph-a', transport: new MockAgentTransport() }),
+            provideAgent(REF_B, { apiUrl: '', assistantId: 'graph-b', transport: new MockAgentTransport() }),
+          ],
+        });
+
+        const agentA = TestBed.runInInjectionContext(() => injectAgent(REF_A));
+        const agentB = TestBed.runInInjectionContext(() => injectAgent(REF_B));
+        expect(agentA).not.toBe(agentB);
+        // Injecting by ref alone is unambiguous, so nothing is logged.
+        expect(warn).not.toHaveBeenCalled();
+
+        // The ref-less token is the ambiguous one: it warns and resolves the last ref.
+        const ambiguous = TestBed.runInInjectionContext(() => injectAgent());
+        expect(ambiguous).toBe(agentB);
+        expect(warn).toHaveBeenCalledTimes(1);
+        const message = String(warn.mock.calls[0][0]);
+        expect(message).toContain('warn-a');
+        expect(message).toContain('warn-b');
+        expect(message).toContain('injectAgent()');
+      } finally {
+        warn.mockRestore();
+      }
+    });
+
+    it('does not warn when a single ref is provided', () => {
+      const REF = createAgentRef<StateA>('lonely');
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      try {
+        TestBed.configureTestingModule({
+          providers: [
+            provideAgent(REF, { apiUrl: '', assistantId: 'graph-a', transport: new MockAgentTransport() }),
+          ],
+        });
+        TestBed.runInInjectionContext(() => injectAgent());
+        expect(warn).not.toHaveBeenCalled();
+      } finally {
+        warn.mockRestore();
+      }
     });
 
     it('keeps single-ref behaviour identical: injectAgent() resolves the same instance', () => {

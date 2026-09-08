@@ -82,7 +82,7 @@ provideAgent({
 const chat = injectAgent();
 ```
 
-Several agents may also coexist at one injector level. Each `provideAgent(ref, …)` call builds its own agent from its own config, so `injectAgent(refA)` and `injectAgent(refB)` return distinct instances. The ref-less `injectAgent()` resolves a single shared token, which can only point at one of them — the last ref-form call at that level wins. Always inject by ref when an injector provides more than one agent.
+Several agents may also coexist at one injector level. Each `provideAgent(ref, …)` call builds its own agent from its own config, so `injectAgent(refA)` and `injectAgent(refB)` return distinct instances. The ref-less `injectAgent()` resolves a single shared token, which can only point at one of them — the last ref-form call at that level wins, and resolving it in development mode logs a warning naming every competing ref. Always inject by ref when an injector provides more than one agent.
 
 ```ts
 export const LIVE = createAgentRef<ChatState>('live');
@@ -94,6 +94,23 @@ providers: [
 ];
 // injectAgent(LIVE) !== injectAgent(REPLAY)
 ```
+
+<Callout type="warning" title="Dev-mode warning on an ambiguous ref-less inject">
+In development mode, resolving the ref-less token while several refs share the injector level logs a `console.warn` naming every competing ref and the one that won. It fires only on the ambiguous path: `injectAgent(LIVE)` and `injectAgent(REPLAY)` are unambiguous and stay silent. Production builds never log it.
+</Callout>
+
+## The `AGENT_LIFECYCLE` token
+
+Every form of `provideAgent()` also provides `AGENT_LIFECYCLE`, so instrumentation can read an agent's [lifecycle signals](/docs/langgraph/guides/lifecycle) without depending on the agent itself:
+
+```ts
+import { inject } from '@angular/core';
+import { AGENT_LIFECYCLE } from '@threadplane/langgraph';
+
+const lifecycle = inject(AGENT_LIFECYCLE); // === injectAgent().lifecycle
+```
+
+The token follows the same last-one-wins rule as the ref-less `injectAgent()`: with several refs at one injector level it resolves the last ref's lifecycle. Read `injectAgent(ref).lifecycle` instead when that is the case.
 
 ## Transcript node filtering
 

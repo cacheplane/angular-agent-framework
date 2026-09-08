@@ -10,12 +10,13 @@ The `@threadplane/langgraph` library exposes per-agent lifecycle signals on ever
 
 ```typescript
 import { InjectionToken, Signal } from '@angular/core';
+import type { AgentErrorKind } from '@threadplane/chat';
 
 export interface AgentLifecycle {
   /** Epoch ms of the first stream chunk arrival. Resets on switchThread(). */
   readonly streamStartedAt: Signal<number | null>;
-  /** Epoch ms + classification of the most recent stream error. Resets on switchThread(). */
-  readonly streamErrorAt: Signal<{ at: number; classification: string } | null>;
+  /** Epoch ms + failure class of the most recent stream error. Resets on switchThread(). */
+  readonly streamErrorAt: Signal<{ at: number; kind: AgentErrorKind | string } | null>;
   /** Epoch ms of the first interrupt$ non-null in this stream. Resets on switchThread(). */
   readonly interruptReceivedAt: Signal<number | null>;
   /** Epoch ms of the most recent submit({ resume }) call. Resets on switchThread(). */
@@ -40,7 +41,7 @@ Six of the eight signals derive directly from existing stream subjects on the ag
 | Signal | Source |
 |--------|--------|
 | `streamStartedAt` | first non-empty `values$` or `messages$` emission |
-| `streamErrorAt` | `error$` emission, classified |
+| `streamErrorAt` | `error$` emission, classified by `AgentErrorKind` |
 | `interruptReceivedAt` | first non-null `interrupt$` value |
 | `threadPersistedAt` | first non-empty `history$` emission |
 | `toolCallStartedAt` | first tool-call append in `toolCalls$` |
@@ -53,8 +54,8 @@ Two signals require explicit hook points that the agent already invokes:
 | `interruptResolvedAt` | `submit({ resume })` |
 | `threadCreatedAt` | the first `submit()` on an agent that has no thread yet |
 
-<Callout type="info" title="What `classification` actually holds">
-`streamErrorAt().classification` is the error's constructor name, taken from `error.name` (or `'string'` / `'unknown'` for a non-`Error` value). Because the runtime normalizes every failure into an `AgentError`, that value is almost always the literal `'AgentError'`, which makes it a poor discriminator. The actionable one is `agent.error()?.kind` — `connection`, `auth`, `server`, `interrupted`, or `aborted`. See [Error handling](/docs/chat/guides/error-handling).
+<Callout type="info" title="What `kind` holds">
+`streamErrorAt().kind` is the [`AgentErrorKind`](/docs/chat/guides/error-handling) of the failure — `connection`, `auth`, `server`, `interrupted`, or `aborted` — the same value `agent.error()?.kind` carries. The runtime normalizes every failure through `toAgentError()` before it reaches the lifecycle, so the discriminator is actionable. A value the runtime could not normalize falls back to the error's constructor name, which is why the type is `AgentErrorKind | string`.
 </Callout>
 
 ## Subscribing
@@ -71,38 +72,37 @@ export class MyComponent {
     effect(() => {
       const err = this.chat.lifecycle.streamErrorAt();
       if (err) {
-        console.log('Stream error at', err.at, 'classification:', err.classification);
+        console.log('Stream error at', err.at, 'kind:', err.kind);
       }
     });
   }
 }
 ```
 
-For application-wide instrumentation, provide `AgentLifecycleRegistry` and read back the lifecycles registered by agents created in that injection context. An agent registers itself at construction, so the registry has to be provided at or above the injector that calls `provideAgent()` — an agent constructed before the registry exists registers nowhere:
+For application-wide instrumentation, inject `AgentLifecycleRegistry` and read back the lifecycles of every live agent. It is `providedIn: 'root'`, so nothing has to be provided and every agent registers into the same instance no matter which injector built it — a route-scoped or component-scoped `provideAgent()` is still visible from the root:
 
 ```typescript
-import { ApplicationConfig, inject } from '@angular/core';
+import { inject } from '@angular/core';
 import { AgentLifecycleRegistry } from '@threadplane/langgraph';
 
-export const appConfig: ApplicationConfig = {
-  providers: [AgentLifecycleRegistry],
-};
-```
-
-```typescript
 const registry = inject(AgentLifecycleRegistry);
 const lifecycles = registry.lifecycles();
 ```
 
-The exported `AGENT_LIFECYCLE` token is a low-level token for custom integrations. The library never provides it — it is an empty token you provide yourself when you want a lifecycle reachable by injection:
+Registration is scoped to the agent's lifetime: an agent unregisters when the injector that created it is destroyed, so `lifecycles()` never accumulates lifecycles for agents that are gone.
+
+`provideAgent()` also provides the `AGENT_LIFECYCLE` token, so a service that needs only the timings can inject the lifecycle without reaching for the agent:
 
 ```typescript
-import { AGENT_LIFECYCLE, injectAgent } from '@threadplane/langgraph';
+import { inject } from '@angular/core';
+import { AGENT_LIFECYCLE } from '@threadplane/langgraph';
 
-providers: [
-  { provide: AGENT_LIFECYCLE, useFactory: () => injectAgent().lifecycle },
-];
+const lifecycle = inject(AGENT_LIFECYCLE); // === injectAgent().lifecycle
 ```
+
+<Callout type="warning" title="One token, one agent">
+`AGENT_LIFECYCLE` follows the same last-one-wins rule as the ref-less `injectAgent()`: when several `provideAgent(ref, …)` calls share an injector level, the token resolves the lifecycle of the **last** ref provided. Read `injectAgent(ref).lifecycle` when an injector provides more than one agent. See [provideAgent()](/docs/langgraph/api/provide-agent).
+</Callout>
 
 ## Reset semantics
 

@@ -136,7 +136,9 @@ The UI lifecycle is intentionally boring — and boring is the goal.
 5. `stop()` aborts the active run when supported, and `retry()` clears `error()` and re-runs the last submitted input after a failure.
 6. `regenerate(index)` rolls back from an assistant message and reruns from the preceding user message.
 
-LangGraph adds deeper lifecycle and history surfaces. `@threadplane/langgraph` exposes `injectAgent().lifecycle` and exports `AgentLifecycle`, `AgentLifecycleRegistry`, and the low-level `AGENT_LIFECYCLE` token. Those are useful for telemetry, debugging, persistence, and time-travel UI. They are not required by `@threadplane/chat`.
+LangGraph adds deeper lifecycle and history surfaces. `@threadplane/langgraph` exposes `injectAgent().lifecycle`, provides the `AGENT_LIFECYCLE` token from every `provideAgent()` call, and ships a root-provided `AgentLifecycleRegistry` that collects the lifecycle of every live agent. Those are useful for telemetry, debugging, persistence, and time-travel UI. They are not required by `@threadplane/chat`. See [Agent lifecycle signals](/docs/langgraph/guides/lifecycle).
+
+`LangGraphAgent` also narrows one optional member of the neutral contract: `interrupt` is required, because the LangGraph adapter always provides it. Code written against `LangGraphAgent` calls `agent.interrupt()` directly; code written against the neutral `Agent` still needs `interrupt?.()`.
 
 ## Testing And Mocks
 

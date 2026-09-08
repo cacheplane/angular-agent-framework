@@ -171,11 +171,11 @@ Lead with `provideFakeAgent()` for the simple case. Reach for `MockAgentTranspor
 
 Register it through `provideAgent({ transport })` in the TestBed `providers` array, then resolve the agent with `TestBed.runInInjectionContext(() => injectAgent())`.
 
-<Callout type="warning" title="Every emit needs a macrotask flush">
-`MockAgentTransport.stream()` is an async generator: `emit()` only wakes the suspended stream loop, so nothing has reached the signals when `emit()` returns. Await one macrotask (`await new Promise(resolve => setTimeout(resolve, 0))`) after every `emit()`, `emitError()`, and `close()` before asserting, and keep the promise `submit()` returns so the spec can await the end of the run. Specs that assert synchronously read stale signals and pass or fail for the wrong reason.
+<Callout type="warning" title="Await every emit">
+`MockAgentTransport.stream()` is an async generator: `emit()` only wakes the suspended stream loop, so nothing has reached the signals at the moment it is called. `emit()`, `emitError()` and `close()` therefore return a promise that resolves once the adapter has consumed the batch — `await` each one before asserting, and keep the promise `submit()` returns so the spec can await the end of the run. Specs that assert synchronously read stale signals and pass or fail for the wrong reason. `flush()` waits the same way without emitting anything, for the cases where something other than an emit drove the agent.
 </Callout>
 
-These examples also pass `throttle: false`. The adapter throttles signal writes by 16 ms by default, which one macrotask does not cover.
+These examples also pass `throttle: false`. The adapter throttles signal writes by 16 ms by default, and the awaited emit does not cover that window.
 
 ### Basic setup
 
@@ -185,8 +185,6 @@ One `messages` event carries an assistant chunk; the adapter projects it into th
 import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { MockAgentTransport, injectAgent, provideAgent } from '@threadplane/langgraph';
-
-const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 describe('basic transport', () => {
   it('projects an emitted assistant chunk into messages()', async () => {
@@ -199,14 +197,13 @@ describe('basic transport', () => {
     const chat = TestBed.runInInjectionContext(() => injectAgent());
 
     const submitted = chat.submit({ message: 'Hi' });
-    transport.emit([
+    await transport.emit([
       { type: 'messages', messages: [{ id: 'ai-1', type: 'ai', content: 'Hello!' }] },
     ]);
-    await flush();
 
     expect(chat.messages().at(-1)?.content).toBe('Hello!');
 
-    transport.close();
+    await transport.close();
     await submitted;
     expect(chat.status()).toBe('idle');
   });
@@ -221,8 +218,6 @@ Pass event batches to the constructor for sequential playback. Each call to `nex
 import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { MockAgentTransport, injectAgent, provideAgent } from '@threadplane/langgraph';
-
-const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 describe('streaming lifecycle', () => {
   it('runs from submit through two batches back to idle', async () => {
@@ -241,15 +236,13 @@ describe('streaming lifecycle', () => {
     expect(chat.status()).toBe('running');
     expect(chat.isLoading()).toBe(true);
 
-    transport.emit(transport.nextBatch());
-    await flush();
+    await transport.emit(transport.nextBatch());
     expect(chat.messages().at(-1)?.content).toBe('Analyzing');
 
-    transport.emit(transport.nextBatch());
-    await flush();
+    await transport.emit(transport.nextBatch());
     expect(chat.messages().at(-1)?.content).toBe('Analyzing... done.');
 
-    transport.close();
+    await transport.close();
     await submitted;
     expect(chat.status()).toBe('idle');
     expect(chat.isLoading()).toBe(false);
@@ -266,8 +259,6 @@ import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { MockAgentTransport, injectAgent, provideAgent } from '@threadplane/langgraph';
 
-const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
-
 describe('interrupt handling', () => {
   it('surfaces the interrupt payload', async () => {
     const transport = new MockAgentTransport();
@@ -279,17 +270,16 @@ describe('interrupt handling', () => {
     const chat = TestBed.runInInjectionContext(() => injectAgent());
 
     const submitted = chat.submit({ message: 'Delete my account' });
-    transport.emit([
+    await transport.emit([
       {
         type: 'interrupt',
         interrupt: { id: 'approval', value: { action: 'delete_account', risk: 'high' } },
       },
     ]);
-    await flush();
-    transport.close();
+    await transport.close();
     await submitted;
 
-    const pending = chat.interrupt?.();
+    const pending = chat.interrupt();
     expect(pending).toBeDefined();
     const value = pending?.value as { action: string; risk: string };
     expect(value.action).toBe('delete_account');
@@ -298,8 +288,8 @@ describe('interrupt handling', () => {
 });
 ```
 
-<Callout type="info" title="Why `interrupt?.()`">
-`interrupt` is optional on the neutral `Agent` contract, because a runtime without human-in-the-loop support omits it. Under `strictNullChecks` the call site therefore needs `?.()`. The LangGraph adapter always provides it, and `langGraphInterrupts()` is a required signal carrying the raw array.
+<Callout type="info" title="`interrupt` is required here">
+`interrupt` is optional on the runtime-neutral `Agent` contract, because a runtime without human-in-the-loop support omits it — code written against that contract needs `interrupt?.()` under `strictNullChecks`. `LangGraphAgent` narrows it to required, because the LangGraph adapter always provides it, so `injectAgent().interrupt()` type-checks as a plain call. `langGraphInterrupts()` carries the raw LangGraph array alongside it.
 </Callout>
 
 Resume the paused run with `chat.submit({ resume: { approved: true } })`, exactly as a component would.
@@ -313,8 +303,6 @@ import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { MockAgentTransport, injectAgent, provideAgent } from '@threadplane/langgraph';
 
-const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
-
 describe('error handling', () => {
   it('classifies a transport failure', async () => {
     const transport = new MockAgentTransport();
@@ -326,9 +314,8 @@ describe('error handling', () => {
     const chat = TestBed.runInInjectionContext(() => injectAgent());
 
     const submitted = chat.submit({ message: 'Hello' });
-    transport.emitError(new Error('HTTP 500: connection lost'));
+    await transport.emitError(new Error('HTTP 500: connection lost'));
     await submitted.catch(() => undefined);
-    await flush();
 
     const err = chat.error();
     expect(err?.kind).toBe('server');
@@ -347,16 +334,15 @@ describe('error handling', () => {
     const chat = TestBed.runInInjectionContext(() => injectAgent());
 
     const submitted = chat.submit({ message: 'Hello' });
-    transport.emitError(new Error('HTTP 503: service unavailable'));
+    await transport.emitError(new Error('HTTP 503: service unavailable'));
     await submitted.catch(() => undefined);
-    await flush();
     expect(chat.status()).toBe('error');
 
     const retried = chat.retry();
     expect(chat.error()).toBeUndefined();
     expect(chat.isLoading()).toBe(true);
 
-    transport.close();
+    await transport.close();
     await retried;
   });
 });
@@ -373,8 +359,6 @@ import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { MockAgentTransport, injectAgent, provideAgent } from '@threadplane/langgraph';
 
-const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
-
 describe('thread switching', () => {
   it('clears the transcript when switching to a new thread', async () => {
     const transport = new MockAgentTransport();
@@ -386,16 +370,15 @@ describe('thread switching', () => {
     const chat = TestBed.runInInjectionContext(() => injectAgent());
 
     const submitted = chat.submit({ message: 'Hi' });
-    transport.emit([
+    await transport.emit([
       { type: 'messages', messages: [{ id: 'ai-1', type: 'ai', content: 'Thread A response' }] },
     ]);
-    await flush();
-    transport.close();
+    await transport.close();
     await submitted;
     expect(chat.messages().at(-1)?.content).toBe('Thread A response');
 
     chat.switchThread(null);
-    await flush();
+    await transport.flush();
     expect(chat.messages()).toEqual([]);
   });
 });
@@ -416,11 +399,11 @@ Pass the transport into `provideAgent({ ..., transport })` in the TestBed `provi
 <Step title="Resolve the agent in an injection context">
 Call `TestBed.runInInjectionContext(() => injectAgent())` so the adapter can reach Angular's injector for signal creation and cleanup.
 </Step>
-<Step title="Script events, then flush">
-Use `emit()` for ad-hoc events, `nextBatch()` for pre-scripted sequences, and `emitError()` for failures — awaiting one macrotask after each call.
+<Step title="Script events, awaiting each one">
+Use `emit()` for ad-hoc events, `nextBatch()` for pre-scripted sequences, and `emitError()` for failures — awaiting the promise each one returns before asserting.
 </Step>
 <Step title="Assert signal values">
-Read `chat.messages()`, `chat.status()`, `chat.interrupt?.()`, and `chat.error()` to verify the agent reacted, then `close()` the stream and await the submit promise.
+Read `chat.messages()`, `chat.status()`, `chat.interrupt()`, and `chat.error()` to verify the agent reacted, then `close()` the stream and await the submit promise.
 </Step>
 </Steps>
 
