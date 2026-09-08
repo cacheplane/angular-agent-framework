@@ -28,6 +28,7 @@ These were downloaded from `https://cdn.simpleicons.org/<slug>/111827` for a com
 
 - `runtimes/crewai.svg` from slug `crewai`.
 - `runtimes/pydantic.svg` from slug `pydantic`.
+- `langchain.svg` from slug `langchain`, used for the LangSmith card on the homepage architecture diagram (Simple Icons has no LangSmith slug; LangSmith is a LangChain product in the same mark family).
 - `surface/angular.svg` from slug `angular`.
 - `surface/reactivex.svg` from slug `reactivex`.
 - `surface/vercel.svg` from slug `vercel`.
