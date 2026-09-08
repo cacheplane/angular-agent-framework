@@ -30,6 +30,12 @@ Read this before Task 1. It is the context you cannot get from the file tree.
 npx nx test website -- --run src/components/shared/Nav.spec.tsx
 ```
 
+**Nx does not forward the path filter to Vitest** — that command runs the whole website suite (139 files, ~1400 tests) and the trailing path is ignored. That is strictly stronger verification, so the commands in this plan keep it, but expect full-suite counts rather than one file's. To actually filter while iterating, bypass Nx:
+
+```bash
+cd apps/website && npx vitest run src/components/shared/Nav.spec.tsx
+```
+
 ```bash
 npx nx lint website
 ```
