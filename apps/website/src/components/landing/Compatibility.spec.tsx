@@ -64,6 +64,16 @@ describe('Compatibility', () => {
     }
   });
 
+  it('keeps the whole plate out of the accessibility tree', () => {
+    // role="presentation" does NOT inherit to descendants, so the plate's own
+    // <text> — runway ids, taxiway letters, "2000 FT" — leaked to screen
+    // readers as unnamed chart noise. aria-hidden takes the subtree with it,
+    // which is what leaves .airport-stack as the band's accessible content.
+    const { container } = render(<Compatibility />);
+    const plate = container.querySelector('[data-diagram="airport"]');
+    expect(plate?.getAttribute('aria-hidden')).toBe('true');
+  });
+
   it('marks every logo decorative, since the visible name carries the meaning', () => {
     const { container } = render(<Compatibility />);
     const marks = container.querySelectorAll('image, img.airport-mark');

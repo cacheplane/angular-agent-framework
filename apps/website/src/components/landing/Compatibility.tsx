@@ -116,7 +116,7 @@ function Plate() {
       `M${x} ${NEAT.y + NEAT.height} V${NEAT.y + NEAT.height - 7}`,
     );
   }
-  for (let y = TICK_Y; y < NEAT.y + NEAT.height; y += TICK_Y) {
+  for (let y = NEAT.y + TICK_Y; y < NEAT.y + NEAT.height; y += TICK_Y) {
     ticks.push(
       `M${NEAT.x} ${y} H${NEAT.x + 7}`,
       `M${NEAT.x + NEAT.width} ${y} H${NEAT.x + NEAT.width - 7}`,
