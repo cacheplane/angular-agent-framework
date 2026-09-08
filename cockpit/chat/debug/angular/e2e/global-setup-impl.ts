@@ -1,0 +1,15 @@
+import { resolve } from 'node:path';
+import { portsFor } from '../../../../../cockpit/ports.mjs';
+import { createGlobalSetup } from '@threadplane-internal/e2e-harness';
+
+const ports = portsFor('cockpit-chat-debug-angular');
+
+export default createGlobalSetup({
+  // Each chat cap runs its OWN standalone backend (cockpit/chat/<name>/python)
+  // on `<angular_port> + 1000`. The proxy.conf.mjs target matches.
+  langgraphCwd: 'cockpit/chat/debug/python',
+  langgraphPort: ports.langgraph,
+  angularProject: 'cockpit-chat-debug-angular',
+  angularPort: ports.angular,
+  fixturesDir: resolve(__dirname, 'fixtures'),
+});

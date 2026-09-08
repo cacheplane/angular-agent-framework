@@ -17,4 +17,4 @@ Existing coverage:
 
 If a render-specific e2e harness is desired in the future (visual diffs, interactive scrubbing), it would be a separate cycle. The aimock pattern from cockpit-chat / cockpit-langgraph caps does not fit.
 
-This file is the deliberate "no e2e" marker matching the c-debug README (`cockpit/chat/debug/angular/e2e/README.md`).
+This file is the deliberate "no e2e" marker for the render caps. It is the only one left: `c-debug` carried the same marker until it gained a real aimock suite at `cockpit/chat/debug/angular/e2e/`.
