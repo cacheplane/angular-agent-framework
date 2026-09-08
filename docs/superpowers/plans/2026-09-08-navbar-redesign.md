@@ -30,11 +30,13 @@ Read this before Task 1. It is the context you cannot get from the file tree.
 npx nx test website -- --run src/components/shared/Nav.spec.tsx
 ```
 
-**Nx does not forward the path filter to Vitest** — that command runs the whole website suite (139 files, ~1400 tests) and the trailing path is ignored. That is strictly stronger verification, so the commands in this plan keep it, but expect full-suite counts rather than one file's. To actually filter while iterating, bypass Nx:
+**Nx does not forward the path filter to Vitest** — that command runs the whole website suite (140 files, ~1407 tests) and the trailing path is ignored. That is strictly stronger verification, so the commands in this plan keep it, but expect full-suite counts rather than one file's. To actually filter while iterating, bypass Nx:
 
 ```bash
 cd apps/website && npx vitest run src/components/shared/Nav.spec.tsx
 ```
+
+**Two traps with that second form.** Some specs resolve paths against `process.cwd()`, so running them from `apps/website` rather than through Nx changes their result. `src/lib/cockpit-retirement.spec.ts` fails 5 of 9 that way and passes under Nx — a false alarm that looks exactly like a regression you caused. So: use the filtered form only on the one spec you are iterating on, and **never** run the whole suite from `apps/website`. Every pass/fail claim in a report or a commit message must come from `npx nx test website`.
 
 ```bash
 npx nx lint website
