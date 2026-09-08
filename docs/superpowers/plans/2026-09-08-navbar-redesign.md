@@ -42,6 +42,12 @@ cd apps/website && npx vitest run src/components/shared/Nav.spec.tsx
 npx nx lint website
 ```
 
+```bash
+npx nx build website
+```
+
+**`nx test` and `nx lint` do not typecheck.** Vitest strips types and this ESLint config is not type-aware, so a type error passes both and only `nx build website` (or `tsc --noEmit`) catches it. Task 4 shipped a broken build behind 1411 passing tests and a clean lint that way: a bare `` const id = `${surface}_${item.ctaId}` `` widens to `string`, which is not assignable to the `CtaId` template-literal union. **Run the build at the end of every task that touches `.ts`/`.tsx`, not only at the end of the plan.**
+
 Playwright specs need a dev server; the config starts one. To run a single e2e file — note the `--testFiles=` form, because a bare positional path fails on this Nx/Playwright executor with `unknown option '--_=…'`:
 
 ```bash
@@ -880,7 +886,11 @@ const OPEN_DELAY_MS = 100;
 const CLOSE_DELAY_MS = 150;
 
 export function trackNavItem(item: NavItem, surface: 'nav' | 'mobile_nav') {
-  const ctaId = `${surface}_${item.ctaId}`;
+  // Annotated, not inferred: a bare template literal widens to `string`, which
+  // is not assignable to CtaId (`nav_${string}` | `mobile_nav_${string}`).
+  // Nothing but `nx build website` catches that.
+  const ctaId: `nav_${string}` | `mobile_nav_${string}` =
+    surface === 'nav' ? `nav_${item.ctaId}` : `mobile_nav_${item.ctaId}`;
   if (item.external) {
     trackExternalLinkClick(item.href, {
       surface,
@@ -1052,7 +1062,9 @@ export function NavDesktop() {
               setOpenId((current) => (current === trigger.id ? null : trigger.id));
             }}
             aria-expanded={openId === trigger.id}
-            aria-controls={panelId(trigger.id)}
+            {/* Only while open: the panel is conditionally rendered, so a
+                constant aria-controls references an id not in the DOM. */}
+            aria-controls={openId === trigger.id ? panelId(trigger.id) : undefined}
             className="text-sm font-mono transition-colors nav-link nav-trigger"
           >
             {trigger.label}
