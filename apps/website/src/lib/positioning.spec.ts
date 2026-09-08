@@ -161,8 +161,9 @@ describe('homepage restructure copy (live-stage spec §3)', () => {
     const { OPEN_SOURCE_STRIP } = await import('./positioning');
     expect(OPEN_SOURCE_STRIP.eyebrow).toBe('Squawk 1200');
     expect(OPEN_SOURCE_STRIP.headline).toBe('Fork us.');
-    // The headline is set at up to 116px. More than two short words wraps,
-    // and a wrapped headline stops reading as a full stop.
+    // A length budget, not a word count: 12 characters is about what fits
+    // on one line at 116px in Archivo Black inside the 1200px container.
+    // A wrapped headline stops reading as a full stop.
     expect(OPEN_SOURCE_STRIP.headline.length).toBeLessThanOrEqual(12);
     // The eyebrow sits on one line at 0.18em tracking beside nothing else.
     expect(OPEN_SOURCE_STRIP.eyebrow.length).toBeLessThanOrEqual(14);

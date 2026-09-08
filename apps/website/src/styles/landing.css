@@ -630,6 +630,10 @@
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
+  /* The Eyebrow primitive pins 1.4; this rule is hand-rolled for the tighter
+     11px/.18em the band wants, so it has to carry the line-height too rather
+     than inherit the body's. */
+  line-height: 1.4;
   color: var(--color-signal);
   margin: 0 0 22px;
 }
@@ -661,6 +665,10 @@
 /* The runway centreline. A fixed 46px dash on a 92px period rather than a
  * proportional one, so it reads as the same painted marking at every width. */
 .open-source-strip-runway {
+  /* Decorative and layered over the band's bottom padding, so it must not
+     swallow a text-selection drag — the dark surface's top seam
+     (ui.css, [data-surface="dark"]::before) sets this for the same reason. */
+  pointer-events: none;
   position: absolute;
   left: 0;
   right: 0;

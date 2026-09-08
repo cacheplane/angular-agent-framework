@@ -15,7 +15,7 @@ import { GITHUB_REPO_URL, OPEN_SOURCE_STRIP } from '../../lib/positioning';
  * page — the reasoning was that the offer is "no catch, no upsell," so it
  * should not read as a second pitch. That restraint is now spent on purpose:
  * the open-source offer is one of the strongest things the product has to
- * say, and it is said here in four words and one aviation marking.
+ * say, and it is said here in two words over an aviation code.
  *
  * The band takes its ~461px from the standard section rhythm; there is no
  * padding override, which is why `tight` is absent rather than false.

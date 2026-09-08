@@ -77,7 +77,7 @@ export const OPEN_SOURCE_STRIP = {
   eyebrow: 'Squawk 1200',
   /** Two words at up to 116px. The band's entire argument. */
   headline: 'Fork us.',
-  /** The licence tag beside the action. */
+  /** The bare licence, set in mono after the action. */
   licence: 'MIT',
   cta: 'Fork on GitHub',
 } as const;
