@@ -355,161 +355,10 @@
   }
 }
 
-/* .pilot-* — components/landing/TeamsBlock.tsx (rules predate the rename;
- * PilotBlock.tsx was retired by the homepage restructure). */
-.pilot-block-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 64px;
-  align-items: center;
-}
+/* .pilot-eyebrow is the last survivor of the retired PilotBlock rules; the
+ * rest went with the TeamsBlock rewrite. */
 .pilot-eyebrow {
   margin-bottom: 16px;
-}
-.pilot-rail {
-  display: flex;
-  align-items: baseline;
-  gap: 14px;
-}
-.pilot-rail-line {
-  flex: 1;
-  height: 1px;
-  background: var(--color-border);
-}
-.pilot-heading {
-  font-family: var(--font-display);
-  font-size: var(--text-h2);
-  line-height: var(--text-h2--line-height);
-  color: var(--color-text-primary);
-  margin: 0;
-  margin-bottom: 20px;
-  letter-spacing: -0.015em;
-}
-.pilot-subhead {
-  font-family: var(--font-sans);
-  font-size: var(--text-body-lg);
-  line-height: var(--text-body-lg--line-height);
-  color: var(--color-text-secondary);
-  margin: 0;
-  margin-bottom: 24px;
-}
-.pilot-cta-row {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-.pilot-rows {
-  margin: 18px 0 4px;
-  border-top: 2px solid var(--color-text-primary);
-  max-width: 44ch;
-}
-.pilot-row {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 16px;
-  align-items: baseline;
-  border-bottom: 1px solid var(--color-border);
-  padding: 9px 0;
-}
-.pilot-row-claim {
-  font-family: var(--font-sans);
-  font-size: 15px;
-  line-height: 1.45;
-  color: var(--color-text-primary);
-  margin: 0;
-}
-.pilot-row-tail {
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-  color: var(--color-text-muted);
-  white-space: nowrap;
-  margin: 0;
-}
-.pilot-steps {
-  border-top: 2px solid var(--color-text-primary);
-}
-.pilot-step {
-  display: grid;
-  grid-template-columns: 64px 1fr;
-  gap: 16px;
-  align-items: start;
-  padding: 14px 0;
-  border-bottom: 1px solid var(--color-border);
-}
-.pilot-step:last-child {
-  border-bottom: none;
-}
-.pilot-step-num {
-  font-family: var(--font-display);
-  font-size: 44px;
-  line-height: 0.9;
-  letter-spacing: -0.03em;
-  color: var(--color-border);
-}
-.pilot-step-title {
-  font-family: var(--font-sans);
-  font-size: 15.5px;
-  font-weight: 600;
-  color: var(--color-text-primary);
-}
-.pilot-step-body {
-  font-family: var(--font-sans);
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--color-text-secondary);
-  margin-top: 2px;
-}
-
-/* TeamsBlock: phases stacked over the field report card. */
-.teams-block-grid {
-  align-items: start;
-}
-.teams-aside {
-  display: flex;
-  flex-direction: column;
-  gap: 28px;
-}
-.teams-report {
-  padding: 22px 24px;
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  background: var(--color-canvas);
-}
-.teams-report-badge {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
-  margin: 6px 0 0;
-}
-.teams-report-title {
-  font-family: var(--font-display);
-  font-size: 26px;
-  line-height: 1.1;
-  margin: 8px 0 6px;
-  color: var(--color-text-primary);
-}
-.teams-report-desc {
-  font-family: var(--font-sans);
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--color-text-secondary);
-  margin: 0 0 16px;
-}
-@media (max-width: 900px) {
-  .pilot-block-grid {
-    /* minmax(0,…): bare 1fr keeps an auto minimum, so one wide child pushed
-     * the stacked column past the viewport (findings §2). */
-    grid-template-columns: minmax(0, 1fr) !important;
-    gap: 40px !important;
-  }
-}
-@media (max-width: 640px) {
-  .pilot-row {
-    grid-template-columns: 1fr;
-    gap: 2px;
-  }
 }
 
 /* RecentArticles — components/landing/RecentArticles.tsx */
@@ -2482,5 +2331,148 @@ a.preflight-row:hover .preflight-challenge {
   .preflight-cols {
     grid-template-columns: 1fr;
     gap: 24px;
+  }
+}
+
+/* For teams — components/landing/TeamsBlock.tsx.
+ * Ask left, briefing right. The cover is a fixed 400px so the form column
+ * keeps a comfortable measure rather than stretching across the section. */
+.teams-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 400px;
+  gap: 64px;
+  align-items: center;
+}
+.teams-eyebrow {
+  margin-bottom: 18px;
+}
+.teams-eyebrow-meta {
+  color: var(--color-text-muted);
+}
+.teams-heading {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(36px, 4.2vw, 54px);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  color: var(--color-text-primary);
+  margin: 0 0 30px;
+  max-width: 16ch;
+}
+.teams-contact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 14px;
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid var(--color-border);
+}
+.teams-contact-copy {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+}
+.teams-contact-link {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-accent);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.teams-contact-link:hover {
+  text-decoration: underline;
+}
+
+/* The briefing preview — components/landing/FieldReportCover.tsx.
+ * .wp-paper supplies the tilt, border and shadow; these rules only style the
+ * content the library pages' version does not carry. */
+.field-report-cover {
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}
+.field-report-paper {
+  width: 100%;
+  max-width: 390px;
+}
+.field-report-kicker {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin: 0 0 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--color-border);
+}
+.field-report-title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 25px;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
+  margin: 0 0 6px;
+}
+.field-report-sub {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  margin: 0 0 20px;
+}
+.field-report-toc-label {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin: 0 0 10px;
+}
+.field-report-toc {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.field-report-toc li {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 6px 0;
+  font-size: 12.5px;
+  color: var(--color-text-primary);
+}
+.field-report-toc li + li {
+  border-top: 1px dotted var(--color-border);
+}
+.field-report-num {
+  flex: 0 0 auto;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-signal);
+}
+.field-report-foot {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  border-top: 1px solid var(--color-border);
+  padding-top: 12px;
+  margin: 20px 0 0;
+}
+@media (max-width: 900px) {
+  .teams-grid {
+    /* minmax(0,…) not 1fr: a bare 1fr keeps an auto minimum, and the cover
+       would push the stacked column past the viewport. */
+    grid-template-columns: minmax(0, 1fr);
+    gap: 44px;
+  }
+  .field-report-cover {
+    justify-content: flex-start;
   }
 }
