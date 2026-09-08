@@ -54,8 +54,19 @@ describe('Reliability', () => {
     expect(mark?.getAttribute('aria-hidden')).toBe('true');
     expect(mark?.getAttribute('data-watermark-text')).toBe('Proof');
     expect(mark?.textContent).toBe('');
-    expect(screen.getByText('Reliable to the core')).toBeTruthy();
+    expect(screen.getByText('Climb performance')).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Audited, scored, published.' }).id).toBe('proof-heading');
+  });
+
+  it('frames the section as a climb and hides the instrument from assistive tech', () => {
+    const { container } = render(<Reliability />);
+    expect(
+      screen.getByText(/Vx clears today’s obstacle; Vy gets you to altitude\./),
+    ).toBeTruthy();
+    const ladder = container.querySelector('.proof-ladder');
+    expect(ladder?.getAttribute('aria-hidden')).toBe('true');
+    // The words carry the argument; the drawing carries none of it.
+    expect(ladder?.textContent).toBe('');
   });
 
   it('carries the works-with line as a compatibility claim with an adapter link', () => {
@@ -75,12 +86,12 @@ describe('Reliability', () => {
     expect(screen.getByRole('list', { name: 'Works with' })).toBeTruthy();
   });
 
-  it('orders cells, receipts, then the works-with line', () => {
+  it('orders the ladder, cells, then receipts', () => {
     const { container } = render(<Reliability />);
     const children = container.querySelector('.proof-strip-grid')!.children;
-    expect(children[1].className).toBe('proof-strip-cells');
-    expect(children[2].className).toBe('reliability-receipts');
-    expect(children[3].className).toBe('reliability-works-with');
+    expect(children[1].getAttribute('class')).toBe('proof-ladder');
+    expect(children[2].className).toBe('proof-strip-cells');
+    expect(children[3].className).toBe('reliability-receipts');
   });
 
   it('links every number and receipt to a human-readable page, never a raw API', () => {

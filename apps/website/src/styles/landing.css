@@ -2174,3 +2174,25 @@
   text-transform: uppercase;
   text-align: center;
 }
+
+/* Attitude indicator between the framing copy and the figures. Hairlines only:
+ * it is a divider first and an instrument second, and the section's problem
+ * was too many competing layers. */
+.proof-ladder {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 700px;
+  margin: 4px 0 26px;
+}
+.proof-ladder-rungs line {
+  stroke: rgba(255, 255, 255, 0.3);
+  stroke-width: 1;
+}
+.proof-ladder-wing line {
+  stroke: var(--color-signal);
+  stroke-width: 2.5;
+}
+.proof-ladder-dot {
+  fill: var(--color-signal);
+}

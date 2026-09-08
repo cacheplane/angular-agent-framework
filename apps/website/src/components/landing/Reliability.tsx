@@ -111,11 +111,33 @@ export function Reliability() {
           <div className="proof-strip-grid">
             <SectionHeader
               variant="rail"
-              eyebrow="Reliable to the core"
+              eyebrow="Climb performance"
               heading="Audited, scored, published."
               headingId="proof-heading"
-              aside="Not self-reported — every number links to its source."
+              aside="Vx clears today’s obstacle; Vy gets you to altitude. Not self-reported — every number links to its source."
             />
+            {/* Attitude indicator: pitch ladder either side of an amber
+              * waterline, nose above the horizon. A divider that happens to
+              * mean something — it pays off the Vx/Vy line above it. Purely
+              * decorative, so aria-hidden. */}
+            <svg
+              className="proof-ladder"
+              viewBox="0 0 700 46"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <g className="proof-ladder-rungs">
+                <line x1="150" y1="34" x2="245" y2="34" />
+                <line x1="455" y1="34" x2="550" y2="34" />
+                <line x1="196" y1="16" x2="245" y2="16" />
+                <line x1="455" y1="16" x2="504" y2="16" />
+              </g>
+              <g className="proof-ladder-wing">
+                <line x1="290" y1="26" x2="330" y2="26" />
+                <line x1="370" y1="26" x2="410" y2="26" />
+              </g>
+              <circle className="proof-ladder-dot" cx="350" cy="26" r="2.5" />
+            </svg>
             <ul className="proof-strip-cells" role="list">
               {PROOF_CELLS.map((cell) => (
                 <li className="proof-strip-cell" key={cell.caption}>
