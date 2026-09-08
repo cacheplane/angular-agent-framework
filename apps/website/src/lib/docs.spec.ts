@@ -10,6 +10,7 @@ import {
   getAllDocSlugs,
   getDocBySlug,
   getDocMetadata,
+  readFrontmatterDescription,
   stripFrontmatter,
 } from './docs';
 import {
@@ -233,6 +234,32 @@ describe('website docs bindings', () => {
     expect(metadata?.description).toBe(
       'Compose custom component catalogs for generative UI using ViewRegistry composition.'
     );
+  });
+
+  it('reads a frontmatter description that contains an apostrophe', () => {
+    // The value pattern excluded every quote character, so a description with
+    // a possessive never matched and the page silently fell back to its first
+    // paragraph while declaring a description of its own.
+    const metadata = getDocMetadata('chat', 'components', 'chat-reasoning');
+
+    expect(metadata?.description).toBe(
+      "The ChatReasoningComponent pill that expands to reveal an assistant's reasoning text, its five inputs, and the auto-collapse behavior."
+    );
+  });
+
+  it('strips only a matched pair of surrounding quotes', () => {
+    expect(readFrontmatterDescription("---\ndescription: 'Quoted.'\n---\n")).toBe(
+      'Quoted.'
+    );
+    expect(readFrontmatterDescription('---\ndescription: "Quoted."\n---\n')).toBe(
+      'Quoted.'
+    );
+    expect(
+      readFrontmatterDescription("---\ndescription: The child's state.\n---\n")
+    ).toBe("The child's state.");
+    expect(readFrontmatterDescription('---\ntitle: T\n---\n')).toBeNull();
+    expect(readFrontmatterDescription('---\ndescription:   \n---\n')).toBeNull();
+    expect(readFrontmatterDescription('# No frontmatter\n')).toBeNull();
   });
 
   it('never leaks frontmatter keys into a derived description', () => {
