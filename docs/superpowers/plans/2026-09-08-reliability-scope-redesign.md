@@ -124,8 +124,16 @@ In `landing.css`, rename the `.hero-strip` rule to `.proof-masthead` and drop th
   /* [data-ui="section"] sets padding-top: var(--spacing-section-y), so a first
    * child would otherwise sit BELOW that padding with a navy gap above it —
    * which defeats the whole point. Pull it back up to the section's top edge
-   * so it is flush against the hero's yellow. */
-  margin: calc(-1 * var(--spacing-section-y)) 0 0;
+   * so it is flush against the hero's yellow.
+   *
+   * The matching bottom margin is not symmetry for its own sake: a negative
+   * margin-top on an in-flow first child drags every following sibling up too,
+   * so without it the band loses its whole top padding and the eyebrow sits
+   * flush against this bar. Give back exactly what the top pulled away.
+   *
+   * Both halves assume this Section is not `tight` — that variant swaps in
+   * --spacing-section-y-tight and the cancellation would no longer balance. */
+  margin: calc(-1 * var(--spacing-section-y)) 0 var(--spacing-section-y);
   padding: 10px var(--spacing-container-x);
   background: var(--color-scope);
   color: #ffffff;
@@ -145,6 +153,8 @@ grep -rn "hero-strip\|hero-trust" apps/website/src || echo "clean"
 ```
 
 Expected: `clean`
+
+**Neither margin is checkable by a unit test** — jsdom applies no CSS. Verify in a real browser: the masthead's top must be flush with both the hero's bottom and the section's top (gap 0 on each), and the heading below it must keep roughly `--spacing-section-y` of clearance. Measured on the real page at 1280px after this change: 0, 0 and 143px.
 
 - [ ] **Step 6: Run the tests**
 

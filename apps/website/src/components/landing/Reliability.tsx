@@ -93,8 +93,11 @@ export function Reliability() {
     <Section surface="dark" id="proof" ariaLabelledBy="proof-heading">
       {/* The seam. The hero's yellow block ends, this marks the boundary, the
         * scope band begins — which is where the ATC app puts its frequency
-        * bar. It lived inside the hero until 2026-09-08, where it read as a
-        * stray navy bar 78px above a much larger band of the same colour. */}
+        * bar. It lived inside the hero until 2026-09-08, when it read as a
+        * stray navy bar 78px above a much larger band of near-identical navy.
+        * Keep the two colours distinct: the bar is --color-scope flat, the band
+        * is a gradient that only reaches that value at its bottom, and that
+        * difference is what stops the bar dissolving into it. */}
       <p className="proof-masthead">{HERO_TRUST_LINE}</p>
       <Container>
         <div className="proof-strip">
