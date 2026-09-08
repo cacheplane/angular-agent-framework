@@ -96,9 +96,9 @@ export function Reliability() {
               aside="Vx clears today’s obstacle; Vy gets you to altitude. Not self-reported — every number links to its source."
             />
             {/* Attitude indicator: pitch ladder either side of an amber
-              * waterline, nose above the horizon. A divider that happens to
-              * mean something — it pays off the Vx/Vy line above it. Purely
-              * decorative, so aria-hidden. */}
+              * waterline. A divider that happens to mean something — it pays
+              * off the Vx/Vy line above it. Purely decorative, so
+              * aria-hidden. */}
             <svg
               className="proof-ladder"
               viewBox="0 0 700 46"

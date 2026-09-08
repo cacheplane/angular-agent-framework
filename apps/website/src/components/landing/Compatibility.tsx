@@ -19,6 +19,16 @@ interface CompatibilityGroup {
  * beside a protocol as though they were the same kind of thing, which is not
  * the information someone evaluating this needs.
  *
+ * This list is COMPLETE — every integration is named. It used to stop at nine
+ * and close the runtimes group with a "+ 3 more" badge, which mis-filed Azure
+ * OpenAI (a model provider) as a runtime and left a count that only stayed
+ * honest if an editor remembered to decrement it. There is no hidden count to
+ * keep in step now; add an entry to the group it actually belongs to.
+ *
+ * "Works with" is a compatibility claim, never a customer claim: logos are
+ * `alt="" aria-hidden` beside visible names, and no wording may imply these
+ * companies use Threadplane. Compatibility.spec.tsx guards both halves.
+ *
  * This section is LIGHT on purpose. These marks are drawn for light grounds —
  * Anthropic's is #181818 — and on the dark band they were invisible. Moving
  * them here is the fix; no CSS filter is involved.
@@ -31,6 +41,7 @@ export const COMPATIBILITY_GROUPS: readonly CompatibilityGroup[] = [
       { name: 'Anthropic', logoSrc: '/logos/providers/anthropic.svg' },
       { name: 'Gemini', logoSrc: '/logos/providers/google.svg' },
       { name: 'Bedrock', logoSrc: '/logos/providers/bedrock.svg' },
+      { name: 'Azure OpenAI', logoSrc: '/logos/providers/azure.svg' },
     ],
   },
   {
@@ -38,6 +49,8 @@ export const COMPATIBILITY_GROUPS: readonly CompatibilityGroup[] = [
     items: [
       { name: 'Mastra', logoSrc: '/logos/runtimes/mastra.svg' },
       { name: 'CrewAI', logoSrc: '/logos/runtimes/crewai.svg' },
+      { name: 'Pydantic AI', logoSrc: '/logos/runtimes/pydantic.svg' },
+      { name: 'Microsoft Agent Framework', logoSrc: '/logos/runtimes/microsoft.svg' },
       { name: 'AWS Strands', logoSrc: null },
     ],
   },
@@ -51,13 +64,11 @@ export const COMPATIBILITY_GROUPS: readonly CompatibilityGroup[] = [
 ];
 
 /**
- * Azure OpenAI, Pydantic AI, Microsoft Agent Framework.
- *
- * Was 4 and included AWS Strands, which is now named above — it is already
- * named twice elsewhere on the page (a reliability receipt cites it), so
- * hiding it in a count was odd. Decrement this if another is promoted.
+ * Derived, never hand-written: each group's `<ul>` takes its accessible name
+ * from the sibling label through this id, so rewording a label cannot leave
+ * the list unnamed.
  */
-export const COMPATIBILITY_MORE_COUNT = 3;
+const groupId = (label: string) => `compatibility-${label.toLowerCase().replace(/\s+/g, '-')}`;
 
 export function Compatibility() {
   return (
@@ -73,8 +84,14 @@ export function Compatibility() {
         <div className="compatibility-groups">
           {COMPATIBILITY_GROUPS.map((group) => (
             <div className="compatibility-group" key={group.label}>
-              <p className="compatibility-group-label">{group.label}</p>
-              <ul className="compatibility-items" role="list">
+              <p className="compatibility-group-label" id={groupId(group.label)}>
+                {group.label}
+              </p>
+              <ul
+                className="compatibility-items"
+                role="list"
+                aria-labelledby={groupId(group.label)}
+              >
                 {group.items.map((item) => (
                   <li className="compatibility-item" key={item.name}>
                     {item.logoSrc ? (
@@ -90,9 +107,6 @@ export function Compatibility() {
                     <span className="compatibility-name">{item.name}</span>
                   </li>
                 ))}
-                {group.label === 'Agent runtimes' ? (
-                  <li className="compatibility-more">+ {COMPATIBILITY_MORE_COUNT} more</li>
-                ) : null}
               </ul>
             </div>
           ))}

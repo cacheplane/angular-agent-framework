@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
-import { Compatibility, COMPATIBILITY_GROUPS, COMPATIBILITY_MORE_COUNT } from './Compatibility';
+import { Compatibility, COMPATIBILITY_GROUPS } from './Compatibility';
 
 describe('Compatibility', () => {
   it('renders a light section with a stable id', () => {
@@ -10,13 +10,35 @@ describe('Compatibility', () => {
     expect(section?.getAttribute('id')).toBe('compatibility');
   });
 
+  it('lists twelve integrations across three groups', () => {
+    render(<Compatibility />);
+    // The suite otherwise iterates the same constant the component renders
+    // from, so it cannot see content disappear: a reviewer deleted the whole
+    // Protocols group — LangGraph and AG-UI, the two with first-party
+    // adapters — and every other test stayed green.
+    expect(COMPATIBILITY_GROUPS).toHaveLength(3);
+    expect(COMPATIBILITY_GROUPS.map((g) => g.label)).toEqual([
+      'Model providers',
+      'Agent runtimes',
+      'Protocols',
+    ]);
+    expect(COMPATIBILITY_GROUPS.flatMap((g) => g.items)).toHaveLength(12);
+    for (const name of ['LangGraph', 'AG-UI', 'OpenAI', 'Anthropic']) {
+      expect(screen.getByText(name)).toBeTruthy();
+    }
+  });
+
   it('groups every item under a labelled heading', () => {
     render(<Compatibility />);
     for (const group of COMPATIBILITY_GROUPS) {
       expect(screen.getByText(group.label)).toBeTruthy();
       for (const item of group.items) expect(screen.getByText(item.name)).toBeTruthy();
     }
-    expect(screen.getByText(`+ ${COMPATIBILITY_MORE_COUNT} more`)).toBeTruthy();
+    // The label is a bare <p>, so the list only carries an accessible name if
+    // aria-labelledby actually points at it.
+    for (const group of COMPATIBILITY_GROUPS) {
+      expect(screen.getByRole('list', { name: group.label })).toBeTruthy();
+    }
   });
 
   it('states compatibility in words and never implies a customer', () => {

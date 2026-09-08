@@ -2124,13 +2124,21 @@
   max-width: 700px;
   margin: 4px 0 26px;
 }
+/* The svg is width:100% over a 700-wide viewBox, so below 700px the whole
+ * drawing scales down — and the stroke would scale with it, putting the rungs
+ * at roughly 0.5 CSS px at 375, which at 30% white is effectively invisible.
+ * non-scaling-stroke holds the hairline at any scale. It has to live on the
+ * lines, not the <g>: vector-effect is not an inherited property, so setting
+ * it on the group is a no-op for the children. */
 .proof-ladder-rungs line {
   stroke: rgba(255, 255, 255, 0.3);
   stroke-width: 1;
+  vector-effect: non-scaling-stroke;
 }
 .proof-ladder-wing line {
   stroke: var(--color-signal);
   stroke-width: 2.5;
+  vector-effect: non-scaling-stroke;
 }
 .proof-ladder-dot {
   fill: var(--color-signal);
@@ -2167,7 +2175,6 @@
   align-items: center;
   gap: 8px;
   white-space: nowrap;
-  font-family: var(--font-sans);
   font-size: 14px;
   font-weight: 500;
   color: var(--color-text-primary);
@@ -2177,13 +2184,6 @@
   height: 17px;
   object-fit: contain;
 }
-.compatibility-more {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  color: var(--color-text-muted);
-  align-self: center;
-}
 .compatibility-footer {
   display: flex;
   align-items: center;
@@ -2192,14 +2192,23 @@
   border-top: 1px solid var(--color-border);
   padding-top: 18px;
 }
-/* The adapter link carries the same mono-uppercase treatment the works-with
- * line gave it on the dark band, so the CTA still reads as a CTA here. */
+/* AdapterGuideLink REPLACES its className rather than appending, so without a
+ * rule here the anchor renders as plain body text. The mono-uppercase
+ * treatment came from the dark band, where --color-accent was amber against
+ * white; on this light ground it resolves to navy against near-black ink — a
+ * very small hue step at 11px. The weight bump and the hover colour are what
+ * make it read as a CTA, not the case and tracking alone. */
 .compatibility-link {
   font-family: var(--font-mono);
   font-size: 11px;
+  font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--color-accent);
+}
+.compatibility-link:hover,
+.compatibility-link:focus-visible {
+  color: var(--color-accent-hover);
 }
 .compatibility-disclaimer {
   font-size: 12.5px;
