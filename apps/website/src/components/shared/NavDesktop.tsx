@@ -48,7 +48,8 @@ export function trackNavLink(
 }
 
 export function trackNavItem(item: NavItem, surface: 'nav' | 'mobile_nav') {
-  const ctaId = `${surface}_${item.ctaId}`;
+  const ctaId: `nav_${string}` | `mobile_nav_${string}` =
+    surface === 'nav' ? `nav_${item.ctaId}` : `mobile_nav_${item.ctaId}`;
   if (item.external) {
     trackExternalLinkClick(item.href, {
       surface,
@@ -225,7 +226,9 @@ export function NavDesktop() {
               );
             }}
             aria-expanded={openId === trigger.id}
-            aria-controls={panelId(trigger.id)}
+            aria-controls={
+              openId === trigger.id ? panelId(trigger.id) : undefined
+            }
             className="text-sm font-mono transition-colors nav-link nav-trigger"
           >
             {trigger.label}

@@ -4,8 +4,9 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Nav } from './Nav';
 
-const { trackCtaClick, pathnameRef } = vi.hoisted(() => ({
+const { trackCtaClick, trackExternalLinkClick, pathnameRef } = vi.hoisted(() => ({
   trackCtaClick: vi.fn(),
+  trackExternalLinkClick: vi.fn(),
   pathnameRef: { current: '/docs/langgraph/guides/streaming' },
 }));
 
@@ -16,13 +17,14 @@ vi.mock('next/navigation', () => ({
 
 vi.mock('../../lib/analytics/client', () => ({
   trackCtaClick,
-  trackExternalLinkClick: vi.fn(),
+  trackExternalLinkClick,
 }));
 
 describe('Docs mobile navigation', () => {
   beforeEach(() => {
     window.localStorage.clear();
     trackCtaClick.mockClear();
+    trackExternalLinkClick.mockClear();
     pathnameRef.current = '/docs/langgraph/guides/streaming';
   });
 
@@ -179,6 +181,20 @@ describe('Docs mobile navigation', () => {
       destination_url: '/blog',
       cta_id: 'nav_solutions_blog',
       cta_text: 'Blog',
+    });
+  });
+
+  it('prefixes external panel link analytics with the surface too', () => {
+    pathnameRef.current = '/';
+    render(<Nav />);
+    const navigation = screen.getByRole('navigation');
+    fireEvent.click(within(navigation).getByRole('button', { name: 'Docs' }));
+    fireEvent.click(within(navigation).getByRole('link', { name: /LangGraph demo/ }));
+
+    expect(trackExternalLinkClick).toHaveBeenCalledWith('https://demo.threadplane.ai', {
+      surface: 'nav',
+      cta_id: 'nav_docs_demo_langgraph',
+      cta_text: 'LangGraph demo',
     });
   });
 
