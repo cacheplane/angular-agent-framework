@@ -98,7 +98,7 @@ describe('FIELD_REPORT', () => {
 });
 ```
 
-Note the path is `public/whitepaper.pdf`, relative to the vitest root (`apps/website`), not the repo root.
+**Correction, found during execution:** the path above does not resolve. `readFileSync` anchors to `process.cwd()`, which is the **repo root** under both `nx test` and `vitest --root apps/website`; and `import.meta.url` is no help either, because jsdom makes it an `http:` URL. Anchor to the workspace root by walking up to `nx.json`, the way `cockpit-docs-links.spec.ts` in the same directory already does. The shipped spec has the working version.
 
 - [ ] **Step 2: Run it and watch it fail**
 
