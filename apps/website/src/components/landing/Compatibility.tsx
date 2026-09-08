@@ -27,13 +27,14 @@ import {
   TWY_N,
   TWY_S,
   VIEW,
-  WIDE_RATIO,
   type Gate,
+  type Row,
+  type Runway as RunwayGeometry,
 } from '../../lib/airport-diagram';
 
 const R = STAND / 2;
 
-function Runway({ y, h, left, right }: typeof RWY_N | typeof RWY_S) {
+function Runway({ y, h, left, right }: RunwayGeometry) {
   return (
     <g data-runway={left}>
       <rect className="ap-pavement" x={FIELD.x0} y={y} width={FIELD.x1 - FIELD.x0} height={h} />
@@ -59,8 +60,6 @@ function TaxiwayLetter({ x, y, ch }: { x: number; y: number; ch: string }) {
 }
 
 /** A stand: the stub off the concourse, the white box, the mark, the callsign. */
-type Row = (typeof CONCOURSES)[number]['row'];
-
 function Stand({ gate, row, above }: { gate: Gate; row: Row; above: boolean }) {
   const cy = row.standCy;
   const tick = above ? row.stubTop : row.stubBot;
@@ -111,7 +110,7 @@ function Stand({ gate, row, above }: { gate: Gate; row: Row; above: boolean }) {
 
 function Plate() {
   const ticks: string[] = [];
-  for (let x = TICK_X; x < VIEW.width; x += TICK_X) {
+  for (let x = NEAT.x + TICK_X; x < NEAT.x + NEAT.width; x += TICK_X) {
     ticks.push(
       `M${x} ${NEAT.y} V${NEAT.y + 7}`,
       `M${x} ${NEAT.y + NEAT.height} V${NEAT.y + NEAT.height - 7}`,
@@ -132,7 +131,11 @@ function Plate() {
       className="ap-svg"
       data-diagram="airport"
       viewBox={`0 0 ${VIEW.width} ${VIEW.height}`}
-      role="presentation"
+      // The whole plate leaves the accessibility tree, not just its root:
+      // role="presentation" is not inherited, so every <text> on it ("09L",
+      // "2000 FT") would otherwise read out as unnamed chart noise. The
+      // .airport-stack list below is the band's accessible content.
+      aria-hidden="true"
       focusable="false"
     >
       <defs>
@@ -168,8 +171,8 @@ function Plate() {
         <path className="ap-taxiway" d={`M${FIELD.x0} ${TWY_N} H${FIELD.x1}`} />
         <path className="ap-taxiway" d={`M${FIELD.x0} ${TWY_S} H${FIELD.x1}`} />
         <path className="ap-taxiway" d={`M${TWY_E} ${TWY_N} V${TWY_S}`} />
-        <TaxiwayLetter x={500} y={TWY_N} ch="N" />
-        <TaxiwayLetter x={500} y={TWY_S} ch="S" />
+        <TaxiwayLetter x={PIVOT.x} y={TWY_N} ch="N" />
+        <TaxiwayLetter x={PIVOT.x} y={TWY_S} ch="S" />
         <TaxiwayLetter x={TWY_E} y={PIVOT.y} ch="E" />
 
         {/* The one structure that IS Threadplane: solid ink. Partner stands are
@@ -235,8 +238,9 @@ function Plate() {
         {OFF_AIRPORT_LABEL}
       </text>
       {PROVIDERS.map((p, i) => {
-        const wide = p.src.endsWith('bedrock.svg');
-        const w = wide ? PROVIDER_ROW.size * WIDE_RATIO : PROVIDER_ROW.size;
+        // Which marks are wordmarks is the table's fact to state, never the
+        // component's to re-derive from a filename.
+        const w = p.w ?? PROVIDER_ROW.size;
         const x = PROVIDER_ROW.x0 + i * PROVIDER_ROW.step;
         return (
           <image
@@ -277,7 +281,10 @@ function Plate() {
 
 /**
  * The band is a chart, so the accessible content is a plain list beside it —
- * the same data, never a second source of truth.
+ * the same data, never a second source of truth. The plate is aria-hidden and
+ * the list is the only carrier, which is why the desktop CSS hides the list
+ * visually (clip-path, like .stage-skip) instead of with `display: none`:
+ * take it out of the tree and the section is empty to a screen reader.
  */
 export function Compatibility() {
   return (

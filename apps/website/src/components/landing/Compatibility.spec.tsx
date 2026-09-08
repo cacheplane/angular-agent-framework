@@ -1,7 +1,7 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import { Compatibility } from './Compatibility';
-import { GATES_A, GATES_B, PROVIDERS } from '../../lib/airport-diagram';
+import { CONCOURSES, GATES_A, GATES_B, PROVIDERS } from '../../lib/airport-diagram';
 
 describe('Compatibility', () => {
   it('renders the signal surface with the ids the homepage spine depends on', () => {
@@ -17,22 +17,51 @@ describe('Compatibility', () => {
     );
   });
 
-  it('names every gate and every provider in text, not only as a picture', () => {
-    // The marks are decorative, so the accessible content is these names. If
-    // the SVG were the only carrier the section would be empty to a reader.
-    render(<Compatibility />);
+  it('names every gate and every provider in the HTML stack, not only on the plate', () => {
+    // The marks are decorative and the plate itself is aria-hidden, so this
+    // list is the section's ONLY accessible content. Scoped to .airport-stack
+    // on purpose: an unscoped getAllByText also matches the SVG's own <text>,
+    // so deleting the whole stack would leave the gate half of this green
+    // while a screen reader heard nothing.
+    const { container } = render(<Compatibility />);
+    const stack = container.querySelector('.airport-stack');
+    expect(stack, 'the accessible stack is gone').toBeTruthy();
+    const list = within(stack as HTMLElement);
     for (const g of [...GATES_A, ...GATES_B]) {
-      expect(screen.getAllByText(g.name).length).toBeGreaterThan(0);
+      expect(list.getAllByText(g.name).length).toBeGreaterThan(0);
     }
     for (const p of PROVIDERS) {
-      expect(screen.getAllByText(p.name).length).toBeGreaterThan(0);
+      expect(list.getAllByText(p.name).length).toBeGreaterThan(0);
     }
   });
 
+  it('draws a stand for every gate and a concourse for every adapter', () => {
+    // Without this the plate is untestable furniture: replace <Plate /> with
+    // an empty <figure /> and every other test here still passes, because the
+    // stack alone carries all the names.
+    const { container } = render(<Compatibility />);
+    expect(container.querySelectorAll('[data-diagram="airport"]').length).toBe(1);
+    expect(container.querySelectorAll('[data-stand]').length).toBe(
+      GATES_A.length + GATES_B.length,
+    );
+    expect(container.querySelectorAll('[data-concourse]').length).toBe(CONCOURSES.length);
+  });
+
   it('shows both adapters as the two concourses', () => {
-    render(<Compatibility />);
-    expect(screen.getAllByText('@threadplane/langgraph').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('@threadplane/ag-ui').length).toBeGreaterThan(0);
+    // Read off the stack, for the reason above — the plate is aria-hidden, so
+    // matching the package names there proves nothing about what is announced.
+    // Each name is paired with its concourse: an adapter labelled with the
+    // other one's package would otherwise pass.
+    const { container } = render(<Compatibility />);
+    const labels = Array.from(
+      container.querySelectorAll('.airport-stack .airport-stack-label'),
+    ).map((el) => el.textContent ?? '');
+    for (const c of CONCOURSES) {
+      expect(
+        labels.some((t) => t.includes(c.label) && t.includes(c.pkg)),
+        `${c.label} is not labelled ${c.pkg}`,
+      ).toBe(true);
+    }
   });
 
   it('marks every logo decorative, since the visible name carries the meaning', () => {
@@ -58,10 +87,11 @@ describe('Compatibility', () => {
     expect(container.textContent).not.toMatch(/never sees/i);
   });
 
-  it('links to the adapter guide', () => {
-    render(<Compatibility />);
-    expect(
-      screen.getByRole('link', { name: 'Choose an adapter →' }).getAttribute('href'),
-    ).toBe('/docs/choosing-an-adapter');
+  it('carries the adapter-guide CTA', () => {
+    // By its stable hook, not its copy: the label and the href belong to
+    // AdapterGuideLink and are asserted in AdapterGuideLink.spec.tsx. All this
+    // band owns is that the link is here.
+    const { container } = render(<Compatibility />);
+    expect(container.querySelectorAll('[data-cta="home_adapter_guide"]').length).toBe(1);
   });
 });

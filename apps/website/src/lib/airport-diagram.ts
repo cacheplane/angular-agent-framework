@@ -44,6 +44,14 @@ export const rotate = (x: number, y: number): { x: number; y: number } => {
 /** Outer extent of everything that rotates. Held so no corner leaves NEAT. */
 export const FIELD = { x0: 56, x1: 944, y0: 58, y1: 419 } as const;
 
+/** A runway strip: its top edge, its width, and the callsign at each threshold. */
+export interface Runway {
+  readonly y: number;
+  readonly h: number;
+  readonly left: string;
+  readonly right: string;
+}
+
 export const RWY_N = { y: 58, h: 11, left: '09L', right: '27R' } as const;
 export const RWY_S = { y: 408, h: 11, left: '09R', right: '27L' } as const;
 export const TWY_N = 100;
@@ -72,13 +80,22 @@ export const APRON_B = { x0: 232, x1: 910, y0: 292, y1: 372 } as const;
  * about its own centre. The stub is the leader line back to the concourse.
  */
 export const STAND = 38;
+
+export interface Row {
+  readonly standCy: number;
+  readonly labelY: number;
+  readonly stubTop: number;
+  readonly stubBot: number;
+}
+
 export const ROW1 = { standCy: 140, labelY: 172, stubTop: 178, stubBot: 190 } as const;
 export const ROW2 = { standCy: 332, labelY: 364, stubTop: 288, stubBot: 306 } as const;
 
 /**
  * A mark that is not square is sized by width at this ratio; the AWS wordmark
  * is the only one so far, and it appears twice — at gate B6 and again in the
- * margin provider row. Stated once so the two cannot drift apart.
+ * margin provider row. Both entries carry their own literal `w`, and the spec
+ * checks each against this ratio, so the two cannot drift apart.
  *
  * The number is not a taste call: it is the aspect of the artwork itself
  * (public/logos/providers/bedrock.svg, viewBox 0 0 256 153), and the spec reads
@@ -150,6 +167,17 @@ export const CONCOURSES = [
   },
 ] as const;
 
+export interface Provider {
+  readonly src: string;
+  readonly name: string;
+  /**
+   * Optical width, for a wordmark that is not square: always
+   * `PROVIDER_ROW.size * WIDE_RATIO`. Same escape hatch as `Gate.w`, so the
+   * component never has to ask which file a mark points at to know its shape.
+   */
+  readonly w?: number;
+}
+
 /**
  * Outside the neat line is outside the airport. The claim is rendered as
  * geometry rather than asserted in prose.
@@ -163,14 +191,14 @@ export const CONCOURSES = [
  */
 export const OFF_AIRPORT_LABEL =
   'OFF AIRPORT — BEHIND YOUR BACKEND. THREADPLANE NEVER TALKS TO THEM.';
-export const PROVIDERS = [
+export const PROVIDERS: readonly Provider[] = [
   { src: '/logos/providers/openai.svg', name: 'OpenAI' },
   { src: '/logos/providers/anthropic.svg', name: 'Anthropic' },
   { src: '/logos/providers/google.svg', name: 'Google' },
   { src: '/logos/providers/azure.svg', name: 'Azure OpenAI' },
-  { src: '/logos/providers/bedrock.svg', name: 'Amazon Bedrock' },
-] as const;
-/** `y` is the marks' centre line; each is `size` tall and WIDE_RATIO wide if wide. */
+  { src: '/logos/providers/bedrock.svg', name: 'Amazon Bedrock', w: 33 },
+];
+/** `y` is the marks' centre line; each is `size` tall and `w` wide if it is a wordmark. */
 export const PROVIDER_ROW = { y: 518, size: 20, x0: 30, step: 76, labelY: 492 } as const;
 
 /** Chart furniture lives in the margin, never on the field. */

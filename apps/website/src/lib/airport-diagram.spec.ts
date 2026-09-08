@@ -38,6 +38,17 @@ const STAND_HALF = (STAND / 2) * (Math.abs(Math.cos(RAD)) + Math.abs(Math.sin(RA
 
 const NEAT_BOTTOM = NEAT.y + NEAT.height;
 
+/**
+ * Every mark the plate draws, from both tables: the gates on the field and the
+ * providers in the margin. A gate states its own height, a provider takes the
+ * row's — but both may carry `w`, so the two sizing tests below have to walk
+ * them together or the margin row's only wordmark goes unchecked.
+ */
+const MARKS: readonly { label: string; src: string; s: number; w?: number }[] = [
+  ...[...GATES_A, ...GATES_B].map((g) => ({ label: g.gate, src: g.src, s: g.s, w: g.w })),
+  ...PROVIDERS.map((p) => ({ label: p.name, src: p.src, s: PROVIDER_ROW.size, w: p.w })),
+];
+
 describe('airport diagram geometry', () => {
   it('keeps all four rotated field corners inside the neat line', () => {
     const corners = [
@@ -178,17 +189,17 @@ describe('airport diagram geometry', () => {
     // is the only assertion here that ties the constant to something outside
     // the module, and it is what stops the `w` vs `s * WIDE_RATIO` check below
     // from closing back on itself.
-    for (const g of [...GATES_A, ...GATES_B]) {
-      if (g.w === undefined) continue;
-      const svg = readFileSync(resolve(WEBSITE, 'public', g.src.slice(1)), 'utf8');
+    for (const m of MARKS) {
+      if (m.w === undefined) continue;
+      const svg = readFileSync(resolve(WEBSITE, 'public', m.src.slice(1)), 'utf8');
       const viewBox = /viewBox="([^"]+)"/.exec(svg)?.[1];
-      expect(viewBox, `${g.src} has no viewBox to measure`).toBeDefined();
+      expect(viewBox, `${m.src} has no viewBox to measure`).toBeDefined();
       const [, , vbW, vbH] = (viewBox as string).trim().split(/[\s,]+/).map(Number);
-      expect(vbW, `${g.src} viewBox width`).toBeGreaterThan(0);
-      expect(vbH, `${g.src} viewBox height`).toBeGreaterThan(0);
+      expect(vbW, `${m.src} viewBox width`).toBeGreaterThan(0);
+      expect(vbH, `${m.src} viewBox height`).toBeGreaterThan(0);
       expect(
         Math.abs(WIDE_RATIO - vbW / vbH),
-        `${g.gate}: WIDE_RATIO ${WIDE_RATIO} vs ${g.src} ${vbW}/${vbH} = ${vbW / vbH}`
+        `${m.label}: WIDE_RATIO ${WIDE_RATIO} vs ${m.src} ${vbW}/${vbH} = ${vbW / vbH}`
       ).toBeLessThanOrEqual(0.02);
     }
   });
@@ -199,14 +210,13 @@ describe('airport diagram geometry', () => {
     // Both numbers are literal, so this compares two independent values against
     // a ratio the test above pins to the file itself. A second wordmark is
     // allowed to join; an off-ratio one is not.
-    const all = [...GATES_A, ...GATES_B];
-    for (const g of all) {
-      expect(g.s, `${g.gate} size`).toBeGreaterThan(0);
-      if (g.w !== undefined) {
-        expect(g.w, `${g.gate} width`).toBeGreaterThan(g.s);
+    for (const m of MARKS) {
+      expect(m.s, `${m.label} size`).toBeGreaterThan(0);
+      if (m.w !== undefined) {
+        expect(m.w, `${m.label} width`).toBeGreaterThan(m.s);
         expect(
-          Math.abs(g.w - g.s * WIDE_RATIO),
-          `${g.gate} w ${g.w} vs s ${g.s} x ${WIDE_RATIO} = ${g.s * WIDE_RATIO}`
+          Math.abs(m.w - m.s * WIDE_RATIO),
+          `${m.label} w ${m.w} vs s ${m.s} x ${WIDE_RATIO} = ${m.s * WIDE_RATIO}`
         ).toBeLessThanOrEqual(1);
       }
     }
