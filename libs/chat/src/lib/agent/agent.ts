@@ -28,6 +28,8 @@ export interface Agent<TState = unknown> {
   messages:  Signal<Message[]>;
   status:    Signal<AgentStatus>;
   isLoading: Signal<boolean>;
+  /** Optional gate for ordinary composer input while the runtime requires resolution or recovery. Resume actions remain adapter-controlled. */
+  isInputBlocked?: Signal<boolean>;
   error:     Signal<AgentError | undefined>;
   toolCalls: Signal<ToolCall[]>;
   state:     Signal<TState>;

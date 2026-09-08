@@ -32,6 +32,21 @@ function source() {
   return { source: new HttpAgent({ url: 'http://test.invalid', threadId: 't1', fetch }), fetch };
 }
 
+it('blocks the composer until asynchronous hydration completes', async () => {
+  const { config } = memory();
+  let release!: () => void;
+  config.store.load = async () => {
+    await new Promise<void>(resolve => { release = resolve; });
+    return null;
+  };
+  const agent = toAgent(source().source, { persistence: config, telemetry: false });
+  expect(agent.isInputBlocked?.()).toBe(true);
+  await vi.waitFor(() => expect(release).toBeTypeOf('function'));
+  release(); await agent.ready;
+  expect(agent.isInputBlocked?.()).toBe(false);
+  agent.dispose();
+});
+
 it('restores committed messages, state and a complete batch into a new adapter', async () => {
   const { config } = memory();
   const original = source();

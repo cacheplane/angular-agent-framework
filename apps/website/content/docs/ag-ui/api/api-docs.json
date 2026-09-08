@@ -462,6 +462,12 @@
         "optional": false
       },
       {
+        "name": "isInputBlocked",
+        "type": "Signal<boolean>",
+        "description": "Optional gate for ordinary composer input while the runtime requires resolution or recovery. Resume actions remain adapter-controlled.",
+        "optional": true
+      },
+      {
         "name": "isLoading",
         "type": "Signal<boolean>",
         "description": "",

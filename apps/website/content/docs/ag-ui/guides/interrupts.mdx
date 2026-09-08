@@ -168,6 +168,8 @@ Atomic storage claims coordinate clients sharing that store. Preventing duplicat
 
 Await `agent.ready` before rendering restored approval controls; actions also wait for hydration. An interrupted in-flight claim restores as uncertain, and an acknowledged attempt requires recovery. Configure `persistence.reconcile(record)` to obtain an authoritative backend outcome and call `agent.reconcileInterrupt()` to apply it. The callback returns `unknown`, or `pending`, `acknowledged`, or `completed` with authoritative `committed` and `session` snapshots. An unknown outcome keeps recovery blocked. The adapter does not provide a backend reconciliation endpoint, and stored client state cannot recreate a checkpoint lost by a restarted `MemorySaver` process.
 
+The optional `isInputBlocked` signal disables ordinary chat input during hydration, reconciliation, and unresolved interrupt phases. The built-in composer preserves drafts while blocked; approval controls still submit through the resume path.
+
 Providers dispose the adapter with their injector. If you create it with `toAgent()` directly, call `agent.dispose()` when finished. Disposal unsubscribes and stops local work; it does not delete or cancel backend checkpoints.
 
 ### Migration note

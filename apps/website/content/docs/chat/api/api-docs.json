@@ -5997,6 +5997,12 @@
         "optional": true
       },
       {
+        "name": "isInputBlocked",
+        "type": "Signal<boolean>",
+        "description": "Optional gate for ordinary composer input while the runtime requires resolution or recovery. Resume actions remain adapter-controlled.",
+        "optional": true
+      },
+      {
         "name": "isLoading",
         "type": "Signal<boolean>",
         "description": "",
@@ -6314,6 +6320,12 @@
         "name": "interrupt",
         "type": "Signal<AgentInterrupt | undefined>",
         "description": "Optional display projection of the pending interrupt. A runtime may expose\na separate full batch and lifecycle surface. A cleared display projection\ndoes not by itself prove that resumed backend work completed.",
+        "optional": true
+      },
+      {
+        "name": "isInputBlocked",
+        "type": "Signal<boolean>",
+        "description": "Optional gate for ordinary composer input while the runtime requires resolution or recovery. Resume actions remain adapter-controlled.",
         "optional": true
       },
       {
@@ -7494,6 +7506,12 @@
         "name": "interrupt",
         "type": "WritableSignal<AgentInterrupt | undefined>",
         "description": "Optional display projection of the pending interrupt. A runtime may expose\na separate full batch and lifecycle surface. A cleared display projection\ndoes not by itself prove that resumed backend work completed.",
+        "optional": true
+      },
+      {
+        "name": "isInputBlocked",
+        "type": "Signal<boolean>",
+        "description": "Optional gate for ordinary composer input while the runtime requires resolution or recovery. Resume actions remain adapter-controlled.",
         "optional": true
       },
       {
@@ -9652,7 +9670,7 @@
   {
     "name": "submitMessage",
     "kind": "function",
-    "description": "Submits a trimmed message to the agent.\nReturns the trimmed string on success, or `null` if the input was empty.",
+    "description": "Submits a trimmed message to the agent.\nReturns the trimmed string on dispatch, or `null` for empty or blocked input.",
     "signature": "submitMessage(agent: Agent<>, text: string): string | null",
     "params": [
       {

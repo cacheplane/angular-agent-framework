@@ -187,8 +187,8 @@ function createAgentAdapter(
   let disposed = false;
   let resumeInput: { state: Record<string, unknown>; messages: typeof source.messages; localMessages?: Message[] } | undefined;
   const persistence = options.persistence ? new InterruptPersistence(options.persistence, source.threadId) : undefined;
-  let hydrated = !persistence;
-  let reconciling = false;
+  const hydrated = signal(!persistence);
+  const reconciling = signal(false);
   let persistenceFault: unknown;
   let persistenceWrites: Promise<void> = Promise.resolve();
   function storageError(error: unknown): void {
@@ -223,7 +223,7 @@ function createAgentAdapter(
     publishInterrupt();
   }
   const ready = persistence
-    ? persistence.load().then(record => { if (record) hydrate(record); hydrated = true; }).catch(error => { storageError(error); throw error; })
+    ? persistence.load().then(record => { if (record) hydrate(record); hydrated.set(true); }).catch(error => { storageError(error); throw error; })
     : Promise.resolve();
   void ready.catch(() => undefined);
   function publishInterrupt(): void {
@@ -242,8 +242,8 @@ function createAgentAdapter(
   }
   function assertAvailable(): void {
     if (disposed) throw new Error('Agent has been disposed');
-    if (reconciling) throw new Error('Interrupt reconciliation is in progress');
-    if (!hydrated) throw new Error('Wait for agent.ready before starting a request');
+    if (reconciling()) throw new Error('Interrupt reconciliation is in progress');
+    if (!hydrated()) throw new Error('Wait for agent.ready before starting a request');
     if (persistenceFault) throw new Error('Interrupt storage recovery requires reconciliation');
   }
   function assertNoInterrupt(): void {
@@ -642,22 +642,23 @@ function createAgentAdapter(
     ready,
     reconcileInterrupt: async () => {
       if (disposed) throw new Error('Agent has been disposed');
-      if (reconciling) throw new Error('Interrupt reconciliation is in progress');
+      if (reconciling()) throw new Error('Interrupt reconciliation is in progress');
       if (activeRun && activeRun.outcome === undefined) throw new Error('Stop the active request before reconciliation');
       if (!persistence) throw new Error('Interrupt recovery requires a persistence reconciler');
-      reconciling = true;
+      reconciling.set(true);
       try {
         await persistenceWrites.catch(() => undefined);
         const record = await persistence.reconcile();
         if (disposed) return;
         if (record) hydrate(record);
         persistenceFault = undefined; persistenceWrites = Promise.resolve();
-        hydrated = true; store.error.set(undefined); store.status.set('idle');
+        hydrated.set(true); store.error.set(undefined); store.status.set('idle');
       } finally {
-        reconciling = false;
+        reconciling.set(false);
       }
     },
     interruptSession: interruptSession.asReadonly(),
+    isInputBlocked: computed(() => !hydrated() || reconciling() || interruptSession().phase !== 'none'),
     dispose: () => {
       if (disposed) return;
       disposed = true;
@@ -692,7 +693,7 @@ function createAgentAdapter(
     clientTools:  clientToolsCap,
 
     submit: async (input: AgentSubmitInput, opts?: AgUiSubmitOptions) => {
-      if (!hydrated) await ready;
+      if (!hydrated()) await ready;
       assertAvailable();
       if (input.resume !== undefined) {
         if (opts?.interruptGeneration !== undefined && opts.interruptGeneration !== interrupts.snapshot.generation) {
@@ -736,7 +737,7 @@ function createAgentAdapter(
     },
 
     retry: async () => {
-      if (!hydrated) await ready;
+      if (!hydrated()) await ready;
       assertAvailable();
       if (interrupts.snapshot.attempt) {
         const attempt = interrupts.retry();
@@ -778,7 +779,7 @@ function createAgentAdapter(
     },
 
     regenerate: async (assistantMessageIndex: number): Promise<void> => {
-      if (!hydrated) await ready;
+      if (!hydrated()) await ready;
       assertNoInterrupt();
       if (store.isLoading()) {
         throw new Error('Cannot regenerate while agent is loading another response');

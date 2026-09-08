@@ -1535,6 +1535,12 @@
         "optional": false
       },
       {
+        "name": "isInputBlocked",
+        "type": "Signal<boolean>",
+        "description": "Optional gate for ordinary composer input while the runtime requires resolution or recovery. Resume actions remain adapter-controlled.",
+        "optional": true
+      },
+      {
         "name": "isLoading",
         "type": "Signal<boolean>",
         "description": "",
@@ -1967,6 +1973,12 @@
         "type": "WritableSignal<AgentInterrupt | undefined>",
         "description": "Current human-in-the-loop pause, or `undefined` when the run is not paused.\n\nNarrowed from the neutral `Agent` contract, where `interrupt` is optional\nbecause a runtime without human-in-the-loop support omits it. The LangGraph\nadapter always provides it, so `injectAgent().interrupt()` type-checks\ndirectly under `strictNullChecks` — no `?.()` needed.",
         "optional": false
+      },
+      {
+        "name": "isInputBlocked",
+        "type": "Signal<boolean>",
+        "description": "Optional gate for ordinary composer input while the runtime requires resolution or recovery. Resume actions remain adapter-controlled.",
+        "optional": true
       },
       {
         "name": "isLoading",
