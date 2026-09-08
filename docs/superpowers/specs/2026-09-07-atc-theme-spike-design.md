@@ -244,11 +244,22 @@ library approach — but is not hand-tuned. Those pages get a smoke pass only.
 
 Named here so the divergence reads as a decision rather than a defect:
 
-- **The OG / social card pipeline** (`apps/website/src/app/card/`,
+- **The OG / social card pipeline's TYPE** (`apps/website/src/app/card/`,
   `opengraph-image.tsx`, `blog/[slug]/opengraph-image.tsx`, `og-font.ts`). It
-  bundles its own `EBGaramond-Bold.ttf` and carries its own `#004090` in
-  `card/tokens.ts`, and `card.spec.ts` asserts the bundled filenames. It keeps
-  navy and Garamond, so a shared link will not match the site.
+  bundles its own `EBGaramond-Bold.ttf`, and `card.spec.ts` asserts the bundled
+  filenames, so retyping it means shipping an Archivo Black TTF. The card keeps
+  Garamond.
+
+  **Its COLOURS are in scope, and this is a correction to an earlier draft of
+  this spec.** `card/tokens.ts` is a hand-copied snapshot of the light tokens,
+  and `card.spec.ts` actively compares it against `theme.css` — its docstring
+  says a snapshot with nothing checking it "would keep rendering, in last
+  season's colours". Declaring the divergence intentional in a markdown file
+  does not satisfy a guard that compares values at test time; it just leaves
+  `nx test website` red for the rest of the arc, which trains everyone to
+  ignore it. The colours cost nothing to move (they are hex literals, not
+  font files), so `ink`, `accent`, `accentSurface` and `accentBorder` follow
+  the retheme and the guard keeps working.
 - **`apps/website/scripts/generate-whitepaper.ts`** — same reason.
 - **`apps/website/src/app/icon.svg`** — the favicon stays navy.
 - **Cockpit and example apps** — they inherit the new values but are not

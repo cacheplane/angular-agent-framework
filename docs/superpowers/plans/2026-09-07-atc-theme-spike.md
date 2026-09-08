@@ -1019,7 +1019,7 @@ git commit -m "fix(website): ATC theme verification pass"
 
 Per spec §7, these keep navy and EB Garamond and **will visibly diverge**. Leaving them is the plan working correctly:
 
-- `apps/website/src/app/card/` — the OG/social card pipeline, including `card/tokens.ts`'s own `#004090` and the bundled `EBGaramond-Bold.ttf` that `card.spec.ts` asserts by filename
+- `apps/website/src/app/card/` **fonts only** — the bundled `EBGaramond-Bold.ttf` that `card.spec.ts` asserts by filename. The card's *colours* are NOT out of scope: `card.spec.ts` compares `card/tokens.ts` against `theme.css` at test time, so they move with the retheme (handled in Task 2)
 - `apps/website/src/app/opengraph-image.tsx` and `blog/[slug]/opengraph-image.tsx`
 - `apps/website/scripts/generate-whitepaper.ts`
 - `apps/website/src/app/icon.svg` — the favicon stays navy
