@@ -19,16 +19,16 @@ export const CARD = {
   /** --color-surface-dim, the user bubble. */
   dim: '#f5f5f5',
   /** --color-text-primary / secondary / muted */
-  ink: '#1c1c1c',
+  ink: '#0a0a0a',
   inkSecondary: '#464646',
   inkMuted: '#737373',
   /** --color-border / --color-border-strong */
   border: '#e5e5e5',
   borderStrong: '#c8c8c8',
   /** --color-accent and its surface/border tints. */
-  accent: '#004090',
-  accentSurface: 'rgba(0, 64, 144, 0.06)',
-  accentBorder: 'rgba(0, 64, 144, 0.30)',
+  accent: '#15253e',
+  accentSurface: 'rgba(255, 175, 0, 0.10)',
+  accentBorder: 'rgba(255, 175, 0, 0.35)',
   /** BrowserFrame traffic lights (ui.css). */
   trafficRed: '#FF5F57',
   trafficAmber: '#FEBC2E',

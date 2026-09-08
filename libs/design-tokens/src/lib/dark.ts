@@ -26,9 +26,9 @@ export const darkOverrides = Object.freeze({
 
   // Semantic accent maps to aviation yellow (8.33:1 on the dark ground).
   // `accent` derives from the brand token; the tints below must be re-derived
-  // with it or they silently stay blue.
+  // with it or they silently keep the previous hue.
   accent: baseTokens.brand.accentLight,
-  accentHover: '#ffc233',
+  accentHover: '#FFC233',
   accentGlow: 'rgba(255, 175, 0, 0.25)',
   accentBorder: 'rgba(255, 175, 0, 0.22)',
   accentBorderHover: 'rgba(255, 175, 0, 0.4)',

@@ -28,9 +28,9 @@ export const lightOverrides = Object.freeze({
 
   // Semantic accent is the interactive INK (links, focus, borders) and stays
   // dark: aviation yellow is 1.84:1 on white and cannot carry text. The tints
-  // below are backgrounds, so they carry the yellow instead — which is how
-  // [data-ui="pill"][data-variant="accent"] already composes: yellow surface,
-  // navy ink on top.
+  // below are backgrounds, so they carry the yellow instead — which is the
+  // shape [data-ui="pill"][data-variant="accent"] already has: accent-surface
+  // behind, accent ink on top.
   accent: baseTokens.brand.accent,
   accentHover: '#0E1B2E',
   accentGlow: 'rgba(255, 175, 0, 0.28)',

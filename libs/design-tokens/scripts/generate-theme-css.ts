@@ -287,8 +287,11 @@ export function generateTokensCss(): string {
 /**
  * Dark twin of tokens.css, from darkOverrides. Exists because the cockpit
  * example apps were designed dark: their var(--ds-*, fallback) fallbacks are
- * hand-copies of darkOverrides (verified value-by-value, 2026-08-30, with
- * minor drift - e.g. accentBorder 0.25 vs the token's 0.2). Wiring THIS file
+ * hand-copies of darkOverrides (verified value-by-value, 2026-08-30). As of
+ * 2026-09-07 those fallbacks are still the pre-ATC blue - e.g.
+ * var(--ds-accent, #64c3fd) against a darkOverrides.accent of #FFAF00 - so
+ * they have diverged from the tokens by HUE, not by a rounding nit, and are
+ * effectively decorative until the cockpit is reviewed. Wiring THIS file
  * in makes those fallbacks dead text; wiring the light tokens.css would flip
  * deliberately-dark apps to light.
  */

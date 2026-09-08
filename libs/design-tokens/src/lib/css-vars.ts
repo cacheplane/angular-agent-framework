@@ -37,7 +37,7 @@ export function cssVars(theme: Theme) {
     '--ds-bg': t.bg,
     '--ds-sidebar-bg': t.sidebarBg,
 
-    // Accent family (theme-variant — semantic accent points to navy in light, bright-blue in dark)
+    // Accent family (theme-variant — the interactive ink: scope navy in light, aviation yellow in dark)
     '--ds-accent': t.accent,
     '--ds-accent-hover': t.accentHover,
     '--ds-accent-glow': t.accentGlow,
