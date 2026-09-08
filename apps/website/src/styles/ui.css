@@ -169,15 +169,24 @@
  * deliberately do not: this band is website-only and takes the ATC scope
  * navy, while dark.ts stays neutral because @threadplane/chat and the cockpit
  * consume it and a navy ground there would seam against embedded chat.
+ * 2026-09-08: the surfaces moved to the navy family as well. The proof cards
+ * that first exposed this are gone, but --color-surface still dresses the
+ * secondary Button and the focus halo in this band, and a neutral
+ * rgb(28,28,28) left those grey-black on a navy ground.
  * Treatment B (spec): vertical gradient canvas, 1px accent seam at the
  * light→dark boundary. */
 [data-ui="section"][data-surface="dark"] {
-  --color-canvas: rgb(17, 17, 17);
-  --color-surface: rgb(28, 28, 28);
-  --color-surface-tinted: rgb(44, 44, 44);
-  --color-surface-dim: rgb(10, 10, 10);
-  --color-border: rgb(45, 45, 45);
-  --color-border-strong: rgb(60, 60, 60);
+  /* Navy-family surfaces. The ground goes DARKER and the surfaces go LIGHTER,
+   * which is the hierarchy that was missing — before, the two darks were
+   * unrelated. --color-surface is consumed here by the secondary Button and
+   * the focus halo; -tinted and -dim complete the ladder for nested surfaces
+   * and currently have no consumer in this band. */
+  --color-canvas: #0B1622;
+  --color-surface: #15253E;
+  --color-surface-tinted: #1B2E4D;
+  --color-surface-dim: #08111B;
+  --color-border: rgba(255, 255, 255, 0.12);
+  --color-border-strong: rgba(255, 255, 255, 0.2);
   --color-text-primary: rgb(245, 245, 245);
   --color-text-secondary: rgb(200, 200, 200);
   --color-text-muted: rgb(160, 160, 160);
@@ -189,7 +198,7 @@
   --color-accent-border-hover: rgba(255, 175, 0, 0.4);
   --color-accent-surface: rgba(255, 175, 0, 0.1);
 
-  background: linear-gradient(180deg, #1b2e4d 0%, #15253e 100%);
+  background: linear-gradient(180deg, #0b1622 0%, #0f1c2e 100%);
   color: var(--color-text-primary);
   position: relative;
 }
@@ -302,7 +311,7 @@
  * fill. The inner `--color-surface` halo is what separates ring from fill in
  * the two cases where both land in the same colour family — yellow ring on
  * yellow fill in the dark band, ink ring on ink fill in the signal scope —
- * because `--color-surface` re-points with the scope too (dark grey, then the
+ * because `--color-surface` re-points with the scope too (navy, then the
  * signal yellow). Held by a style contract. */
 [data-ui="button"]:focus-visible {
   outline: 2px solid var(--color-accent);

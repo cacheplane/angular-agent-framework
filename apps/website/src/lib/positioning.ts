@@ -52,35 +52,6 @@ export const HERO_TRUST_LINE = `MIT · ${formatAngularRange(WEBSITE_SUPPORTED_AN
 
 // ── The final mile (live-stage spec §3, block 3) ─────────────────────────────
 
-// ── Reliability receipts (spec §3, block 2). Each links a page a human can read;
-// the sourced numbers stay in Reliability.tsx beside them. ───────────────────
-export interface ReliabilityReceipt {
-  readonly claim: string;
-  readonly detail: string;
-  readonly sourceLabel: string;
-  readonly sourceHref: string;
-}
-export const RELIABILITY_RECEIPTS: readonly ReliabilityReceipt[] = [
-  {
-    claim: 'Signed provenance on every release',
-    detail: 'npm provenance attestations from OIDC trusted publishing, and a SLSA provenance file on each GitHub release.',
-    sourceLabel: 'npmjs.com · provenance',
-    sourceHref: 'https://www.npmjs.com/package/@threadplane/chat',
-  },
-  {
-    claim: 'Three runtimes exercised end to end',
-    detail: 'LangGraph, Mastra and AWS Strands backends, each driven by browser tests on every merge against one Angular contract.',
-    sourceLabel: 'runtime portability matrix',
-    sourceHref: '/docs/choosing-an-adapter#measured-runtime-support',
-  },
-  {
-    claim: 'No content telemetry, no cloud',
-    detail: 'Operational facts about how the product runs, never prompts, messages or tool data. MIT, self-hosted, no account.',
-    sourceLabel: 'privacy policy',
-    sourceHref: '/privacy',
-  },
-];
-
 /**
  * The public source repository.
  *

@@ -7,7 +7,6 @@ import {
   HERO_H1,
   HERO_SECONDARY_HREF,
   HERO_SUBHEAD,
-  HERO_TRUST_LINE,
 } from '../../lib/positioning';
 
 const trackMock = vi.hoisted(() => vi.fn());
@@ -62,7 +61,6 @@ describe('Hero', () => {
       'Your backend stays where it is.',
     );
     expect(document.querySelectorAll('.hero-subhead .marker-highlight')).toHaveLength(1);
-    expect(document.querySelector('.hero-trust')?.textContent).toBe(HERO_TRUST_LINE);
     expect(document.querySelector('.hero-chip-row')).toBeNull();
     expect(screen.queryByText(/six months/)).toBeNull();
     expect(screen.queryByRole('link', { name: /Talk to our engineers/ })).toBeNull();

@@ -157,36 +157,6 @@ describe('positioning: coding-agent prompt', () => {
 });
 
 describe('homepage restructure copy (live-stage spec §3)', () => {
-
-  it('carries three reliability receipts, each linking a human-readable page', async () => {
-    const { RELIABILITY_RECEIPTS } = await import('./positioning');
-    expect(RELIABILITY_RECEIPTS.map((r) => r.claim)).toEqual([
-      'Signed provenance on every release',
-      'Three runtimes exercised end to end',
-      'No content telemetry, no cloud',
-    ]);
-    for (const r of RELIABILITY_RECEIPTS) {
-      expect(r.sourceLabel.length).toBeGreaterThan(0);
-      const { hostname, pathname } = new URL(r.sourceHref, 'https://threadplane.ai');
-      expect(hostname.startsWith('api.'), r.sourceHref).toBe(false);
-      expect(pathname.startsWith('/api/'), r.sourceHref).toBe(false);
-
-      if (r.sourceHref.startsWith('/docs/')) {
-        const slug = pathname.replace(/^\/docs\//, '');
-        const candidates = [
-          path.join(resolveWebsiteDir(), 'content', 'docs', `${slug}.mdx`),
-          path.join(resolveWebsiteDir(), 'content', 'docs', slug, 'index.mdx'),
-        ];
-        expect(candidates.some((p) => fs.existsSync(p)), r.sourceHref).toBe(true);
-      } else if (r.sourceHref.startsWith('/')) {
-        expect(
-          fs.existsSync(path.join(resolveWebsiteDir(), 'src', 'app', r.sourceHref.slice(1), 'page.tsx')),
-          r.sourceHref,
-        ).toBe(true);
-      }
-    }
-  });
-
   it('closes on the open-source offer: one sentence, the licence, the fork CTA', async () => {
     const { OPEN_SOURCE_STRIP } = await import('./positioning');
     expect(`${OPEN_SOURCE_STRIP.lead} ${OPEN_SOURCE_STRIP.emphasis}`).toBe(
