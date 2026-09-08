@@ -70,9 +70,9 @@
 <pre><code>@Component({
   template: `
     @switch (output.type) {
-      @case ('product') { <product-card [data]="output" /> }
-      @case ('chart') { <data-viz [config]="output" /> }
-      @case ('form') { <dynamic-form [schema]="output" /> }
+      @case ('product') { &lt;product-card [data]="output" /&gt; }
+      @case ('chart') { &lt;data-viz [config]="output" /&gt; }
+      @case ('form') { &lt;dynamic-form [schema]="output" /&gt; }
     }
   `
 })
@@ -81,7 +81,7 @@ export class AgentResponseComponent {
 }
 </code></pre>
 <p>This works. Ship it. Demo goes well.</p>
-<p>Then the agent team adds a new capability. They want to render comparison tables. Your switch statement doesn't handle it. The agent emits valid output, the frontend shows nothing. Now you're in a deploy queue behind three other teams, waiting to add `@case ('table')`.</p>
+<p>Then the agent team adds a new capability. They want to render comparison tables. Your switch statement doesn't handle it. The agent emits valid output, the frontend shows nothing. Now you're in a deploy queue behind three other teams, waiting to add <code>@case ('table')</code>.</p>
 <p>You've created a bidirectional dependency that will strangle your velocity.</p>
 <h3>The Dependency Graph You Didn't Want</h3>
 <p>The coupling runs both directions. The agent's output schema is constrained by what the frontend can render. The frontend's component library is constrained by what the agent might emit. Change either side and you break the contract.</p>
@@ -107,17 +107,17 @@ Your switch statements are now scattered across repositories. Each frontend has 
   "component": "data-table",
   "props": { "columns": [...], "rows": [...] }
 }
-<p>// Frontend interprets via registry
+// Frontend interprets via registry
 const registry = defineAngularRegistry({
   'data-table': DataTableComponent,
   'product-card': ProductCardComponent,
   // ...
 });
-</code></pre></p>
+</code></pre>
 <p>New capability? Agent emits it. If the registry has a mapping, it renders. If not, fallback behavior. No frontend deploy required for agent changes. No agent prompt changes required for component refactors.</p>
 <p>The registry becomes the contract. Version it. Document it. Let teams evolve independently.</p>
 <h3>The Standard Problem</h3>
-<p>A registry per frontend doesn't solve coordination—it moves it. You still need agreement on what `"component": "data-table"` means, what props it accepts, how deeply specs can nest.</p>
+<p>A registry per frontend doesn't solve coordination—it moves it. You still need agreement on what <code>"component": "data-table"</code> means, what props it accepts, how deeply specs can nest.</p>
 <p>Without a shared specification, you'll build three proprietary formats. Your agents will need frontend-specific prompt branches. Your component libraries will drift.</p>
 <p>This is why the approach demands an open spec—a grammar for describing UI that agents can target and any frontend can interpret. Not a component library. Not a design system. A protocol.</p>
 <p>The next chapter introduces that protocol.</p></div>
@@ -167,7 +167,7 @@ const registry = defineAngularRegistry({
   "children": [{ "component": "admin-panel", "props": {} }]
 }
 </code></pre>
-<p>Iteration uses `$for`:</p>
+<p>Iteration uses <code>$for</code>:</p>
 <pre><code>{
   "component": "$for",
   "props": { "each": "{{ items }}", "as": "item" },
@@ -182,36 +182,36 @@ const registry = defineAngularRegistry({
 <p>Computed properties use template expressions. The renderer evaluates these against a provided context object, keeping the spec declarative while supporting dynamic data binding.</p>
 <h3>Google's A2UI Extension</h3>
 <p>Google's Agent-to-UI (A2UI) specification extends json-render with agent-specific patterns. It adds constructs for streaming updates, tool call visualization, and interrupt handling—concepts that don't exist in static UI rendering but are fundamental to agent interactions.</p>
-<p>A2UI defines how partial UI updates arrive during generation, how tool invocations surface to users, and how human-in-the-loop checkpoints integrate with component trees. The `@threadplane/render` package implements both specifications.</p>
+<p>A2UI defines how partial UI updates arrive during generation, how tool invocations surface to users, and how human-in-the-loop checkpoints integrate with component trees. The <code>@threadplane/render</code> package implements both specifications.</p>
 <h3>The @threadplane/render Implementation</h3>
-<p>The `<render-spec>` directive consumes json-render documents and instantiates Angular components:</p>
+<p>The <code>&lt;render-spec&gt;</code> directive consumes json-render documents and instantiates Angular components:</p>
 <pre><code>import { Component, signal } from '@angular/core';
 import { RenderSpecComponent, defineAngularRegistry } from '@threadplane/render';
 import { CardComponent, MetricComponent, SparklineComponent } from './components';
-<p>const registry = defineAngularRegistry({
+const registry = defineAngularRegistry({
   card: CardComponent,
   metric: MetricComponent,
   sparkline: SparklineComponent
-});</p>
-<p>@Component({
+});
+@Component({
   selector: 'app-dashboard',
   imports: [RenderSpecComponent],
-  template: `<render-spec [spec]="uiSpec()" [registry]="registry" />`
+  template: &lt;code&gt;&lt;render-spec [spec]="uiSpec()" [registry]="registry" /&gt;&lt;/code&gt;
 })
 export class DashboardComponent {
   registry = registry;
-  uiSpec = signal<object | null>(null);
+  uiSpec = signal&lt;object | null&gt;(null);
 }
-</code></pre></p>
+</code></pre>
 <p>The registry maps component names to Angular components. Unknown components throw at render time—fail fast rather than silent degradation.</p>
 <h3>Prompting for Valid Output</h3>
 <p>LLMs generate spec-compliant JSON when prompts include the schema and examples:</p>
 <pre><code>Generate a json-render document for a user profile card.
-<p>Schema: { component: string, props: object, children?: array }
-Available components: card, avatar, text, badge</p>
-<p>Example output:
+Schema: { component: string, props: object, children?: array }
+Available components: card, avatar, text, badge
+Example output:
 {"component": "card", "props": {"variant": "outlined"}, "children": [...]}
-</code></pre></p>
+</code></pre>
 <p>Structured output modes (JSON mode, function calling) enforce syntactic validity. Schema validation catches semantic errors—referencing undefined components or invalid prop types.</p>
 <p>The specification creates a stable contract. Agents emit it. Renderers consume it. Neither side knows how the other works.</p></div>
     </section>
@@ -221,29 +221,29 @@ Available components: card, avatar, text, badge</p>
       <div style="width:72px;height:6px;background:#FFAF00"></div>
       <div class="chapter-body" style="margin-top:30px"><p>A render-spec document references components by string name. The registry resolves those names to Angular component classes at render time. Without this mapping layer, the open standard would be theoretical—the registry makes it executable.</p>
 <h3>Defining the Registry</h3>
-<p>`defineAngularRegistry()` accepts a record of component names to Angular component classes:</p>
+<p><code>defineAngularRegistry()</code> accepts a record of component names to Angular component classes:</p>
 <pre><code>import { defineAngularRegistry } from '@threadplane/render';
 import { CardComponent } from './card.component';
 import { ButtonComponent } from './button.component';
 import { DataTableComponent } from './data-table.component';
 import { AlertComponent } from './alert.component';
-<p>export const uiRegistry = defineAngularRegistry({
+export const uiRegistry = defineAngularRegistry({
   'Card': CardComponent,
   'Button': ButtonComponent,
   'DataTable': DataTableComponent,
   'Alert': AlertComponent
 });
-</code></pre></p>
-<p>The keys are the exact strings that appear in your render-spec `component` fields. The values are the component classes themselves—not selectors, not factory functions. This directness means the registry is statically analyzable and tree-shakeable.</p>
+</code></pre>
+<p>The keys are the exact strings that appear in your render-spec <code>component</code> fields. The values are the component classes themselves—not selectors, not factory functions. This directness means the registry is statically analyzable and tree-shakeable.</p>
 <h3>Providing the Registry</h3>
 <p>Two patterns, depending on your architecture.</p>
 <p><strong>Direct binding</strong> works for isolated cases where a single component owns the rendering context:</p>
 <pre><code>@Component({
-  template: `<render-spec [spec]="spec" [registry]="registry" />`
+  template: &lt;code&gt;&lt;render-spec [spec]="spec" [registry]="registry" /&gt;&lt;/code&gt;
 })
 export class PreviewComponent {
   registry = uiRegistry;
-  spec = input.required<RenderSpec>();
+  spec = input.required&lt;RenderSpec&gt;();
 }
 </code></pre>
 <p><strong>Dependency injection</strong> suits applications where multiple components render specs against a shared registry:</p>
@@ -254,21 +254,21 @@ export const appConfig: ApplicationConfig = {
   ]
 };
 </code></pre>
-<p>When both are present, the direct `[registry]` binding takes precedence. This lets you override the global registry for specific rendering contexts—useful for sandboxed previews or A/B testing component implementations.</p>
+<p>When both are present, the direct <code>[registry]</code> binding takes precedence. This lets you override the global registry for specific rendering contexts—useful for sandboxed previews or A/B testing component implementations.</p>
 <h3>Resolution and Input Mapping</h3>
-<p>`<render-spec>` walks the spec tree, resolving each `component` string against the registry. For each node, it instantiates the corresponding Angular component and maps the spec's `props` object to `@Input()` bindings.</p>
-<p>The mapping is direct: a prop named `title` binds to an input named `title`. No transformation, no case conversion. If your component expects `@Input() headerText` but the spec sends `header_text`, the binding fails silently—Angular's standard behavior for unknown inputs.</p>
+<p><code>&lt;render-spec&gt;</code> walks the spec tree, resolving each <code>component</code> string against the registry. For each node, it instantiates the corresponding Angular component and maps the spec's <code>props</code> object to <code>@Input()</code> bindings.</p>
+<p>The mapping is direct: a prop named <code>title</code> binds to an input named <code>title</code>. No transformation, no case conversion. If your component expects <code>@Input() headerText</code> but the spec sends <code>header_text</code>, the binding fails silently—Angular's standard behavior for unknown inputs.</p>
 <p>This is intentional. The registry defines *which* components exist; your component contracts define *what* they accept. Keep those contracts stable or version them explicitly.</p>
 <h3>Unknown Components</h3>
-<p>When a spec references a component name not present in the registry, `<render-spec>` renders nothing for that node by default. No error thrown, no console warning—just a gap in the output.</p>
-<p>For development, enable strict mode through `provideRender({ strict: true })`. This throws on unknown component names, surfacing mismatches immediately.</p>
+<p>When a spec references a component name not present in the registry, <code>&lt;render-spec&gt;</code> renders nothing for that node by default. No error thrown, no console warning—just a gap in the output.</p>
+<p>For development, enable strict mode through <code>provideRender({ strict: true })</code>. This throws on unknown component names, surfacing mismatches immediately.</p>
 <p>For production, consider a fallback component:</p>
 <pre><code>export const uiRegistry = defineAngularRegistry({
   // ... your components
   '__fallback__': UnknownComponentPlaceholder
 });
 </code></pre>
-<p>The `__fallback__` key is a convention, not a framework feature. Your error boundary strategy depends on your domain—some applications should fail visibly, others should degrade gracefully.</p>
+<p>The <code>__fallback__</code> key is a convention, not a framework feature. Your error boundary strategy depends on your domain—some applications should fail visibly, others should degrade gracefully.</p>
 <h3>Registry Versioning</h3>
 <p>Specs persist. Registries evolve. The mismatch creates a versioning problem.</p>
 <p>The cleanest solution: never remove component names from the registry. Deprecate by redirecting old names to new implementations:</p>
@@ -277,7 +277,7 @@ export const appConfig: ApplicationConfig = {
   'DataTable': DataGridV2Component,     // legacy alias
 });
 </code></pre>
-<p>For breaking changes in prop shape, version the component name itself (`CardV2`) or handle transformation inside the component. The registry stays stable; the component absorbs the complexity.</p></div>
+<p>For breaking changes in prop shape, version the component name itself (<code>CardV2</code>) or handle transformation inside the component. The registry stays stable; the component absorbs the complexity.</p></div>
     </section>
     <section style="padding:80px;page-break-before:always">
       <div style="font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#15253E;font-weight:700;margin-bottom:16px">Chapter 04</div>
@@ -292,11 +292,11 @@ export const appConfig: ApplicationConfig = {
 <p>Both approaches scale poorly. A spec that grows through 20 incremental updates would transmit 20 full copies—potentially hundreds of kilobytes for what amounts to a few patch operations.</p>
 <h3>JSON Patch RFC 6902</h3>
 <p>JSON Patch defines three core operations for mutating JSON documents:</p>
-<ul><li><strong>add</strong>: Insert a value at a path (`/dashboard/widgets/3`)</li>
+<ul><li><strong>add</strong>: Insert a value at a path (<code>/dashboard/widgets/3</code>)</li>
 <li><strong>replace</strong>: Swap a value at an existing path</li>
 <li><strong>remove</strong>: Delete a value at a path</li>
 </ul>
-Each operation targets a specific JSON Pointer location. The patch `[{"op": "add", "path": "/rows/-", "value": {"id": 42, "name": "Widget"}}]` appends a single row without touching the rest of the document.
+Each operation targets a specific JSON Pointer location. The patch <code>[{"op": "add", "path": "/rows/-", "value": {"id": 42, "name": "Widget"}}]</code> appends a single row without touching the rest of the document.
 <h3>Patch-Based Agent Output</h3>
 <p>Instead of emitting complete specs, the agent streams patch operations as it generates content:</p>
 <pre><code>{"op": "add", "path": "/rows/0", "value": {"id": 1, "status": "pending"}}
@@ -308,18 +308,18 @@ Each operation targets a specific JSON Pointer location. The patch `[{"op": "add
 <p>Real streams don't arrive in neat lines. TCP chunks split mid-token. @threadplane/render handles incomplete JSON by maintaining parse state across chunks, rendering valid portions while buffering incomplete fragments.</p>
 <p>Skeleton states emerge naturally from this model. The agent can emit structural placeholders first—empty arrays, loading indicators—then fill them progressively:</p>
 <pre><code>@Component({
-  template: `<render-spec [spec]="spec()" [registry]="registry" />`,
+  template: &lt;code&gt;&lt;render-spec [spec]="spec()" [registry]="registry" /&gt;&lt;/code&gt;,
 })
 export class DashboardComponent {
-  private store = signalStateStore<DashboardSpec>({ rows: [] });
+  private store = signalStateStore&lt;DashboardSpec&gt;({ rows: [] });
   spec = this.store.state;
   registry = defineAngularRegistry({ DataTable, SkeletonRow });
-<p>constructor() {
-    this.streamPatches().subscribe(patch => this.store.applyPatch(patch));
+constructor() {
+    this.streamPatches().subscribe(patch =&gt; this.store.applyPatch(patch));
   }
 }
-</code></pre></p>
-<p>The `signalStateStore` from @threadplane/render manages immutable state updates. Each `applyPatch` call triggers fine-grained Angular signals, re-rendering only components bound to changed paths.</p>
+</code></pre>
+<p>The <code>signalStateStore</code> from @threadplane/render manages immutable state updates. Each <code>applyPatch</code> call triggers fine-grained Angular signals, re-rendering only components bound to changed paths.</p>
 <h3>Performance Characteristics</h3>
 <p>Patch-based updates are O(change), not O(spec size). Appending one row to a 500-row table touches one array slot. The differ doesn't walk the entire spec; it applies the operation directly to the target path.</p>
 <p>This matters at scale. A real-time monitoring dashboard receiving 10 updates per second would choke on full-document replacement. With patches, each update carries only the delta—typically under 200 bytes—and applies in microseconds.</p>
@@ -329,21 +329,21 @@ export class DashboardComponent {
       <div style="font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#15253E;font-weight:700;margin-bottom:16px">Chapter 05</div>
       <h2 style="font-family:'Archivo Black','Archivo',sans-serif;font-size:32px;color:#0A0A0A;margin-bottom:18px;line-height:1.15;letter-spacing:-0.01em">State Management & Computed Functions</h2>
       <div style="width:72px;height:6px;background:#FFAF00"></div>
-      <div class="chapter-body" style="margin-top:30px"><p>Static UI specs hit a wall fast. The moment you need a total that updates when line items change, or a button that disables based on form state, you're beyond what static JSON can express. Production generative UI requires computed properties and collection rendering—capabilities that @threadplane/render delivers through `signalStateStore()` and spec-level computed functions.</p>
+      <div class="chapter-body" style="margin-top:30px"><p>Static UI specs hit a wall fast. The moment you need a total that updates when line items change, or a button that disables based on form state, you're beyond what static JSON can express. Production generative UI requires computed properties and collection rendering—capabilities that @threadplane/render delivers through <code>signalStateStore()</code> and spec-level computed functions.</p>
 <h3>Agent-Managed State with signalStateStore()</h3>
-<p>`signalStateStore()` creates a reactive state container that both agents and components can manipulate. The agent initializes state through the spec, components update it via user interaction, and computed properties derive new values automatically.</p>
+<p><code>signalStateStore()</code> creates a reactive state container that both agents and components can manipulate. The agent initializes state through the spec, components update it via user interaction, and computed properties derive new values automatically.</p>
 <pre><code>import { signalStateStore } from '@threadplane/render';
-<p>const store = signalStateStore({
+const store = signalStateStore({
   items: [
     { name: 'Widget', price: 25, quantity: 2 },
     { name: 'Gadget', price: 40, quantity: 1 }
   ],
   taxRate: 0.08
-});</p>
-<p>const spec = {
+});
+const spec = {
   type: 'invoice',
   state: store,
-  subtotal: { $compute: 'items.reduce((sum, i) => sum + i.price * i.quantity, 0)' },
+  subtotal: { $compute: 'items.reduce((sum, i) =&gt; sum + i.price * i.quantity, 0)' },
   tax: { $compute: 'subtotal * taxRate' },
   total: { $compute: 'subtotal + tax' },
   lineItems: {
@@ -353,19 +353,19 @@ export class DashboardComponent {
     amount: { $compute: '$item.price * $item.quantity' }
   }
 };
-</code></pre></p>
-<p>The store exposes signals. When `items` changes—whether from agent streaming or user input—`subtotal`, `tax`, and `total` recompute. No imperative wiring required.</p>
+</code></pre>
+<p>The store exposes signals. When <code>items</code> changes—whether from agent streaming or user input—<code>subtotal</code>, <code>tax</code>, and <code>total</code> recompute. No imperative wiring required.</p>
 <h3>Computed Properties: Declarative Derived State</h3>
-<p>Computed properties use the `$compute` key to define expressions evaluated at render time. These expressions access the state store's current values and can reference other computed properties, enabling dependency chains.</p>
+<p>Computed properties use the <code>$compute</code> key to define expressions evaluated at render time. These expressions access the state store's current values and can reference other computed properties, enabling dependency chains.</p>
 <p>The expression syntax is intentionally constrained JavaScript. It supports property access, arithmetic, array methods, and ternary operators—enough for UI logic, not enough to become a security liability. The renderer evaluates expressions in a sandboxed context with access only to the state store and iteration variables.</p>
 <h3>Repeat Loops for Collections</h3>
-<p>The `$repeat` directive iterates over arrays in state, rendering a component instance for each element. Within the repeated block, `$item` references the current element and `$index` provides the iteration index. This handles the common case of rendering lists, tables, and card grids without requiring the agent to enumerate every instance.</p>
+<p>The <code>$repeat</code> directive iterates over arrays in state, rendering a component instance for each element. Within the repeated block, <code>$item</code> references the current element and <code>$index</code> provides the iteration index. This handles the common case of rendering lists, tables, and card grids without requiring the agent to enumerate every instance.</p>
 <h3>Drawing the Line: Spec Logic vs. Component Logic</h3>
 <p>Computed functions handle derived *data*. Components handle derived *behavior*. If you're calculating a display value—totals, formatted dates, conditional text—that belongs in the spec. If you're managing focus, coordinating animations, or handling complex validation workflows, that belongs in the component.</p>
 <p>The heuristic: if an agent could reasonably want to change the logic, put it in the spec. If the logic is intrinsic to how the component works, keep it in the component.</p>
 <h3>Testing Computed Behavior</h3>
 <p>Test computed properties by manipulating the state store and asserting against the rendered output:</p>
-<pre><code>it('should recompute total when items change', () => {
+<pre><code>it('should recompute total when items change', () =&gt; {
   const store = signalStateStore({ items: [{ price: 10, quantity: 1 }], taxRate: 0.1 });
   const spec = { type: 'invoice', state: store, total: { $compute: 'items[0].price * items[0].quantity * (1 + taxRate)' } };
   
@@ -375,7 +375,7 @@ export class DashboardComponent {
   
   expect(fixture.nativeElement.textContent).toContain('11'); // 10 * 1.1
   
-  store.update(s => ({ ...s, items: [{ price: 20, quantity: 2 }] }));
+  store.update(s =&gt; ({ ...s, items: [{ price: 20, quantity: 2 }] }));
   fixture.detectChanges();
   
   expect(fixture.nativeElement.textContent).toContain('44'); // 40 * 1.1

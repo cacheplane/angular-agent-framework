@@ -73,9 +73,9 @@
       <div class="chapter-body" style="margin-top:30px"><p>You've built the backend. The LangGraph agent handles multi-step reasoning, calls tools, maintains conversation memory, and streams responses token by token. You've tested it with curl, watched it work in LangGraph Studio, maybe even built a quick React prototype. The agent architecture is solid.</p>
 <p>Then you integrate it with your Angular application.</p>
 <h3>Zone Pollution Is Architectural, Not Configurable</h3>
-<p>The first symptom appears quickly: performance degradation during streaming. Every SSE event triggers zone.js change detection. A typical LLM response generates hundreds of token events over several seconds. Each event runs through `Zone.wrap()`, schedules a microtask, and triggers a full change detection cycle. Your application becomes unresponsive while the agent is responding.</p>
-<p>The instinctive fix—running the EventSource outside the zone—creates new problems. Updates don't reach templates. Manual `ChangeDetectorRef.detectChanges()` calls scatter through your codebase. You're now maintaining zone-aware and zone-unaware code paths for the same data flow.</p>
-<p>This isn't a configuration problem you can solve with `NgZone.runOutsideAngular()`. It's a fundamental mismatch between SSE's event model and Angular's zone-based change detection architecture.</p>
+<p>The first symptom appears quickly: performance degradation during streaming. Every SSE event triggers zone.js change detection. A typical LLM response generates hundreds of token events over several seconds. Each event runs through <code>Zone.wrap()</code>, schedules a microtask, and triggers a full change detection cycle. Your application becomes unresponsive while the agent is responding.</p>
+<p>The instinctive fix—running the EventSource outside the zone—creates new problems. Updates don't reach templates. Manual <code>ChangeDetectorRef.detectChanges()</code> calls scatter through your codebase. You're now maintaining zone-aware and zone-unaware code paths for the same data flow.</p>
+<p>This isn't a configuration problem you can solve with <code>NgZone.runOutsideAngular()</code>. It's a fundamental mismatch between SSE's event model and Angular's zone-based change detection architecture.</p>
 <h3>Synchronous Templates, Asynchronous Tokens</h3>
 <p>Angular's template binding model expects synchronous state reads. Signals improved this, but the core assumption remains: when a template renders, it reads current values and completes. LLM token streams don't work this way. Tokens arrive continuously, accumulate into partial content, and may include control events (tool calls, interrupts) interleaved with text.</p>
 <p>The naive implementation—updating a signal on every token—violates Angular's expectation of stable reads during change detection. You get ExpressionChangedAfterItHasBeenChecked errors, visual flickering, or worse: dropped tokens during rapid updates.</p>
@@ -83,7 +83,7 @@
 <h3>Push vs. Pull: The Reactivity Mismatch</h3>
 <p>RxJS Observables are push-based. Angular signals are pull-based. LLM streams are push-based with ordering guarantees. Bridging these models requires careful coordination.</p>
 <p>Your REST-era patterns don't transfer. An HTTP response completes atomically; you handle loading, success, or error states. A streaming agent response is loading *and* partially successful *and* potentially errored, simultaneously. Tool calls arrive mid-stream. Human interrupts pause processing indefinitely. Partial content is valid content.</p>
-<p>The standard `toSignal()` approach gives you the latest emission but loses the accumulated message history. Building that accumulation logic—correctly handling message append vs. replace semantics, tool call lifecycle states, and interrupt coordination—requires understanding LangGraph's event protocol, not just Angular's reactivity model.</p>
+<p>The standard <code>toSignal()</code> approach gives you the latest emission but loses the accumulated message history. Building that accumulation logic—correctly handling message append vs. replace semantics, tool call lifecycle states, and interrupt coordination—requires understanding LangGraph's event protocol, not just Angular's reactivity model.</p>
 <h3>The Real Cost</h3>
 <p>Teams solve these problems. They build zone-patch utilities, token accumulator services, retry-with-backoff wrappers, and error boundary components. They write tests for partial stream failure, reconnection logic, and concurrent stream management.</p>
 <p>Then the next project starts, and they build it again. Or they copy the code, discover edge cases the original didn't handle, and fork into divergent implementations.</p>
@@ -93,48 +93,48 @@
       <div style="font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#15253E;font-weight:700;margin-bottom:16px">Chapter 02</div>
       <h2 style="font-family:'Archivo Black','Archivo',sans-serif;font-size:32px;color:#0A0A0A;margin-bottom:18px;line-height:1.15;letter-spacing:-0.01em">The agent() API</h2>
       <div style="width:72px;height:6px;background:#FFAF00"></div>
-      <div class="chapter-body" style="margin-top:30px"><p>The `agent()` function is the primary interface for streaming LangGraph agents into Angular components. It returns a `LangGraphAgent` instance containing reactive signals that update automatically as the agent stream progresses. No subscriptions. No cleanup. No zone gymnastics.</p>
+      <div class="chapter-body" style="margin-top:30px"><p>The <code>agent()</code> function is the primary interface for streaming LangGraph agents into Angular components. It returns a <code>LangGraphAgent</code> instance containing reactive signals that update automatically as the agent stream progresses. No subscriptions. No cleanup. No zone gymnastics.</p>
 <h3>Signal Architecture</h3>
-<p>Calling `agent()` returns an object with typed signals covering the full agent lifecycle:</p>
-<ul><li><strong>`messages()`</strong> — The accumulated message history as `Message[]`, updated with each stream chunk</li>
-<li><strong>`isLoading()`</strong> — Boolean signal indicating active stream processing</li>
-<li><strong>`error()`</strong> — The current error state, or `undefined` when healthy</li>
-<li><strong>`interrupt()`</strong> — `AgentInterrupt | undefined`, populated when the agent yields control for human input</li>
-<li><strong>`status()`</strong> — Runtime lifecycle state: `'idle'` | `'running'` | `'error'`; use `isLoading()` for loading UI</li>
-<li><strong>`toolCalls()`</strong> — Active tool invocations extracted from the message stream</li>
-<li><strong>`state()`</strong> — The current agent state object from the LangGraph thread</li>
+<p>Calling <code>agent()</code> returns an object with typed signals covering the full agent lifecycle:</p>
+<ul><li><strong><code>messages()</code></strong> — The accumulated message history as <code>Message[]</code>, updated with each stream chunk</li>
+<li><strong><code>isLoading()</code></strong> — Boolean signal indicating active stream processing</li>
+<li><strong><code>error()</code></strong> — The current error state, or <code>undefined</code> when healthy</li>
+<li><strong><code>interrupt()</code></strong> — <code>AgentInterrupt | undefined</code>, populated when the agent yields control for human input</li>
+<li><strong><code>status()</code></strong> — Runtime lifecycle state: <code>'idle'</code> | <code>'running'</code> | <code>'error'</code>; use <code>isLoading()</code> for loading UI</li>
+<li><strong><code>toolCalls()</code></strong> — Active tool invocations extracted from the message stream</li>
+<li><strong><code>state()</code></strong> — The current agent state object from the LangGraph thread</li>
 </ul>
-For cases requiring access to the raw LangGraph protocol, additional signals like `langGraphMessages()` expose the unprocessed message format.
+For cases requiring access to the raw LangGraph protocol, additional signals like <code>langGraphMessages()</code> expose the unprocessed message format.
 <h3>Provider Configuration</h3>
-<p>Before `agent()` can connect, configure the transport layer with `provideAgent()`:</p>
+<p>Before <code>agent()</code> can connect, configure the transport layer with <code>provideAgent()</code>:</p>
 <pre><code>provideAgent({
   transport: new FetchStreamTransport()
 })
 </code></pre>
-<p>This registers the stream transport globally. Individual `agent()` calls then specify their endpoint:</p>
+<p>This registers the stream transport globally. Individual <code>agent()</code> calls then specify their endpoint:</p>
 <pre><code>readonly chat = agent({
   assistantId: 'support_agent',
   apiUrl: 'https://api.example.com/langgraph',
   threadId: this.threadId,
-  onThreadId: id => this.threadId.set(id)
+  onThreadId: id =&gt; this.threadId.set(id)
 });
 </code></pre>
-<p>The `assistantId` identifies the deployed agent. The `apiUrl` points to your LangGraph API endpoint. Thread management is handled through the `threadId` input and `onThreadId` callback.</p>
+<p>The <code>assistantId</code> identifies the deployed agent. The <code>apiUrl</code> points to your LangGraph API endpoint. Thread management is handled through the <code>threadId</code> input and <code>onThreadId</code> callback.</p>
 <h3>Why Signals Work with OnPush</h3>
-<p>Angular's `OnPush` change detection strategy only triggers updates when input references change or when signals read in the template emit new values. Because `agent()` returns signals—not observables requiring `async` pipes—the framework detects changes automatically when stream chunks arrive.</p>
-<p>No `markForCheck()`. No `ChangeDetectorRef` injection. The signals integrate with Angular's reactivity system at the primitive level.</p>
+<p>Angular's <code>OnPush</code> change detection strategy only triggers updates when input references change or when signals read in the template emit new values. Because <code>agent()</code> returns signals—not observables requiring <code>async</code> pipes—the framework detects changes automatically when stream chunks arrive.</p>
+<p>No <code>markForCheck()</code>. No <code>ChangeDetectorRef</code> injection. The signals integrate with Angular's reactivity system at the primitive level.</p>
 <h3>Template Binding</h3>
 <p>Bind agent state directly in templates without ceremony:</p>
 <pre><code>@Component({
   template: `
     @if (chat.isLoading()) {
-      <loading-indicator />
+      &lt;loading-indicator /&gt;
     }
     @for (message of chat.messages(); track message.id) {
-      <message-bubble [message]="message" />
+      &lt;message-bubble [message]="message" /&gt;
     }
     @if (chat.error(); as error) {
-      <error-banner [error]="error" />
+      &lt;error-banner [error]="error" /&gt;
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -145,15 +145,15 @@ export class ChatComponent {
 </code></pre>
 <p>Ten lines. The stream connects, messages accumulate, loading state toggles, errors surface—all reactive, all type-safe.</p>
 <h3>The Alternative</h3>
-<p>Without `agent()`, the equivalent implementation requires manual stream handling:</p>
+<p>Without <code>agent()</code>, the equivalent implementation requires manual stream handling:</p>
 <pre><code>// Manual approach: ~60 lines of subscription management,
 // token accumulation, error handling, cleanup logic,
 // and change detection triggers
 </code></pre>
-<p>With `agent()`:</p>
+<p>With <code>agent()</code>:</p>
 <pre><code>readonly chat = agent({ assistantId: 'chat_agent' });
 </code></pre>
-<p>The Angular signals-based design eliminates the subscription lifecycle entirely. When the component destroys, the signals become inert. No `takeUntilDestroyed()`. No `ngOnDestroy`. The framework handles it.</p></div>
+<p>The Angular signals-based design eliminates the subscription lifecycle entirely. When the component destroys, the signals become inert. No <code>takeUntilDestroyed()</code>. No <code>ngOnDestroy</code>. The framework handles it.</p></div>
     </section>
     <section style="padding:80px;page-break-before:always">
       <div style="font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#15253E;font-weight:700;margin-bottom:16px">Chapter 03</div>
@@ -161,23 +161,23 @@ export class ChatComponent {
       <div style="width:72px;height:6px;background:#FFAF00"></div>
       <div class="chapter-body" style="margin-top:30px"><p>Production agent applications are stateful. Users expect to close a browser tab, return hours later, and resume exactly where they left off. This requires tight coordination between LangGraph's checkpoint system and your Angular frontend's thread management.</p>
 <h3>The Thread Lifecycle</h3>
-<p>LangGraph's `MemorySaver` backend persists conversation state against a `threadId`. Every message, tool call, and state mutation is checkpointed. The frontend's job is simple: track which `threadId` the user is working with and ensure it survives page reloads.</p>
-<p>The `agent()` surface exposes this through two mechanisms. First, `threadId` accepts a signal containing the current thread identifier—pass `undefined` to create a new conversation. Second, `onThreadId` fires when LangGraph assigns an ID to a newly created thread.</p>
+<p>LangGraph's <code>MemorySaver</code> backend persists conversation state against a <code>threadId</code>. Every message, tool call, and state mutation is checkpointed. The frontend's job is simple: track which <code>threadId</code> the user is working with and ensure it survives page reloads.</p>
+<p>The <code>agent()</code> surface exposes this through two mechanisms. First, <code>threadId</code> accepts a signal containing the current thread identifier—pass <code>undefined</code> to create a new conversation. Second, <code>onThreadId</code> fires when LangGraph assigns an ID to a newly created thread.</p>
 <pre><code>@Component({
-  template: `<chat [agent]="chat" />`,
+  template: &lt;code&gt;&lt;chat [agent]="chat" /&gt;&lt;/code&gt;,
   providers: [provideAgent()]
 })
 export class ChatPage {
   private readonly storage = inject(ThreadStorageService);
   
-  readonly threadId = signal<string | undefined>(
+  readonly threadId = signal&lt;string | undefined&gt;(
     this.storage.getActiveThreadId()
   );
   
   readonly chat = agent({
     assistantId: 'support_agent',
     threadId: this.threadId,
-    onThreadId: id => {
+    onThreadId: id =&gt; {
       this.storage.setActiveThreadId(id);
       this.storage.addToThreadList(id);
       this.threadId.set(id);
@@ -185,28 +185,28 @@ export class ChatPage {
   });
 }
 </code></pre>
-<p>When `threadId` is `undefined`, the first `submit()` call triggers thread creation on the backend. LangGraph responds with the assigned ID, which flows through `onThreadId`. You persist it, update your signal, and subsequent messages automatically route to the correct checkpoint.</p>
+<p>When <code>threadId</code> is <code>undefined</code>, the first <code>submit()</code> call triggers thread creation on the backend. LangGraph responds with the assigned ID, which flows through <code>onThreadId</code>. You persist it, update your signal, and subsequent messages automatically route to the correct checkpoint.</p>
 <h3>Restoring State on Mount</h3>
-<p>When a user returns with an existing `threadId`, LangGraph's checkpoint system handles restoration automatically. The backend loads the conversation history from `MemorySaver`, and the frontend receives the full message stream during the initial connection handshake.</p>
-<p>This means your `messages()` signal populates with historical content without additional API calls. The `langGraphCheckpoint()` signal exposes metadata about the restored state—useful for debugging or displaying "last active" timestamps.</p>
+<p>When a user returns with an existing <code>threadId</code>, LangGraph's checkpoint system handles restoration automatically. The backend loads the conversation history from <code>MemorySaver</code>, and the frontend receives the full message stream during the initial connection handshake.</p>
+<p>This means your <code>messages()</code> signal populates with historical content without additional API calls. The <code>langGraphCheckpoint()</code> signal exposes metadata about the restored state—useful for debugging or displaying "last active" timestamps.</p>
 <h3>Building a Thread List</h3>
 <p>Most applications need more than single-thread persistence. Users expect to manage multiple conversations:</p>
 <pre><code>@Component({
   template: `
-    <aside>
+    &lt;aside&gt;
       @for (id of threadIds(); track id) {
-        <button (click)="switchThread(id)" [class.active]="id === threadId()">
+        &lt;button (click)="switchThread(id)" [class.active]="id === threadId()"&gt;
           {{ id | slice:0:8 }}...
-        </button>
+        &lt;/button&gt;
       }
-      <button (click)="newThread()">New Conversation</button>
-    </aside>
-    <chat [agent]="chat" />
+      &lt;button (click)="newThread()"&gt;New Conversation&lt;/button&gt;
+    &lt;/aside&gt;
+    &lt;chat [agent]="chat" /&gt;
   `
 })
 export class MultiThreadChat {
-  readonly threadIds = signal<string[]>(this.storage.getAllThreadIds());
-  readonly threadId = signal<string | undefined>(this.storage.getActiveThreadId());
+  readonly threadIds = signal&lt;string[]&gt;(this.storage.getAllThreadIds());
+  readonly threadId = signal&lt;string | undefined&gt;(this.storage.getActiveThreadId());
   
   switchThread(id: string) {
     this.threadId.set(id);
@@ -218,33 +218,33 @@ export class MultiThreadChat {
   }
 }
 </code></pre>
-<p>Switching threads is a signal update. The `agent()` reactive system handles reconnection, state restoration, and UI synchronization.</p>
+<p>Switching threads is a signal update. The <code>agent()</code> reactive system handles reconnection, state restoration, and UI synchronization.</p>
 <h3>Production Considerations</h3>
-<p>Server-side thread expiration creates a failure mode your UI must handle. `MemorySaver` configurations often include TTLs—threads expire after periods of inactivity. When a user selects a stale `threadId`, the backend returns an error rather than conversation history.</p>
-<p>Watch the `error()` signal for thread-not-found conditions. Your recovery logic should remove the invalid ID from local storage, notify the user, and optionally create a fresh thread automatically.</p>
+<p>Server-side thread expiration creates a failure mode your UI must handle. <code>MemorySaver</code> configurations often include TTLs—threads expire after periods of inactivity. When a user selects a stale <code>threadId</code>, the backend returns an error rather than conversation history.</p>
+<p>Watch the <code>error()</code> signal for thread-not-found conditions. Your recovery logic should remove the invalid ID from local storage, notify the user, and optionally create a fresh thread automatically.</p>
 <p><strong>Production checklist:</strong></p>
 <ul><li>Does your thread list handle deleted or expired server-side threads gracefully?</li>
 <li>Are you cleaning up localStorage when threads fail to load?</li>
 <li>Do you display meaningful state when restoration is in progress versus complete?</li>
 <li>Have you considered thread metadata (titles, timestamps) beyond raw IDs?</li>
 </ul>
-The `MemorySaver` backend and Angular's signal-based reactivity create a clean separation of concerns. The backend owns durability; the frontend owns navigation. Keep that boundary crisp.</div>
+The <code>MemorySaver</code> backend and Angular's signal-based reactivity create a clean separation of concerns. The backend owns durability; the frontend owns navigation. Keep that boundary crisp.</div>
     </section>
     <section style="padding:80px;page-break-before:always">
       <div style="font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#15253E;font-weight:700;margin-bottom:16px">Chapter 04</div>
       <h2 style="font-family:'Archivo Black','Archivo',sans-serif;font-size:32px;color:#0A0A0A;margin-bottom:18px;line-height:1.15;letter-spacing:-0.01em">Interrupt & Approval Flows</h2>
       <div style="width:72px;height:6px;background:#FFAF00"></div>
-      <div class="chapter-body" style="margin-top:30px"><p>Agents that modify external systems—sending emails, executing database writes, triggering deployments—require human oversight. Autonomous execution without checkpoints creates liability, compliance violations, and irreversible mistakes. LangGraph's `interrupt()` primitive solves this at the graph level, pausing execution mid-stream until a human provides explicit authorization. `@threadplane/langgraph` surfaces this as a reactive signal, making approval workflows native to Angular's change detection without polling, websockets, or custom resume endpoints.</p>
+      <div class="chapter-body" style="margin-top:30px"><p>Agents that modify external systems—sending emails, executing database writes, triggering deployments—require human oversight. Autonomous execution without checkpoints creates liability, compliance violations, and irreversible mistakes. LangGraph's <code>interrupt()</code> primitive solves this at the graph level, pausing execution mid-stream until a human provides explicit authorization. <code>@threadplane/langgraph</code> surfaces this as a reactive signal, making approval workflows native to Angular's change detection without polling, websockets, or custom resume endpoints.</p>
 <h3>How LangGraph Interrupt Works</h3>
-<p>When a LangGraph node calls `interrupt()`, the graph halts execution and persists its current state to the configured checkpointer. The interrupt payload—containing context about the pending action—is sent to the client as part of the stream. Execution remains suspended until the client sends a resume command with one of three directives: approve the action as-is, provide edited parameters, or cancel entirely.</p>
+<p>When a LangGraph node calls <code>interrupt()</code>, the graph halts execution and persists its current state to the configured checkpointer. The interrupt payload—containing context about the pending action—is sent to the client as part of the stream. Execution remains suspended until the client sends a resume command with one of three directives: approve the action as-is, provide edited parameters, or cancel entirely.</p>
 <p>The resume payload structure is straightforward:</p>
 <pre><code>{ action: 'approve' }                    // Proceed with original parameters
 { action: 'edit', args: { ... } }        // Proceed with modified parameters  
 { action: 'cancel', reason?: string }    // Abort the pending action
 </code></pre>
-<p>LangGraph's `Command.RESUME` handles the routing. The graph receives the payload and either continues execution, re-executes with new arguments, or terminates gracefully.</p>
+<p>LangGraph's <code>Command.RESUME</code> handles the routing. The graph receives the payload and either continues execution, re-executes with new arguments, or terminates gracefully.</p>
 <h3>The interrupt() Signal</h3>
-<p>The agent surface exposes `interrupt()` as a signal that transitions from `undefined` to an `AgentInterrupt` object when the graph pauses:</p>
+<p>The agent surface exposes <code>interrupt()</code> as a signal that transitions from <code>undefined</code> to an <code>AgentInterrupt</code> object when the graph pauses:</p>
 <pre><code>interface AgentInterrupt {
   id: string;
   type: string;
@@ -252,14 +252,14 @@ The `MemorySaver` backend and Angular's signal-based reactivity create a clean s
   timestamp: number;
 }
 </code></pre>
-<p>This signal integrates directly with Angular's reactivity model. Components re-render automatically when an interrupt arrives—no subscription management, no manual change detection triggers. When the user responds and execution resumes, the signal returns to `undefined`.</p>
+<p>This signal integrates directly with Angular's reactivity model. Components re-render automatically when an interrupt arrives—no subscription management, no manual change detection triggers. When the user responds and execution resumes, the signal returns to <code>undefined</code>.</p>
 <h3>Prebuilt Approval UI</h3>
-<p>`@threadplane/chat` provides `<chat-interrupt-panel>`, a ready-to-use approval interface:</p>
+<p><code>@threadplane/chat</code> provides <code>&lt;chat-interrupt-panel&gt;</code>, a ready-to-use approval interface:</p>
 <pre><code>@Component({
   selector: 'app-agent',
   template: `
-    <chat [agent]="chat" />
-    <chat-interrupt-panel [agent]="chat" />
+    &lt;chat [agent]="chat" /&gt;
+    &lt;chat-interrupt-panel [agent]="chat" /&gt;
   `
 })
 export class AgentComponent {
@@ -270,11 +270,11 @@ export class AgentComponent {
 <pre><code>@Component({
   template: `
     @if (chat.interrupt(); as int) {
-      <div class="approval-modal">
-        <p>{{ int.payload.description }}</p>
-        <button (click)="chat.interrupt({ action: 'approve' })">Approve</button>
-        <button (click)="chat.interrupt({ action: 'cancel' })">Cancel</button>
-      </div>
+      &lt;div class="approval-modal"&gt;
+        {{ int.payload.description }}
+        &lt;button (click)="chat.interrupt({ action: 'approve' })"&gt;Approve&lt;/button&gt;
+        &lt;button (click)="chat.interrupt({ action: 'cancel' })"&gt;Cancel&lt;/button&gt;
+      &lt;/div&gt;
     }
   `
 })
@@ -282,13 +282,13 @@ export class CustomApprovalComponent {
   readonly chat = agent({ assistantId: 'ops_agent' });
 }
 </code></pre>
-<p>Calling `interrupt()` with a resume payload sends the command and clears the signal.</p>
+<p>Calling <code>interrupt()</code> with a resume payload sends the command and clears the signal.</p>
 <h3>Edge Cases</h3>
-<p><strong>Navigation during interrupt</strong>: LangGraph persists interrupt state server-side. If the user navigates away, the interrupt remains active. Re-initializing the agent with the same `threadId` restores the pending interrupt automatically.</p>
+<p><strong>Navigation during interrupt</strong>: LangGraph persists interrupt state server-side. If the user navigates away, the interrupt remains active. Re-initializing the agent with the same <code>threadId</code> restores the pending interrupt automatically.</p>
 <p><strong>Session expiration</strong>: Checkpointed state survives session boundaries. The interrupt signal repopulates on reconnection, though your application should handle re-authentication before allowing resume actions.</p>
 <p><strong>Cancel with partial state</strong>: Cancellation doesn't roll back prior node executions. If three nodes completed before the interrupt, those effects persist. Design graphs with compensation logic for actions that require atomicity, or structure interrupts to occur before side effects rather than after.</p>
-<p><strong>Multiple pending interrupts</strong>: LangGraph supports sequential interrupts within a single run. The `interrupt()` signal reflects the current pending interrupt; each resume advances to the next pause point or completion.</p>
-<p>Human-in-the-loop isn't optional for production agents. `@threadplane/langgraph` makes it reactive, type-safe, and compatible with Angular's rendering model—approval flows become UI state, not infrastructure problems.</p></div>
+<p><strong>Multiple pending interrupts</strong>: LangGraph supports sequential interrupts within a single run. The <code>interrupt()</code> signal reflects the current pending interrupt; each resume advances to the next pause point or completion.</p>
+<p>Human-in-the-loop isn't optional for production agents. <code>@threadplane/langgraph</code> makes it reactive, type-safe, and compatible with Angular's rendering model—approval flows become UI state, not infrastructure problems.</p></div>
     </section>
     <section style="padding:80px;page-break-before:always">
       <div style="font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#15253E;font-weight:700;margin-bottom:16px">Chapter 05</div>
@@ -296,19 +296,19 @@ export class CustomApprovalComponent {
       <div style="width:72px;height:6px;background:#FFAF00"></div>
       <div class="chapter-body" style="margin-top:30px"><p>Most Angular LLM integrations handle the basics: send a message, stream tokens, render a response. The moment you need tool calls, subgraphs, or multi-agent coordination, you're writing raw SSE parsers and manually reconciling state. @threadplane/langgraph exists specifically to avoid that cliff—every LangGraph feature surfaces through the same reactive signals your components already consume.</p>
 <h3>Tool Call Streaming</h3>
-<p>LangGraph emits tool invocations as structured events mid-stream. Rather than parsing `tool_call` chunks yourself, the agent ref exposes them directly:</p>
+<p>LangGraph emits tool invocations as structured events mid-stream. Rather than parsing <code>tool_call</code> chunks yourself, the agent ref exposes them directly:</p>
 <pre><code>readonly chat = agent({
   assistantId: 'research_agent',
   apiUrl: 'https://api.smith.langchain.com'
 });
-<p>// In your template
+// In your template
 @for (call of chat.toolCalls(); track call.id) {
-  <chat-tool-call-card [toolCall]="call" />
+  &lt;chat-tool-call-card [toolCall]="call" /&gt;
 }
-</code></pre></p>
-<p>The `toolCalls()` signal updates as invocations arrive, complete as the agent processes results, and clear when the turn ends. No manual event filtering. Tool call arguments stream incrementally—useful for showing users what data the agent is requesting before results return.</p>
+</code></pre>
+<p>The <code>toolCalls()</code> signal updates as invocations arrive, complete as the agent processes results, and clear when the turn ends. No manual event filtering. Tool call arguments stream incrementally—useful for showing users what data the agent is requesting before results return.</p>
 <h3>Subgraph Support</h3>
-<p>Nested graphs emit events with their own namespaces. @threadplane/langgraph flattens these into the primary stream while preserving hierarchy through the `subagents()` signal:</p>
+<p>Nested graphs emit events with their own namespaces. @threadplane/langgraph flattens these into the primary stream while preserving hierarchy through the <code>subagents()</code> signal:</p>
 <pre><code>// Parent agent spawns child graphs for specialized tasks
 const activeSubagents = this.chat.subagents();
 // Returns SubagentInfo[] with id, name, status for each active subgraph
@@ -322,22 +322,22 @@ this.chat.interrupt({
   action: 'rewind' 
 });
 </code></pre>
-<p>The `langGraphCheckpoints()` signal exposes available restore points. After rewinding, `messages()` reflects the restored state and streaming continues from that node. This enables "undo" flows, A/B comparison of agent paths, and debugging without replaying the entire conversation.</p>
+<p>The <code>langGraphCheckpoints()</code> signal exposes available restore points. After rewinding, <code>messages()</code> reflects the restored state and streaming continues from that node. This enables "undo" flows, A/B comparison of agent paths, and debugging without replaying the entire conversation.</p>
 <h3>DeepAgent Multi-Agent Coordination</h3>
 <p>DeepAgent orchestrates multiple specialized agents through a supervisor pattern. At the stream level, this means interleaved events from distinct agents with coordination metadata. The agent ref normalizes this:</p>
 <pre><code>// Each agent's output tagged with origin
 const messages = this.chat.messages();
 // Message.metadata.agent identifies the source agent
-<p>// Coordination state available through
+// Coordination state available through
 const graphState = this.chat.langGraphState();
 // Includes active_agent, delegation_history, shared_context
-</code></pre></p>
+</code></pre>
 <p>Your UI can render agent-specific styling, show delegation chains, or visualize the coordination graph—all from signals that update as events arrive.</p>
 <h3>The onCustomEvent Hook</h3>
-<p>Agents emit structured events beyond messages: progress indicators, analytics payloads, generative UI specs. The `onCustomEvent` callback captures these without polluting the message stream:</p>
+<p>Agents emit structured events beyond messages: progress indicators, analytics payloads, generative UI specs. The <code>onCustomEvent</code> callback captures these without polluting the message stream:</p>
 <pre><code>readonly chat = agent({
   assistantId: 'ui_agent',
-  onCustomEvent: (event) => {
+  onCustomEvent: (event) =&gt; {
     if (event.type === 'render_component') {
       this.dynamicUI.set(event.payload);
     }
@@ -347,21 +347,21 @@ const graphState = this.chat.langGraphState();
 <p>This separates concerns cleanly: messages render in the chat, custom events drive application-specific behavior.</p>
 <h3>Why Full Coverage Matters</h3>
 <p>The pattern we've seen repeatedly: teams adopt a library for basic chat, then bypass it entirely when requirements expand. They end up maintaining parallel implementations—the library for simple flows, raw SSE handling for everything else. That's two mental models, two bug surfaces, two upgrade paths.</p>
-<p>Full feature coverage eliminates that bifurcation. Tool calls, subgraphs, time travel, and multi-agent coordination all flow through the same `agent()` call. When LangGraph adds capabilities, they surface through existing signals rather than requiring new integration code. Your components stay declarative. Your state stays reactive. The complexity lives in the library, not your application.</p></div>
+<p>Full feature coverage eliminates that bifurcation. Tool calls, subgraphs, time travel, and multi-agent coordination all flow through the same <code>agent()</code> call. When LangGraph adds capabilities, they surface through existing signals rather than requiring new integration code. Your components stay declarative. Your state stays reactive. The complexity lives in the library, not your application.</p></div>
     </section>
     <section style="padding:80px;page-break-before:always">
       <div style="font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#15253E;font-weight:700;margin-bottom:16px">Chapter 06</div>
       <h2 style="font-family:'Archivo Black','Archivo',sans-serif;font-size:32px;color:#0A0A0A;margin-bottom:18px;line-height:1.15;letter-spacing:-0.01em">Deterministic Testing</h2>
       <div style="width:72px;height:6px;background:#FFAF00"></div>
       <div class="chapter-body" style="margin-top:30px"><p>Agent UIs are notoriously difficult to test. Real LLM calls introduce latency measured in seconds, non-deterministic outputs, rate limits, and network dependencies that make CI pipelines slow and flaky. A test that passes locally might fail in CI because the model returned a slightly different response, or the API throttled your request, or the stream took longer than your timeout.</p>
-<p>The solution is deterministic mocking at the transport layer. Threadplane provides two complementary approaches: `MockAgentTransport` for scripting realistic SSE event sequences, and `mockLangGraphAgent()` for direct signal manipulation when you need fine-grained control.</p>
+<p>The solution is deterministic mocking at the transport layer. Threadplane provides two complementary approaches: <code>MockAgentTransport</code> for scripting realistic SSE event sequences, and <code>mockLangGraphAgent()</code> for direct signal manipulation when you need fine-grained control.</p>
 <h3>MockAgentTransport: Scripted Event Sequences</h3>
-<p>`MockAgentTransport` replaces `FetchStreamTransport` in tests, emitting a predetermined sequence of SSE events without any network calls. You script exactly what the agent receives—message chunks, tool calls, interrupts, errors—and the transport replays them synchronously or with configurable delays.</p>
+<p><code>MockAgentTransport</code> replaces <code>FetchStreamTransport</code> in tests, emitting a predetermined sequence of SSE events without any network calls. You script exactly what the agent receives—message chunks, tool calls, interrupts, errors—and the transport replays them synchronously or with configurable delays.</p>
 <pre><code>import { TestBed } from '@angular/core/testing';
 import { MockAgentTransport, provideAgent } from '@threadplane/langgraph';
-<p>describe('ChatComponent', () => {
-  let transport: MockAgentTransport;</p>
-<p>beforeEach(() => {
+describe('ChatComponent', () =&gt; {
+  let transport: MockAgentTransport;
+beforeEach(() =&gt; {
     transport = new MockAgentTransport();
     TestBed.configureTestingModule({
       imports: [ChatComponent],
@@ -369,16 +369,16 @@ import { MockAgentTransport, provideAgent } from '@threadplane/langgraph';
     });
   });
 });
-</code></pre></p>
+</code></pre>
 <p>This setup runs entirely offline. No HTTP interceptors, no mock servers, no environment configuration. The transport is synchronous by default, meaning your test assertions execute immediately after triggering a submit.</p>
 <h3>Testing Agent States</h3>
-<p>Every agent state your UI handles needs a corresponding test. `MockAgentTransport` lets you script each scenario explicitly:</p>
-<p><strong>Streaming in progress</strong>: Emit partial message events without a completion event. Assert that `isLoading()` returns true and the message list shows the partial content.</p>
-<p><strong>Stream complete</strong>: Emit the full event sequence including the completion marker. Assert that `isLoading()` returns false and messages contain the final content.</p>
-<p><strong>Interrupt pending</strong>: Script an interrupt event mid-stream. Assert that `interrupt()` returns the interrupt payload and your interrupt panel renders the expected options.</p>
-<p><strong>Error state</strong>: Emit an error event. Assert that `error()` contains the error details and your error UI appears.</p>
+<p>Every agent state your UI handles needs a corresponding test. <code>MockAgentTransport</code> lets you script each scenario explicitly:</p>
+<p><strong>Streaming in progress</strong>: Emit partial message events without a completion event. Assert that <code>isLoading()</code> returns true and the message list shows the partial content.</p>
+<p><strong>Stream complete</strong>: Emit the full event sequence including the completion marker. Assert that <code>isLoading()</code> returns false and messages contain the final content.</p>
+<p><strong>Interrupt pending</strong>: Script an interrupt event mid-stream. Assert that <code>interrupt()</code> returns the interrupt payload and your interrupt panel renders the expected options.</p>
+<p><strong>Error state</strong>: Emit an error event. Assert that <code>error()</code> contains the error details and your error UI appears.</p>
 <h3>Direct Signal Control with mockLangGraphAgent</h3>
-<p>When testing component rendering in isolation—without exercising the transport layer—use `mockLangGraphAgent()` to create an agent instance with directly controllable signals:</p>
+<p>When testing component rendering in isolation—without exercising the transport layer—use <code>mockLangGraphAgent()</code> to create an agent instance with directly controllable signals:</p>
 <pre><code>const mockAgent = mockLangGraphAgent({
   messages: signal([{ role: 'assistant', content: 'Test response' }]),
   status: signal('complete'),
@@ -387,7 +387,7 @@ import { MockAgentTransport, provideAgent } from '@threadplane/langgraph';
 </code></pre>
 <p>Pass this mock to components that accept an agent input. You control exactly what signals return, making it trivial to test tool call rendering, generative UI output, and edge cases like empty states or malformed data.</p>
 <h3>Testing Thread Switching</h3>
-<p>Thread switching tests verify that your component correctly handles `threadId` changes and `onThreadId` callbacks. Script a sequence where the transport emits a new thread ID, then assert that your `onThreadId` handler persisted the value and subsequent messages associate with the correct thread.</p>
+<p>Thread switching tests verify that your component correctly handles <code>threadId</code> changes and <code>onThreadId</code> callbacks. Script a sequence where the transport emits a new thread ID, then assert that your <code>onThreadId</code> handler persisted the value and subsequent messages associate with the correct thread.</p>
 <h3>The Benchmark</h3>
 <p>Agent component tests should run offline and complete in under 100ms each. This isn't aspirational—it's achievable when you eliminate network calls and async delays. A test suite with 50 agent UI tests should finish in under 5 seconds, run identically on developer machines and CI, and produce the same results every time.</p>
 <p>If your agent tests take longer or exhibit flakiness, you're either hitting real infrastructure or introducing unnecessary async delays in your mocks. Fix the mocking strategy, not the timeout thresholds.</p></div>

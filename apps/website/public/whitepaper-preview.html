@@ -70,33 +70,33 @@
       <div style="font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#15253E;font-weight:700;margin-bottom:16px">Chapter 01</div>
       <h2 style="font-family:'Archivo Black','Archivo',sans-serif;font-size:32px;color:#0A0A0A;margin-bottom:18px;line-height:1.15;letter-spacing:-0.01em">Streaming State Management</h2>
       <div style="width:72px;height:6px;background:#FFAF00"></div>
-      <div class="chapter-body" style="margin-top:30px"><p>Server-sent events don't play nicely with Angular's change detection. Zone.js patches `EventSource`, but the resulting microtask scheduling creates timing issues—tokens arrive faster than digest cycles complete, leading to dropped renders or, worse, accumulated state that suddenly flushes in a visual stutter. Teams typically respond by wrapping streams in `NgZone.run()`, manually calling `detectChanges()`, or building elaborate buffer-and-flush mechanisms. All of these approaches share a common failure mode: they work in development and break under production load.</p>
+      <div class="chapter-body" style="margin-top:30px"><p>Server-sent events don't play nicely with Angular's change detection. Zone.js patches <code>EventSource</code>, but the resulting microtask scheduling creates timing issues—tokens arrive faster than digest cycles complete, leading to dropped renders or, worse, accumulated state that suddenly flushes in a visual stutter. Teams typically respond by wrapping streams in <code>NgZone.run()</code>, manually calling <code>detectChanges()</code>, or building elaborate buffer-and-flush mechanisms. All of these approaches share a common failure mode: they work in development and break under production load.</p>
 <p>The root issue isn't Zone.js itself—it's the impedance mismatch between push-based streaming and Angular's pull-based change detection model. When your LangGraph agent streams 50 tokens per second, you need state primitives that coalesce updates intelligently while remaining reactive enough to drive smooth UI. Custom solutions invariably choose wrong: either they batch too aggressively (laggy typing effect) or too little (CPU saturation from excess renders).</p>
 <h3>Signals as the Synchronization Primitive</h3>
-<p>The `agent()` function returns an Angular signals-based interface that sidesteps these problems entirely. Rather than exposing raw event streams that require manual subscription management, it provides computed signals that update atomically as tokens arrive:</p>
+<p>The <code>agent()</code> function returns an Angular signals-based interface that sidesteps these problems entirely. Rather than exposing raw event streams that require manual subscription management, it provides computed signals that update atomically as tokens arrive:</p>
 <pre><code>@Component({
   selector: 'app-chat',
   template: `
-    <chat-message-list [messages]="chat.messages()" />
-    <chat-input (send)="chat.submit($event)" [disabled]="chat.isLoading()" />
+    &lt;chat-message-list [messages]="chat.messages()" /&gt;
+    &lt;chat-input (send)="chat.submit($event)" [disabled]="chat.isLoading()" /&gt;
   `,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ChatComponent {
-  private readonly threadId = signal<string | undefined>(undefined);
+  private readonly threadId = signal&lt;string | undefined&gt;(undefined);
   
   readonly chat = agent({
     assistantId: 'support_agent',
     threadId: this.threadId,
-    onThreadId: id => this.threadId.set(id)
+    onThreadId: id =&gt; this.threadId.set(id)
   });
 }
 </code></pre>
-<p>The `messages()` signal returns `Message[]`—a runtime-neutral representation that updates as the stream progresses. Internally, the framework handles token accumulation, message boundary detection, and state reconciliation. Your component simply reads the signal; Angular's signal-based reactivity handles the rest.</p>
-<p>The `isLoading()` signal deserves specific attention. It returns `true` from the moment you call `submit()` until the stream completes or errors. This eliminates the polling patterns teams often implement—checking message array lengths, tracking "last update" timestamps, or maintaining parallel loading flags that drift out of sync with actual stream state.</p>
+<p>The <code>messages()</code> signal returns <code>Message[]</code>—a runtime-neutral representation that updates as the stream progresses. Internally, the framework handles token accumulation, message boundary detection, and state reconciliation. Your component simply reads the signal; Angular's signal-based reactivity handles the rest.</p>
+<p>The <code>isLoading()</code> signal deserves specific attention. It returns <code>true</code> from the moment you call <code>submit()</code> until the stream completes or errors. This eliminates the polling patterns teams often implement—checking message array lengths, tracking "last update" timestamps, or maintaining parallel loading flags that drift out of sync with actual stream state.</p>
 <h3>OnPush Compatibility</h3>
-<p>Signals and `OnPush` change detection are natural partners, but the pairing requires attention. When `messages()` updates, Angular marks the component dirty through signal dependencies, not through Zone.js event interception. This means your streaming UI actually predates OnPush—it *requires* it for correct behavior under load.</p>
-<p>The production checklist question—"Are your message signals OnPush-compatible?"—is really asking whether your component tree properly propagates signal reads. If a parent component reads `messages()` and passes the array to a child via `@Input()`, the child must also use `OnPush` or it won't re-render when the array reference changes. The fix is straightforward: either pass the signal itself (`[messages]="chat.messages"`) or ensure `OnPush` propagates down your component tree.</p>
+<p>Signals and <code>OnPush</code> change detection are natural partners, but the pairing requires attention. When <code>messages()</code> updates, Angular marks the component dirty through signal dependencies, not through Zone.js event interception. This means your streaming UI actually predates OnPush—it *requires* it for correct behavior under load.</p>
+<p>The production checklist question—"Are your message signals OnPush-compatible?"—is really asking whether your component tree properly propagates signal reads. If a parent component reads <code>messages()</code> and passes the array to a child via <code>@Input()</code>, the child must also use <code>OnPush</code> or it won't re-render when the array reference changes. The fix is straightforward: either pass the signal itself (<code>[messages]="chat.messages"</code>) or ensure <code>OnPush</code> propagates down your component tree.</p>
 <p>Streaming state management in Angular isn't inherently difficult. It becomes difficult when you fight the framework's reactivity model instead of leveraging it. Signals provide the coalescing, the timing, and the change detection integration. Your job is to read them.</p></div>
     </section>
     <section style="padding:80px;page-break-before:always">
@@ -108,57 +108,57 @@ export class ChatComponent {
 <p>Every agent demo you've seen starts fresh on page load. That's fine for a conference talk. In production, users expect continuity. They start a conversation, close their laptop, resume tomorrow, and pick up where they left off. Without thread persistence, you're forcing users to re-explain context every session. Worse, you're wasting LLM tokens reconstructing state the backend already has.</p>
 <p>LangGraph's MemorySaver stores complete conversation history server-side, keyed by thread ID. Your frontend's job is simple: remember which thread the user was talking to and reconnect on mount.</p>
 <h3>The threadId Signal and onThreadId Callback</h3>
-<p>The `agent()` function accepts a reactive `threadId` signal and an `onThreadId` callback. When `threadId` is undefined, the backend creates a new thread and fires `onThreadId` with the generated ID. Your callback persists it. On subsequent loads, you initialize the signal from storage, and the agent resumes the existing conversation.</p>
+<p>The <code>agent()</code> function accepts a reactive <code>threadId</code> signal and an <code>onThreadId</code> callback. When <code>threadId</code> is undefined, the backend creates a new thread and fires <code>onThreadId</code> with the generated ID. Your callback persists it. On subsequent loads, you initialize the signal from storage, and the agent resumes the existing conversation.</p>
 <p>This pattern keeps thread lifecycle management declarative. You don't manually coordinate thread creation with message sending. The agent handles it.</p>
 <h3>Persisting to localStorage</h3>
 <p>The implementation is straightforward:</p>
 <pre><code>@Component({
   selector: 'app-chat',
   template: `
-    <chat [agent]="chat">
-      <chat-message-list />
-      <chat-input />
-    </chat>
+    &lt;chat [agent]="chat"&gt;
+      &lt;chat-message-list /&gt;
+      &lt;chat-input /&gt;
+    &lt;/chat&gt;
   `
 })
 export class ChatComponent {
-  private readonly threadId = signal<string | undefined>(
+  private readonly threadId = signal&lt;string | undefined&gt;(
     localStorage.getItem('chat_thread') ?? undefined
   );
-<p>readonly chat = agent({
+readonly chat = agent({
     assistantId: 'support_agent',
     threadId: this.threadId,
-    onThreadId: id => {
+    onThreadId: id =&gt; {
       this.threadId.set(id);
       localStorage.setItem('chat_thread', id);
     }
   });
 }
-</code></pre></p>
-<p>On first visit, `threadId` is undefined. The backend creates a thread, `onThreadId` fires, and you persist. On refresh, you read from localStorage, pass the existing ID, and the agent loads history from MemorySaver.</p>
+</code></pre>
+<p>On first visit, <code>threadId</code> is undefined. The backend creates a thread, <code>onThreadId</code> fires, and you persist. On refresh, you read from localStorage, pass the existing ID, and the agent loads history from MemorySaver.</p>
 <h3>Thread List UI and Conversation Switching</h3>
 <p>Production apps typically need multiple conversations. A sidebar shows thread history; clicking switches context. The pattern extends naturally:</p>
-<pre><code>readonly threads = signal<string[]>(
+<pre><code>readonly threads = signal&lt;string[]&gt;(
   JSON.parse(localStorage.getItem('thread_list') ?? '[]')
 );
-<p>readonly activeThreadId = signal<string | undefined>(this.threads()[0]);</p>
-<p>readonly chat = agent({
+readonly activeThreadId = signal&lt;string | undefined&gt;(this.threads()[0]);
+readonly chat = agent({
   assistantId: 'support_agent',
   threadId: this.activeThreadId,
-  onThreadId: id => {
+  onThreadId: id =&gt; {
     this.activeThreadId.set(id);
-    this.threads.update(list => [id, ...list]);
+    this.threads.update(list =&gt; [id, ...list]);
     localStorage.setItem('thread_list', JSON.stringify(this.threads()));
   }
-});</p>
-<p>newConversation() {
+});
+newConversation() {
   this.activeThreadId.set(undefined);
-}</p>
-<p>switchThread(id: string) {
+}
+switchThread(id: string) {
   this.activeThreadId.set(id);
 }
-</code></pre></p>
-<p>When `activeThreadId` changes, the agent reconnects to that thread and `messages()` reflects the restored history. No manual fetching. The reactive binding handles it.</p>
+</code></pre>
+<p>When <code>activeThreadId</code> changes, the agent reconnects to that thread and <code>messages()</code> reflects the restored history. No manual fetching. The reactive binding handles it.</p>
 <p>For production, you'll likely move thread metadata to an API—titles, timestamps, archival status. The pattern remains identical: reactive signal in, persistence callback out.</p>
 <h3>Production Checklist</h3>
 <p>Before shipping, verify thread persistence end-to-end:</p>
@@ -177,26 +177,26 @@ Thread persistence is table stakes for production agent UIs. The framework gives
 <h3>The Raw Stream Problem</h3>
 <p>Tool call events arrive as discrete chunks in the SSE stream. A single tool invocation might produce five or six events: an initial call with arguments, multiple intermediate steps as the tool executes, and a final result. The raw payload includes nested metadata, partial JSON for arguments that stream incrementally, and status fields that change meaning depending on tool type.</p>
 <p>Hand-parsing these events is fragile. You end up maintaining state machines to track which call is active, handling out-of-order delivery, and writing defensive code for malformed chunks. Testing becomes painful because you need to simulate realistic streaming sequences. Every edge case—interrupted calls, parallel tool execution, retry logic—adds branching complexity.</p>
-<p>The framework solves this by exposing `toolCalls()` as a normalized signal on the agent surface. Each tool call object includes its current status, accumulated steps, and final result. The stream parsing happens once, correctly, inside the transport layer.</p>
+<p>The framework solves this by exposing <code>toolCalls()</code> as a normalized signal on the agent surface. Each tool call object includes its current status, accumulated steps, and final result. The stream parsing happens once, correctly, inside the transport layer.</p>
 <h3>Headless and Prebuilt Options</h3>
-<p>`@threadplane/chat` provides two components for tool call rendering. `<chat-tool-calls>` is the headless primitive—it manages the structural rendering of multiple concurrent calls but leaves visual presentation to you. `<chat-tool-call-card>` is the prebuilt option that handles common patterns: status indicators, step lists, collapsible sections, and error states.</p>
+<p><code>@threadplane/chat</code> provides two components for tool call rendering. <code>&lt;chat-tool-calls&gt;</code> is the headless primitive—it manages the structural rendering of multiple concurrent calls but leaves visual presentation to you. <code>&lt;chat-tool-call-card&gt;</code> is the prebuilt option that handles common patterns: status indicators, step lists, collapsible sections, and error states.</p>
 <p>For most production apps, start with the prebuilt card and customize from there:</p>
-<pre><code><chat-message-list [messages]="chat.messages()">
-  <ng-template #toolCalls let-calls>
+<pre><code>&lt;chat-message-list [messages]="chat.messages()"&gt;
+  &lt;ng-template #toolCalls let-calls&gt;
     @for (call of calls; track call.id) {
-      <chat-tool-call-card
+      &lt;chat-tool-call-card
         [toolCall]="call"
         [expandedByDefault]="call.status === 'running'"
-        (stepClick)="inspectStep($event)">
-      </chat-tool-call-card>
+        (stepClick)="inspectStep($event)"&gt;
+      &lt;/chat-tool-call-card&gt;
     }
-  </ng-template>
-</chat-message-list>
+  &lt;/ng-template&gt;
+&lt;/chat-message-list&gt;
 </code></pre>
 <p>The card component reads status from each tool call object and adjusts its presentation accordingly. Running calls show a live step feed. Completed calls collapse to a summary with expandable history. Failed calls surface error details without disrupting the message flow.</p>
 <h3>Progressive Disclosure</h3>
 <p>Real-time tool execution benefits from progressive disclosure. Users want to see that something is happening—steps appearing as the tool runs—but they don't want permanent visual clutter once the call completes.</p>
-<p>The `expandedByDefault` binding above handles this: calls expand while running, then collapse automatically on completion. Users can still click to expand history, but the default state keeps the conversation readable.</p>
+<p>The <code>expandedByDefault</code> binding above handles this: calls expand while running, then collapse automatically on completion. Users can still click to expand history, but the default state keeps the conversation readable.</p>
 <p>This pattern matters more than it seems. Agents that invoke multiple tools per response can generate substantial step output. Without automatic collapsing, the chat becomes a wall of tool metadata instead of a conversation.</p>
 <h3>Production Checklist</h3>
 <p>Before shipping, verify this behavior:</p>
@@ -207,23 +207,23 @@ Thread persistence is table stakes for production agent UIs. The framework gives
       <div style="font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#15253E;font-weight:700;margin-bottom:16px">Chapter 04</div>
       <h2 style="font-family:'Archivo Black','Archivo',sans-serif;font-size:32px;color:#0A0A0A;margin-bottom:18px;line-height:1.15;letter-spacing:-0.01em">Human Approval Flows</h2>
       <div style="width:72px;height:6px;background:#FFAF00"></div>
-      <div class="chapter-body" style="margin-top:30px"><p>Production agents that modify external state—sending emails, initiating payments, deploying infrastructure—require human oversight before execution. LangGraph provides the `interrupt()` primitive for this purpose: a mechanism that pauses graph execution at designated checkpoints and waits for explicit human authorization before proceeding.</p>
+      <div class="chapter-body" style="margin-top:30px"><p>Production agents that modify external state—sending emails, initiating payments, deploying infrastructure—require human oversight before execution. LangGraph provides the <code>interrupt()</code> primitive for this purpose: a mechanism that pauses graph execution at designated checkpoints and waits for explicit human authorization before proceeding.</p>
 <h3>The LangGraph Interrupt Pattern</h3>
-<p>When a LangGraph node calls `interrupt()`, execution halts and the graph emits an interrupt event containing the pending action's metadata. The graph remains suspended until it receives a `Command.RESUME` with one of three directives: proceed with the original action, proceed with modified parameters, or abort entirely. This checkpoint-based approach ensures that no consequential action executes without explicit human consent.</p>
+<p>When a LangGraph node calls <code>interrupt()</code>, execution halts and the graph emits an interrupt event containing the pending action's metadata. The graph remains suspended until it receives a <code>Command.RESUME</code> with one of three directives: proceed with the original action, proceed with modified parameters, or abort entirely. This checkpoint-based approach ensures that no consequential action executes without explicit human consent.</p>
 <p>The challenge lies in surfacing this interrupt state to users and capturing their response without introducing fragile infrastructure. Polling-based solutions waste resources and introduce latency. Custom WebSocket implementations require maintaining connection state, handling reconnections, and synchronizing interrupt lifecycle across multiple browser tabs. Both approaches scatter interrupt logic across services, components, and connection handlers.</p>
-<h3>The `interrupt()` Signal</h3>
-<p>The `agent()` function exposes interrupt state through a dedicated signal:</p>
+<h3>The <code>interrupt()</code> Signal</h3>
+<p>The <code>agent()</code> function exposes interrupt state through a dedicated signal:</p>
 <pre><code>readonly chat = agent({
   assistantId: 'deployment_agent',
   threadId: this.threadId,
-  onThreadId: id => this.threadId.set(id)
+  onThreadId: id =&gt; this.threadId.set(id)
 });
-<p>// chat.interrupt() returns AgentInterrupt | undefined
-</code></pre></p>
-<p>When `interrupt()` returns a defined value, the agent is paused and awaiting human input. The `AgentInterrupt` object contains the action metadata emitted by the graph—typically a description of the pending operation and any parameters the user might modify. When `interrupt()` returns `undefined`, no approval is pending.</p>
+// chat.interrupt() returns AgentInterrupt | undefined
+</code></pre>
+<p>When <code>interrupt()</code> returns a defined value, the agent is paused and awaiting human input. The <code>AgentInterrupt</code> object contains the action metadata emitted by the graph—typically a description of the pending operation and any parameters the user might modify. When <code>interrupt()</code> returns <code>undefined</code>, no approval is pending.</p>
 <p>This signal-based approach eliminates the need for manual subscription management or imperative state tracking. Angular's reactivity system propagates interrupt state changes automatically, and the signal remains consistent across component re-renders.</p>
 <h3>UI Components for Interrupt Handling</h3>
-<p>The `@threadplane/chat` package provides two components for rendering interrupt flows. `<chat-interrupt-panel>` offers a prebuilt approval interface with sensible defaults. For custom designs, the headless `<chat-interrupt>` component exposes the interrupt state and action handlers without imposing markup or styling.</p>
+<p>The <code>@threadplane/chat</code> package provides two components for rendering interrupt flows. <code>&lt;chat-interrupt-panel&gt;</code> offers a prebuilt approval interface with sensible defaults. For custom designs, the headless <code>&lt;chat-interrupt&gt;</code> component exposes the interrupt state and action handlers without imposing markup or styling.</p>
 <p>Both components support three user actions that map directly to resume commands:</p>
 <ul><li><strong>Approve</strong>: Resume execution with the original parameters</li>
 <li><strong>Edit</strong>: Resume execution with user-modified parameters</li>
@@ -232,11 +232,11 @@ Thread persistence is table stakes for production agent UIs. The framework gives
 <pre><code>@Component({
   template: `
     @if (chat.interrupt(); as interrupt) {
-      <chat-interrupt-panel
+      &lt;chat-interrupt-panel
         [interrupt]="interrupt"
         (approve)="chat.interrupt()?.approve()"
         (edit)="chat.interrupt()?.approve($event)"
-        (cancel)="chat.interrupt()?.cancel()" />
+        (cancel)="chat.interrupt()?.cancel()" /&gt;
     }
   `
 })
@@ -244,11 +244,11 @@ export class DeploymentChatComponent {
   readonly chat = agent({
     assistantId: 'deployment_agent',
     threadId: this.threadId,
-    onThreadId: id => this.threadId.set(id)
+    onThreadId: id =&gt; this.threadId.set(id)
   });
 }
 </code></pre>
-<p>The edit flow passes modified parameters through the `$event` payload, allowing users to adjust action details before approval. The cancel flow terminates the pending action and allows the conversation to continue without executing the interrupted operation.</p>
+<p>The edit flow passes modified parameters through the <code>$event</code> payload, allowing users to adjust action details before approval. The cancel flow terminates the pending action and allows the conversation to continue without executing the interrupted operation.</p>
 <h3>Production Considerations</h3>
 <p>Interrupt flows introduce a class of edge cases that prototype implementations often ignore. Users close browser tabs. Sessions expire. Network connections drop mid-approval.</p>
 <p><strong>Production checklist item</strong>: *Can your agent UI recover gracefully if a user cancels an interrupt?*</p>
@@ -269,38 +269,38 @@ await writer.write({
     "rows": rows_so_far
 })
 </code></pre>
-<p>On the Angular side, `@threadplane/langgraph` surfaces these through the agent's event stream. The `@threadplane/render` package consumes these specs and resolves them to Angular components at runtime.</p>
+<p>On the Angular side, <code>@threadplane/langgraph</code> surfaces these through the agent's event stream. The <code>@threadplane/render</code> package consumes these specs and resolves them to Angular components at runtime.</p>
 <h3>Registry-Based Resolution</h3>
 <p>The registry pattern decouples agent output from component implementation. Your agent emits a type identifier. Your frontend maps that identifier to a component. Neither side knows implementation details of the other.</p>
 <pre><code>import { defineAngularRegistry } from '@threadplane/render';
 import { DataTableComponent } from './components/data-table.component';
 import { ReservationFormComponent } from './components/reservation-form.component';
 import { ChartComponent } from './components/chart.component';
-<p>export const uiRegistry = defineAngularRegistry({
+export const uiRegistry = defineAngularRegistry({
   data_table: DataTableComponent,
   reservation_form: ReservationFormComponent,
   chart: ChartComponent,
   // Add components without touching agent code
 });
-</code></pre></p>
-<p>Components receive the spec's data through a standardized input contract. Your `DataTableComponent` receives `columns` and `rows` — it doesn't know or care that a Python agent emitted them.</p>
-<p>Template usage is direct:</p>
-<pre><code><render-spec [spec]="currentSpec()" [registry]="uiRegistry" />
 </code></pre>
-<p>Or configure the registry at the provider level with `provideRender({ registry: uiRegistry })` and omit it from individual templates.</p>
+<p>Components receive the spec's data through a standardized input contract. Your <code>DataTableComponent</code> receives <code>columns</code> and <code>rows</code> — it doesn't know or care that a Python agent emitted them.</p>
+<p>Template usage is direct:</p>
+<pre><code>&lt;render-spec [spec]="currentSpec()" [registry]="uiRegistry" /&gt;
+</code></pre>
+<p>Or configure the registry at the provider level with <code>provideRender({ registry: uiRegistry })</code> and omit it from individual templates.</p>
 <h3>Progressive Updates Through JSON Patch</h3>
 <p>Static specs work for complete data. Streaming scenarios require progressive updates. When your agent processes a large dataset, users shouldn't wait for completion before seeing results.</p>
-<p>`@threadplane/render` supports JSON Patch streaming for incremental UI updates. The agent emits patches as data arrives:</p>
+<p><code>@threadplane/render</code> supports JSON Patch streaming for incremental UI updates. The agent emits patches as data arrives:</p>
 <pre><code># Initial spec
 await writer.write({"type": "data_table", "columns": [...], "rows": []})
-<p># Patches as rows arrive
+# Patches as rows arrive
 for row in process_rows():
     await writer.write({"op": "add", "path": "/rows/-", "value": row})
-</code></pre></p>
+</code></pre>
 <p>The frontend applies patches to the live spec. Rows appear as they're processed. Charts animate as data points arrive. Users see progress, not loading spinners.</p>
 <h3>The Decoupling Advantage</h3>
 <p>Tight coupling between agent and frontend creates deployment dependencies. Changing a table column requires coordinated releases. Adding a new visualization blocks on frontend implementation.</p>
-<p>The registry pattern inverts this. Agents emit specs against a stable contract. Frontend teams add components independently. You can ship a new `heatmap` type in your registry without redeploying agents — they'll use it when ready.</p>
+<p>The registry pattern inverts this. Agents emit specs against a stable contract. Frontend teams add components independently. You can ship a new <code>heatmap</code> type in your registry without redeploying agents — they'll use it when ready.</p>
 <p>This also enables A/B testing component implementations, graceful degradation for unknown types, and environment-specific registries (richer components in desktop, simplified in mobile).</p>
 <p>---</p>
 <p><strong>Production checkpoint:</strong> Can your agent emit UI components without tight coupling to the frontend codebase? If adding a new visualization requires changes to both agent and frontend in lockstep, the integration is too brittle for production iteration speed.</p></div>
@@ -314,12 +314,12 @@ for row in process_rows():
 <p>Testing against real LLM APIs introduces three fundamental problems. First, response content varies between runs. The same prompt might yield slightly different phrasing, breaking snapshot tests or exact-match assertions. Second, latency compounds. A single agent interaction might take 2-5 seconds; a test suite with 50 agent tests becomes a 4-minute bottleneck. Third, you can't manufacture edge cases on demand. How do you test interrupt handling if the model decides not to request human input? How do you verify your tool call UI when the model skips the tool entirely?</p>
 <p>Deterministic testing requires control over the event stream itself.</p>
 <h3>MockAgentTransport: Scripted Event Sequences</h3>
-<p>`MockAgentTransport` replaces the network layer entirely. You provide a scripted sequence of events, and the transport emits them on demand. No server, no network, no variability.</p>
+<p><code>MockAgentTransport</code> replaces the network layer entirely. You provide a scripted sequence of events, and the transport emits them on demand. No server, no network, no variability.</p>
 <p>This approach lets you test streaming behavior by controlling exactly when each token arrives. You can simulate interrupts at precise moments, inject tool calls with specific payloads, and verify error handling by emitting failure events. Your tests become reproducible scenarios rather than probabilistic hopes.</p>
 <h3>mockLangGraphAgent(): Writable Signal Control</h3>
-<p>For component-level testing, `mockLangGraphAgent()` provides an even more direct approach. It returns an agent surface where every signal is writable—you set the state, and your component reacts.</p>
-<pre><code>describe('ChatComponent', () => {
-  it('displays interrupt panel when interrupt is pending', () => {
+<p>For component-level testing, <code>mockLangGraphAgent()</code> provides an even more direct approach. It returns an agent surface where every signal is writable—you set the state, and your component reacts.</p>
+<pre><code>describe('ChatComponent', () =&gt; {
+  it('displays interrupt panel when interrupt is pending', () =&gt; {
     const agent = mockLangGraphAgent();
     const fixture = TestBed.createComponent(ChatComponent);
     fixture.componentRef.setInput('agent', agent);
@@ -337,8 +337,8 @@ for row in process_rows():
 </code></pre>
 <p>This pattern isolates component behavior from streaming mechanics. You're testing how your UI responds to state—not whether the transport correctly parses SSE frames.</p>
 <h3>Testing in Isolation</h3>
-<p>Each agent capability becomes independently testable. For streaming, set `isLoading` to true and progressively update `messages` to verify your typing indicators and incremental rendering. For tool calls, populate `toolCalls` with specific payloads and assert your `ChatToolCallCardComponent` renders the expected UI. For generative UI via render-spec, test your registered components against static specs without involving the agent layer at all.</p>
-<p>Interrupts deserve particular attention. Set `interrupt` to various payloads and verify your `ChatInterruptPanelComponent` handles each type—multiple choice, free text, confirmation dialogs. Call the resume function and assert `interrupt` clears correctly.</p>
+<p>Each agent capability becomes independently testable. For streaming, set <code>isLoading</code> to true and progressively update <code>messages</code> to verify your typing indicators and incremental rendering. For tool calls, populate <code>toolCalls</code> with specific payloads and assert your <code>ChatToolCallCardComponent</code> renders the expected UI. For generative UI via render-spec, test your registered components against static specs without involving the agent layer at all.</p>
+<p>Interrupts deserve particular attention. Set <code>interrupt</code> to various payloads and verify your <code>ChatInterruptPanelComponent</code> handles each type—multiple choice, free text, confirmation dialogs. Call the resume function and assert <code>interrupt</code> clears correctly.</p>
 <h3>Production Checklist</h3>
 <p>Before shipping agent features, verify this: <strong>Do your agent component tests run offline and complete in under 100ms each?</strong></p>
 <p>If not, you're either hitting real APIs or your test setup carries unnecessary overhead. Deterministic agent testing should feel like testing any other Angular component—fast, reliable, and completely under your control.</p></div>

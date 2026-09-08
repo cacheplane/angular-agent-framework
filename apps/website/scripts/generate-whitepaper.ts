@@ -575,9 +575,34 @@ const signalRule = (width: number) =>
   `<div style="width:${width}px;height:6px;background:${BRAND.SIGNAL}"></div>`;
 
 // ── Markdown to HTML converter ───────────────────────────────────────────
+/**
+ * Escape the characters that would otherwise be parsed as markup.
+ *
+ * Load-bearing for code spans: the prose is full of Angular element names like
+ * `<chat-message-list>`. Unescaped, the browser parses those as unknown
+ * elements — which render as NOTHING — so the shipped PDF read "` ` manages
+ * scroll position" with the component name silently gone.
+ */
+function escapeHtml(text: string): string {
+  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 function mdToHTML(md: string): string {
-  return md
-    .replace(/```[\w]*\n([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+  // Fenced blocks are lifted out first so their contents are escaped exactly
+  // once and never re-processed by the inline rules below.
+  const fenced: string[] = [];
+  const withoutFences = md.replace(
+    /```[\w]*\n([\s\S]*?)```/g,
+    (_match, code: string) => {
+      fenced.push(`<pre><code>${escapeHtml(code)}</code></pre>`);
+      return `\u0000FENCE${fenced.length - 1}\u0000`;
+    },
+  );
+
+  return withoutFences
+    // Inline code. Without this the backticks survived verbatim into the PDF
+    // and anything angle-bracketed inside them vanished.
+    .replace(/`([^`\n]+)`/g, (_match, code: string) => `<code>${escapeHtml(code)}</code>`)
     // The model restates the chapter title as a top-level heading. The chapter
     // opener already renders that title, so an `<h1>` here would duplicate it —
     // and leaving `# ` unhandled leaked a literal hash into the body text.
@@ -593,7 +618,8 @@ function mdToHTML(md: string): string {
       const trimmed = block.trim();
       return trimmed ? `<p>${trimmed}</p>` : '';
     })
-    .join('\n');
+    .join('\n')
+    .replace(/\u0000FENCE(\d+)\u0000/g, (_match, index: string) => fenced[Number(index)]);
 }
 
 // ── HTML builder ─────────────────────────────────────────────────────────
@@ -730,7 +756,34 @@ function readCommittedChapters(htmlPath: string): RenderedChapter[] {
     // Older runs leaked the model's restated `# Title` into the body as literal
     // text, directly beneath the heading that already says it. Drop it.
     const cleaned = body.replace(/^\s*<p>#\s[^<]*<\/p>\s*/, '');
-    return { title, bodyHTML: cleaned.trim() };
+    // Older runs had no inline-code rule, so markdown spans survived as literal
+    // backticks AND their angle-bracketed contents were parsed as unknown
+    // elements, which render as nothing. `<chat-message-list>` therefore
+    // reached the reader as an empty pair of backticks. The source text is
+    // still here, so repair it on the way through rather than leaving a
+    // published document with words missing from it.
+    const withCodeSpans = cleaned.replace(
+      /`([^`\n]+)`/g,
+      (_match, code: string) => `<code>${escapeHtml(code)}</code>`,
+    );
+    // Older runs split paragraphs AFTER building fenced blocks, so any code
+    // sample containing a blank line was torn in two and its second half
+    // wrapped in a <p> — which also left the sample's own markup unescaped, so
+    // lines like `<chat [agent]="agent" />` were parsed as unknown elements and
+    // vanished from the page. Stitch those blocks back together and escape
+    // them. Unescaping first keeps this idempotent across re-runs.
+    const withRepairedFences = withCodeSpans.replace(
+      /<pre><code>([\s\S]*?)<\/code><\/pre>(?:\s*<\/p>)?/g,
+      (_match, code: string) => {
+        const stitched = code.replace(/<\/?p>/g, '');
+        const raw = stitched
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&amp;/g, '&');
+        return `<pre><code>${escapeHtml(raw)}</code></pre>`;
+      },
+    );
+    return { title, bodyHTML: withRepairedFences.trim() };
   });
 }
 
