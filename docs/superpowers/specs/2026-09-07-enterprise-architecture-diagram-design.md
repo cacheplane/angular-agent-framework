@@ -1,7 +1,7 @@
 # Enterprise architecture diagram on the homepage
 
 **Date:** 2026-09-07
-**Status:** Design approved in brainstorming (iterated through six mockups with the user); implementation gated on the user's visual sign-off before merge.
+**Status:** Built on `blove/architecture-diagram` (PR #1048). Iterated through eight mockups and four review passes with the user; the final direction scaled the three-zone enterprise map back to this four-column flow. Merge is gated on the user's visual sign-off.
 **Surface:** `apps/website` only.
 **Replaces:** the "Where Threadplane fits" section (`ScopeTable`, section id `why`) on the homepage. `ScopeTable` and the `FINAL_MILE_*` copy leave with it.
 
@@ -38,15 +38,23 @@ Column labels: YOUR USERS, YOUR ANGULAR APPLICATION, ADAPTERS, YOUR AGENTS.
 
 ## 4. Component
 
-`apps/website/src/components/landing/EnterpriseArchitecture.tsx`, a server component rendering one `<svg viewBox="0 0 1280 624">` inside the kit's `DiagramFrame` at `scale="marketing"`, framed by `DiagramSection`. Logos are `<image href="/logos/...">` referencing the public files. The diagram's geometry lives in a data module, `apps/website/src/lib/architecture-diagram.ts`, as typed card/arrow/strip records so the tests can read the same numbers the component draws. The line icons are inline paths in the component (five to seven, matching the mockup).
+`apps/website/src/components/landing/EnterpriseArchitecture.tsx`, a server component rendering one `<svg viewBox="0 0 1280 640">` inside the kit's `DiagramFrame` at `scale="marketing"`, framed by `DiagramSection`. Logos are `<image href="/logos/...">` referencing the public files; line icons are inline paths in the component. The geometry lives in a data module, `apps/website/src/lib/architecture-diagram.ts`, as typed card/arrow/strip records, so the component, the unit spec and the e2e all read the same numbers.
+
+Row kinds: `text`, `mono`, `caps` (the Threadplane card's five capability links), `badge` (a mark with a label), `marks` (a row of mark tiles), and `items` — the banded list used by the adapter and agent cards, one soft band per line with a left accent bar, white-on-tint inside a highlighted card.
+
+Ground: a faint radial gradient under the kit's dot pattern, with the dots one step lighter than the docs default, so the figure reads as a surface.
+
+**Grid.** Four columns 64 apart, 48px margins on all four sides, stacked cards 40 apart, every arrow 64 long landing on the vertical centre of the card it enters, and the two paired cards in each row sharing their tops, heights and row positions. The People card's block is centred on its card, where its arrow leaves.
+
+**Phone form.** Under 768px the SVG is hidden and `ArchitectureStack` renders the same cards as an HTML stack in reading order, from the same data module, so the two forms cannot drift.
 
 ## 5. Verification
 
-- **Unit:** every card rect has `x, y, width, height` divisible by 8 inside the view's 40px margin, stacked cards are 40 apart, no two cards overlap, the users and Threadplane cards span the adapter stack exactly, every arrow leaves one card edge and enters the next, and the model strip fits (from the data module). The component renders every link whose hrefs each resolve to an existing docs page or route (the spec reads `apps/website/content/docs` and `src/app`). Public-copy scan stays green.
-- **e2e (`home-architecture.spec.ts`):** at 1440×900 every `<text>` in the diagram has a `getBBox()` inside its parent card's rect with 8px of margin, every chip rect is inside its card, every `<image>` loaded (`naturalWidth`/complete via the parent's `getBBox` non-zero), and the section's links have the expected hrefs. At 390px the frame scrolls horizontally and the SVG is at least 1024px wide.
+- **Unit:** every card rect is divisible by 8 and sits inside the view's margin; stacked cards are 40 apart; no two cards overlap; the users and Threadplane cards span the adapter stack exactly; every column gap is equal; the left, right and bottom margins match and the model strip starts at the first column; every arrow is one length and lands on the vertical centre of the card it enters; the paired cards share their tops, heights and first row positions; every row sits inside its card. Every href resolves to a docs page or route on disk, and every mark exists under `/logos`. Public-copy scan stays green.
+- **e2e (`home-architecture.spec.ts`):** at 1440×900, with fonts loaded, every `<text>` and every chip rect in the diagram has a `getBBox()` inside its own card with margin, every `<image>` has a non-zero box, and the cards carry the expected hrefs. At 390px the HTML stack is visible, the SVG is hidden, it renders one card per data entry, and the page has no horizontal scroll.
 - **Visual sign-off:** rendered frames at 1440 and 390 shown to the user before the PR merges; the PR is opened without auto-merge.
 - **Spine test:** the homepage heading order replaces `why-heading` with `architecture-heading`.
 
 ## 6. Out of scope
 
-Hover interactions, a mobile-specific stacked variant, sourcing the LangSmith mark, changes to the docs pages linked.
+Hover interactions beyond the links, animation, changes to the docs pages linked. LangSmith has no mark under the site's sourcing rules (Simple Icons carries no `langsmith` slug), so its card uses the LangChain mark and the logo README records why; swapping in a real LangSmith SVG is a later one-line change.
