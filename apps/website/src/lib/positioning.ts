@@ -12,7 +12,7 @@ export const HERO_H1 = 'The open-source thread-plane for agents.';
  */
 export const HERO_H1_LINES: readonly string[] = ['The open-source', 'thread-plane', 'for agents.'];
 export const HERO_SUBHEAD =
-  'Chat, threads, approvals, and generative UI on Signals and DI. Your backend stays where it is.';
+  'Chat, durable threads, persistence, human approvals, and generative UI for Angular, on LangGraph and AG-UI. Your backend stays where it is.';
 
 /**
  * The subhead, split so Hero.tsx can marker-highlight the boundary claim.
@@ -26,7 +26,7 @@ export interface HeroSubheadSegment {
   highlight?: boolean;
 }
 export const HERO_SUBHEAD_SEGMENTS: readonly HeroSubheadSegment[] = [
-  { text: 'Chat, threads, approvals, and generative UI on Signals and DI. ' },
+  { text: 'Chat, durable threads, persistence, human approvals, and generative UI for Angular, on LangGraph and AG-UI. ' },
   { text: 'Your backend stays where it is.', highlight: true },
 ];
 
@@ -81,13 +81,29 @@ export const RELIABILITY_RECEIPTS: readonly ReliabilityReceipt[] = [
   },
 ];
 
-// ── Prove it without a backend (spec §3, block 5): the Test rows the final CTA
-// absorbs. ────────────────────────────────────────────────────────────────────
-export const PROVE_IT_ROWS = [
-  { claim: 'No key, no server, no network', api: 'provideFakeAgent()' },
-  { claim: 'Script tool calls and interrupts', api: 'mockLangGraphAgent()' },
-  { claim: 'Same UI code in test and production', api: 'Agent' },
-] as const;
+/**
+ * The public source repository.
+ *
+ * It lives here, not in site-metadata.ts: that module reaches node:fs through
+ * blog.ts, so importing it from a client component drags the filesystem into
+ * the browser bundle and the page 500s. positioning.ts is client-safe — the
+ * hero already imports it.
+ */
+export const GITHUB_REPO_URL = 'https://github.com/cacheplane/angular-agent-framework';
+
+// ── The open-source strip (the slim dark band after the stage). One sentence,
+// the licence, the repo. Bold in what it says, quiet in how it looks: the
+// point is that there is no catch, and the remedy for disagreeing with us is
+// a fork — so it must not read as another sales pitch. ──────────────────────
+export const OPEN_SOURCE_STRIP = {
+  /** The sentence, up to the part that carries the emphasis. */
+  lead: 'Yes, this is all free. Don’t like something?',
+  /** Rendered italic at the end of the same line. */
+  emphasis: 'Fork us.',
+  /** The licence tag beside the action. */
+  licence: 'MIT',
+  cta: 'Fork on GitHub',
+} as const;
 
 // ── The stage rail (stage-rail spec §3–5): the four-claim ledger beside the
 // pinned demo. One label, one claim and one docs link per beat; the still

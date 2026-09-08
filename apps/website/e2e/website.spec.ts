@@ -52,7 +52,7 @@ test('landing page renders the spine in order (live-stage spec §3)', async ({ p
     'proof-heading',
     'architecture-heading',
     'stage-heading',
-    'final-cta-heading',
+    'open-source-heading',
     'pilot-heading',
     'faq-heading',
   ];

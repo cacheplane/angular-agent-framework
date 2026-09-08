@@ -585,33 +585,6 @@
   margin: 0;
 }
 
-/* Prove-it rows above the closing headline. FinalCTA.tsx `rows`. */
-.final-cta-rows {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 12px 24px;
-  list-style: none;
-  margin: 0 0 28px;
-  padding: 0;
-  text-align: left;
-}
-.final-cta-prove-row {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-.final-cta-prove-row-claim {
-  font-family: var(--font-inter);
-  font-size: 14px;
-  color: var(--color-text-secondary);
-}
-.final-cta-prove-row-api {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--color-accent);
-  overflow-wrap: anywhere;
-}
 /* FinalCTA dark variant — the Yes wall's partner section. */
 [data-surface="dark"] .final-cta-inner {
   position: relative;
@@ -643,6 +616,59 @@
 @media (max-width: 640px) {
   .final-cta-mark {
     font-size: 140px;
+  }
+}
+
+/* OpenSourceStrip — components/landing/OpenSourceStrip.tsx
+ *
+ * A strip, not a section: the sentence sits at the left edge of the page
+ * container and the action at the right, so it reads as an aside between the
+ * stage and the teams block. It deliberately undercuts the tight section
+ * rhythm (48–80px) — at that height the band still reads as a full closing
+ * beat, which is the volume this replaced. The [data-tight] selector is two
+ * attributes, so the override has to carry both to win. */
+[data-ui="section"][data-tight].open-source-strip {
+  padding-top: clamp(28px, 3.2vw, 44px);
+  padding-bottom: clamp(28px, 3.2vw, 44px);
+}
+.open-source-strip-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px 32px;
+  flex-wrap: wrap;
+}
+.open-source-strip-line {
+  font-family: var(--font-garamond);
+  font-size: 23px;
+  line-height: 1.35;
+  font-weight: 400;
+  letter-spacing: -0.005em;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+.open-source-strip-line em {
+  font-style: italic;
+}
+.open-source-strip-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex: none;
+}
+.open-source-strip-licence {
+  font-family: var(--font-inter);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill, 999px);
+  padding: 4px 10px;
+  white-space: nowrap;
+}
+@media (max-width: 640px) {
+  .open-source-strip-line {
+    font-size: 21px;
   }
 }
 

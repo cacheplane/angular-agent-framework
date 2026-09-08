@@ -70,7 +70,12 @@ export default async function OpenGraphImage() {
               </div>
             ))}
           </div>
-          <div style={{ display: 'flex', marginTop: 20, fontSize: 24, lineHeight: 1.45, color: CARD.inkSecondary, maxWidth: 470 }}>
+          {/* Three lines. The subhead names every capability, and at 24px/470
+              it ran to four and overlapped the pills — the column is centred in
+              a fixed 630px card, so overflow collides rather than pushing. 530
+              is the widest the 600px column's 64px left padding allows, and 20px
+              is what holds three lines without orphaning the last two words. */}
+          <div style={{ display: 'flex', marginTop: 20, fontSize: 20, lineHeight: 1.45, color: CARD.inkSecondary, maxWidth: 530 }}>
             {HERO_SUBHEAD}
           </div>
           <div style={{ display: 'flex', marginTop: 26 }}>
