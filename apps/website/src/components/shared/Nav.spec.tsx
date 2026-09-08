@@ -106,52 +106,90 @@ describe('Docs mobile navigation', () => {
     return { focus, observation };
   };
 
-  it('retires Examples from desktop navigation without changing primary destinations or demos', () => {
+  it('opens a panel per trigger and links each library from it', () => {
     pathnameRef.current = '/';
     render(<Nav />);
-
     const navigation = screen.getByRole('navigation');
+
+    const libraries = within(navigation).getByRole('button', { name: 'Libraries' });
+    expect(libraries.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.click(libraries);
+    expect(libraries.getAttribute('aria-expanded')).toBe('true');
+
+    const panel = document.getElementById(
+      libraries.getAttribute('aria-controls') ?? '',
+    );
+    if (!panel) throw new Error('Expected the trigger to control a panel');
     expect(
-      within(navigation).queryByRole('link', { name: 'Examples' }),
-    ).toBeNull();
+      within(panel).getByRole('link', { name: /@threadplane\/langgraph/ }).getAttribute('href'),
+    ).toBe('/langgraph');
     expect(
-      within(navigation)
-        .getByRole('link', { name: 'Pilot to Prod' })
-        .getAttribute('href'),
-    ).toBe('/pilot-to-prod');
+      within(panel).getByRole('link', { name: /@threadplane\/render/ }).getAttribute('href'),
+    ).toBe('/render');
     expect(
-      within(navigation)
-        .getByRole('link', { name: 'Docs' })
-        .getAttribute('href'),
-    ).toBe('/docs');
+      within(panel).getByRole('link', { name: /Choosing an adapter/ }).getAttribute('href'),
+    ).toBe('/docs/choosing-an-adapter');
+  });
+
+  it('keeps Pricing a plain link and retires the Demo dropdown', () => {
+    pathnameRef.current = '/';
+    render(<Nav />);
+    const navigation = screen.getByRole('navigation');
+
     expect(
-      within(navigation)
-        .getByRole('link', { name: 'Pricing' })
-        .getAttribute('href'),
+      within(navigation).getByRole('link', { name: 'Pricing' }).getAttribute('href'),
     ).toBe('/pricing');
+    expect(within(navigation).queryByRole('button', { name: /^Demo/ })).toBeNull();
+
+    fireEvent.click(within(navigation).getByRole('button', { name: 'Docs' }));
     expect(
-      within(navigation)
+      screen.getByRole('link', { name: /LangGraph demo/ }).getAttribute('href'),
+    ).toBe('https://demo.threadplane.ai');
+    expect(
+      screen.getByRole('link', { name: /AG-UI demo/ }).getAttribute('href'),
+    ).toBe('https://ag-ui.threadplane.ai');
+  });
+
+  it('shows one panel at a time and closes on Escape, restoring trigger focus', () => {
+    pathnameRef.current = '/';
+    render(<Nav />);
+    const navigation = screen.getByRole('navigation');
+    const libraries = within(navigation).getByRole('button', { name: 'Libraries' });
+    const solutions = within(navigation).getByRole('button', { name: 'Solutions' });
+
+    fireEvent.click(libraries);
+    fireEvent.click(solutions);
+    expect(libraries.getAttribute('aria-expanded')).toBe('false');
+    expect(solutions.getAttribute('aria-expanded')).toBe('true');
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(solutions.getAttribute('aria-expanded')).toBe('false');
+    expect(document.activeElement).toBe(solutions);
+  });
+
+  it('tags panel link analytics with the trigger it came from', () => {
+    pathnameRef.current = '/';
+    render(<Nav />);
+    const navigation = screen.getByRole('navigation');
+    fireEvent.click(within(navigation).getByRole('button', { name: 'Solutions' }));
+    fireEvent.click(screen.getByRole('link', { name: /Blog/ }));
+
+    expect(trackCtaClick).toHaveBeenCalledWith({
+      surface: 'nav',
+      destination_url: '/blog',
+      cta_id: 'nav_solutions_blog',
+      cta_text: 'Blog',
+    });
+  });
+
+  it('still links the repository from the bar', () => {
+    pathnameRef.current = '/';
+    render(<Nav />);
+    expect(
+      within(screen.getByRole('navigation'))
         .getByRole('link', { name: 'GitHub repository' })
         .getAttribute('href'),
-    ).toBe(
-      'https://github.com/cacheplane/angular-agent-framework',
-    );
-
-    fireEvent.click(within(navigation).getByRole('button', { name: /^Demo/ }));
-    expect(
-      within(navigation)
-        .getByRole('link', { name: 'LangGraph demo' })
-        .getAttribute('href'),
-    ).toBe(
-      'https://demo.threadplane.ai',
-    );
-    expect(
-      within(navigation)
-        .getByRole('link', { name: 'AG-UI demo' })
-        .getAttribute('href'),
-    ).toBe(
-      'https://ag-ui.threadplane.ai',
-    );
+    ).toBe('https://github.com/cacheplane/angular-agent-framework');
   });
 
   it('retires Examples from mobile navigation without changing primary destinations or demos', () => {
@@ -200,8 +238,13 @@ describe('Docs mobile navigation', () => {
     const trigger = screen.getByRole('button', { name: 'Open menu' });
     fireEvent.click(trigger);
 
-    expect(screen.getByRole('dialog', { name: 'Mobile navigation' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Docs' }).getAttribute('data-active')).not.toBeNull();
+    const dialog = screen.getByRole('dialog', { name: 'Mobile navigation' });
+    expect(dialog).toBeTruthy();
+    // Scoped to the drawer: the desktop bar now has a `Docs` panel trigger too,
+    // so the bare role query would match two buttons.
+    expect(
+      within(dialog).getByRole('button', { name: 'Docs' }).getAttribute('data-active'),
+    ).not.toBeNull();
     expect(screen.getByRole('button', { name: 'Search docs' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Learn' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Settings' })).toBeNull();
