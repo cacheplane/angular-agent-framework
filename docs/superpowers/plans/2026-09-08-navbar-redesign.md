@@ -42,11 +42,13 @@ cd apps/website && npx vitest run src/components/shared/Nav.spec.tsx
 npx nx lint website
 ```
 
-Playwright specs need a dev server; the config starts one. To run a single e2e file:
+Playwright specs need a dev server; the config starts one. To run a single e2e file — note the `--testFiles=` form, because a bare positional path fails on this Nx/Playwright executor with `unknown option '--_=…'`:
 
 ```bash
-npx nx e2e website -- e2e/nav-height.spec.ts
+npx nx e2e website -- --testFiles=e2e/nav-height.spec.ts
 ```
+
+**Free the port first.** A previous run's `next-server` can outlive it and hold the Playwright web-server port, and the failure does not say so. If a spec run hangs or the server will not start, find and kill the orphan before debugging anything else — one was found 19 minutes stale on port 4308 during Task 4. A stale server is also perfectly capable of serving an OLD bundle, so a green run against one proves nothing.
 
 **Tests that will break, and which task fixes each.** These exist today in `src/components/shared/Nav.spec.tsx` and assert the old IA. Do not delete them ahead of time — each is rewritten in the task that changes its behavior:
 
@@ -1404,7 +1406,7 @@ test('the nav is solid on a route with no hero', async ({ page }) => {
 
 - [ ] **Step 4: Run the e2e to verify it passes**
 
-Run: `npx nx e2e website -- e2e/nav-surface.spec.ts`
+Run: `npx nx e2e website -- --testFiles=e2e/nav-surface.spec.ts`
 
 Expected: PASS, 3 tests.
 
@@ -1509,7 +1511,7 @@ test('the docs nav does not grow with the breakpoint', async ({ page }) => {
 
 - [ ] **Step 2: Run the e2e to verify it fails**
 
-Run: `npx nx e2e website -- e2e/nav-height.spec.ts`
+Run: `npx nx e2e website -- --testFiles=e2e/nav-height.spec.ts`
 
 Expected: FAIL on `the docs nav does not grow with the breakpoint` — the docs nav is still 81px at 1440 and 58px at 375.
 
@@ -1558,7 +1560,7 @@ In `apps/website/src/components/shared/Nav.tsx`, add the attribute beside `data-
 
 - [ ] **Step 5: Run the e2e to verify it passes**
 
-Run: `npx nx e2e website -- e2e/nav-height.spec.ts`
+Run: `npx nx e2e website -- --testFiles=e2e/nav-height.spec.ts`
 
 Expected: PASS, 15 tests (6 marketing + 6 docs + the flat-height test + the two positional tests).
 
@@ -1569,7 +1571,7 @@ If a marketing step now fails by more than 1px, the declared value needs re-meas
 The value moved, so everything reading it has to be re-checked in a browser. Run the docs shell suites:
 
 ```bash
-npx nx e2e website -- e2e/docs-shell.spec.ts e2e/docs.spec.ts e2e/workspace-shell.spec.ts
+npx nx e2e website -- --testFiles=e2e/docs-shell.spec.ts --testFiles=e2e/docs.spec.ts --testFiles=e2e/workspace-shell.spec.ts
 ```
 
 Expected: PASS. These cover the docs column's top padding (`docs.css:79`), both sticky rails (`docs.css:99,1824`), and the drawer's `top` (`chrome.css:163`).
