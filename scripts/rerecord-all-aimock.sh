@@ -42,11 +42,12 @@ declare -A CAP_PROMPTS=(
   ["c-subagents"]="Plan a trip from LAX to JFK"
   ["c-generative-ui"]="Show me a dashboard of airline operations.|Filter to only the cancelled flights."
   ["c-a2ui"]="I want to fly LAX to JFK|I want to fly SFO to SEA"
+  ["c-debug"]="What is a jet bridge?"
   ["streaming"]="Tell me one quick fact about Angular signals in two sentences."
 )
 
 # Discover aimock-eligible caps by walking fixture files. Excludes
-# documented-N/A caps (render, ag-ui, c-debug) which have no fixtures.
+# documented-N/A caps (render, ag-ui) which have no fixtures.
 CAPS=()
 while IFS= read -r f; do
   cap_id=$(basename "$f" .json)
