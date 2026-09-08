@@ -287,7 +287,7 @@ function CardView({ card }: { card: Card }) {
         <Icon
           name={card.icon.name}
           x={card.x + CARD_PAD}
-          y={card.y + 32}
+          y={card.y + 32 + (card.contentDy ?? 0)}
           size={44}
           bg={card.icon.bg}
           fg={card.icon.fg}
@@ -315,7 +315,11 @@ function CardView({ card }: { card: Card }) {
           </text>
         </a>
       ) : card.icon ? (
-        <text className="arch-title" x={card.x + CARD_PAD} y={card.y + 116}>
+        <text
+          className="arch-title"
+          x={card.x + CARD_PAD}
+          y={card.y + 116 + (card.contentDy ?? 0)}
+        >
           {card.title}
         </text>
       ) : (

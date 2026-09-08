@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   ARROWS,
+  STRIP_CHIP_H,
   CARDS,
   CARD_GAP,
   CARD_PAD,
@@ -74,19 +75,60 @@ describe('architecture diagram geometry', () => {
     expect(card('ag-ui-servers').y).toBe(bottom.y);
   });
 
-  it('draws every arrow from one card edge to the next card edge, on a grid row', () => {
+  it('lands every arrow on the vertical centre of the card it enters, at one length', () => {
+    const lengths = new Set<number>();
     for (const a of ARROWS) {
-      expect(onGrid(a.y), `arrow y ${a.y}`).toBe(true);
       const from = CARDS.find(
         (c) => c.x + c.width === a.x1 && a.y > c.y && a.y < c.y + c.height
       );
-      const to = CARDS.find(
-        (c) => c.x === a.x2 && a.y > c.y && a.y < c.y + c.height
-      );
+      const to = CARDS.find((c) => c.x === a.x2);
       expect(from, `arrow at ${a.x1} leaves a card`).toBeDefined();
       expect(to, `arrow at ${a.x2} enters a card`).toBeDefined();
-      expect(a.y).toBeGreaterThan(from!.y);
-      expect(a.y).toBeLessThan(from!.y + from!.height);
+      const enters = CARDS.filter(
+        (c) => c.x === a.x2 && a.y > c.y && a.y < c.y + c.height
+      )[0];
+      expect(a.y, `arrow into ${enters?.id}`).toBe(
+        enters!.y + enters!.height / 2
+      );
+      lengths.add(a.x2 - a.x1);
+    }
+    expect([...lengths], 'every arrow is the same length').toHaveLength(1);
+  });
+
+  it('spaces the columns evenly and centres the drawing in the view', () => {
+    const xs = [...new Set(CARDS.map((c) => c.x))].sort((a, b) => a - b);
+    const gaps = xs.slice(1).map((x, i) => {
+      const right = Math.max(
+        ...CARDS.filter((c) => c.x === xs[i]).map((c) => c.x + c.width)
+      );
+      return x - right;
+    });
+    expect([...new Set(gaps)], `column gaps ${gaps}`).toHaveLength(1);
+    expect(onGrid(gaps[0])).toBe(true);
+    const left = xs[0];
+    const right = VIEW.width - Math.max(...CARDS.map((c) => c.x + c.width));
+    expect(right, 'left and right margins match').toBe(left);
+    expect(
+      VIEW.height - (MODEL_STRIP.chipY + STRIP_CHIP_H),
+      'bottom margin matches the sides'
+    ).toBe(left);
+    expect(MODEL_STRIP.x, 'the strip starts at the first column').toBe(left);
+  });
+
+  it('aligns the rows of side-by-side cards', () => {
+    const firstItemY = (id: string) => {
+      const r = card(id).rows.find((row) => row.kind === 'items');
+      return r && r.kind === 'items' ? r.y : null;
+    };
+    expect(firstItemY('langsmith')).toBe(firstItemY('langgraph-sdk'));
+    expect(firstItemY('ag-ui-servers')).toBe(firstItemY('ag-ui'));
+    // Both rows of the stack share their tops and bottoms across the columns.
+    for (const [a, b] of [
+      ['langgraph-sdk', 'langsmith'],
+      ['ag-ui', 'ag-ui-servers'],
+    ] as const) {
+      expect(card(b).y).toBe(card(a).y);
+      expect(card(b).height).toBe(card(a).height);
     }
   });
 

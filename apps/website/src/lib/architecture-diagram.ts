@@ -14,7 +14,7 @@
  * of a role, never as integrations the library claims.
  */
 
-export const VIEW = { width: 1280, height: 624 } as const;
+export const VIEW = { width: 1280, height: 640 } as const;
 export const GRID = 8;
 export const MAJOR = 40;
 export const CARD_GAP = 40;
@@ -122,6 +122,8 @@ export interface Card {
     readonly bg: string;
     readonly fg: string;
   };
+  /** Pushes an icon card's icon and title down, to centre a short card's content. */
+  readonly contentDy?: number;
   /** Right-aligned tag on the card's first line. */
   readonly tag?: string;
   readonly highlight?: boolean;
@@ -145,30 +147,33 @@ export interface StripChip {
 }
 
 export const COLUMNS: readonly ColumnLabel[] = [
-  { x: 64, label: 'YOUR USERS' },
-  { x: 304, label: 'YOUR ANGULAR APPLICATION' },
-  { x: 776, label: 'ADAPTERS' },
-  { x: 1024, label: 'YOUR AGENTS' },
+  { x: 48, label: 'YOUR USERS' },
+  { x: 288, label: 'YOUR ANGULAR APPLICATION' },
+  { x: 744, label: 'ADAPTERS' },
+  { x: 1008, label: 'YOUR AGENTS' },
 ];
 export const COLUMN_LABEL_Y = 72;
 
 export const CARDS: readonly Card[] = [
   {
     id: 'users',
-    x: 64,
+    x: 48,
     y: 104,
     width: 176,
     height: 392,
     title: 'People',
     href: '/docs/chat/getting-started/introduction',
     icon: { name: 'users', bg: '#fff3e0', fg: '#c2410c' },
-    rows: [{ kind: 'text', y: 248, text: 'web · mobile' }],
+    // The column's single node: its block is centred on the card, where its
+    // outgoing arrow leaves.
+    contentDy: 104,
+    rows: [{ kind: 'text', y: 352, text: 'web · mobile' }],
   },
   {
     id: 'threadplane',
-    x: 304,
+    x: 288,
     y: 104,
-    width: 408,
+    width: 392,
     height: 392,
     title: 'Threadplane',
     href: '/docs/chat/getting-started/introduction',
@@ -202,8 +207,8 @@ export const CARDS: readonly Card[] = [
           },
         ],
       },
-      { kind: 'badge', x: 540, y: 224, mark: 'google', label: 'A2UI' },
-      { kind: 'badge', x: 540, y: 272, mark: 'vercel', label: 'json-render' },
+      { kind: 'badge', x: 524, y: 224, mark: 'google', label: 'A2UI' },
+      { kind: 'badge', x: 524, y: 272, mark: 'vercel', label: 'json-render' },
       {
         kind: 'mono',
         y: 470,
@@ -213,7 +218,7 @@ export const CARDS: readonly Card[] = [
   },
   {
     id: 'langgraph-sdk',
-    x: 776,
+    x: 744,
     y: 104,
     width: 200,
     height: 208,
@@ -238,7 +243,7 @@ export const CARDS: readonly Card[] = [
   },
   {
     id: 'ag-ui',
-    x: 776,
+    x: 744,
     y: 352,
     width: 200,
     height: 144,
@@ -247,14 +252,14 @@ export const CARDS: readonly Card[] = [
     href: '/docs/ag-ui/getting-started/introduction',
     mark: 'agui',
     rows: [
-      { kind: 'items', y: 460, step: 32, items: ['events · tools · state'] },
+      { kind: 'items', y: 468, step: 32, items: ['events · tools · state'] },
     ],
   },
   {
     id: 'langsmith',
-    x: 1024,
+    x: 1008,
     y: 104,
-    width: 216,
+    width: 224,
     height: 208,
     title: 'LangSmith',
     href: '/docs/langgraph/guides/deployment',
@@ -262,7 +267,7 @@ export const CARDS: readonly Card[] = [
     rows: [
       {
         kind: 'items',
-        y: 200,
+        y: 212,
         step: 32,
         items: ['deploy · observe', 'traces · evals', 'or self-hosted'],
       },
@@ -270,16 +275,16 @@ export const CARDS: readonly Card[] = [
   },
   {
     id: 'ag-ui-servers',
-    x: 1024,
+    x: 1008,
     y: 352,
-    width: 216,
+    width: 224,
     height: 144,
     title: 'AG-UI servers',
     href: '/docs/runtimes/getting-started/introduction',
     rows: [
       {
         kind: 'marks',
-        y: 400,
+        y: 408,
         marks: ['crewai', 'mastra', 'microsoft', 'bedrock', 'pydantic'],
         size: 30,
         step: 34,
@@ -294,25 +299,26 @@ export const CARDS: readonly Card[] = [
   },
 ];
 
+/** Each arrow lands on the vertical centre of the card it enters. */
 export const ARROWS: readonly Arrow[] = [
-  { x1: 240, x2: 304, y: 272 },
-  { x1: 712, x2: 776, y: 208 },
-  { x1: 712, x2: 776, y: 424 },
-  { x1: 976, x2: 1024, y: 208 },
-  { x1: 976, x2: 1024, y: 424 },
+  { x1: 224, x2: 288, y: 300 },
+  { x1: 680, x2: 744, y: 208 },
+  { x1: 680, x2: 744, y: 424 },
+  { x1: 944, x2: 1008, y: 208 },
+  { x1: 944, x2: 1008, y: 424 },
 ];
 /** The two-line caption between the adapter arrows. */
 export const CONTRACT_CAPTION = {
-  x: 744,
+  x: 712,
   y: 306,
   lines: ['one Agent', 'contract'],
 } as const;
 
 export const MODEL_STRIP = {
   label: 'ANY MODEL',
-  labelY: 540,
+  labelY: 524,
   chipY: 556,
-  x: 64,
+  x: 48,
   chips: [
     { mark: 'openai', label: 'OpenAI' },
     { mark: 'anthropic', label: 'Anthropic' },
