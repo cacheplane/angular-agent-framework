@@ -88,12 +88,11 @@ test('c-debug: the State tab swaps in the live state inspector', async ({ page }
   // The tab owns the panel body — the timeline is torn down, not stacked.
   await expect(page.locator('chat-debug-checkpoint-card')).toHaveCount(0);
   // `agent.state()` is the LangGraph values bag with `messages` projected out
-  // into the transcript, so on this MessagesState graph the inspector renders
-  // an empty object today. Assert the shape the JsonPipe produces rather than
-  // that exact literal: the claim is that the inspector is mounted and bound
-  // to the agent, and a graph that carries state beyond its messages should
-  // widen this tab's coverage, not fail it.
-  await expect(stateTab.locator('chat-debug-state-inspector pre')).toHaveText(
-    /^\{[\s\S]*\}$/,
-  );
+  // into the transcript. This graph's DebugState also carries `analysis`, the
+  // metrics the `process` node computes, so the inspector has real run state
+  // to print — that is what makes this tab worth opening.
+  const inspector = stateTab.locator('chat-debug-state-inspector pre');
+  await expect(inspector).toContainText('analysis');
+  await expect(inspector).toContainText('characters');
+  await expect(inspector).toContainText('words');
 });
