@@ -54,6 +54,10 @@ Playwright specs need a dev server; the config starts one. To run a single e2e f
 npx nx e2e website -- --testFiles=e2e/nav-height.spec.ts
 ```
 
+**Playwright `.hover()` does not traverse.** It jumps straight to the target's centre in one step, so it never crosses the space between two elements. Any test whose subject is a *path* — a hover grace period, a dead zone between a trigger and its panel, a drag — is vacuous when written with `.hover()`: it passes identically whether the behaviour works or not. Task 4 shipped exactly such a test and only caught it because the mutation proof failed to fail. Use `page.mouse.move(x, y, { steps: 15 })` when the movement is the thing under test.
+
+**An entrance animation makes geometry assertions flaky.** A test that samples several `boundingBox()` values in sequence can read them mid-interpolation — Task 4's four-item layout test failed roughly one run in five with a ~2px discrepancy after a 140ms transform was added. Await `getAnimations().finished` on the animating element before sampling. Waiting for the animation to settle is legitimate; a fixed `waitForTimeout` or a retry-until-green loop is masking, and the assertions themselves must not change.
+
 **Free the port first.** A previous run's `next-server` can outlive it and hold the Playwright web-server port, and the failure does not say so. If a spec run hangs or the server will not start, find and kill the orphan before debugging anything else — one was found 19 minutes stale on port 4308 during Task 4. A stale server is also perfectly capable of serving an OLD bundle, so a green run against one proves nothing.
 
 **Tests that will break, and which task fixes each.** These exist today in `src/components/shared/Nav.spec.tsx` and assert the old IA. Do not delete them ahead of time — each is rewritten in the task that changes its behavior:
