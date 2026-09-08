@@ -521,7 +521,16 @@
 .nav-panel[data-columns='3'] .nav-panel-cols {
   grid-template-columns: repeat(3, 1fr);
 }
+/* The Libraries panel is one column of four items that must sit side by side,
+ * not three columns of stacked items like Docs and Solutions. The tracks
+ * therefore belong on the column itself — putting them on .nav-panel-cols
+ * gives a four-track grid exactly one child wide, which left three quarters of
+ * the panel empty. e2e/nav-panels.spec.ts measures this. */
 .nav-panel[data-columns='1'] .nav-panel-cols {
+  grid-template-columns: 1fr;
+}
+.nav-panel[data-columns='1'] .nav-panel-col {
+  display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 6px;
 }
