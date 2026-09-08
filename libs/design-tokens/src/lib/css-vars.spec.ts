@@ -9,12 +9,17 @@ describe('cssVars(theme)', () => {
       expect(vars['--ds-canvas']).toBe('rgb(255, 255, 255)');
     });
 
-    it('uses navy accent', () => {
-      expect(vars['--ds-accent']).toBe('#004090');
+    it('uses scope-navy accent as the interactive ink', () => {
+      expect(vars['--ds-accent']).toBe('#15253E');
     });
 
-    it('uses dark text on light surfaces', () => {
-      expect(vars['--ds-text-primary']).toBe('rgb(28, 28, 28)');
+    it('uses near-black text on light surfaces', () => {
+      expect(vars['--ds-text-primary']).toBe('#0A0A0A');
+    });
+
+    it('exposes aviation yellow as a fill-only signal, not as the ink', () => {
+      expect(vars['--ds-accent-light']).toBe('#FFAF00');
+      expect(vars['--ds-accent']).not.toBe(vars['--ds-accent-light']);
     });
   });
 
@@ -26,7 +31,7 @@ describe('cssVars(theme)', () => {
     });
 
     it('uses bright-blue accent', () => {
-      expect(vars['--ds-accent']).toBe('#64C3FD');
+      expect(vars['--ds-accent']).toBe('#FFAF00');
     });
 
     it('uses near-white text on dark surfaces', () => {

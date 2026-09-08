@@ -24,13 +24,15 @@ export const darkOverrides = Object.freeze({
   bg: 'rgb(17, 17, 17)',
   sidebarBg: 'rgba(28, 28, 28, 0.65)',
 
-  // Semantic accent maps to the bright-blue brand color (readable on dark surfaces)
+  // Semantic accent maps to aviation yellow (8.33:1 on the dark ground).
+  // `accent` derives from the brand token; the tints below must be re-derived
+  // with it or they silently stay blue.
   accent: baseTokens.brand.accentLight,
-  accentHover: '#8dd4ff',
-  accentGlow: 'rgba(100, 195, 253, 0.25)',
-  accentBorder: 'rgba(100, 195, 253, 0.2)',
-  accentBorderHover: 'rgba(100, 195, 253, 0.35)',
-  accentSurface: 'rgba(100, 195, 253, 0.08)',
+  accentHover: '#ffc233',
+  accentGlow: 'rgba(255, 175, 0, 0.25)',
+  accentBorder: 'rgba(255, 175, 0, 0.22)',
+  accentBorderHover: 'rgba(255, 175, 0, 0.4)',
+  accentSurface: 'rgba(255, 175, 0, 0.1)',
 } as const);
 
 export type DarkOverrides = typeof darkOverrides;

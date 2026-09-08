@@ -14,11 +14,25 @@ export const baseTokens = Object.freeze({
   radius,
   shadows,
   brand: Object.freeze({
-    /** LangGraph navy — used as the light-theme semantic accent */
-    accent: '#004090',
-    /** Bright sky blue — used as the dark-theme semantic accent */
-    accentLight: '#64C3FD',
-    /** Angular brand red */
+    /** Scope navy — the ATC radar panel. The light-theme interactive ink. */
+    accent: '#15253E',
+    /**
+     * Aviation yellow. Fill only: 1.84:1 on white, so it is never a text or
+     * icon colour on a light surface. Doubles as the dark-theme accent, where
+     * it reaches 8.33:1 — dark.ts derives its accent from this name.
+     */
+    accentLight: '#FFAF00',
+    /** Aviation yellow, by its intended name. Same value as accentLight. */
+    signal: '#FFAF00',
+    /** Frequency-strip amber. Full-bleed data strips only. */
+    signalStrong: '#FFB700',
+    /** Scope navy — dark grounds and data strips. */
+    scope: '#15253E',
+    /** LIVE red-orange. 3.68:1, so status fills and large bold text only. */
+    alert: '#FF3200',
+    /** Near-black. Text on yellow, and the light-theme text primary. */
+    ink: '#0A0A0A',
+    /** Angular brand red — trademark colour, not ours to retheme */
     angularRed: '#DD0031',
     /** Render library green */
     renderGreen: '#1a7a40',
