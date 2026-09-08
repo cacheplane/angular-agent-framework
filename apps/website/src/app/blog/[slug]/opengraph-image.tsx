@@ -72,15 +72,14 @@ export default async function og({ params }: Params) {
           padding: 64,
           background: CARD.ground,
           color: CARD.ink,
-          fontFamily: 'Inter, sans-serif',
+          fontFamily: 'Archivo, sans-serif',
         }}
       >
         <Rail text="THREADPLANE BLOG" />
         <div
           style={{
-            fontFamily: 'EB Garamond, Georgia, serif',
+            fontFamily: 'Archivo Black, sans-serif',
             fontSize: 64,
-            fontWeight: 700,
             lineHeight: 1.1,
             letterSpacing: '-0.02em',
             color: CARD.ink,

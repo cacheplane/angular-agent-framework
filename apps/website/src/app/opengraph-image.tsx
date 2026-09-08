@@ -44,7 +44,7 @@ export default async function OpenGraphImage() {
           height: '100%',
           display: 'flex',
           background: CARD.ground,
-          fontFamily: 'Inter, sans-serif',
+          fontFamily: 'Archivo, sans-serif',
           position: 'relative',
           overflow: 'hidden',
         }}
@@ -56,8 +56,7 @@ export default async function OpenGraphImage() {
               display: 'flex',
               flexDirection: 'column',
               marginTop: 22,
-              fontFamily: 'EB Garamond, Georgia, serif',
-              fontWeight: 700,
+              fontFamily: 'Archivo Black, sans-serif',
               fontSize: 60,
               lineHeight: 1.04,
               letterSpacing: '-0.02em',

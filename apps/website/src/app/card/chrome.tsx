@@ -48,8 +48,10 @@ export function Wordmark({ size = 34, color = CARD.ink }: { size?: number; color
         display: 'flex',
         alignItems: 'center',
         gap: 13,
-        fontFamily: 'EB Garamond',
-        fontWeight: 700,
+        // Archivo Black is a single-weight family, so there is no `fontWeight`
+        // here: asking for 700 only sends Satori hunting for a bold that the
+        // bundled face does not contain.
+        fontFamily: 'Archivo Black',
         fontSize: size,
         color,
       }}

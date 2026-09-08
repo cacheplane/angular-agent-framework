@@ -49,12 +49,12 @@ describe('card fonts', () => {
    * These are read off disk at render time. If one goes missing the card does
    * not fail — `satoriFonts` drops it and Satori falls back — so a deleted or
    * unbuilt face is invisible until someone looks at a card and finds the
-   * mono eyebrow set in serif. Assert they exist instead.
+   * mono eyebrow set in Satori's fallback. Assert they exist instead.
    */
   it.each([
-    'EBGaramond-Bold.ttf',
-    'Inter-Regular.ttf',
-    'Inter-SemiBold.ttf',
+    'ArchivoBlack-Regular.ttf',
+    'Archivo-Regular.ttf',
+    'Archivo-SemiBold.ttf',
     'JetBrainsMono-Bold.ttf',
   ])('%s is bundled', (name) => {
     const stat = statSync(join(__dirname, 'fonts', name));
@@ -66,7 +66,13 @@ describe('card fonts', () => {
     // Satori throws "Cannot read properties of undefined (reading '256')" on a
     // variable font, which would 500 the request-time default card. The build
     // script strips `fvar`; this asserts the tag is absent from the file.
-    for (const name of ['EBGaramond-Bold.ttf', 'Inter-Regular.ttf', 'JetBrainsMono-Bold.ttf']) {
+    const names = [
+      'ArchivoBlack-Regular.ttf',
+      'Archivo-Regular.ttf',
+      'Archivo-SemiBold.ttf',
+      'JetBrainsMono-Bold.ttf',
+    ];
+    for (const name of names) {
       const buf = readFileSync(join(__dirname, 'fonts', name));
       expect(buf.subarray(0, 2048).includes(Buffer.from('fvar'))).toBe(false);
     }

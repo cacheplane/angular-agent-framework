@@ -6,15 +6,21 @@ Why this script exists
 Satori (the engine behind Next.js ImageResponse) cannot decode woff2, which is
 the only format Google Fonts serves, and it crashes on variable-weight TTFs
 with "Cannot read properties of undefined (reading '256')". So every face a
-card uses has to be instanced to a single weight, stripped of its variable
-tables, and committed.
+card uses has to reach the renderer as a single static weight, stripped of its
+variable tables, and committed.
 
-Until now only Garamond was bundled (see instance-garamond.py, which this
-script supersedes). Inter and JetBrains Mono were scraped from the Google
-Fonts CSS API on every card render. That is a network round trip inside an
-image render, and when it fails there is no error — the card silently falls
-back to whatever loaded, which is how a card whose eyebrow and pills are
-specified in mono came out set in serif. Bundling removes the dependency.
+Every face a card uses is bundled here rather than scraped from the Google
+Fonts CSS API at render time. That was a network round trip inside an image
+render, and when it failed there was no error — the card silently fell back to
+whatever loaded, which is how a card whose eyebrow and pills are specified in
+mono came out set in serif. Bundling removes the dependency.
+
+The faces are the site's own: Archivo Black for display type, Archivo for
+body, JetBrains Mono for the eyebrow and pills. Archivo Black is shipped by
+Google as a *static* font — it has no `fvar` — so instancing is conditional;
+running the instancer over it would fail rather than no-op. Archivo's variable
+source carries a `wdth` axis alongside `wght`, which has to be pinned too, or
+variable tables survive into the output and Satori chokes on them.
 
 The fonts are subsetted to Latin plus the punctuation the site actually uses,
 which is what keeps four faces under 150KB total rather than well over 1MB.
@@ -22,7 +28,7 @@ Blog post titles are the only unbounded text on a card; anything outside this
 range falls back to Satori's bundled Noto Sans rather than failing.
 
 Usage:
-    pip install --user fonttools brotli
+    pip install --user fonttools   # no brotli: this reads and writes TTF
     python3 apps/website/scripts/build-card-fonts.py
 
 Re-run if an upstream font is updated, and commit the result.
@@ -45,18 +51,19 @@ UNICODES = "U+0020-007E,U+00A0-00FF,U+2010-2015,U+2018-201A,U+201C-201E,U+2022,U
 
 FACES = [
     {
-        "name": "EBGaramond-Bold.ttf",
-        "url": "https://github.com/google/fonts/raw/main/ofl/ebgaramond/EBGaramond%5Bwght%5D.ttf",
-        "weight": 700,
-    },
-    {
-        "name": "Inter-Regular.ttf",
-        "url": "https://github.com/google/fonts/raw/main/ofl/inter/Inter%5Bopsz,wght%5D.ttf",
+        # Static — no `fvar`, so `build()` skips instancing for this one.
+        "name": "ArchivoBlack-Regular.ttf",
+        "url": "https://github.com/google/fonts/raw/main/ofl/archivoblack/ArchivoBlack-Regular.ttf",
         "weight": 400,
     },
     {
-        "name": "Inter-SemiBold.ttf",
-        "url": "https://github.com/google/fonts/raw/main/ofl/inter/Inter%5Bopsz,wght%5D.ttf",
+        "name": "Archivo-Regular.ttf",
+        "url": "https://github.com/google/fonts/raw/main/ofl/archivo/Archivo%5Bwdth,wght%5D.ttf",
+        "weight": 400,
+    },
+    {
+        "name": "Archivo-SemiBold.ttf",
+        "url": "https://github.com/google/fonts/raw/main/ofl/archivo/Archivo%5Bwdth,wght%5D.ttf",
         "weight": 600,
     },
     {
@@ -75,12 +82,20 @@ def build(face: dict) -> None:
         raw = tmp.name
 
     font = TTFont(raw)
-    axes = {"wght": face["weight"]}
-    # Inter carries an optical-size axis as well; pin it to its text setting so
-    # instancing leaves no variable tables behind for Satori to trip over.
-    if "fvar" in font and any(a.axisTag == "opsz" for a in font["fvar"].axes):
-        axes["opsz"] = 14
-    font = instantiateVariableFont(font, axes, updateFontNames=False, inplace=True)
+    # Archivo Black ships static, with no `fvar`. Running the instancer over a
+    # font with no axes is not a harmless no-op, so only instance when there is
+    # something to instance. Every *other* axis the source carries has to be
+    # pinned as well, or its variation tables survive for Satori to trip over.
+    # Archivo carries `wdth` (pinned to the normal width); `opsz` is handled
+    # too, since Google ships several text faces with an optical-size axis.
+    if "fvar" in font:
+        tags = {a.axisTag for a in font["fvar"].axes}
+        axes = {"wght": face["weight"]}
+        if "wdth" in tags:
+            axes["wdth"] = 100
+        if "opsz" in tags:
+            axes["opsz"] = 14
+        font = instantiateVariableFont(font, axes, updateFontNames=False, inplace=True)
     for table in ("fvar", "STAT", "MVAR", "HVAR", "VVAR", "gvar", "cvar", "avar"):
         if table in font:
             del font[table]

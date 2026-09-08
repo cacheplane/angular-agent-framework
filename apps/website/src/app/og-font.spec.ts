@@ -2,17 +2,17 @@ import { describe, expect, it } from 'vitest';
 import { satoriFonts, type OgFont } from './og-font';
 
 const FONT: OgFont = {
-  name: 'EB Garamond',
+  name: 'Archivo Black',
   data: new ArrayBuffer(8),
-  weight: 700,
+  weight: 400,
   style: 'normal',
 };
 
 describe('satoriFonts', () => {
   it('drops the fonts that failed to load', () => {
-    expect(satoriFonts([FONT, null, { ...FONT, name: 'Inter', weight: 400 }])).toEqual([
+    expect(satoriFonts([FONT, null, { ...FONT, name: 'JetBrains Mono', weight: 700 }])).toEqual([
       FONT,
-      { ...FONT, name: 'Inter', weight: 400 },
+      { ...FONT, name: 'JetBrains Mono', weight: 700 },
     ]);
   });
 
