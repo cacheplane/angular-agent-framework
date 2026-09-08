@@ -13,7 +13,7 @@ The Run tab shows a split surface. The rendered output is on the left, the JSON 
 Below the JSON is a List Controls panel over the store. **Add Item** appends a new entry to the `/items` array and the small cross beside each row removes it, and because Simple List binds a repeating element to `/items`, the rendered surface on the left gains or loses a row as you do. The other two specs, Task List and Sections, name their rows as explicit children with literal text, which is the enumerated form a repeat replaces.
 
 <Callout type="info" title="Two shapes, side by side">
-Simple List is the repeat form: one `Text` element with `repeat: { statePath: '/items' }` under a `Heading`, so adding an item adds a rendered row. Task List and Sections are the enumerated form the repeat collapses, so their rows do not move when the array does. The store holds plain strings rather than objects, which is why the repeated element binds `content` to `{ "$item": "" }` — the whole item — rather than to a field on it.
+Simple List is the repeat form: one `Text` element with `repeat: { statePath: '/items' }` under a `Heading`, so adding an item adds a rendered row. Task List and Sections are the enumerated form the repeat collapses, so their rows do not move when the array does. The store holds objects, so the repeated element binds `content` to `{ "$item": "label" }` — a field on the current item. Binding to `{ "$item": "" }` would hand the component the whole item instead.
 </Callout>
 
 ## How it is built
@@ -134,6 +134,25 @@ A `visible` condition on the element that carries `repeat` is evaluated once per
 ```
 
 Only the entries whose condition holds are mounted; the rest leave no markup behind. Filtering the array in the state model before it reaches the repeat path remains an option, and is the better one when the hidden rows should not be in the model at all.
+
+## Per-item readiness
+
+Each mount is gated on its own resolved props, not on the element's. A row whose `$item`-bound props have not arrived yet shows the registry entry's fallback while its ready siblings show the real component, and a registry `schema` is validated once per row against that row's props. The switch from fallback to real component is one-way per row, so a value that later becomes `undefined` never sends a mounted row back to its fallback.
+
+Action params follow the same rule: `{ "$item": … }` inside an `ActionBinding`'s `params` resolves in the scope of the row whose component emitted the event, whether the component fires through the `emit` input or through `injectRenderHost()`.
+
+```json
+{
+  "row": {
+    "type": "Button",
+    "props": { "label": { "$item": "title" } },
+    "repeat": { "statePath": "/tasks" },
+    "on": { "click": { "action": "openTask", "params": { "id": { "$item": "id" } } } }
+  }
+}
+```
+
+Clicking the second row calls `handlers.openTask({ id: /* the second task's id */ })`.
 
 ## Item scope in Angular
 

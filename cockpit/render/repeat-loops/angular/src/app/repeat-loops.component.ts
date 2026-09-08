@@ -353,7 +353,7 @@ class DemoCardComponent {
           <button class="control-btn" type="button" style="width:100%" (click)="addItem()">+ Add Item</button>
           <div style="margin-top:0.6rem">
             @for (item of getItems(); track $index) {
-              <div class="list-row"><span>{{ item }}</span><button class="list-row__remove" type="button" (click)="removeItem($index)">×</button></div>
+              <div class="list-row"><span>{{ item.label }}</span><button class="list-row__remove" type="button" (click)="removeItem($index)">×</button></div>
             }
           </div>
           <p class="control-hint">Mutates the <code>/items</code> array in the state store.</p>
@@ -395,25 +395,27 @@ export class RepeatLoopsComponent implements OnDestroy {
     Card: DemoCardComponent,
   });
 
-  protected readonly store = signalStateStore({ items: ['Alpha', 'Beta', 'Gamma'] });
+  protected readonly store = signalStateStore({
+    items: [{ label: 'Alpha' }, { label: 'Beta' }, { label: 'Gamma' }],
+  });
   // #endregion
 
   // #region list-state
   private counter = 0;
 
-  protected getItems(): string[] {
-    return (this.store.get('/items') as string[]) ?? [];
+  protected getItems(): { label: string }[] {
+    return (this.store.get('/items') as { label: string }[]) ?? [];
   }
 
   protected addItem(): void {
     this.counter++;
     const items = this.getItems();
-    this.store.set('/items', [...items, `Item ${this.counter}`]);
+    this.store.set('/items', [...items, { label: `Item ${this.counter}` }]);
   }
 
   protected removeItem(index: number): void {
     const items = this.getItems();
-    this.store.set('/items', items.filter((_: string, i: number) => i !== index));
+    this.store.set('/items', items.filter((_: { label: string }, i: number) => i !== index));
   }
   // #endregion
 

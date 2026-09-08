@@ -42,7 +42,7 @@
       {
         "name": "filteredRepeatInputs",
         "type": "Signal<Record<string, unknown>[]>",
-        "description": "`repeatInputs` filtered per-item to declared component inputs.",
+        "description": "`repeatInputs` filtered per-item to declared component inputs — against\n that item's own mount class, which may be the fallback while a sibling\n already shows the real component.",
         "optional": false
       },
       {
@@ -78,13 +78,25 @@
       {
         "name": "repeatInjectors",
         "type": "Signal<DestroyableInjector<>[]>",
-        "description": "One child Injector per repeat item, providing RepeatScope.",
+        "description": "One child Injector per repeat item, providing RepeatScope and a\n row-scoped RenderHost (so `injectRenderHost().emit(…)` carries the row).",
         "optional": false
       },
       {
         "name": "repeatInputs",
         "type": "Signal<object[]>",
         "description": "Resolved inputs for each repeat item.",
+        "optional": false
+      },
+      {
+        "name": "repeatMountClasses",
+        "type": "Signal<AngularComponentRenderer | null[]>",
+        "description": "Per-item counterpart of mountClass.",
+        "optional": false
+      },
+      {
+        "name": "repeatNotReady",
+        "type": "Signal<boolean[]>",
+        "description": "Per-item counterpart of notReady: a row whose `$item`-bound props\n have not resolved yet shows the fallback while its ready siblings mount\n the real component. Latched per index, exactly as the single mount is.",
         "optional": false
       },
       {
@@ -377,7 +389,7 @@
   {
     "name": "RenderHost",
     "kind": "interface",
-    "description": "The element-scoped host a mounted view component talks back through.\nAgent-agnostic: `result(value)` just means \"this component produced a\nvalue\"; the render lib surfaces it as a RenderResultEvent and never\ninterprets it. Provided per-element by RenderElementComponent.",
+    "description": "The element-scoped host a mounted view component talks back through.\nAgent-agnostic: `result(value)` just means \"this component produced a\nvalue\"; the render lib surfaces it as a RenderResultEvent and never\ninterprets it. Provided per-element by RenderElementComponent, and once\nper row for a repeating element, so `emit` carries the row that fired it\nand `{ $item: … }` action params resolve in that row's scope.",
     "properties": [],
     "methods": [
       {
