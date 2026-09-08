@@ -73,10 +73,6 @@ comments — a drive-by is worse than not posting.
 >   this action" looks like is a product decision.
 > - Tracing and evaluation are yours — those belong to tools built for them, not a UI library.
 >
-> That interrupt row is one I had to correct. An earlier draft of our homepage claimed
-> destructive actions were held for approval automatically. They aren't. Checking our own
-> marketing against our own docs turned one confident checkmark into two honest lines.
->
 > What *is* in the box: `<chat>` plus 15 components, streaming markdown, durable threads with
 > checkpoints and time travel, interrupts, client tools, generative UI (json-render and
 > A2UI), subagents, classified errors with retry, and a test path that runs with no model and
