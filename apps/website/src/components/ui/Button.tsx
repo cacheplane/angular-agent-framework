@@ -14,6 +14,8 @@ interface CommonProps {
   size?: Size;
   /** Optional right-side icon — typically an arrow for ghost links. */
   trailingIcon?: ReactNode;
+  /** Optional left-side icon — typically a brand mark (e.g. the GitHub logo). */
+  leadingIcon?: ReactNode;
 }
 
 type AnchorButtonProps = CommonProps &
@@ -34,12 +36,14 @@ export function Button(props: ButtonProps) {
     variant = 'primary',
     size = 'md',
     trailingIcon,
+    leadingIcon,
     className,
     style,
   } = props;
 
   const content = (
     <>
+      {leadingIcon ? <span aria-hidden="true">{leadingIcon}</span> : null}
       <span>{children}</span>
       {trailingIcon ? <span aria-hidden="true">{trailingIcon}</span> : null}
     </>
@@ -52,6 +56,7 @@ export function Button(props: ButtonProps) {
       variant: _v,
       size: _s,
       trailingIcon: _t,
+      leadingIcon: _li,
       className: _cn,
       style: _st,
       ...anchorAttrs
@@ -76,6 +81,7 @@ export function Button(props: ButtonProps) {
     variant: _v2,
     size: _s2,
     trailingIcon: _t2,
+    leadingIcon: _li2,
     className: _cn2,
     style: _st2,
     href: _h,

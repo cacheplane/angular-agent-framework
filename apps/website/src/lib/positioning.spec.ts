@@ -49,7 +49,9 @@ describe('positioning: hero copy', () => {
   it('names the exact category in eyebrow, H1, title and description', () => {
     expect(HERO_EYEBROW).toBe('Angular · LangGraph & AG-UI');
     expect(HERO_H1).toBe('The open-source thread-plane for agents.');
-    expect(HERO_SUBHEAD).toBe('Chat, threads, approvals, and generative UI on Signals and DI. Your backend stays where it is.');
+    expect(HERO_SUBHEAD).toBe(
+      'Chat, durable threads, persistence, human approvals, and generative UI for Angular, on LangGraph and AG-UI. Your backend stays where it is.',
+    );
     expect(HOME_TITLE).toBe('Threadplane — The open-source thread-plane for agents');
     expect(HOME_DESCRIPTION).toBe(
       'The open-source thread-plane for agents: chat, durable threads, persistence, human approvals, and generative UI for Angular, on LangGraph and AG-UI.',
@@ -185,13 +187,16 @@ describe('homepage restructure copy (live-stage spec §3)', () => {
     }
   });
 
-  it('carries the three prove-it rows the final CTA absorbs from the Test section', async () => {
-    const { PROVE_IT_ROWS } = await import('./positioning');
-    expect(PROVE_IT_ROWS).toEqual([
-      { claim: 'No key, no server, no network', api: 'provideFakeAgent()' },
-      { claim: 'Script tool calls and interrupts', api: 'mockLangGraphAgent()' },
-      { claim: 'Same UI code in test and production', api: 'Agent' },
-    ]);
+  it('closes on the open-source offer: one sentence, the licence, the fork CTA', async () => {
+    const { OPEN_SOURCE_STRIP } = await import('./positioning');
+    expect(`${OPEN_SOURCE_STRIP.lead} ${OPEN_SOURCE_STRIP.emphasis}`).toBe(
+      'Yes, this is all free. Don’t like something? Fork us.',
+    );
+    // The strip is one line on a wide viewport; long copy would wrap into the
+    // action group and undo the whole point of the shape.
+    expect(`${OPEN_SOURCE_STRIP.lead} ${OPEN_SOURCE_STRIP.emphasis}`.length).toBeLessThanOrEqual(60);
+    expect(OPEN_SOURCE_STRIP.licence).toBe('MIT');
+    expect(OPEN_SOURCE_STRIP.cta).toBe('Fork on GitHub');
   });
 });
 

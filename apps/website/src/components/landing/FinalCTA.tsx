@@ -8,7 +8,7 @@ import { trackCtaClick } from '../../lib/analytics/client';
 import type { CtaId } from '../../lib/analytics/events';
 
 interface FinalCTAProps {
-  /** Headline. Defaults to the homepage closer. */
+  /** Headline. Defaults to the product closer. */
   headline?: string;
   /** Sub-headline. Defaults to the homepage closer. */
   subtext?: string;
@@ -24,9 +24,6 @@ interface FinalCTAProps {
   caption?: string | null;
   /** Optional link rendered after the caption text (e.g. "Talk to an engineer"). */
   captionLink?: { label: string; href: string } | null;
-  /** Optional claim/api rows rendered above the headline (the homepage's
-   *  "prove it without a backend" moment). Omitted everywhere else. */
-  rows?: readonly { readonly claim: string; readonly api: string }[];
   /** Further caption links, rendered after `captionLink`. */
   captionLinks?: readonly { label: string; href: string }[];
   /**
@@ -49,7 +46,6 @@ export function FinalCTA({
   secondary = DEFAULT_SECONDARY,
   caption = null,
   captionLink = null,
-  rows = [],
   captionLinks = [],
   variant = 'default',
 }: FinalCTAProps = {}) {
@@ -65,16 +61,6 @@ export function FinalCTA({
             <div className="final-cta-mark" aria-hidden="true">
               →
             </div>
-          ) : null}
-          {rows.length > 0 ? (
-            <ul className="final-cta-rows" role="list" aria-label="What you can prove first">
-              {rows.map((row) => (
-                <li className="final-cta-prove-row" key={row.claim}>
-                  <span className="final-cta-prove-row-claim">{row.claim}</span>
-                  <span className="final-cta-prove-row-api">{row.api}</span>
-                </li>
-              ))}
-            </ul>
           ) : null}
           <h2 id="final-cta-heading" className="final-cta-heading">
             {headline}

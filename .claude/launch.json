@@ -24,7 +24,7 @@
       "runtimeExecutable": "/bin/bash",
       "runtimeArgs": [
         "-c",
-        "export PATH=/Users/blove/.nvm/versions/node/v22.14.0/bin:$PATH && npx nx serve website --port $PORT"
+        "export PATH=/Users/blove/.nvm/versions/node/v22.14.0/bin:$PATH && export GROWTH_FORM_POLICY=growth_v1 && npx nx serve website --port $PORT"
       ],
       "port": 3000,
       "autoPort": true
