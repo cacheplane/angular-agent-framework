@@ -66,6 +66,21 @@ async def generate_title(state: MessagesState, config) -> dict:
     return {}
 
 
+# region debug-state
+class DebugState(MessagesState):
+    """MessagesState plus the metrics `process` computes.
+
+    The devtools State tab pretty-prints whatever the graph keeps in state.
+    A graph that only carries `messages` has nothing to show there, because
+    the transcript is rendered as the conversation rather than as state.
+    """
+
+    analysis: dict
+
+
+# endregion
+
+
 def build_debug_graph():
     """
     Constructs a multi-step graph with generate, process, and summarize
@@ -74,21 +89,25 @@ def build_debug_graph():
     llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
 
     # region pipeline-nodes
-    async def generate(state: MessagesState) -> dict:
+    async def generate(state: DebugState) -> dict:
         system_prompt = (PROMPTS_DIR / "debug.md").read_text()
         messages = [SystemMessage(content=system_prompt)] + state["messages"]
         response = await llm.ainvoke(messages)
         return {"messages": [response]}
 
-    async def process(state: MessagesState) -> dict:
+    async def process(state: DebugState) -> dict:
         last = state["messages"][-1].content
+        analysis = {
+            "characters": len(last),
+            "words": last.count(" ") + 1,
+        }
         processed = AIMessage(
-            content=f"[Processing] Analyzed {len(last)} characters. "
-            f"Found {last.count(' ') + 1} words. Processing complete."
+            content=f"[Processing] Analyzed {analysis['characters']} characters. "
+            f"Found {analysis['words']} words. Processing complete."
         )
-        return {"messages": [processed]}
+        return {"messages": [processed], "analysis": analysis}
 
-    async def summarize(state: MessagesState) -> dict:
+    async def summarize(state: DebugState) -> dict:
         messages = [
             SystemMessage(content="Provide a brief one-sentence summary of the conversation so far.")
         ] + state["messages"]
@@ -98,7 +117,7 @@ def build_debug_graph():
     # endregion
 
     # region graph-wiring
-    graph = StateGraph(MessagesState)
+    graph = StateGraph(DebugState)
     graph.add_node("generate", generate)
     graph.add_node("process", process)
     graph.add_node("summarize", summarize)

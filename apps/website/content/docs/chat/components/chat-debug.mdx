@@ -22,19 +22,25 @@ Before the first turn the Timeline tab shows its empty state: "No checkpoints ye
 
 ## How it is built
 
-Three files carry the example: the graph that produces the checkpoints, the provider that points Angular at it, and the component that mounts the panel. Open the Code tab to read them in place.
+The example is three files: the graph that produces the checkpoints, the provider that points Angular at it, and the component that mounts the panel. Open the Code tab to read them in place.
 
 ### A graph with several nodes per turn
 
-The backend is deliberately multi-step, because one node per turn produces one checkpoint and very little to look at. `generate` answers with the model, `process` appends a synthetic message derived from the answer, and `summarize` asks the model for a one-sentence summary of the conversation so far. The system prompt read by `generate` frames the assistant as an aviation helper; the graph binds no tools, so every answer comes from the model alone.
+The backend is deliberately multi-step, because one node per turn produces one checkpoint and very little to look at. `generate` answers with the model, `process` measures that answer and records the result, and `summarize` asks the model for a one-sentence summary of the conversation so far. The system prompt read by `generate` frames the assistant as an aviation helper; the graph binds no tools, so every answer comes from the model alone.
 
 <ExampleCode file="graph.py" region="pipeline-nodes" title="graph.py — the three pipeline nodes" />
 
 Each node returns a partial state update, and each of those updates becomes a checkpoint on the thread.
 
+### State the inspector can show
+
+`agent.state()` is the LangGraph values bag with `messages` projected out into the transcript, so a graph that carries nothing but its messages leaves the State tab printing an empty object. This graph widens `MessagesState` with the metrics `process` computes, which is what gives the second tab something to inspect.
+
+<ExampleCode file="graph.py" region="debug-state" title="graph.py — the state the panel inspects" />
+
 ### Wiring the nodes into a linear pipeline
 
-The nodes are registered on a `StateGraph` over `MessagesState` and chained: `generate` to `process` to `summarize` to `generate_title`, then to the end. `generate_title` is a background node that summarizes the first user message into a thread title; it returns an empty update, so it changes the message list not at all while still adding a step to the run.
+The nodes are registered on a `StateGraph` over `DebugState` and chained: `generate` to `process` to `summarize` to `generate_title`, then to the end. `generate_title` is a background node that summarizes the first user message into a thread title; it returns an empty update, so it changes the message list not at all while still adding a step to the run.
 
 <ExampleCode file="graph.py" region="graph-wiring" title="graph.py — the compiled pipeline" />
 
