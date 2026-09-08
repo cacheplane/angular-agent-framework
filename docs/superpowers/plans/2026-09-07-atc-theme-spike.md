@@ -24,6 +24,16 @@
 - `apps/website/e2e/home-architecture.spec.ts` waits for `document.fonts.ready` then measures every text run in the homepage architecture diagram against its card. It is the gate proving the `--font-diagram` carve-out held. If it goes red, restore `--font-diagram` on the three declarations in Task 5 — **do not** adjust the diagram geometry.
 - `apps/website/e2e/home-hero.spec.ts` exercises the hero demo iframe, which only loads when `HeroDemo.tsx:69`'s `IntersectionObserver` at `threshold: 0.25` fires. Adding vertical padding to the hero pushes that stage down the page. If it goes red, scroll the stage into view in the test — do not shrink the hero copy.
 
+**`nx test website` does NOT type-check.** Vitest transpiles without checking
+types, and React forwards an unknown prop string to the DOM happily — so a
+test asserting a new union member passes BEFORE the union is extended. Any
+step in this plan that says "watch it fail" on a type-level change is wrong as
+written: get the real failure from `npx tsc --noEmit -p apps/website/tsconfig.json`
+(add `--ignoreDeprecations 6.0`; that config has pre-existing unrelated errors,
+so filter to the file you are working on), or from `npx nx build website`,
+which type-checks because `next.config` sets no `ignoreBuildErrors`. Treat the
+build as the real gate for anything type-level.
+
 **Commands** (run from the worktree root, never `cd` elsewhere):
 - Regenerate CSS: `npx nx run design-tokens:generate-theme-css`
 - Token tests: `npx nx test design-tokens`
