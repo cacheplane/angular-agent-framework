@@ -331,7 +331,7 @@ body:has([data-website-workspace-host]) {
 /* mdx — Callout (header band; tone via custom properties) */
 [data-mdx="callout"] {
   --callout-tone-text: var(--color-accent);
-  --callout-tone-surface: rgba(0, 64, 144, 0.06);
+  --callout-tone-surface: rgba(255, 175, 0, 0.1);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -1620,7 +1620,7 @@ body:has([data-website-workspace-host]) {
   height: 22px;
   border-radius: 6px;
   flex-shrink: 0;
-  background: rgba(0, 64, 144, 0.1);
+  background: rgba(255, 175, 0, 0.14);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1693,8 +1693,8 @@ body:has([data-website-workspace-host]) {
   color: #5e35b1;
 }
 .arch-flow-log-source[data-source="langgraph"] {
-  background: rgba(0, 64, 144, 0.08);
-  color: #004090;
+  background: rgba(255, 175, 0, 0.12);
+  color: var(--color-accent);
 }
 .arch-flow-log-source[data-source="signal"] {
   background: rgba(16, 185, 129, 0.08);

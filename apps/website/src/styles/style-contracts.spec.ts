@@ -236,7 +236,7 @@ const CONTRACTS: StyleContract[] = [
   {
     file: 'ui.css',
     selector: '[data-ui="button"]:focus-visible',
-    why: "Without this the UA default `outline: auto 1px rgb(0, 95, 204)` draws a blue hairline on the primary button's own #004090 fill — invisible. Closing the install dialog returns focus to that button, so the keyboard user is left with no idea where they are. The ring uses --color-accent, which the dark section scope re-points, so it survives on both surfaces.",
+    why: "Without this the UA default `outline: auto 1px rgb(0, 95, 204)` draws a blue hairline straight on the primary button's own fill — invisible. Closing the install dialog returns focus to that button, so the keyboard user is left with no idea where they are. The ring uses --color-accent, which every section scope re-points, so it survives on all three grounds: scope navy (#15253E) against the signal-yellow fill on white, aviation yellow inside the dark band, and ink inside the signal scope, where the primary button inverts to an ink fill.",
     requires: {
       outline: /outline:\s*2px\s+solid\s+var\(--color-accent\)/,
       'outline-offset': /outline-offset:\s*2px/,

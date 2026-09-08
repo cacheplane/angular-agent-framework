@@ -615,8 +615,8 @@
   letter-spacing: -0.04em;
   background: linear-gradient(
     160deg,
-    rgba(100, 195, 253, 0.14),
-    rgba(100, 195, 253, 0.03) 70%
+    rgba(255, 175, 0, 0.14),
+    rgba(255, 175, 0, 0.03) 70%
   );
   -webkit-background-clip: text;
   background-clip: text;
@@ -982,7 +982,7 @@
 }
 .lg-show-card-head {
   padding: 10px 20px;
-  background: rgba(0, 64, 144, 0.04);
+  background: rgba(255, 175, 0, 0.08);
   border-bottom: 1px solid var(--color-border);
 }
 .lg-show-card-title {
@@ -1064,8 +1064,8 @@
   letter-spacing: -0.04em;
   background: linear-gradient(
     160deg,
-    rgba(100, 195, 253, 0.11),
-    rgba(100, 195, 253, 0.02) 70%
+    rgba(255, 175, 0, 0.11),
+    rgba(255, 175, 0, 0.02) 70%
   );
   -webkit-background-clip: text;
   background-clip: text;
@@ -1083,8 +1083,8 @@
   height: 560px;
   background: radial-gradient(
     closest-side,
-    rgba(100, 195, 253, 0.13),
-    rgba(100, 195, 253, 0.04) 55%,
+    rgba(255, 175, 0, 0.13),
+    rgba(255, 175, 0, 0.04) 55%,
     transparent 75%
   );
   pointer-events: none;

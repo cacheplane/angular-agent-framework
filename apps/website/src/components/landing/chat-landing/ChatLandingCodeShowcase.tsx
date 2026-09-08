@@ -22,7 +22,7 @@ export class MyChatPage {
 
 const SNIPPET_2 = `chat {
   --chat-bg: #f8f9fc;
-  --chat-user-bg: #004090;
+  --chat-user-bg: #15253E;
   --chat-user-color: #ffffff;
   --chat-assistant-bg: #f0f4ff;
   --chat-font-family: 'Inter', sans-serif;
