@@ -9,7 +9,12 @@
   --form-control-height: 44px;
   --form-control-height-compact: 36px;
   --form-control-radius: 8px;
-  --form-focus-ring: 0 0 0 3px var(--color-accent-glow);
+  /* The focused control's indicator is its navy border (15.37:1); this ring is
+     the halo around it. --color-accent-glow was retuned to the signal yellow,
+     which composites to 1.19:1 on white — softer than the navy it replaced, so
+     the halo had visibly thinned. Mixed at 55% it reads again while staying
+     the signal colour. Same color-mix idiom as --form-error-ring below. */
+  --form-focus-ring: 0 0 0 3px color-mix(in srgb, var(--color-signal) 55%, transparent);
   --color-status-success: #1a7a40;
   --color-status-error: var(--color-angular-red);
   --form-error-ring: 0 0 0 3px color-mix(in srgb, var(--color-status-error) 18%, transparent);
