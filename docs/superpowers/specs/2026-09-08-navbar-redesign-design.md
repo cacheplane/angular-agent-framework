@@ -225,6 +225,25 @@ The drill-in stack **replaces** the Site/Docs tab strip. `mobileTab` state and t
   it returns to. Item descriptions are kept; this is the reason drill-in beat an
   accordion, which would have produced a two-screen scroll.
 
+**Correction, found during implementation: on most docs routes the drawer does not
+open at all.** Only `/docs/[library]/[section]/[slug]` mounts `WebsiteWorkspace`, and
+`docs.css:87-95` hides `.nav-hamburger` and `.nav-mobile-overlay` below 1024px via
+`body:has([data-website-workspace-host])`, because the workspace's own control plane is
+the sole modal navigation there. Above 1024px the hamburger is already `lg:hidden`. So on
+docs **detail** pages the site drawer is unreachable at every width — deliberately, and
+`website.spec.ts:296` and `workspace-shell.spec.ts:591` already assert it.
+
+The drawer therefore reaches only `/docs` and `/docs/choosing-an-adapter`, which have no
+workspace host. Both are library-neutral, so the docs level there shows the library
+switcher in its "Choose a library" state rather than a page tree.
+
+This does not change the decision — if anything it strengthens it, since a Site/Docs tab
+strip is even harder to justify on a page whose docs half is a library picker. But it
+sharply reduces what the pre-push is worth, and it means the accepted "Site tab becomes a
+back row" regression is close to moot. It also means the shared `expanded` state that
+motivated hosting `DocsContextContent` unchanged is shared with the **workspace pane** on
+detail pages, not with the drawer.
+
 **On a `/docs` route the drawer opens pre-pushed to the Docs level.** That is the same
 behavior as `mobileTab` initialising to `'docs'` today, expressed as depth.
 
