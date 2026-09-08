@@ -28,6 +28,10 @@ const display = Archivo_Black({
 
 const sans = Archivo({
   subsets: ['latin'],
+  // Archivo ships a true italic. Loading it makes every italic on the text
+  // face real rather than an obliqued upright — Inter was normal-only here,
+  // so those sites had been faux-italic all along.
+  style: ['normal', 'italic'],
   variable: '--font-sans',
 });
 

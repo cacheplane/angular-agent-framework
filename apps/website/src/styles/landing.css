@@ -642,7 +642,9 @@
   flex-wrap: wrap;
 }
 .open-source-strip-line {
-  font-family: var(--font-garamond);
+  /* Body-scale editorial copy, not display type: it carries an italic <em>,
+     and Archivo Black has no italic. --font-sans (Archivo) does. */
+  font-family: var(--font-sans);
   font-size: 23px;
   line-height: 1.35;
   font-weight: 400;
@@ -660,7 +662,7 @@
   flex: none;
 }
 .open-source-strip-licence {
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   font-size: 12px;
   letter-spacing: 0.02em;
   color: var(--color-text-muted);
