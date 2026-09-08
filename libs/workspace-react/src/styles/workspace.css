@@ -23,7 +23,7 @@
 .workspace-prose h1,
 .workspace-prose h2,
 .workspace-prose h3 {
-  font-family: var(--font-display), var(--ds-font-serif);
+  font-family: var(--font-display), var(--ds-font-display);
   color: var(--ds-text-primary);
   letter-spacing: -0.01em;
 }

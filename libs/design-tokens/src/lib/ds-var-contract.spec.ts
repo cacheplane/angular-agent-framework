@@ -1,4 +1,5 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { describe, it, expect } from 'vitest';
 
@@ -81,5 +82,67 @@ describe('--ds-* consumer contract', () => {
   it('defines every --ds-* name a cockpit or example app references', () => {
     const missing = CONSUMER_REFERENCED.filter((n) => !defined.has(n));
     expect(missing).toEqual([]);
+  });
+});
+
+/**
+ * No consumer may reference a `--ds-*` name the generator does not define.
+ *
+ * The list above guards the other direction — that a name we know consumers
+ * use does not vanish from tokens.css. It cannot catch the inverse, and the
+ * inverse is what actually shipped during the 2026-09-07 aviation retheme:
+ * `--ds-font-serif` was retired from the token sources while
+ * workspace.css:26 still said `var(--font-display), var(--ds-font-serif)`.
+ *
+ * That failure mode is silent and worse than it looks. An undefined custom
+ * property in a `font-family` list is invalid at computed-value time, so the
+ * whole declaration is dropped and the element loses its font entirely —
+ * there is no partial fallback to the first entry in the list.
+ */
+describe('no dangling --ds-* references', () => {
+  /**
+   * Pre-dates the retheme (already dangling at 218ac1c41) and is a real bug in
+   * its own right: `background: var(--ds-surface-subtle)` with no fallback
+   * resolves to nothing. Listed rather than hidden so it stays visible; remove
+   * this entry when workspace.css:209 is fixed or the token is added.
+   */
+  const KNOWN_PRE_EXISTING = new Set(['--ds-surface-subtle']);
+
+  const CONSUMER_ROOTS = ['libs/workspace-react', 'cockpit', 'examples', 'apps/website/src'];
+
+  it('every --ds-* a consumer references is defined in tokens.css', () => {
+    const repoRoot = resolve(__dirname, '../../../..');
+    const defined = new Set(
+      [...readFileSync(TOKENS_CSS, 'utf-8').matchAll(/^\s*(--ds-[a-z0-9-]+):/gm)].map((m) => m[1]),
+    );
+
+    const referenced = new Set<string>();
+    for (const root of CONSUMER_ROOTS) {
+      const dir = resolve(repoRoot, root);
+      if (!existsSync(dir)) continue;
+      // grep exits 1 when a directory simply has no matches, and execFileSync
+      // throws on any non-zero status — so a clean directory would look like a
+      // broken test rather than a passing one.
+      let found = '';
+      try {
+        found = execFileSync(
+          'grep',
+          ['-rhoE', '--exclude-dir=node_modules', 'var\\(--ds-[a-z0-9-]+', dir],
+          { encoding: 'utf-8' },
+        );
+      } catch (error) {
+        const status = (error as { status?: number }).status;
+        if (status !== 1) throw error;
+      }
+      for (const hit of found.split('\n')) {
+        if (hit) referenced.add(hit.replace('var(', ''));
+      }
+    }
+
+    expect(referenced.size).toBeGreaterThan(5);
+    const dangling = [...referenced]
+      .filter((name) => !defined.has(name) && !KNOWN_PRE_EXISTING.has(name))
+      .sort();
+    expect(dangling).toEqual([]);
   });
 });
