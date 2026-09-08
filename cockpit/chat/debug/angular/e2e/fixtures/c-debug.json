@@ -1,0 +1,31 @@
+{
+  "fixtures": [
+    {
+      "match": {
+        "systemMessage": "Aviation Assistant",
+        "userMessage": "What is a jet bridge?"
+      },
+      "response": {
+        "content": "A jet bridge is the enclosed, movable walkway that connects an airport gate to an aircraft door, so passengers board without crossing the ramp."
+      }
+    },
+    {
+      "match": {
+        "systemMessage": "brief one-sentence summary",
+        "userMessage": "What is a jet bridge?"
+      },
+      "response": {
+        "content": "The traveler asked what a jet bridge is and received a short definition of the boarding walkway."
+      }
+    },
+    {
+      "match": {
+        "systemMessage": "In 3-5 words",
+        "userMessage": "What is a jet bridge?"
+      },
+      "response": {
+        "content": "Jet bridge basics"
+      }
+    }
+  ]
+}
