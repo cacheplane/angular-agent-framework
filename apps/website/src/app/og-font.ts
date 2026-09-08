@@ -53,32 +53,34 @@ export function satoriFonts(candidates: (OgFont | null)[]): OgFont[] | undefined
 }
 
 /**
- * Loads the shared card font set: Garamond for display type, Inter for body,
- * and JetBrains Mono for the eyebrow and pills.
+ * Loads the shared card font set, which is the site's own: Archivo Black for
+ * display type, Archivo for body, and JetBrains Mono for the eyebrow and
+ * pills. Archivo Black is a single-weight family — there is no bold of it, so
+ * nothing on a card should ask for one.
  *
  * All four are bundled (see `./card/fonts`). They used to be fetched from
  * Google Fonts on every render, which is a network round trip inside an image
  * render that fails silently: the card simply came out in whichever faces
- * happened to load. A card specified with a mono eyebrow rendered in serif
- * that way. `loadGoogleFont` is kept for callers that want a face we do not
- * bundle, but no card depends on it.
+ * happened to load. A card specified with a mono eyebrow came out in Satori's
+ * own fallback face that way. `loadGoogleFont` is kept for callers that want a
+ * face we do not bundle, but no card depends on it.
  *
  * Returns `undefined` (not `[]`) when nothing loaded — see `satoriFonts`.
  */
 export async function loadCardFonts(options: { mono?: boolean } = {}): Promise<OgFont[] | undefined> {
-  const { readGaramondBold, readInterRegular, readInterSemiBold, readMonoBold, toFont } = await import(
+  const { readArchivoBlack, readArchivoRegular, readArchivoSemiBold, readMonoBold, toFont } = await import(
     './card/fonts'
   );
-  const [garamond, interRegular, interSemiBold, mono] = await Promise.all([
-    readGaramondBold(),
-    readInterRegular(),
-    readInterSemiBold(),
+  const [archivoBlack, archivoRegular, archivoSemiBold, mono] = await Promise.all([
+    readArchivoBlack(),
+    readArchivoRegular(),
+    readArchivoSemiBold(),
     options.mono ? readMonoBold() : Promise.resolve(null),
   ]);
   return satoriFonts([
-    toFont('EB Garamond', 700, garamond),
-    toFont('Inter', 400, interRegular),
-    toFont('Inter', 600, interSemiBold),
+    toFont('Archivo Black', 400, archivoBlack),
+    toFont('Archivo', 400, archivoRegular),
+    toFont('Archivo', 600, archivoSemiBold),
     toFont('JetBrains Mono', 700, mono),
   ]);
 }

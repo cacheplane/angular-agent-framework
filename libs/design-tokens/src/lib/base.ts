@@ -36,7 +36,11 @@ export const baseTokens = Object.freeze({
     signalStrong: '#FFB700',
     /** Scope navy — dark grounds and data strips. */
     scope: SCOPE_NAVY,
-    /** LIVE red-orange. 3.68:1, so status fills and large bold text only. */
+    /**
+     * LIVE red-orange. 3.68:1, so status fills and large bold text only.
+     * Reserved: part of the sampled ATC palette, with no consumer as of
+     * 2026-09-08. Kept so the palette is complete rather than re-derived.
+     */
     alert: '#FF3200',
     /** Near-black. Text on yellow, and the light-theme text primary. */
     ink: '#0A0A0A',

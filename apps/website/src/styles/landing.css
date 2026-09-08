@@ -110,12 +110,6 @@
 .hero-text-link:focus-visible {
   text-decoration: underline;
 }
-.hero-trust {
-  margin: 12px 0 0;
-  font-family: var(--font-sans);
-  font-size: 13px;
-  color: var(--color-text-muted);
-}
 @keyframes blink { to { visibility: hidden; } }
 /* FeatureBlock — components/landing/FeatureBlock.tsx */
 .feature-block-grid {
@@ -2203,6 +2197,10 @@
   width: 100vw;
   padding: 10px var(--spacing-container-x);
   background: var(--color-scope);
+  /* Literal rather than a token on purpose: the strip sits inside the signal
+     scope, which re-points --color-text-inverted (and every surface token) to
+     the yellow. The strip declares its own ground, so it declares its own ink
+     too. */
   color: #ffffff;
   font-family: var(--font-mono);
   font-size: 11px;

@@ -10,8 +10,8 @@
  * with a literal filename rather than through a loop over a list.
  *
  * The files are produced by `scripts/build-card-fonts.py`: instanced to a
- * single weight, stripped of variable tables Satori cannot parse, and subset
- * to Latin plus the punctuation the site uses.
+ * single weight where the source is variable, stripped of the variable tables
+ * Satori cannot parse, and subset to Latin plus the punctuation the site uses.
  */
 import type { OgFont, OgFontWeight } from '../../og-font';
 
@@ -29,9 +29,9 @@ async function readSibling(name: string): Promise<ArrayBuffer | null> {
 }
 
 /* Each call passes a literal, so the tracer sees four concrete filenames. */
-export const readGaramondBold = () => readSibling('EBGaramond-Bold.ttf');
-export const readInterRegular = () => readSibling('Inter-Regular.ttf');
-export const readInterSemiBold = () => readSibling('Inter-SemiBold.ttf');
+export const readArchivoBlack = () => readSibling('ArchivoBlack-Regular.ttf');
+export const readArchivoRegular = () => readSibling('Archivo-Regular.ttf');
+export const readArchivoSemiBold = () => readSibling('Archivo-SemiBold.ttf');
 export const readMonoBold = () => readSibling('JetBrainsMono-Bold.ttf');
 
 export function toFont(

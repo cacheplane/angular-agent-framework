@@ -9,8 +9,9 @@ import type { SVGProps } from 'react';
  * card, the nav and the favicon each showed whatever the viewer's font
  * happened to hold. This ships as a path so all three agree.
  *
- * Filled with `currentColor`, so it takes the wordmark's own color and needs
- * no dark-mode variant. The square app-icon form (navy field, knocked-out
+ * Filled with `currentColor`. ui.css sets that colour explicitly rather than
+ * letting it inherit: the mark is an ink glyph on a signal-yellow squircle,
+ * which inverts inside the signal scope. The square app-icon form (yellow field, knocked-out
  * glyph) lives in `src/app/icon.svg`, which browsers request as the favicon.
  */
 export function PlaneMark(props: SVGProps<SVGSVGElement>) {

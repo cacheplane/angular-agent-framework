@@ -2,13 +2,24 @@ import Anthropic from '@anthropic-ai/sdk';
 import fs from 'fs';
 import path from 'path';
 import puppeteer from 'puppeteer';
+import { mdToHTML, escapeHtml } from './whitepaper-markdown';
 
 const loadEnvFile = (process as typeof process & { loadEnvFile?: (path?: string) => void }).loadEnvFile;
 if (!process.env['ANTHROPIC_API_KEY'] && loadEnvFile && fs.existsSync('.env')) {
   loadEnvFile('.env');
 }
 
-const client = new Anthropic();
+/**
+ * Constructed on first use rather than at import time. The module also exports
+ * pure helpers (mdToHTML, escapeHtml) that a unit spec imports, and building a
+ * client at import throws in a browser-like test environment — which is why
+ * those helpers had no spec while shipping three text-deleting bugs.
+ */
+let client: Anthropic | undefined;
+function anthropic(): Anthropic {
+  client ??= new Anthropic();
+  return client;
+}
 const MODEL = process.env['ANTHROPIC_MODEL'] ?? 'claude-opus-4-5';
 
 const CURRENT_API_CONTEXT = `You are writing public technical whitepapers for Threadplane Threadplane.
@@ -70,7 +81,7 @@ const WHITEPAPERS: Record<string, WhitepaperConfig> = {
     title: 'Threadplane',
     subtitle: 'Production-ready chat, threads, and generative UI for AI agents',
     eyebrow: 'Threadplane · Open source · Angular',
-    coverGradient: 'linear-gradient(135deg, #fafbfc 0%, #eaf3ff 100%)',
+    coverGradient: 'linear-gradient(160deg, #FFFFFF 0%, #F2F2F0 100%)',
     outputPdf: 'apps/website/public/whitepaper.pdf',
     outputHtml: 'apps/website/public/whitepaper-preview.html',
     chapters: [
@@ -196,7 +207,7 @@ Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engi
     title: 'The Enterprise Guide to Agent UI in Angular',
     subtitle: 'Ship LangGraph and AG-UI-compatible agents without building the plumbing',
     eyebrow: 'Threadplane · Angular Agent UI Guide',
-    coverGradient: 'linear-gradient(135deg, #fafbfc 0%, #eaf3ff 100%)',
+    coverGradient: 'linear-gradient(160deg, #FFFFFF 0%, #F2F2F0 100%)',
     outputPdf: 'apps/website/public/whitepapers/angular.pdf',
     outputHtml: 'apps/website/public/whitepapers/angular-preview.html',
     chapters: [
@@ -323,7 +334,7 @@ Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engi
     title: 'The Enterprise Guide to Generative UI in Angular',
     subtitle: 'Agents that render UI — without coupling to your frontend',
     eyebrow: '@threadplane/render · Enterprise Guide',
-    coverGradient: 'linear-gradient(135deg, #fafbfc 0%, #e8f5e9 100%)',
+    coverGradient: 'linear-gradient(160deg, #FFFFFF 0%, #F2F2F0 100%)',
     outputPdf: 'apps/website/public/whitepapers/render.pdf',
     outputHtml: 'apps/website/public/whitepapers/render-preview.html',
     chapters: [
@@ -433,7 +444,7 @@ Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engi
     title: 'The Enterprise Guide to Agent Chat Interfaces in Angular',
     subtitle: 'Production agent chat UI in days, not sprints',
     eyebrow: '@threadplane/chat · Enterprise Guide',
-    coverGradient: 'linear-gradient(135deg, #fafbfc 0%, #f3e8ff 100%)',
+    coverGradient: 'linear-gradient(160deg, #FFFFFF 0%, #F2F2F0 100%)',
     outputPdf: 'apps/website/public/whitepapers/chat.pdf',
     outputHtml: 'apps/website/public/whitepapers/chat-preview.html',
     chapters: [
@@ -540,40 +551,66 @@ Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engi
   },
 };
 
+// ── Brand ────────────────────────────────────────────────────────────────
+/**
+ * The ATC palette, as the website resolves it (libs/design-tokens light theme).
+ *
+ * The one hard rule: `SIGNAL` is aviation yellow at 1.84:1 on white, so it is
+ * a FILL and never type — no labels, no thin rules anyone has to read a word
+ * off. Emphasis ink is `ACCENT` (scope navy, 15.37:1 on white).
+ *
+ * `DISPLAY` is Archivo Black, which ships a SINGLE weight (400) and has no
+ * italic. Never pair it with `font-weight` or `font-style`: the browser
+ * synthesizes both and smears an already-black face. `BODY` (Archivo) is the
+ * family that owns weight and a real italic.
+ */
+const BRAND = {
+  DISPLAY: `'Archivo Black','Archivo',sans-serif`,
+  BODY: `'Archivo',sans-serif`,
+  MONO: `'JetBrains Mono',monospace`,
+  INK: '#0A0A0A',
+  INK_SECONDARY: '#464646',
+  INK_MUTED: '#737373',
+  ACCENT: '#15253E',
+  SIGNAL: '#FFAF00',
+  BORDER: '#E5E5E5',
+} as const;
+
+/**
+ * The one yellow device in the document: a short fill sitting under a
+ * page-opening heading. Repeated on the cover, the contents page, and every
+ * chapter opener, so the brand signs each page break without ever becoming
+ * type or a wall of colour.
+ */
+const signalRule = (width: number) =>
+  `<div style="width:${width}px;height:6px;background:${BRAND.SIGNAL}"></div>`;
+
 // ── Markdown to HTML converter ───────────────────────────────────────────
-function mdToHTML(md: string): string {
-  return md
-    .replace(/```[\w]*\n([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
-    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-    .replace(/^## (.+)$/gm, '<h3>$1</h3>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/^- (.+)$/gm, '<li>$1</li>')
-    .replace(/(<li>[^\n]+<\/li>\n?)+/g, match => `<ul>${match}</ul>`)
-    .split('\n\n')
-    .map(block => {
-      if (block.startsWith('<h') || block.startsWith('<ul') || block.startsWith('<pre')) return block;
-      const trimmed = block.trim();
-      return trimmed ? `<p>${trimmed}</p>` : '';
-    })
-    .join('\n');
-}
 
 // ── HTML builder ─────────────────────────────────────────────────────────
-function buildHTML(
-  chapters: Array<{ title: string; content: string }>,
-  config: WhitepaperConfig,
-): string {
+/**
+ * A chapter carries either the model's markdown (`content`) or body HTML that
+ * has already been converted (`bodyHTML`, from `--rerender`).
+ */
+interface RenderedChapter {
+  title: string;
+  content?: string;
+  bodyHTML?: string;
+}
+
+function buildHTML(chapters: RenderedChapter[], config: WhitepaperConfig): string {
   const tocHTML = chapters.map((ch, i) => `
-    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid #e6e8ee;font-size:15px;color:#555770">
-      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">${String(i + 1).padStart(2, '0')}</span>
+    <div style="display:flex;align-items:baseline;gap:12px;padding:11px 0;border-bottom:1px solid ${BRAND.BORDER};font-size:15px;color:${BRAND.INK}">
+      <span style="font-family:${BRAND.MONO};font-size:11px;color:${BRAND.ACCENT};font-weight:700;min-width:26px">${String(i + 1).padStart(2, '0')}</span>
       <span style="flex:1">${ch.title}</span>
     </div>`).join('');
 
   const chaptersHTML = chapters.map((ch, i) => `
     <section style="padding:80px;page-break-before:always">
-      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter ${i + 1}</div>
-      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">${ch.title}</h2>
-      <div class="chapter-body">${mdToHTML(ch.content)}</div>
+      <div style="font-family:${BRAND.MONO};font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:${BRAND.ACCENT};font-weight:700;margin-bottom:16px">Chapter ${String(i + 1).padStart(2, '0')}</div>
+      <h2 style="font-family:${BRAND.DISPLAY};font-size:32px;color:${BRAND.INK};margin-bottom:18px;line-height:1.15;letter-spacing:-0.01em">${ch.title}</h2>
+      ${signalRule(72)}
+      <div class="chapter-body" style="margin-top:30px">${ch.bodyHTML ?? mdToHTML(ch.content ?? '')}</div>
     </section>`).join('');
 
   return `<!DOCTYPE html>
@@ -581,33 +618,41 @@ function buildHTML(
 <head>
 <meta charset="UTF-8">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'Inter',sans-serif;color:#1a1a2e;background:#fff}
-  .chapter-body p{font-size:15px;line-height:1.75;color:#333;margin-bottom:18px}
-  .chapter-body h3{font-family:'EB Garamond',serif;font-size:22px;font-weight:700;color:#1a1a2e;margin:28px 0 12px}
+  body{font-family:${BRAND.BODY};color:${BRAND.INK};background:#fff}
+  .chapter-body p{font-size:15px;line-height:1.75;color:${BRAND.INK};margin-bottom:18px}
+  /* Archivo Black is single-weight with no italic — no font-weight/font-style here. */
+  .chapter-body h3{font-family:${BRAND.DISPLAY};font-size:19px;color:${BRAND.INK};margin:30px 0 12px;letter-spacing:-0.005em}
   .chapter-body ul{margin:0 0 18px 20px}
-  .chapter-body li{font-size:15px;line-height:1.7;color:#333;margin-bottom:6px}
-  .chapter-body pre{background:#1a1b26;color:#c8ccee;padding:20px 24px;border-radius:8px;font-size:13px;line-height:1.65;overflow-x:auto;margin:24px 0;white-space:pre-wrap}
-  .chapter-body code{font-family:'JetBrains Mono',monospace;font-size:13px}
-  .chapter-body strong{font-weight:600}
+  .chapter-body li{font-size:15px;line-height:1.7;color:${BRAND.INK};margin-bottom:6px}
+  .chapter-body pre{background:${BRAND.ACCENT};color:#EDEFF3;padding:20px 24px;border-radius:8px;font-size:13px;line-height:1.65;overflow-x:auto;margin:24px 0;white-space:pre-wrap}
+  .chapter-body code{font-family:${BRAND.MONO};font-size:13px}
+  /* Navy carries emphasis; yellow never becomes type. */
+  .chapter-body strong{font-weight:700;color:${BRAND.ACCENT}}
 </style>
 </head>
 <body>
 
 <!-- Cover -->
 <div style="height:100vh;display:flex;flex-direction:column;justify-content:flex-end;padding:80px 80px 100px;background:${config.coverGradient};page-break-after:always">
-  <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#004090;font-weight:700;margin-bottom:24px">${config.eyebrow}</div>
-  <h1 style="font-family:'EB Garamond',serif;font-size:52px;font-weight:800;line-height:1.1;color:#1a1a2e;margin-bottom:20px">${config.title.replace(/ /g, '<br>')}</h1>
-  <p style="font-family:'EB Garamond',serif;font-style:italic;font-size:20px;color:#555770;margin-bottom:40px">${config.subtitle}</p>
-  <div style="font-size:13px;color:#8b8fa3;font-family:monospace">threadplane.ai · ${new Date().getFullYear()}</div>
+  <div style="font-family:${BRAND.MONO};font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:${BRAND.ACCENT};font-weight:700;margin-bottom:24px">${config.eyebrow}</div>
+  <!-- Wrapped on a measure rather than one word per line: Archivo Black is
+       heavy enough that a forced break per word leaves orphans ("to", "in")
+       and turns the cover into a slab. -->
+  <h1 style="font-family:${BRAND.DISPLAY};font-size:46px;line-height:1.08;letter-spacing:-0.015em;color:${BRAND.INK};max-width:560px;margin-bottom:26px">${config.title}</h1>
+  ${signalRule(132)}
+  <p style="font-family:${BRAND.BODY};font-style:italic;font-size:19px;line-height:1.5;color:${BRAND.INK_SECONDARY};margin:26px 0 40px">${config.subtitle}</p>
+  <div style="font-size:13px;color:${BRAND.INK_MUTED};font-family:${BRAND.MONO}">threadplane.ai · ${new Date().getFullYear()}</div>
 </div>
 
 <!-- TOC -->
 <div style="padding:80px;page-break-after:always">
-  <h2 style="font-family:'EB Garamond',serif;font-size:32px;font-weight:700;color:#1a1a2e;margin-bottom:32px">Contents</h2>
-  ${tocHTML}
+  <h2 style="font-family:${BRAND.DISPLAY};font-size:32px;color:${BRAND.INK};margin-bottom:18px;letter-spacing:-0.01em">Contents</h2>
+  ${signalRule(72)}
+  <div style="margin-top:30px">${tocHTML}</div>
 </div>
 
 <!-- Chapters -->
@@ -637,7 +682,7 @@ async function generateChapter(
   chapter: WhitepaperConfig['chapters'][0],
 ): Promise<string> {
   console.log(`  Generating: ${chapter.title}...`);
-  const message = await client.messages.create({
+  const message = await anthropic().messages.create({
     model: MODEL,
     max_tokens: 1500,
     system: CURRENT_API_CONTEXT,
@@ -650,6 +695,79 @@ async function generateChapter(
     throw new Error(`Generated chapter "${chapter.title}" included stale API terms: ${banned.join(', ')}`);
   }
   return content.text;
+}
+
+// ── Re-render (no model calls) ───────────────────────────────────────────
+/**
+ * Pull the chapter titles and body HTML back out of a committed preview.
+ *
+ * `--rerender` exists because the document's design and its prose change on
+ * different clocks. When the brand moves, the artifact a lead downloads has to
+ * move with it — but the chapters were already written and reviewed, so paying
+ * the model to write new ones would swap a design change for a content change
+ * nobody asked for. This reads the committed HTML and pours the same words
+ * into the current template.
+ */
+function readCommittedChapters(htmlPath: string): RenderedChapter[] {
+  const html = fs.readFileSync(htmlPath, 'utf8');
+  const sections = html.match(/<section [^>]*page-break-before:always[^>]*>[\s\S]*?<\/section>/g) ?? [];
+
+  return sections.map(section => {
+    const title = /<h2[^>]*>([\s\S]*?)<\/h2>/.exec(section)?.[1]?.trim();
+    const body = /<div class="chapter-body"[^>]*>([\s\S]*)<\/div>\s*<\/section>/.exec(section)?.[1];
+    if (!title || body == null) {
+      throw new Error(`Could not parse a chapter out of ${htmlPath}`);
+    }
+    // Older runs leaked the model's restated `# Title` into the body as literal
+    // text, directly beneath the heading that already says it. Drop it.
+    const cleaned = body.replace(/^\s*<p>#\s[^<]*<\/p>\s*/, '');
+    // Older runs had no inline-code rule, so markdown spans survived as literal
+    // backticks AND their angle-bracketed contents were parsed as unknown
+    // elements, which render as nothing. `<chat-message-list>` therefore
+    // reached the reader as an empty pair of backticks. The source text is
+    // still here, so repair it on the way through rather than leaving a
+    // published document with words missing from it.
+    const withCodeSpans = cleaned.replace(
+      /`([^`\n]+)`/g,
+      (_match, code: string) => `<code>${escapeHtml(code)}</code>`,
+    );
+    // Older runs split paragraphs AFTER building fenced blocks, so any code
+    // sample containing a blank line was torn in two and its second half
+    // wrapped in a <p> — which also left the sample's own markup unescaped, so
+    // lines like `<chat [agent]="agent" />` were parsed as unknown elements and
+    // vanished from the page. Stitch those blocks back together and escape
+    // them. Unescaping first keeps this idempotent across re-runs.
+    const withRepairedFences = withCodeSpans.replace(
+      /<pre><code>([\s\S]*?)<\/code><\/pre>(?:\s*<\/p>)?/g,
+      (_match, code: string) => {
+        const stitched = code.replace(/<\/?p>/g, '');
+        const raw = stitched
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&amp;/g, '&');
+        return `<pre><code>${escapeHtml(raw)}</code></pre>`;
+      },
+    );
+    return { title, bodyHTML: withRepairedFences.trim() };
+  });
+}
+
+async function rerenderWhitepaper(config: WhitepaperConfig): Promise<void> {
+  console.log(`\n── ${config.id} (re-render) ──────────────────────────`);
+  if (!fs.existsSync(config.outputHtml)) {
+    throw new Error(`No committed preview to re-render at ${config.outputHtml}`);
+  }
+
+  const chapters = readCommittedChapters(config.outputHtml);
+  console.log(`  Recovered ${chapters.length} chapters from ${config.outputHtml}`);
+
+  const html = buildHTML(chapters, config);
+  fs.writeFileSync(config.outputHtml, html, 'utf8');
+  console.log(`  HTML preview: ${config.outputHtml}`);
+
+  await renderPDF(html, config.outputPdf);
+  const stat = fs.statSync(config.outputPdf);
+  console.log(`  PDF saved to ${config.outputPdf} (${Math.round(stat.size / 1024)}KB)`);
 }
 
 // ── Single whitepaper runner ─────────────────────────────────────────────
@@ -681,8 +799,12 @@ async function generateWhitepaper(config: WhitepaperConfig): Promise<void> {
 
 // ── Main ─────────────────────────────────────────────────────────────────
 async function main() {
+  const rerender = process.argv.includes('--rerender');
+
   console.log('Threadplane White Paper Generator\n');
-  console.log(`Model: ${MODEL}`);
+  console.log(rerender ? 'Mode: re-render committed prose (no model calls)' : `Model: ${MODEL}`);
+
+  const run = rerender ? rerenderWhitepaper : generateWhitepaper;
 
   const paperArg = process.argv.find(a => a.startsWith('--paper='))?.split('=')[1]
     ?? (process.argv.includes('--paper') ? process.argv[process.argv.indexOf('--paper') + 1] : undefined);
@@ -693,11 +815,11 @@ async function main() {
       console.error(`Unknown whitepaper: "${paperArg}". Available: ${Object.keys(WHITEPAPERS).join(', ')}`);
       process.exit(1);
     }
-    await generateWhitepaper(config);
+    await run(config);
   } else {
-    console.log(`Generating all whitepapers: ${Object.keys(WHITEPAPERS).join(', ')}\n`);
+    console.log(`Whitepapers: ${Object.keys(WHITEPAPERS).join(', ')}\n`);
     for (const config of Object.values(WHITEPAPERS)) {
-      await generateWhitepaper(config);
+      await run(config);
     }
   }
 
