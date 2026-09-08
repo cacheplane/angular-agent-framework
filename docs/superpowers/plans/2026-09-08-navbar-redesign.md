@@ -1624,6 +1624,8 @@ Create `apps/website/src/components/shared/NavMobile.tsx` exporting `NavMobile`.
 | 346–362 | the hamburger button |
 | 364–515 | the overlay `<div role="dialog">` and everything inside it |
 
+**Hazard introduced by Task 6:** `chrome.css` now has `.nav-bar[data-route='docs'] > div { padding-block: 16px }`. Today `<nav>` has exactly one direct `div` child, and the mobile overlay is deliberately a *sibling* of `<nav>` rather than a child ("to avoid stacking context issues", per the comment in `Nav.tsx`). If this task moves the overlay inside `<nav>` — for instance to solve that stacking problem a different way — it silently inherits the docs-only padding. Keep it outside, or scope that rule to a class.
+
 `navRef` stays in `Nav.tsx` (the `<nav>` element is still rendered there) and is passed down, because the drawer sets `nav.inert` while it is open.
 
 `NavMobile` takes what it can no longer compute for itself:
