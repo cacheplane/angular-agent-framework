@@ -245,7 +245,7 @@ constant stay — the footer and the mobile stack still use them.
 | Unit (`Nav.spec.tsx`) | Trigger renders each panel's items from `nav-config`; Escape closes and restores focus; disclosure attributes are correct |
 | Unit (`nav-config.spec.ts`) | Every configured href resolves to a real route or a known external target; every item has an analytics id |
 | Unit (mobile) | Depth transitions; pre-push on a `/docs` path; Escape pops before it closes |
-| e2e (`nav-height.spec.ts`) | `nav.height === --nav-h` at three marketing widths **and** at the docs height |
+| e2e (`nav-height.spec.ts`) | `nav.height === --nav-h` at six widths. **Every existing step navigates to `/docs`**, so the marketing steps move to `/` and a docs set is added alongside them |
 | e2e (new) | Nav is transparent at scroll 0 on every hero route, and solid after scrolling past the sentinel |
 | e2e (existing docs specs) | Docs shell offsets, both sticky rails, and anchor `scroll-padding` still land correctly at the condensed height |
 
@@ -257,9 +257,13 @@ constant stay — the footer and the mobile stack still use them.
   reasoning.
 - **The focus trap rework** is the highest-risk mobile change; the current implementation
   is fiddly and correct, and per-level re-entry is where it will break.
-- **New panel copy is unscanned.** The banned-claims contract gate reads only `content/**`,
-  so descriptive strings in `src/components` slip past it until a preview crawl. The new
-  strings must be checked against the banned-claims list by hand before merge.
+- **New panel copy is scanned automatically** — no manual check needed.
+  `src/lib/public-copy.spec.ts` has two scans, not one: the `content/**` line scan, and a
+  `renderedCopyFiles` AST scan that walks every non-spec `.ts`/`.tsx`/`.mjs` under `src/`
+  and extracts string literals, template chunks, JSX attribute values, and JSX body text.
+  `nav-config.ts` is covered by construction. What it still cannot catch is copy assembled
+  across a substitution, so panel descriptions stay as whole literals rather than being
+  built from interpolated fragments.
 
 ## Out of scope
 
