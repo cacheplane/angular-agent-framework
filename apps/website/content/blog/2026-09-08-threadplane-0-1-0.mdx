@@ -1,0 +1,138 @@
+---
+title: 'Threadplane 0.1.0: The Coffee in the Hangar Is Free'
+description: 'The first minor release. Six MIT packages covering the last mile of an Angular agent UI — chat, durable threads, approvals, generative UI — no paid tier.'
+date: 2026-09-08
+tags: [threadplane, release, angular, agentic-ui, open-source]
+author: brian
+featured: true
+draft: false
+---
+
+There is a pot of coffee in the hangar at five in the morning.
+
+Nobody signed for it.
+Nobody is going to hand you a bill for the cup.
+Somebody got there before you, put the pot on, and left it for whoever walked in next.
+
+That is the closest thing I have to a description of what shipping Threadplane 0.1.0 feels like.
+
+## What 0.1.0 actually means
+
+Through `v0.0.66` this project bumped only the patch number.
+Fifty-five commits of accumulated breaking changes went out under a counter that said nothing had broken.
+That was misleading, and it had started to contradict the documentation.
+
+So 0.1.0 is not a feature release.
+It is the release where the version number starts telling the truth.
+
+Six packages move together as one fixed group — `@threadplane/chat`, `@threadplane/langgraph`, `@threadplane/ag-ui`, `@threadplane/render`, `@threadplane/a2ui`, and `@threadplane/telemetry`.
+The Python package, `threadplane-middleware`, moves to `0.1.0` alongside them.
+They version in lockstep on purpose, because an adapter and the surface it feeds are not independently upgradable in practice, and pretending otherwise just moves the breakage to your `npm install`.
+
+`1.0.0` is a separate decision, and it stays gated.
+I am not going to reach for it because the number looks better on a README.
+
+## The whole last mile
+
+The reason this post exists is not the version bump.
+It is that the last mile is *finished*.
+
+By last mile I mean everything between "my agent streams tokens" and "my team can put this in front of a customer."
+That gap is where Angular teams have been losing weeks, and it is the only thing this project has ever tried to close.
+
+Here is the complete surface, as of 0.1.0.
+
+| Capability | What ships | Where it is documented |
+|---|---|---|
+| Chat surface | `<chat>` plus fifteen documented components — message list, input, tool calls, tool-call cards and templates, reasoning, trace, subagent cards, sidebar, sidenav, popup, select, debug | [`<chat>`](/docs/chat/components/chat) |
+| Streaming markdown | A streaming node renderer over a twenty-six-node registry, sanitized, with per-instance node overrides | [Markdown](/docs/chat/guides/markdown) |
+| Two runtimes, one contract | `@threadplane/langgraph` and `@threadplane/ag-ui` both produce the same `Agent` interface — six signals, four methods, one event stream | [Choosing an adapter](/docs/choosing-an-adapter) |
+| Durable threads | Persistence, checkpoints, durable execution, and time travel across restarts | [Persistence](/docs/langgraph/guides/persistence) |
+| Human approvals | Interrupts, resume payloads, and the panel primitives to compose a review step | [Interrupts](/docs/langgraph/guides/interrupts) |
+| Client tools | Tools that execute in the browser and hand control back to the graph | [Client tools](/docs/chat/guides/client-tools) |
+| Generative UI | `@threadplane/render` for json-render, `@threadplane/a2ui` for A2UI v0.9, both rendering only components you registered | [json-render vs A2UI](/docs/render/concepts/json-render-vs-a2ui) |
+| Subagents | Child graphs rendered as their own cards, with their own transcripts | [Subgraphs](/docs/langgraph/guides/subgraphs) |
+| Long-horizon agents | The five Deep Agents capabilities — planning, filesystem, subagents, memory, and skills — rendered with no extra adapter | [Deep Agents](/docs/deep-agents/getting-started/introduction) |
+| Errors and retry | `AgentError` classifies every failure as `connection`, `auth`, `server`, `interrupted`, or `aborted`, each carrying a `retryable` flag | [Error handling](/docs/chat/guides/error-handling) |
+| Thread routing | The URL is the source of truth, so a shared link opens the thread it points at | [Thread routing](/docs/chat/guides/thread-routing) |
+| Theming | CSS custom properties, no `!important`, your design system stays yours | [Theming](/docs/chat/guides/theming) |
+| Testing | `provideFakeAgent()`, mock transports, and fixture replay, so your suite runs without a model or an API key | [Try without a backend](/docs/chat/getting-started/try-without-a-backend) |
+
+One hundred and twenty-seven documentation pages sit behind that table.
+
+Two lines of it deserve more than a table cell.
+
+The runtime is not a one-way door.
+Both adapters implement the same `Agent` contract, so components written against `<chat>` do not know which backend they are talking to.
+When the backend changes, your providers change and your components do not.
+I measured this rather than asserted it, and I wrote up [exactly where the door is still one-way](/blog/what-changes-when-the-runtime-changes), because the honest version of that claim is more useful than the clean one.
+
+AG-UI support is protocol-first, and that is a claim I could test rather than assert.
+The adapter consumes the AG-UI event vocabulary, not any single runtime's SDK.
+On 2026-08-31 it ran against [AWS Strands, Microsoft Agent Framework, and Mastra](/docs/runtimes/getting-started/introduction) — three runtimes in two languages, with no adapter changes for messages, tool calls, or state.
+Each one has a standalone example and a committed transcript of its wire traffic.
+Three runtimes, two languages, nothing to change. That one was fun to watch work!
+
+## What is still yours
+
+A feature list is a sales document unless it also says where it stops.
+
+These are the things Threadplane does not do for you, and will not start doing quietly in a patch release.
+
+- The agent endpoint sits behind your proxy. The browser should not be talking to your graph server directly.
+- API keys never reach the bundle. There is no configuration option that makes this safe, so there is no configuration option.
+- Thread IDs are server-generated. Never mint one client-side.
+- CORS is yours to configure.
+- The interrupt panel is yours to compose. `<chat>` does not render it. The primitives are there; the review experience is a product decision, and it is yours.
+- The resume payload is yours to choose. Only you know what "approved" means in your domain.
+- Tracing and evaluation are yours. Runs get traced and regressions get evaluated by tools built for that, not by a UI library.
+
+I like this list *more* than the one above it.
+Every row on it is a place where taking the work off your hands would mean taking a decision off your hands too.
+
+## Why this is free
+
+There is no open-core split here.
+There is no capability held back for a paid tier, no seat count, no activation, no runtime license check, and no account to create.
+Every package is MIT, and MIT means commercial use, modification, and redistribution without asking me.
+
+There are paid offerings, and I want to be precise about what they sell: review time, a private channel, and a response commitment.
+They sell my attention.
+They do not sell code you cannot *otherwise* have.
+
+For me that distinction is the whole point.
+The moment a capability moves behind a paywall, every architectural decision in the library starts getting made by the pricing page, and you can feel that in the code long before you can see it on the invoice.
+
+If you disagree with a decision I made, the remedy is a fork, and the license already grants it.
+
+## Airworthiness
+
+Free is easy to say.
+Maintained is the part that needs numbers, so here are the ones I would want if I were the person putting this into a production Angular app.
+
+- Ranked #8 of 119 agent frameworks on the HVTracker supply-chain index.
+- 8.2 / 10 on the OpenSSF Scorecard.
+- Releases are signed, with OIDC provenance and SLSA attestations.
+- Angular 20, 21, and 22 are tested in CI, not merely claimed.
+- Model drift is checked weekly against a live provider, and the workflow diffs fresh recordings against committed fixtures.
+- There is no cloud service, no telemetry account, and no VC board seat waiting to change any of the above.
+
+I verified every one of those before writing this sentence, which is more than I can say for the first draft of the homepage checklist.
+Three claims did not survive that pass, including one that was simply false.
+Removing them made the page better, and I would rather tell you that than pretend the list arrived correct.
+
+## Conclusion
+
+Threadplane 0.1.0 is the first release where the version number, the documentation, and the published packages all agree with each other.
+It closes the last mile: chat, durable threads, human approvals, generative UI, subagents, long-horizon capabilities, classified errors, and a test path that does not need a model.
+It costs nothing, and nothing about it is going to start costing something later.
+
+Install it, spike something this week, and tell me where it breaks.
+
+```bash
+npm install @threadplane/chat @threadplane/langgraph @langchain/core @langchain/langgraph-sdk marked
+```
+
+The FUEL sign is on.
+The pot is full.
+Pour a cup.
