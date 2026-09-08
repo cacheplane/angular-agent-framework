@@ -169,14 +169,18 @@
  * deliberately do not: this band is website-only and takes the ATC scope
  * navy, while dark.ts stays neutral because @threadplane/chat and the cockpit
  * consume it and a navy ground there would seam against embedded chat.
- * 2026-09-08: the surfaces moved to the navy family as well, because leaving
- * --color-surface neutral put grey-black cards on a navy ground.
+ * 2026-09-08: the surfaces moved to the navy family as well. The proof cards
+ * that first exposed this are gone, but --color-surface still dresses the
+ * secondary Button and the focus halo in this band, and a neutral
+ * rgb(28,28,28) left those grey-black on a navy ground.
  * Treatment B (spec): vertical gradient canvas, 1px accent seam at the
  * light→dark boundary. */
 [data-ui="section"][data-surface="dark"] {
   /* Navy-family surfaces. The ground goes DARKER and the surfaces go LIGHTER,
-   * which is the hierarchy that was missing: before this, cards were neutral
-   * rgb(28,28,28) floating on a navy ground — two unrelated darks. */
+   * which is the hierarchy that was missing — before, the two darks were
+   * unrelated. --color-surface is consumed here by the secondary Button and
+   * the focus halo; -tinted and -dim complete the ladder for nested surfaces
+   * and currently have no consumer in this band. */
   --color-canvas: #0B1622;
   --color-surface: #15253E;
   --color-surface-tinted: #1B2E4D;
@@ -307,7 +311,7 @@
  * fill. The inner `--color-surface` halo is what separates ring from fill in
  * the two cases where both land in the same colour family — yellow ring on
  * yellow fill in the dark band, ink ring on ink fill in the signal scope —
- * because `--color-surface` re-points with the scope too (dark grey, then the
+ * because `--color-surface` re-points with the scope too (navy, then the
  * signal yellow). Held by a style contract. */
 [data-ui="button"]:focus-visible {
   outline: 2px solid var(--color-accent);

@@ -1081,7 +1081,14 @@
 .proof-strip-cells {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
+  /* Asymmetric on purpose. With the cards gone, whitespace is the ONLY grouping
+   * cue, and a symmetric 20px made the gap between one cell's source link and
+   * the next cell's numeral no larger than the gaps inside a cell — so the
+   * rhythm argued for the wrong grouping wherever the grid stacks (≤900px and
+   * ≤560px). The row gutter has to beat the intra-cell spacing; the column
+   * gutter is the old card padding expressed as a gap, which is what
+   * column-gap is for. */
+  gap: 44px 40px;
   list-style: none;
   margin: 0;
   padding: 0;
@@ -1091,7 +1098,6 @@
   /* Grid items default to min-width:auto; the long mono source URLs would then
    * push the columns past the container. */
   min-width: 0;
-  padding: 0 20px 0 0;
 }
 .proof-strip-value {
   font-family: var(--font-display);
