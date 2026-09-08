@@ -13,7 +13,6 @@ import {
   HERO_SECONDARY_HREF,
   HERO_SECONDARY_LABEL,
   HERO_SUBHEAD_SEGMENTS,
-  HERO_TRUST_LINE,
 } from '../../lib/positioning';
 import { HeroDemo } from './HeroDemo';
 import { InstallDialog } from './InstallDialog';
@@ -59,7 +58,6 @@ export function Hero() {
             </a>
           </div>
           <HeroDemo />
-          <p className="hero-trust hero-strip">{HERO_TRUST_LINE}</p>
         </div>
       </Container>
       <InstallDialog open={installOpen} onClose={closeInstall} />

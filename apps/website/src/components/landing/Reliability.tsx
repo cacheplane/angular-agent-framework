@@ -2,7 +2,7 @@ import { Container } from '../ui/Container';
 import { Section } from '../ui/Section';
 import { SectionHeader } from '../ui/SectionHeader';
 import { WEBSITE_SUPPORTED_ANGULAR_MAJORS } from '../pricing/angular-support.mjs';
-import { RELIABILITY_RECEIPTS } from '../../lib/positioning';
+import { HERO_TRUST_LINE, RELIABILITY_RECEIPTS } from '../../lib/positioning';
 import { AdapterGuideLink } from './AdapterGuideLink';
 
 interface ProofCell {
@@ -91,6 +91,11 @@ export const RIBBON_MORE_COUNT = 4;
 export function Reliability() {
   return (
     <Section surface="dark" id="proof" ariaLabelledBy="proof-heading">
+      {/* The seam. The hero's yellow block ends, this marks the boundary, the
+        * scope band begins — which is where the ATC app puts its frequency
+        * bar. It lived inside the hero until 2026-09-08, where it read as a
+        * stray navy bar 78px above a much larger band of the same colour. */}
+      <p className="proof-masthead">{HERO_TRUST_LINE}</p>
       <Container>
         <div className="proof-strip">
           {/* Garamond watermark; the glyph comes from the data attribute so no

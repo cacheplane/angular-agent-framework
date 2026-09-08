@@ -2189,18 +2189,16 @@
   text-decoration: none;
 }
 
-/* The frequency strip — the ATC player's bottom bar. Full-bleed scope navy
- * closing the yellow block, set in mono because the instrument-panel cue is
- * doing as much work here as the colour is. */
-.hero-strip {
-  margin: 32px calc(50% - 50vw) 0;
-  width: 100vw;
+/* The seam between the yellow hero and the scope band. Full width by virtue of
+ * sitting outside the Container, so no calc(50% - 50vw) breakout is needed. */
+.proof-masthead {
+  /* [data-ui="section"] sets padding-top: var(--spacing-section-y), so a first
+   * child would otherwise sit BELOW that padding with a navy gap above it —
+   * which defeats the whole point. Pull it back up to the section's top edge
+   * so it is flush against the hero's yellow. */
+  margin: calc(-1 * var(--spacing-section-y)) 0 0;
   padding: 10px var(--spacing-container-x);
   background: var(--color-scope);
-  /* Literal rather than a token on purpose: the strip sits inside the signal
-     scope, which re-points --color-text-inverted (and every surface token) to
-     the yellow. The strip declares its own ground, so it declares its own ink
-     too. */
   color: #ffffff;
   font-family: var(--font-mono);
   font-size: 11px;

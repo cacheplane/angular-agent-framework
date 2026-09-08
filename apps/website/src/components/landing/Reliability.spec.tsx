@@ -3,9 +3,19 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import { Reliability, PROOF_CELLS, RIBBON_ITEMS, RIBBON_MORE_COUNT } from './Reliability';
-import { RELIABILITY_RECEIPTS } from '../../lib/positioning';
+import { HERO_TRUST_LINE, RELIABILITY_RECEIPTS } from '../../lib/positioning';
 
 describe('Reliability', () => {
+  it('opens with the trust masthead, so the yellow block closes into the dark band', () => {
+    const { container } = render(<Reliability />);
+    const mast = container.querySelector('.proof-masthead');
+    expect(mast?.textContent).toBe(HERO_TRUST_LINE);
+    // It must be the section's first child: it is the seam between the hero's
+    // yellow and this band, not a line floating inside the content.
+    const section = container.querySelector('[data-ui="section"]');
+    expect(section?.firstElementChild).toBe(mast);
+  });
+
   it('renders four cells, each with a source link', () => {
     render(<Reliability />);
     expect(PROOF_CELLS).toHaveLength(4);
