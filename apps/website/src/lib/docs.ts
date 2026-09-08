@@ -32,7 +32,16 @@ export type ResolvedDocMetadata = Metadata;
  */
 const FRONTMATTER_BLOCK_PATTERN = /^---\s*\n(?<body>[\s\S]*?)\n---\s*(?:\n|$)/;
 
-const FRONTMATTER_DESCRIPTION_PATTERN = /^description:\s*['"]?(?<description>[^'"\n]+?)['"]?\s*$/m;
+/**
+ * The value is captured whole and unquoted afterwards. Excluding quote
+ * characters from the capture instead made every description containing a
+ * possessive unreadable, so those pages fell back to their first paragraph.
+ */
+const FRONTMATTER_DESCRIPTION_PATTERN = /^description:[^\S\n]*(?<description>\S.*?)[^\S\n]*$/m;
+
+function unquote(value: string): string {
+  return value.match(/^(?<quote>['"])(?<inner>.*)\k<quote>$/)?.groups?.inner ?? value;
+}
 
 /**
  * Remove a frontmatter block so the rest can be handed to the MDX pipeline.
@@ -48,10 +57,16 @@ export function stripFrontmatter(source: string): string {
   return source.replace(FRONTMATTER_BLOCK_PATTERN, '');
 }
 
-function readFrontmatterDescription(content: string): string | null {
+/**
+ * The `description` a page declares for itself, or `null` when it declares
+ * none. Exported so the content guard can assert on the same parse the page
+ * metadata uses rather than a second copy of these patterns.
+ */
+export function readFrontmatterDescription(content: string): string | null {
   const body = content.match(FRONTMATTER_BLOCK_PATTERN)?.groups?.body;
   if (!body) return null;
-  return body.match(FRONTMATTER_DESCRIPTION_PATTERN)?.groups?.description ?? null;
+  const description = body.match(FRONTMATTER_DESCRIPTION_PATTERN)?.groups?.description;
+  return description ? unquote(description) : null;
 }
 
 function normalizeDescription(description: string): string {
