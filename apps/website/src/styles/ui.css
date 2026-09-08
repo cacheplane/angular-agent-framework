@@ -209,6 +209,31 @@
   pointer-events: none;
 }
 
+/* Signal section scope (the ATC hero block).
+ * Aviation yellow is a FILL: this scope flips the ink to near-black rather
+ * than tinting the yellow, because #FFAF00 carries text at 1.84:1 on white
+ * and 10.73:1 under #0A0A0A. Same re-scoping mechanism as the dark surface
+ * above. */
+[data-ui="section"][data-surface="signal"] {
+  --color-canvas: var(--color-signal);
+  --color-surface: var(--color-signal);
+  --color-surface-tinted: var(--color-signal-strong);
+  --color-border: rgba(10, 10, 10, 0.18);
+  --color-border-strong: rgba(10, 10, 10, 0.32);
+  --color-text-primary: var(--color-ink);
+  --color-text-secondary: rgba(10, 10, 10, 0.78);
+  --color-text-muted: rgba(10, 10, 10, 0.6);
+  --color-text-inverted: var(--color-signal);
+  --color-accent: var(--color-ink);
+  --color-accent-hover: #000000;
+  --color-accent-surface: rgba(10, 10, 10, 0.08);
+  --color-accent-border: rgba(10, 10, 10, 0.25);
+  --shadow-focus: 0 0 0 3px rgba(10, 10, 10, 0.45);
+
+  background: var(--color-signal);
+  color: var(--color-text-primary);
+}
+
 /* UI primitive — Button */
 [data-ui="button"] {
   display: inline-flex;

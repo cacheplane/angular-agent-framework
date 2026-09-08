@@ -9,6 +9,12 @@ describe('Section', () => {
     expect(el?.getAttribute('data-surface')).toBe('dark');
   });
 
+  it('renders data-surface="signal" when asked', () => {
+    const { container } = render(<Section surface="signal">x</Section>);
+    const el = container.querySelector('[data-ui="section"]');
+    expect(el?.getAttribute('data-surface')).toBe('signal');
+  });
+
   it('defaults to canvas', () => {
     const { container } = render(<Section>x</Section>);
     expect(
