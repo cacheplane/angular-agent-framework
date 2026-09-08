@@ -138,11 +138,16 @@
  * phone's 16px at every width, and the CTA demotes from a fill button to a
  * text link.
  *
- * The demotion is also what makes the height flat. `Button` gives size=md a
- * hard `height: 40px`, which is what pushes the marketing bar to 81px once the
- * lg link row appears; dropping to `height: auto` leaves the 25px logo as the
- * tallest thing in the row at every width, so 16 + 25 + 16 + the 1px border
- * measures the same 58px from 375px up. Raising the padding here without
+ * The demotion is also what makes the height flat. The `padding-block: 12px;
+ * margin-block: -12px` pair below is the same hit-area trick as .nav-hamburger:
+ * it pads the box for a larger click target, then pulls it back with an equal
+ * negative margin, so the flex row sizes off the *margin* box — which is a flat
+ * 16px regardless of the element's own content height. That is what actually
+ * holds the 58px; `height: auto` is belt-and-braces on top of it (verified by
+ * mutation: setting `height: 40px` back here still measures a flat 58px once
+ * the negative margin is in place). With the margin box pinned at 16px, the
+ * 25px logo is the tallest thing left in the row, so 16 + 25 + 16 + the 1px
+ * border measures 58px from 375px up. Raising the padding here without
  * re-measuring --nav-h above is what re-opens the dead-space bug.
  *
  * `Button` stamps data-ui/data-variant/data-size and adds no class of its own,

@@ -17,12 +17,12 @@ import { test, expect } from '@playwright/test';
  * bug this guards against was fifteen.
  */
 const STEPS = [
-  { width: 375, note: 'phone — px-6 py-4' },
-  { width: 767, note: 'phone — last px before md' },
-  { width: 768, note: 'tablet — md padding, no lg link row' },
-  { width: 1023, note: 'tablet — last px before lg' },
-  { width: 1024, note: 'desktop — lg link row appears' },
-  { width: 1440, note: 'desktop' },
+  { width: 375, note: 'phone — px-6 py-4', marketingNavH: 58, docsNavH: 58 },
+  { width: 767, note: 'phone — last px before md', marketingNavH: 58, docsNavH: 58 },
+  { width: 768, note: 'tablet — md padding, no lg link row', marketingNavH: 66, docsNavH: 58 },
+  { width: 1023, note: 'tablet — last px before lg', marketingNavH: 66, docsNavH: 58 },
+  { width: 1024, note: 'desktop — lg link row appears', marketingNavH: 81, docsNavH: 58 },
+  { width: 1440, note: 'desktop', marketingNavH: 81, docsNavH: 58 },
 ];
 
 /**
@@ -32,8 +32,12 @@ const STEPS = [
  * rendered height and only a browser knows what that height is.
  */
 const SURFACES = [
-  { name: 'marketing', url: '/' },
-  { name: 'docs', url: '/docs/langgraph/getting-started/introduction' },
+  { name: 'marketing', url: '/', expectedNavH: (step: (typeof STEPS)[number]) => step.marketingNavH },
+  {
+    name: 'docs',
+    url: '/docs/langgraph/getting-started/introduction',
+    expectedNavH: (step: (typeof STEPS)[number]) => step.docsNavH,
+  },
 ];
 
 for (const surface of SURFACES) {
@@ -54,6 +58,16 @@ for (const surface of SURFACES) {
 
       expect(variable).toBeGreaterThanOrEqual(measured);
       expect(variable - measured).toBeLessThanOrEqual(1);
+
+      // The two checks above are self-consistency only: they confirm --nav-h
+      // tracks whatever the nav happens to render, but they cannot see a
+      // regression where the *ladder itself* collapses — e.g. the marketing
+      // steps flattening to 58px like docs. If the declared value and the
+      // rendered nav moved together, every self-consistency check above would
+      // still pass. Pinning the declared value against the ladder we intend
+      // catches that; it is a separate property from "does the variable match
+      // what rendered."
+      expect(variable).toBe(surface.expectedNavH(step));
     });
   }
 }
@@ -72,6 +86,30 @@ test('the docs nav does not grow with the breakpoint', async ({ page }) => {
   }
   const [phone] = heights;
   for (const height of heights) expect(Math.abs(height - phone)).toBeLessThanOrEqual(1);
+});
+
+test('the marketing nav does grow with the breakpoint', async ({ page }) => {
+  // Direct counterpart to "the docs nav does not grow with the breakpoint"
+  // above: docs stays flat on purpose, and marketing is supposed to keep its
+  // ladder. Stating both intents as tests means a future change that
+  // accidentally flattens the marketing ladder (matching it to docs) fails
+  // here even though every self-consistency check elsewhere in this file
+  // would still pass.
+  await page.setViewportSize({ width: 375, height: 800 });
+  await page.goto('/');
+  const phoneHeight = await page
+    .locator('nav')
+    .first()
+    .evaluate((el) => el.getBoundingClientRect().height);
+
+  await page.setViewportSize({ width: 1440, height: 800 });
+  await page.goto('/');
+  const desktopHeight = await page
+    .locator('nav')
+    .first()
+    .evaluate((el) => el.getBoundingClientRect().height);
+
+  expect(desktopHeight - phoneHeight).toBeGreaterThan(15);
 });
 
 test('the docs column starts directly under the nav at a tablet width', async ({ page }) => {
