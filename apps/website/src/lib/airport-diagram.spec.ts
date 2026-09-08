@@ -2,16 +2,10 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
-  APRON_A,
-  APRON_B,
-  CONC_A,
-  CONC_B,
   CONCOURSES,
   FIELD,
   GATES_A,
   GATES_B,
-  LINK_A_Y,
-  LINK_B_Y,
   MAIN,
   NEAT,
   NORTH,
@@ -75,13 +69,15 @@ describe('airport diagram geometry', () => {
       expect(y1, `${label} bottom`).toBeLessThanOrEqual(FIELD.y1);
     };
 
+    // Read off CONCOURSES rather than listed by hand: a third concourse is
+    // bounded the moment it is declared, instead of the day someone remembers
+    // to add its box and its apron to a list over here.
     const boxes = [
-      ['MAIN', MAIN],
-      ['CONC_A', CONC_A],
-      ['CONC_B', CONC_B],
-      ['APRON_A', APRON_A],
-      ['APRON_B', APRON_B],
-    ] as const;
+      ['MAIN', MAIN] as const,
+      ...CONCOURSES.flatMap(
+        (c) => [[`CONC_${c.id}`, c.box], [`APRON_${c.id}`, c.apron]] as const
+      ),
+    ];
     for (const [label, b] of boxes) inside(label, b.x0, b.x1, b.y0, b.y1);
 
     for (const [label, r] of [
@@ -176,11 +172,33 @@ describe('airport diagram geometry', () => {
     for (const c of CONCOURSES) expect(c.gates.length, `concourse ${c.id}`).toBeGreaterThan(0);
   });
 
+  it('takes the wide ratio from the artwork, not from taste', () => {
+    // WIDE_RATIO decides how wide the AWS wordmark is drawn in two places, so
+    // it has to be the shape of the actual file or the mark is stretched. This
+    // is the only assertion here that ties the constant to something outside
+    // the module, and it is what stops the `w` vs `s * WIDE_RATIO` check below
+    // from closing back on itself.
+    for (const g of [...GATES_A, ...GATES_B]) {
+      if (g.w === undefined) continue;
+      const svg = readFileSync(resolve(WEBSITE, 'public', g.src.slice(1)), 'utf8');
+      const viewBox = /viewBox="([^"]+)"/.exec(svg)?.[1];
+      expect(viewBox, `${g.src} has no viewBox to measure`).toBeDefined();
+      const [, , vbW, vbH] = (viewBox as string).trim().split(/[\s,]+/).map(Number);
+      expect(vbW, `${g.src} viewBox width`).toBeGreaterThan(0);
+      expect(vbH, `${g.src} viewBox height`).toBeGreaterThan(0);
+      expect(
+        Math.abs(WIDE_RATIO - vbW / vbH),
+        `${g.gate}: WIDE_RATIO ${WIDE_RATIO} vs ${g.src} ${vbW}/${vbH} = ${vbW / vbH}`
+      ).toBeLessThanOrEqual(0.02);
+    }
+  });
+
   it('sizes each mark individually, and any wordmark at the wide ratio', () => {
     // One shared height reads wrong: Mastra is wide and heavy, Anthropic is a
-    // narrow wedge. `w` is the escape hatch for a wordmark that is not square,
-    // and it is derived from `s` so the ratio is stated once. A second
-    // wordmark is allowed to join; an off-ratio one is not.
+    // narrow wedge. `w` is the escape hatch for a wordmark that is not square.
+    // Both numbers are literal, so this compares two independent values against
+    // a ratio the test above pins to the file itself. A second wordmark is
+    // allowed to join; an off-ratio one is not.
     const all = [...GATES_A, ...GATES_B];
     for (const g of all) {
       expect(g.s, `${g.gate} size`).toBeGreaterThan(0);
@@ -203,19 +221,16 @@ describe('airport diagram geometry', () => {
   it('places the main terminal west of both concourses, and connects it to each', () => {
     // Strictly west: at equality the two connector paths would be zero-length
     // and the terminal would read as fused to the concourses.
-    expect(MAIN.x1).toBeLessThan(CONC_A.x0);
-    expect(MAIN.x1).toBeLessThan(CONC_B.x0);
-    for (const [label, y, box] of [
-      ['LINK_A_Y', LINK_A_Y, CONC_A],
-      ['LINK_B_Y', LINK_B_Y, CONC_B],
-    ] as const) {
+    for (const { id, box, link } of CONCOURSES) {
+      expect(MAIN.x1, `main terminal west of concourse ${id}`).toBeLessThan(box.x0);
       // A connector leaves the terminal wall and lands on the concourse wall,
       // so it has to fall inside both y spans. Move a concourse up or down
-      // without moving its link and the line detaches at one end.
-      expect(y, `${label} leaves the terminal`).toBeGreaterThan(MAIN.y0);
-      expect(y, `${label} leaves the terminal`).toBeLessThan(MAIN.y1);
-      expect(y, `${label} lands on the concourse`).toBeGreaterThan(box.y0);
-      expect(y, `${label} lands on the concourse`).toBeLessThan(box.y1);
+      // without moving its link and the line detaches at one end. The pairing
+      // comes from CONCOURSES, so it cannot be got wrong here.
+      expect(link, `link ${id} leaves the terminal`).toBeGreaterThan(MAIN.y0);
+      expect(link, `link ${id} leaves the terminal`).toBeLessThan(MAIN.y1);
+      expect(link, `link ${id} lands on the concourse`).toBeGreaterThan(box.y0);
+      expect(link, `link ${id} lands on the concourse`).toBeLessThan(box.y1);
     }
   });
 

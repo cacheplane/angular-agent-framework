@@ -53,6 +53,11 @@ export const TWY_E = 930;
 export const MAIN = { x0: 56, x1: 188, y0: 190, y1: 288 } as const;
 export const CONC_A = { x0: 204, x1: 432, y0: 190, y1: 224 } as const;
 export const CONC_B = { x0: 204, x1: 900, y0: 254, y1: 288 } as const;
+/**
+ * Connector centre lines, terminal wall to concourse wall. CONCOURSES pairs
+ * each with its concourse as `link`; the names exist so each value can be
+ * written beside the two boxes its line runs between.
+ */
 export const LINK_A_Y = 206;
 export const LINK_B_Y = 270;
 
@@ -74,6 +79,10 @@ export const ROW2 = { standCy: 332, labelY: 364, stubTop: 288, stubBot: 306 } as
  * A mark that is not square is sized by width at this ratio; the AWS wordmark
  * is the only one so far, and it appears twice — at gate B6 and again in the
  * margin provider row. Stated once so the two cannot drift apart.
+ *
+ * The number is not a taste call: it is the aspect of the artwork itself
+ * (public/logos/providers/bedrock.svg, viewBox 0 0 256 153), and the spec reads
+ * that file off disk to hold it there. Change it and the wordmark stretches.
  */
 export const WIDE_RATIO = 1.67;
 
@@ -92,37 +101,29 @@ export const GATES_A: readonly Gate[] = [
   { gate: 'A1', src: '/logos/langgraph.svg', name: 'LANGGRAPH', s: 21, x: 318 },
 ];
 
-/** B6's optical height, named so its width can be derived from it in place. */
-const B6_H = 12;
-
 export const GATES_B: readonly Gate[] = [
   { gate: 'B1', src: '/logos/ag-ui.svg', name: 'AG-UI', s: 19, x: 268 },
   { gate: 'B2', src: '/logos/runtimes/crewai.svg', name: 'CREWAI', s: 22, x: 380 },
   { gate: 'B3', src: '/logos/runtimes/mastra.svg', name: 'MASTRA', s: 16, x: 492 },
   { gate: 'B4', src: '/logos/runtimes/pydantic.svg', name: 'PYDANTIC AI', s: 21, x: 604 },
   { gate: 'B5', src: '/logos/runtimes/microsoft.svg', name: 'MS AGENT FWK', s: 19, x: 716 },
-  // The AWS wordmark is not square, so it is the one mark sized by width — and
-  // that width is derived from WIDE_RATIO rather than measured a second time.
+  // The AWS wordmark is not square, so it is the one mark sized by width. Both
+  // numbers are written literally like every other value in this table; the
+  // spec checks the pair against WIDE_RATIO, and WIDE_RATIO against the file.
   // Using it for Strands is honest — Strands is an AWS project. The rejected
   // alternative was the word "AWS" in Archivo Black, which out-weighed every
   // real logo on the plate.
-  {
-    gate: 'B6',
-    src: '/logos/providers/bedrock.svg',
-    name: 'AWS STRANDS',
-    s: B6_H,
-    w: Math.round(B6_H * WIDE_RATIO),
-    x: 828,
-  },
+  { gate: 'B6', src: '/logos/providers/bedrock.svg', name: 'AWS STRANDS', s: 12, w: 20, x: 828 },
 ];
 
 /**
- * The whole pairing, stated once: each concourse owns a gate row, an apron and
- * a side. `gatesAbove` is which side of the concourse its gates hang on — row 1
- * sits above concourse A, row 2 below concourse B — which the component needs
- * to aim the stub tick and which the spec needs to read the row's ordering.
- * Anything that re-derives "A is the up row" from the constant names is a
- * second copy of this table.
+ * The whole pairing, stated once: each concourse owns a gate row, an apron, a
+ * connector back to the main terminal and a side. `gatesAbove` is which side of
+ * the concourse its gates hang on — row 1 sits above concourse A, row 2 below
+ * concourse B — which the component needs to aim the stub tick and which the
+ * spec needs to read the row's ordering. Anything that re-derives "A is the up
+ * row", or re-pairs a concourse with its apron or its link, from the constant
+ * names is a second copy of this table.
  */
 export const CONCOURSES = [
   {
@@ -133,6 +134,7 @@ export const CONCOURSES = [
     gates: GATES_A,
     row: ROW1,
     apron: APRON_A,
+    link: LINK_A_Y,
     gatesAbove: true,
   },
   {
@@ -143,6 +145,7 @@ export const CONCOURSES = [
     gates: GATES_B,
     row: ROW2,
     apron: APRON_B,
+    link: LINK_B_Y,
     gatesAbove: false,
   },
 ] as const;
