@@ -950,24 +950,27 @@ Change `color: #004090;` to:
   color: var(--color-accent);
 ```
 
-- [ ] **Step 3: Turn the active-item fill into a signal rule**
+- [x] **Step 3: WITHDRAWN — the tokens already did this, and a guard says so**
 
-The active rule already exists at `docs.css:917` as
-`[data-docs-navlink][data-active]` — every sidebar link carries both
-attributes. It currently fills with `--color-accent-surface`, which is now a
-yellow tint; a rule reads better than a wash and matches the surface
-discipline in spec §6. Replace it:
+This step originally replaced the active sidebar item's fill with a 3px
+`--color-signal` left rule. It is withdrawn; do nothing here.
 
-```css
-[data-docs-navlink][data-active] {
-  color: var(--color-text-primary);
-  background: none;
-  border-left: 3px solid var(--color-signal);
-  padding-left: 9px;
-  margin-left: -12px;
-  font-weight: 700;
-}
-```
+`DocsControlPlane.spec.tsx` has a test named "uses complete rounded sidebar
+states without a left marker" asserting `border-radius: 7px`, asserting the
+active state uses `background: var(--color-accent-surface)`, and explicitly
+asserting NO `border-left` on either the hover or the active state. That came
+from #963 (unify docs and runtime control plane) — a deliberate decision.
+
+More to the point, the step was unnecessary. `--color-accent-surface` is now
+`rgba(255, 175, 0, 0.10)` and `--color-accent` is scope navy, so the active
+item ALREADY renders as a soft yellow rounded pill with navy ink — yellow as a
+fill under dark ink, exactly the discipline spec §6 asks for. The retheme
+reached this surface through the tokens, which is the point of doing the work
+in the token library.
+
+Withdrawing rather than overriding: a plan written days earlier does not get to
+overrule a design decision the codebase deliberately guards, especially to
+achieve something already achieved.
 
 - [ ] **Step 4: Run the unit tests**
 
