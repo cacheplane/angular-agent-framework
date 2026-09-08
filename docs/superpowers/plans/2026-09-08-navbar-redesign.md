@@ -90,6 +90,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { HERO_ROUTES, NAV_TRIGGERS, navItems } from './nav-config';
 import { docsConfig } from '../../lib/docs-config';
+import { getAllSolutionSlugs } from '../../lib/solutions-data';
 
 const APP_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'app');
 
@@ -113,6 +114,17 @@ function docsHrefResolves(href: string): boolean {
   );
 }
 
+/**
+ * `/solutions/:slug` is a dynamic route too. `getAllSolutionSlugs()` is what
+ * `generateStaticParams` renders from, so that is what a solutions href has to
+ * be checked against.
+ */
+function solutionsHrefResolves(href: string): boolean {
+  if (href === '/solutions') return true;
+  const [, , slug] = href.split('/');
+  return Boolean(slug) && getAllSolutionSlugs().includes(slug);
+}
+
 function staticHrefResolves(href: string): boolean {
   return existsSync(join(APP_ROOT, ...href.split('/').filter(Boolean), 'page.tsx'));
 }
@@ -121,11 +133,11 @@ describe('nav-config', () => {
   it('points every internal link at a route that exists', () => {
     const unresolved = navItems()
       .filter((item) => !item.external)
-      .filter((item) =>
-        item.href.startsWith('/docs')
-          ? !docsHrefResolves(item.href)
-          : !staticHrefResolves(item.href),
-      )
+      .filter((item) => {
+        if (item.href.startsWith('/docs')) return !docsHrefResolves(item.href);
+        if (item.href.startsWith('/solutions')) return !solutionsHrefResolves(item.href);
+        return !staticHrefResolves(item.href);
+      })
       .map((item) => `${item.label} → ${item.href}`);
 
     expect(unresolved).toEqual([]);
@@ -445,7 +457,13 @@ Run: `npx nx test website -- --run src/components/shared/nav-config.spec.ts`
 
 Expected: PASS, 6 tests.
 
-If `points every internal link at a route that exists` fails, the href is wrong, not the test — check the slug against `src/lib/docs-config.ts` rather than loosening the assertion.
+If `points every internal link at a route that exists` fails, check the slug against `src/lib/docs-config.ts` or `src/lib/solutions-data.ts` rather than loosening the assertion.
+
+**The one exception, and it bit the first run of this task:** a failure that names *every* href in a family means the family is a dynamic route the test has no resolver for — not that the hrefs are wrong. `/docs/*` and `/solutions/*` both have resolvers above. Repointing such links at a static hub to make the test pass silently destroys the IA; add the resolver instead.
+
+- [ ] **Step 4b: Prove each dynamic-route resolver is not vacuous**
+
+A resolver that returns `true` for everything passes this test while catching nothing. For each of `docsHrefResolves` and `solutionsHrefResolves`, temporarily repoint one href at a slug that does not exist (`/solutions/does-not-exist`), confirm the test FAILS naming that href, then restore it and confirm it passes.
 
 - [ ] **Step 5: Confirm the new copy clears the public-copy contract**
 
