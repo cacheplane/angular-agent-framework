@@ -96,10 +96,41 @@
 .nav-link:hover {
   color: var(--color-accent);
 }
+/* Two surfaces, no shadow in either.
+ *
+ * Transparent is only ever reached on a HERO_ROUTES page at scroll 0, where the
+ * ground behind the bar is the hero's saturated yellow. Navy on that yellow is
+ * roughly 8:1, so this is a stylistic state, not an accessibility concession. */
 .nav-bar {
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
-  box-shadow: var(--shadow-sm);
+  transition: background 0.2s, border-color 0.2s;
+}
+.nav-bar[data-surface='transparent'] {
+  background: transparent;
+  border-bottom-color: transparent;
+}
+.nav-bar[data-surface='transparent'] .nav-link,
+.nav-bar[data-surface='transparent'] .nav-trigger,
+.nav-bar[data-surface='transparent'] .nav-trigger-caret {
+  color: var(--color-accent);
+}
+.nav-bar[data-surface='transparent'] [data-ui='button'][data-variant='primary'] {
+  background: var(--color-accent);
+  color: var(--color-text-inverted);
+}
+.nav-scroll-sentinel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 8px;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-bar {
+    transition: none;
+  }
 }
 .nav-hamburger {
   color: var(--color-text-primary);

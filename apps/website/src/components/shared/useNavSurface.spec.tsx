@@ -18,11 +18,27 @@ function Probe({ pathname }: { pathname: string }) {
   );
 }
 
+// The hook seeds its state from the sentinel's rect, and jsdom has no layout
+// engine — every rect it reports is zero, which reads as "scrolled past". So
+// the scroll position each case is about has to be stated outright.
+const AT_TOP = { bottom: 8 } as DOMRect;
+const SCROLLED_PAST = { bottom: -120 } as DOMRect;
+let sentinelRect: DOMRect;
+const realGetBoundingClientRect = Element.prototype.getBoundingClientRect;
+
 describe('useNavSurface', () => {
   beforeEach(() => {
     observerCallback = null;
     disconnect.mockClear();
     observe.mockClear();
+    sentinelRect = AT_TOP;
+    Element.prototype.getBoundingClientRect = function getRect(
+      this: Element,
+    ): DOMRect {
+      return this.getAttribute('data-testid') === 'sentinel'
+        ? sentinelRect
+        : realGetBoundingClientRect.call(this);
+    };
     vi.stubGlobal(
       'IntersectionObserver',
       class {
@@ -37,11 +53,22 @@ describe('useNavSurface', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    Element.prototype.getBoundingClientRect = realGetBoundingClientRect;
   });
 
   it('is transparent at rest on a hero route', () => {
     render(<Probe pathname="/" />);
     expect(screen.getByTestId('surface').textContent).toBe('transparent');
+  });
+
+  it('is solid immediately when a hero route mounts already scrolled', () => {
+    // A #hash deep link or back-navigation with scroll restoration. The state
+    // is seeded from the sentinel's rect precisely so this never spends a
+    // frame transparent while waiting on the observer's first callback.
+    sentinelRect = SCROLLED_PAST;
+    render(<Probe pathname="/" />);
+    expect(screen.getByTestId('surface').textContent).toBe('solid');
+    expect(observerCallback).not.toBeNull();
   });
 
   it('observes the sentinel element it handed back', () => {

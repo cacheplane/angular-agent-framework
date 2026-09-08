@@ -15,6 +15,7 @@ import { GITHUB_REPO_URL } from '../../lib/positioning';
 import { DEMOS, demoCtaSuffix } from '../../lib/demos';
 import { DocsContextContent } from '../docs/DocsControlPlane';
 import { NavDesktop, links, trackNavLink } from './NavDesktop';
+import { useNavSurface } from './useNavSurface';
 
 const toAnalyticsLibrary = (library: LibraryId | null): AnalyticsLibrary => {
   switch (library) {
@@ -75,6 +76,7 @@ export function Nav() {
   const docsLibrary = (getLibraryConfig(activeLibrary)?.id ??
     null) as LibraryId | null;
   const navRef = useRef<HTMLElement>(null);
+  const { surface, sentinelRef } = useNavSurface(pathname);
   const mobileTriggerRef = useRef<HTMLButtonElement>(null);
   const mobileDialogRef = useRef<HTMLDivElement>(null);
   const restoreMobileFocusRef = useRef(false);
@@ -190,10 +192,14 @@ export function Nav() {
 
   return (
     <>
+      {/* Outside the fixed <nav> so it actually scrolls: `body` is its
+          containing block, so `top: 0` is the top of the document. */}
+      <div ref={sentinelRef} className="nav-scroll-sentinel" aria-hidden="true" />
       <nav
         ref={navRef}
         className="fixed top-0 left-0 right-0 z-50 nav-bar"
         data-site-navigation=""
+        data-surface={surface}
       >
         {/* Top bar */}
         <div className="flex items-center justify-between px-6 py-4 md:px-8 md:py-5">
