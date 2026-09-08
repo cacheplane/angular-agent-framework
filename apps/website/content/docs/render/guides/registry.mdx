@@ -94,7 +94,7 @@ registry.names();                     // ['Text', 'Card']
 
 ### Fallbacks and unregistered types
 
-An element whose type is not registered has no entry at all, so nothing mounts and the element renders nothing. When the type is registered, the entry's fallback fills the gap while a prop is still resolving to `undefined`, or while a declared `schema` does not yet validate the resolved props. Once the real component mounts it stays mounted: the switch is one-way per element instance, so a prop that later becomes undefined never reverts the element to its fallback.
+An element whose type is not registered has no entry at all, so nothing mounts and the element renders nothing. When the type is registered, the entry's fallback fills the gap while a prop is still resolving to `undefined`, or while a declared `schema` does not yet validate the resolved props. Once the real component mounts it stays mounted: the switch is one-way per element instance, so a prop that later becomes undefined never reverts the element to its fallback. A repeating element is gated one row at a time — each mount is judged on the props it resolved in its own item scope, so a row that is still missing a value shows the fallback while its ready siblings show the real component.
 
 ## The component input contract
 
@@ -146,7 +146,7 @@ the component receives `value` resolved to the stored value and `bindings` set t
 
 ## Talking back through the render host
 
-`injectRenderHost()` gives a mounted component the element-scoped host, which is the supported way to write state, fire events, and announce a result.
+`injectRenderHost()` gives a mounted component the element-scoped host, which is the supported way to write state, fire events, and announce a result. Inside a repeat the host is scoped to the row, so an event it fires resolves `{ "$item": … }` action params against that row's item.
 
 ```ts
 import { Component, input } from '@angular/core';

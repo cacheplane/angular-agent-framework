@@ -12,11 +12,12 @@ export const REPEAT_LOOPS_SPECS: DemoSpec[] = [
           children: ['row'],
         },
         // One element declaration, one rendered row per entry in /items.
-        // `{ $item: '' }` resolves to the whole item, which here is a string.
+        // `{ $item: 'label' }` reads the `label` field of the current item;
+        // `{ $item: '' }` would resolve to the whole item instead.
         row: {
           type: 'Text',
           repeat: { statePath: '/items' },
-          props: { content: { $item: '' } },
+          props: { content: { $item: 'label' } },
         },
       },
     }, null, 2),

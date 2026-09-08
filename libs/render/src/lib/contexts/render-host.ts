@@ -4,7 +4,9 @@ import { InjectionToken, inject } from '@angular/core';
  * The element-scoped host a mounted view component talks back through.
  * Agent-agnostic: `result(value)` just means "this component produced a
  * value"; the render lib surfaces it as a RenderResultEvent and never
- * interprets it. Provided per-element by RenderElementComponent.
+ * interprets it. Provided per-element by RenderElementComponent, and once
+ * per row for a repeating element, so `emit` carries the row that fired it
+ * and `{ $item: … }` action params resolve in that row's scope.
  */
 export interface RenderHost {
   /** Write a value to the render state store at a JSON-Pointer path. */

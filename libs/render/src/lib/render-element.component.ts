@@ -130,7 +130,11 @@ function preventDefaultOn(payload: unknown): void {
       @for (repeatInjector of repeatInjectors(); track $index) {
         @if (repeatVisible()[$index]) {
           <ng-container
-            *ngComponentOutlet="mountClass(); inputs: filteredRepeatInputs()[$index]; injector: repeatInjector"
+            *ngComponentOutlet="
+              repeatMountClasses()[$index];
+              inputs: filteredRepeatInputs()[$index];
+              injector: repeatInjector
+            "
           />
         }
       }
@@ -160,7 +164,12 @@ export class RenderElementComponent implements OnInit {
   constructor() {
     this.destroyRef.onDestroy(() => this.development.dispose());
     afterEveryRender(() => {
-      if (this.destroyed || !this.visible() || this.notReady()) return;
+      // Evidence is the mounted outlet itself: an element that is hidden,
+      // unready, unknown or repeating over an empty array either renders no
+      // outlet at all or renders the fallback, and the identity check below
+      // rejects both. That holds per repeat item too, where a single
+      // element-level readiness flag never could.
+      if (this.destroyed) return;
       const component = this.componentClass();
       if (!component) return;
       for (const outlet of this.outlets()) {
@@ -191,10 +200,23 @@ export class RenderElementComponent implements OnInit {
     effect(() => {
       if (this.mountedReal()) return;
       const el = this.element();
-      if (!el) return;
+      if (!el || el.repeat) return;
       // Only latch when notReady is false AND a real component is registered.
       if (!this.notReady() && this.entry()?.component) {
         this.mountedReal.set(true);
+      }
+    });
+
+    // The same latch, one flag per repeat index. Indexes are the identity the
+    // `@for` block tracks, so a component instance and its latch line up.
+    effect(() => {
+      const el = this.element();
+      if (!el?.repeat || !this.entry()?.component) return;
+      const raw = this.repeatRawNotReady();
+      const latched = this.repeatMountedReal();
+      const next = raw.map((notReady, index) => (latched[index] ?? false) || !notReady);
+      if (next.length !== latched.length || next.some((v, i) => v !== latched[i])) {
+        this.repeatMountedReal.set(next);
       }
     });
   }
@@ -282,8 +304,15 @@ export class RenderElementComponent implements OnInit {
   /** Invokes the element's `on[event]` handler bindings, honoring every field
    *  of `ActionBinding`: `preventDefault`, `confirm`, `params` (resolved
    *  through the same expression resolver the element props use) and the
-   *  `onSuccess` / `onError` follow-ups. */
-  private invokeHandlers(event: string, payload?: Record<string, unknown>): void {
+   *  `onSuccess` / `onError` follow-ups.
+   *
+   *  `repeatIndex` names which repeated instance fired, so `{ $item: … }`
+   *  params resolve in that row's scope rather than the parent's. */
+  private invokeHandlers(
+    event: string,
+    payload?: Record<string, unknown>,
+    repeatIndex?: number,
+  ): void {
     const el = this.element();
     if (!el?.on) return;
     const binding = el.on[event];
@@ -301,7 +330,9 @@ export class RenderElementComponent implements OnInit {
       // exactly as an element prop would. The payload wins on key collisions.
       const resolved = resolveElementProps(
         (b.params ?? {}) as Record<string, unknown>,
-        this.propCtx(),
+        repeatIndex === undefined
+          ? this.propCtx()
+          : this.repeatPropCtxs()[repeatIndex] ?? this.propCtx(),
       );
       const params = { ...resolved, ...(payload ?? {}) };
 
@@ -385,6 +416,19 @@ export class RenderElementComponent implements OnInit {
     result: (value: unknown) => { if (this.destroyed) return; this.ctx.emitEvent?.({ type: 'result', value, elementKey: this.elementKey() }); },
   };
 
+  /** The same host, bound to one repeated instance so `host.emit(…)` resolves
+   * `$item` action params in that row's scope. */
+  private hostForRepeatIndex(index: number): RenderHost {
+    return {
+      set: this.host.set,
+      result: this.host.result,
+      emit: (event: string, payload?: Record<string, unknown>) => {
+        if (this.destroyed) return;
+        this.invokeHandlers(event, payload, index);
+      },
+    };
+  }
+
   /** Emit function passed to mounted view components as the `emit` framework
    * input. Delegates to the element's `on[event]` handler bindings. */
   private readonly emitFn = (event: string) => {
@@ -437,32 +481,77 @@ export class RenderElementComponent implements OnInit {
     } satisfies RepeatScope));
   });
 
-  /** One child Injector per repeat item, providing RepeatScope. */
+  /** One prop-resolution context per repeat item. Every per-item derivation —
+   *  props, bindings, readiness, visibility, action params — resolves through
+   *  these, so `{ $item: … }`, `{ $index: … }` and `{ $bindItem: … }` see the
+   *  row they belong to instead of the parent scope. */
+  private readonly repeatPropCtxs = computed(() =>
+    this.repeatScopes().map(scope =>
+      buildPropResolutionContext(this.ctx.store, scope, this.ctx.functions),
+    ),
+  );
+
+  /** One child Injector per repeat item, providing RepeatScope and a
+   *  row-scoped RenderHost (so `injectRenderHost().emit(…)` carries the row). */
   readonly repeatInjectors = computed(() => {
-    return this.repeatScopes().map(scope =>
+    return this.repeatScopes().map((scope, index) =>
       Injector.create({
-        providers: [{ provide: REPEAT_SCOPE, useValue: scope }],
+        providers: [
+          { provide: REPEAT_SCOPE, useValue: scope },
+          { provide: RENDER_HOST, useValue: this.hostForRepeatIndex(index) },
+        ],
         parent: this.parentInjector,
       }),
     );
+  });
+
+  /** Per-index latch behind {@link repeatNotReady}; written by a constructor
+   *  effect because Angular forbids signal writes inside a computed. */
+  private readonly repeatMountedReal = signal<readonly boolean[]>([]);
+
+  /** Per-item readiness before the mounted latch is applied. */
+  private readonly repeatRawNotReady = computed<boolean[]>(() => {
+    const el = this.element();
+    if (!el?.repeat) return [];
+    const props = el.props;
+    if (!props) return this.repeatPropCtxs().map(() => false);
+    const entry = this.entry();
+    return this.repeatPropCtxs().map(
+      ctx => !isElementReady(entry, resolveElementProps(props, ctx)),
+    );
+  });
+
+  /** Per-item counterpart of {@link notReady}: a row whose `$item`-bound props
+   *  have not resolved yet shows the fallback while its ready siblings mount
+   *  the real component. Latched per index, exactly as the single mount is. */
+  readonly repeatNotReady = computed<boolean[]>(() => {
+    const latched = this.repeatMountedReal();
+    return this.repeatRawNotReady().map((notReady, index) =>
+      latched[index] ? false : notReady,
+    );
+  });
+
+  /** Per-item counterpart of {@link mountClass}. */
+  readonly repeatMountClasses = computed<(AngularComponentRenderer | null)[]>(() => {
+    const el = this.element();
+    if (!el?.repeat) return [];
+    const entry = this.entry();
+    const real = entry?.component ?? null;
+    const fallback = entry?.fallback ?? null;
+    return this.repeatNotReady().map(notReady => (notReady ? fallback : real));
   });
 
   /** Resolved inputs for each repeat item. */
   readonly repeatInputs = computed(() => {
     const el = this.element();
     if (!el?.repeat) return [];
-    return this.repeatScopes().map(scope => {
-      const ctx = buildPropResolutionContext(
-        this.ctx.store,
-        scope,
-        this.ctx.functions,
-      );
+    return this.repeatPropCtxs().map((ctx, index) => {
       const resolved = resolveElementProps(el.props ?? {}, ctx);
       const bindings = resolveBindings(el.props ?? {}, ctx);
       return {
         ...resolved,
         bindings,
-        emit: this.emitFn,
+        emit: (event: string) => this.invokeHandlers(event, undefined, index),
         loading: this.ctx.loading ?? false,
         childKeys: el.children ?? [],
         spec: this.spec(),
@@ -470,10 +559,14 @@ export class RenderElementComponent implements OnInit {
     });
   });
 
-  /** `repeatInputs` filtered per-item to declared component inputs. */
+  /** `repeatInputs` filtered per-item to declared component inputs — against
+   *  that item's own mount class, which may be the fallback while a sibling
+   *  already shows the real component. */
   readonly filteredRepeatInputs = computed(() => {
-    const cls = this.mountClass() as Type<unknown> | null;
-    return this.repeatInputs().map(inputs => filterInputsForClass(cls, inputs));
+    const classes = this.repeatMountClasses();
+    return this.repeatInputs().map((inputs, index) =>
+      filterInputsForClass(classes[index] as Type<unknown> | null, inputs),
+    );
   });
 
   /** Per-item visibility for repeat elements. The element's own `visible`
@@ -483,12 +576,9 @@ export class RenderElementComponent implements OnInit {
   readonly repeatVisible = computed<boolean[]>(() => {
     const el = this.element();
     if (!el?.repeat) return [];
-    if (this.mountClass() === null) return this.repeatScopes().map(() => false);
-    return this.repeatScopes().map(scope =>
-      evaluateVisibility(
-        el.visible,
-        buildPropResolutionContext(this.ctx.store, scope, this.ctx.functions),
-      ),
+    const classes = this.repeatMountClasses();
+    return this.repeatPropCtxs().map(
+      (ctx, index) => classes[index] !== null && evaluateVisibility(el.visible, ctx),
     );
   });
 }
