@@ -40,3 +40,44 @@ test('the nav is solid on a route with no hero', async ({ page }) => {
     'solid',
   );
 });
+
+/**
+ * Pins the contrast the docs CTA demotion (chrome.css) rests on: marketing
+ * keeps a filled button, docs flattens it to a text link. `nav-height.spec.ts`
+ * only proves the docs bar stopped growing — the same measured height would
+ * also result from a filled button that happened to be 25px tall, so nothing
+ * else asserts the surface actually changed.
+ *
+ * Marketing is asserted as "has a fill", not "has a yellow fill": at rest
+ * (scroll 0) `/` is a HERO_ROUTES page with a transparent `.nav-bar`, and the
+ * transparent-surface rule inverts the CTA to a navy fill rather than leaving
+ * it in its normal yellow — asserting a specific colour here would encode
+ * that scroll-position inversion and break the moment either theme changes.
+ *
+ * Both reads use `toHaveCSS`, not a one-shot `getComputedStyle`: the button
+ * itself transitions `background-color`/`color` over 120ms on mount, so an
+ * immediate read after `goto` can land mid-transition.
+ */
+test('the nav CTA is a filled button on marketing but a text link on docs', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+
+  await page.goto('/');
+  const marketingCta = page
+    .locator('nav')
+    .first()
+    .getByRole('link', { name: 'Talk to Us' });
+  await expect(marketingCta).not.toHaveCSS(
+    'background-color',
+    'rgba(0, 0, 0, 0)',
+  );
+
+  await page.goto('/docs/langgraph/getting-started/introduction');
+  const docsCta = page
+    .locator('nav')
+    .first()
+    .getByRole('link', { name: 'Talk to Us' });
+  await expect(docsCta).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+  await expect(docsCta).toHaveCSS('color', 'rgb(21, 37, 62)');
+});

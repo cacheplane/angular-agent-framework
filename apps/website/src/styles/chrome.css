@@ -159,6 +159,16 @@
   padding-inline: 0;
   border-color: transparent;
   box-shadow: none;
+  /* line-height:1 plus zero padding collapses the hit area to the text
+   * itself — ~16px tall (14px text + the 1px transparent border on each
+   * side). Same trick as .nav-hamburger below: pad the box for a larger
+   * click target, then pull it back with an equal negative margin so the
+   * flex row sizes off the unchanged margin box — neither the visual
+   * position nor the 58px nav height moves. 12px matches the row's own
+   * 16px top/bottom padding with room to spare, so the taller hit area
+   * still lands inside the bar instead of leaking into the content below. */
+  padding-block: 12px;
+  margin-block: -12px;
 }
 .nav-scroll-sentinel {
   position: absolute;
