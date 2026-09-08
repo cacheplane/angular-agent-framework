@@ -53,8 +53,9 @@
   --color-chat-purple: #5a00c8;
 
   /* Fonts */
-  --font-garamond: "EB Garamond", Georgia, serif;
-  --font-inter: Inter, system-ui, sans-serif;
+  --font-display: "Archivo Black", system-ui, sans-serif;
+  --font-sans: Archivo, system-ui, sans-serif;
+  --font-diagram: Inter, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
   /* Type scale */

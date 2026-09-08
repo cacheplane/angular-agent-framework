@@ -57,8 +57,9 @@ export function cssVars(theme: Theme) {
     '--ds-chat-purple': brand.chatPurple,
 
     // Typography (invariant)
-    '--ds-font-serif': typography.fontSerif,
+    '--ds-font-display': typography.fontDisplay,
     '--ds-font-sans': typography.fontSans,
+    '--ds-font-diagram': typography.fontDiagram,
     '--ds-font-mono': typography.fontMono,
 
     // Shadows (invariant)

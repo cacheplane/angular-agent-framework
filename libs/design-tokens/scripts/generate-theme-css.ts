@@ -93,8 +93,9 @@ function buildThemeBlock(): string {
   // Fonts
   lines.push('');
   lines.push('  /* Fonts */');
-  lines.push(`  --font-garamond: ${typography.fontSerif};`);
-  lines.push(`  --font-inter: ${typography.fontSans};`);
+  lines.push(`  --font-display: ${typography.fontDisplay};`);
+  lines.push(`  --font-sans: ${typography.fontSans};`);
+  lines.push(`  --font-diagram: ${typography.fontDiagram};`);
   lines.push(`  --font-mono: ${typography.fontMono};`);
 
   // Type scale — Tailwind v4 composite text tokens.
@@ -105,7 +106,7 @@ function buildThemeBlock(): string {
   // composite objects in typography.ts.
   //
   // `family` is deliberately not emitted: those values are already
-  // `var(--font-garamond)` and friends, and Tailwind's --text-* bundle has no
+  // `var(--font-display)` and friends, and Tailwind's --text-* bundle has no
   // font-family sub-key. `eyebrow.transform` is likewise a plain
   // `text-transform` keyword, not a token. Both are excluded in
   // token-css-parity.spec.ts with that reasoning.
@@ -231,8 +232,9 @@ function buildTokensBlock(theme: ThemeOverrides): string {
 
   lines.push('');
   lines.push('  /* Typography */');
-  lines.push(`  --ds-font-serif: ${typography.fontSerif};`);
+  lines.push(`  --ds-font-display: ${typography.fontDisplay};`);
   lines.push(`  --ds-font-sans: ${typography.fontSans};`);
+  lines.push(`  --ds-font-diagram: ${typography.fontDiagram};`);
   lines.push(`  --ds-font-mono: ${typography.fontMono};`);
 
   lines.push('');

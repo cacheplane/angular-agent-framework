@@ -66,7 +66,16 @@ describe('cssVars(theme)', () => {
   });
 
   it('typography tokens are identical across themes', () => {
-    expect(cssVars('light')['--ds-font-serif']).toBe(cssVars('dark')['--ds-font-serif']);
+    expect(cssVars('light')['--ds-font-display']).toBe(cssVars('dark')['--ds-font-display']);
     expect(cssVars('light')['--ds-font-sans']).toBe(cssVars('dark')['--ds-font-sans']);
+    expect(cssVars('light')['--ds-font-diagram']).toBe(cssVars('dark')['--ds-font-diagram']);
+  });
+
+  it('keeps diagrams off the brand face', () => {
+    // Diagram geometry is pinned to Inter's metrics by
+    // apps/website/e2e/home-architecture.spec.ts. Archivo would change every
+    // glyph width and silently overflow the cards.
+    expect(cssVars('light')['--ds-font-diagram']).toContain('Inter');
+    expect(cssVars('light')['--ds-font-sans']).not.toContain('Inter');
   });
 });

@@ -28,8 +28,9 @@ const CSS_VAR_BY_PATH: Record<string, string> = {
   'brand.chatPurple': '--color-chat-purple',
 
   // Font families
-  'typography.fontSerif': '--font-garamond',
-  'typography.fontSans': '--font-inter',
+  'typography.fontDisplay': '--font-display',
+  'typography.fontSans': '--font-sans',
+  'typography.fontDiagram': '--font-diagram',
   'typography.fontMono': '--font-mono',
 
   // Type scale — size
@@ -105,7 +106,7 @@ const CSS_VAR_BY_PATH: Record<string, string> = {
 const EXCLUDED: ReadonlyArray<{ prefix: string; why: string }> = [
   {
     prefix: 'typography.h1.family',
-    why: 'value is already `var(--font-garamond)` — a var about a var buys nothing',
+    why: 'value is already `var(--font-display)` — a var about a var buys nothing',
   },
   { prefix: 'typography.h2.family', why: 'see h1.family' },
   { prefix: 'typography.h3.family', why: 'see h1.family' },

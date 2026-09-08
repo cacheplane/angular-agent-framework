@@ -51,8 +51,9 @@
   --ds-border-strong: rgb(200, 200, 200);
 
   /* Typography */
-  --ds-font-serif: "EB Garamond", Georgia, serif;
-  --ds-font-sans: Inter, system-ui, sans-serif;
+  --ds-font-display: "Archivo Black", system-ui, sans-serif;
+  --ds-font-sans: Archivo, system-ui, sans-serif;
+  --ds-font-diagram: Inter, system-ui, sans-serif;
   --ds-font-mono: "JetBrains Mono", ui-monospace, monospace;
 
   /* Typography — type scale */
