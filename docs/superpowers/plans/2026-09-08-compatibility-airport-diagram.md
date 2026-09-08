@@ -402,8 +402,6 @@ import {
   EYEBROW,
   FIELD,
   HEADLINE,
-  LINK_A_Y,
-  LINK_B_Y,
   MAIN,
   NEAT,
   NORTH,
@@ -562,8 +560,9 @@ function Plate() {
           <text className="ap-main-sub" x={mx} y={my + 24} textAnchor="middle">MAIN TERMINAL</text>
         </g>
 
-        <path className="ap-link" d={`M${MAIN.x1} ${LINK_A_Y} H${CONCOURSES[0].box.x0}`} />
-        <path className="ap-link" d={`M${MAIN.x1} ${LINK_B_Y} H${CONCOURSES[1].box.x0}`} />
+        {CONCOURSES.map((c) => (
+          <path key={c.id} className="ap-link" d={`M${MAIN.x1} ${c.link} H${c.box.x0}`} />
+        ))}
 
         {CONCOURSES.map((c) => (
           <g key={c.id} data-concourse={c.id}>
