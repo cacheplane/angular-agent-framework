@@ -57,8 +57,8 @@ export const RENDER_LIFECYCLE = new InjectionToken<RenderLifecycle>('RENDER_LIFE
 
 Only mounts are recorded. `destroyed` lifecycle events are pushed through the same tap but the service ignores them, so nothing decrements and no signal reports teardown. See the [Events guide](/docs/render/guides/events) for the full event union.
 
-<Callout type="warning" title="mountCount counts spec mounts, not elements">
-`<render-spec>` emits exactly one spec-scope `mounted` event, in `ngOnInit`. Element-scope `mounted` events come from `<render-element>`, and it emits one only when the element carries a truthy `lifecycle` field in the spec -- a field `UIElement` does not declare. For a spec whose elements do not set it, `mountCount` reaches `1` and stays there, and `lastMountAt` keeps the timestamp of that single mount. Treat these two signals as "the spec mounted at", not as a live element census.
+<Callout type="info" title="mountCount counts mounts, not live elements">
+`<render-spec>` emits one spec-scope `mounted` event in `ngOnInit`, and `<render-element>` emits one element-scope `mounted` event per element it mounts. A three-element spec therefore leaves `mountCount` at `4`. The counter only ever climbs: `destroyed` events are ignored, so a spec that mounts and tears down elements as it streams keeps adding to the total rather than reporting how many elements are on screen right now.
 </Callout>
 
 ## Reading the signals
@@ -82,7 +82,7 @@ export class MyComponent {
 }
 ```
 
-`lastStateChangeAt` and `lastHandlerInvokedAt` are the two signals that keep moving in an ordinary application: every store write and every dispatched handler updates one of them.
+All four of the non-sticky signals keep moving in an ordinary application: every store write, every dispatched handler, and every element the renderer mounts updates one of them.
 
 ## Reset semantics
 

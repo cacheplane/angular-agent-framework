@@ -1126,7 +1126,7 @@
       },
       {
         "name": "liveStore",
-        "type": "StateStore",
+        "type": "SignalStateStore",
         "description": "Surface-owned live state store: `$bindState` props read it and input\ncomponents write user edits into it, so event-time logic (checks,\naction context) sees CURRENT values instead of the agent-seeded\nsnapshot. Seeded from spec.state with user edits preserved. Public so\nhosts (and tests) can read the live values of a rendered surface.",
         "optional": false
       },

@@ -100,7 +100,7 @@ The rendering pipeline works as follows:
    - Evaluates the `visible` condition
    - Resolves prop expressions and bindings using `@json-render/core`
    - Renders the component via `NgComponentOutlet` with the resolved inputs
-3. For elements with `repeat`, the library iterates over the state array and creates a child `Injector` with a `RepeatScope` for each item. The `visible` condition is evaluated only on the non-repeating path -- a repeating element renders one instance per item regardless of `visible`.
+3. For elements with `repeat`, the library iterates over the state array and creates a child `Injector` with a `RepeatScope` for each item. The `visible` condition is evaluated once per item, in that item's scope, so an `$item` or `$index` condition hides individual rows.
 4. Children are not rendered automatically -- a component that wants them must mount `<render-element>` for each key in `childKeys`.
 
 ## Next Steps

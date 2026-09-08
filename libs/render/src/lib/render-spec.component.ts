@@ -19,7 +19,7 @@ import { toRenderRegistry } from './views';
 import { RENDER_CONTEXT } from './contexts/render-context';
 import type { RenderContext } from './contexts/render-context';
 import type { AngularRegistry } from './render.types';
-import { signalStateStore } from './signal-state-store';
+import { signalStateStore, type SignalStateStore } from './signal-state-store';
 import type { RenderEvent } from './render-event';
 import { RenderLifecycleService } from './render-lifecycle.service';
 import { makeGuardedEmit } from './internals/guarded-emit';
@@ -205,10 +205,14 @@ export class RenderSpecComponent implements OnInit {
       const store = this.resolvedStore();
       const unsub = store.subscribe(() => {
         const snapshot = store.getSnapshot() as Record<string, unknown>;
+        // `StateStore.subscribe` carries no path, so a foreign store can only
+        // report the root and the whole snapshot. `signalStateStore()` records
+        // its last mutation, which lets us name the path that actually changed.
+        const change = (store as SignalStateStore).lastChange?.();
         this.emitTapped({
           type: 'stateChange',
-          path: '/',
-          value: snapshot,
+          path: change?.path ?? '/',
+          value: change ? change.value : snapshot,
           snapshot,
         });
       });
