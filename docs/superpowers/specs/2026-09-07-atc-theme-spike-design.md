@@ -150,10 +150,12 @@ reviewed as part of this work (§7).
 | --- | --- | --- |
 | `--font-display` (was `--font-garamond`) | EB Garamond | **Archivo Black** |
 | `--font-sans` (was `--font-inter`) | Inter | **Archivo** 400–700 |
+| `--font-diagram` | *(new)* | **Inter** — retained for diagrams only |
 | `--font-mono` | JetBrains Mono | unchanged |
 
 EB Garamond is removed from `layout.tsx` entirely. A serif has no place in this
-system, and dropping it removes six loaded font files.
+system, and dropping it removes six loaded font files. Inter is **not**
+removed — it stays loaded to serve `--font-diagram` (§5.1).
 
 Archivo Black is display-only (a single weight) and is used for h1/h2 and the
 wordmark; Archivo carries body and UI. This pairing is what keeps the docs
@@ -164,7 +166,41 @@ JetBrains Mono uppercase on the eyebrows and the data strips is doing more work
 than it looks: it is the instrument-panel cue. Without it the theme leans
 entirely on the yellow.
 
-### 5.1 The rename
+### 5.1 Diagrams keep Inter
+
+Diagrams do not take the brand face. They stay on Inter via a new
+`--font-diagram` token, and they stay clean and minimal: neutral type, no
+Archivo Black, no display weights.
+
+Two reasons, and the second is the load-bearing one:
+
+1. **Diagrams are information, not brand surface.** A heavy grotesk in a
+   16-node architecture drawing fights the drawing. The brand lives in the
+   hero; the diagram's job is to be read.
+2. **The geometry is tuned to Inter's metrics.** `EnterpriseArchitecture.tsx`
+   pins every rectangle to an 8px grid in a data module, and
+   `home-architecture.spec.ts` measures every rendered text run against its
+   card after `document.fonts.ready`. Swapping the diagram to Archivo would
+   change every glyph width and force a geometry rework that could easily
+   exceed the retheme itself. Keeping Inter makes that rework zero.
+
+The carve-out is three declarations, not a scatter:
+
+- `apps/website/src/styles/landing.css` — `.arch-figure text`, a single blanket
+  rule over every text node in the architecture figure
+- `apps/website/src/styles/docs.css` — `.tp-diagram-node[data-title="sans"]
+  .tp-diagram-title` and `.tp-diagram-meta`, the shared docs diagram kit
+
+Diagram rules already on `var(--font-mono)` (eyebrows, titles, `data-meta="mono"`)
+are unchanged — mono was never Inter and is not being retyped.
+
+**Trap:** the §5.2 rename is a mechanical `--font-inter` → `--font-sans`
+replacement, and these three declarations must become `--font-diagram`
+instead. A blind find-and-replace silently rethemes the diagrams to Archivo
+and breaks the overflow e2e — or worse, passes at desktop and overflows at
+390px. Do the carve-out in the same commit as the rename, not after it.
+
+### 5.2 The rename
 
 The names `--font-garamond` and `--font-inter` become lies after the swap, so
 they are renamed to `--font-display` and `--font-sans`. This is wider than a
@@ -220,14 +256,20 @@ Named here so the divergence reads as a decision rather than a defect:
 
 ## 8. Verification
 
-The e2e added by #1048 is load-bearing for this work.
+The e2e added by #1048 is the gate on the §5.1 carve-out.
 `apps/website/e2e/home-architecture.spec.ts` waits on `document.fonts.ready`
 and then runs an overflow report against every card in the homepage
 architecture diagram, with the comment "a fallback face lies about widths."
-**Archivo's metrics differ from Inter's, so text that fits a diagram card today
-may overflow after the swap.** Expect to adjust the diagram's geometry data
-module or its type sizes, and treat that e2e as a required gate rather than an
-afterthought.
+
+Because diagrams keep Inter, this should pass **unchanged** — and that is
+exactly what makes it useful. A green run means the carve-out held; a red run
+means the rename swept the diagram rules into Archivo. If it goes red, the fix
+is to restore `--font-diagram` on the three declarations in §5.1, **not** to
+adjust the diagram geometry. Adjusting geometry would be treating the symptom
+and would bake Archivo's metrics into the data module.
+
+Run it at both viewports. The spec's second test drops to 390px, and a
+metrics regression can pass at desktop while overflowing on a phone.
 
 Specs that pin a value being deliberately changed, and must be updated as part
 of the work:
