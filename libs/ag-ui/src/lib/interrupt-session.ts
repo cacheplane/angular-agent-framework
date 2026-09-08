@@ -13,9 +13,13 @@ export class InterruptSession {
   observeNative(entries: unknown[], runId?: string): void {
     if (entries.length === 0) throw new Error('Native interrupt outcome must contain interrupts');
     if (this.isLateObservation(runId)) return;
-    const parsed = entries.map(entry => InterruptSchema.passthrough().parse(
-      isRecord(entry) && entry['reason'] === undefined ? { ...entry, reason: '' } : entry,
-    ));
+    const parsed = entries.map(entry => {
+      const normalized = isRecord(entry) && entry['reason'] === undefined ? { ...entry, reason: '' } : entry;
+      // Keep the SDK's declared output type across consumer strictness settings.
+      // Preserve extensions separately instead of re-inferring a passthrough schema.
+      const validated = InterruptSchema.parse(normalized);
+      return { ...(isRecord(normalized) ? normalized : {}), ...validated };
+    });
     if (new Set(parsed.map(entry => entry.id)).size !== parsed.length) throw new Error('Duplicate interrupt id');
     this.beginObservation(runId);
     const merged = new Map(this.state.interrupts.map(entry => [entry.id, entry]));
