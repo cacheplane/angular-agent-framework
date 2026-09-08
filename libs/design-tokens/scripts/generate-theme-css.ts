@@ -80,6 +80,7 @@ function buildThemeBlock(): string {
   lines.push('');
   lines.push('  /* Brand */');
   lines.push(`  --color-accent-light: ${brand.accentLight};`);
+  lines.push('  /* signal aliases accent-light, scope aliases accent — deliberate: dark.ts derives its accent from accentLight, so both names must exist. Prefer signal/scope in new work. */');
   lines.push(`  --color-signal: ${brand.signal};`);
   lines.push(`  --color-signal-strong: ${brand.signalStrong};`);
   lines.push(`  --color-scope: ${brand.scope};`);
@@ -208,6 +209,8 @@ function buildTokensBlock(theme: ThemeOverrides): string {
   lines.push(`  --ds-text-muted: ${theme.textMuted};`);
   lines.push(`  --ds-text-inverted: ${theme.textInverted};`);
   lines.push(`  --ds-sidebar-bg: ${theme.sidebarBg};`);
+
+  lines.push('  /* Brand (invariant — identical in tokens.css and tokens-dark.css) */');
   lines.push(`  --ds-signal: ${brand.signal};`);
   lines.push(`  --ds-signal-strong: ${brand.signalStrong};`);
   lines.push(`  --ds-scope: ${brand.scope};`);

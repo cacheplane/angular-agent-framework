@@ -42,6 +42,7 @@
 
   /* Brand */
   --color-accent-light: #FFAF00;
+  /* signal aliases accent-light, scope aliases accent — deliberate: dark.ts derives its accent from accentLight, so both names must exist. Prefer signal/scope in new work. */
   --color-signal: #FFAF00;
   --color-signal-strong: #FFB700;
   --color-scope: #15253E;

@@ -5,16 +5,29 @@ import { describe, it, expect } from 'vitest';
 const TOKENS_CSS = resolve(__dirname, 'tokens.css');
 
 /**
- * The `--ds-*` names that cockpit and example apps actually reference today.
+ * The `--ds-*` names this contract protects. Two categories, both guarded
+ * the same way:
  *
- * They all reference them with fallbacks and nothing imports tokens.css yet,
- * so dropping a name causes no immediate breakage — it would just silently
- * pin those apps to their fallback colours forever. Hence this list.
+ * 1. Names cockpit and example apps actually reference today. They all
+ *    reference them with fallbacks and nothing imports tokens.css yet,
+ *    so dropping a name causes no immediate breakage — it would just
+ *    silently pin those apps to their fallback colours forever. Hence
+ *    this list.
  *
- * Derived from:
- *   grep -rhoE -- "--ds-[a-z0-9-]+" cockpit examples apps | sort -u
- * intersected with the names tokens.css defined before it came under the
- * generator. Add to this list when a consumer starts using a new name.
+ *    Derived from:
+ *      grep -rhoE -- "--ds-[a-z0-9-]+" cockpit examples apps | sort -u
+ *    intersected with the names tokens.css defined before it came under
+ *    the generator. Add to this list when a consumer starts using a new
+ *    name.
+ *
+ * 2. Names reserved ahead of their consumers: `--ds-signal`,
+ *    `--ds-signal-strong`, `--ds-scope`, `--ds-alert`, `--ds-ink` are the
+ *    aviation-yellow retheme's brand colors. A repo-wide grep finds ZERO
+ *    references to them outside libs/design-tokens/ as of 2026-09-07 — that
+ *    is expected, not a mistake, because cockpit/example adoption has not
+ *    landed yet. Do NOT remove them because the grep above comes up empty;
+ *    they must stay guarded so the names are ready when a consumer needs
+ *    them.
  */
 const CONSUMER_REFERENCED = [
   '--ds-accent',

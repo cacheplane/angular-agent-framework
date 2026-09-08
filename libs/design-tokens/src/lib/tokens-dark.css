@@ -32,6 +32,7 @@
   --ds-text-muted: rgb(160, 160, 160);
   --ds-text-inverted: rgb(17, 17, 17);
   --ds-sidebar-bg: rgba(28, 28, 28, 0.65);
+  /* Brand (invariant — identical in tokens.css and tokens-dark.css) */
   --ds-signal: #FFAF00;
   --ds-signal-strong: #FFB700;
   --ds-scope: #15253E;
