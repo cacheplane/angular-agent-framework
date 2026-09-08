@@ -12,6 +12,6 @@ export default defineConfig({
     baseURL: 'http://localhost:4200',
     trace: 'retain-on-failure',
   },
-  globalSetup: './global-setup.ts',
-  globalTeardown: './global-teardown.ts',
+  globalSetup: process.env.STAGE_LOCAL_SERVER ? undefined : './global-setup.ts',
+  globalTeardown: process.env.STAGE_LOCAL_SERVER ? undefined : './global-teardown.ts',
 });

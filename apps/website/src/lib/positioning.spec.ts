@@ -176,21 +176,27 @@ describe('STAGE_RAIL', () => {
   it('has one entry per beat in the beat map order, each a short claim with one docs link', () => {
     expect(STAGE_RAIL.map((b) => b.beat)).toEqual([...STAGE_BEATS]);
     for (const b of STAGE_RAIL) {
-      expect(b.label.length).toBeLessThanOrEqual(8);
+      expect(b.label.length).toBeLessThanOrEqual(24);
       expect(b.claim.length).toBeLessThanOrEqual(40);
-      expect(b.claim.endsWith('.')).toBe(true);
       expect(b.docs.label).not.toBe('');
       expect(b.docs.href).toMatch(/^\//);
       expect(b.stillAlt.length).toBeGreaterThan(40);
     }
-    expect(STAGE_RAIL.map((b) => b.label)).toEqual(['Tools', 'Persist', 'Approve', 'Render']);
+    expect(STAGE_RAIL.map((b) => b.label)).toEqual([
+      'Tools & citations',
+      'Subagents',
+      'Threads & branches',
+      'Interrupts & approval',
+      'Generated UI',
+    ]);
   });
   it('carries one hold line and the closing ledger copy', () => {
     expect(STAGE_HOLD_LINE).toBe('Keep scrolling to approve.');
-    expect(STAGE_CLOSE.claim).toBe('Feature complete for the final mile.');
+    expect(STAGE_CLOSE.claim).toBe(
+      'One workflow. Every step in your Angular app.'
+    );
     // The fake-agent install command is a single line, so the ending shows it whole (derived, never retyped).
     expect(INSTALL_OPTIONS[0].command).not.toContain('\n');
-    expect(STAGE_CLOSE.install).toBe(INSTALL_OPTIONS[0].command);
     expect(STAGE_CLOSE.cta.href).toBe(INSTALL_OPTIONS[0].quickstartHref);
   });
   it('keeps the rail under the word budget: four beats plus the ending', () => {

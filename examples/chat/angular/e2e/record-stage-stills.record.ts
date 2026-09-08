@@ -46,6 +46,7 @@ test('capture stage stills', async ({ page }) => {
   };
   const settle: Record<string, number> = {
     stream: endOf('stream'),
+    subagents: endOf('subagents'),
     persist: endOf('persist'),
     approve: tl.hold.startMs + Math.round((tl.hold.endMs - tl.hold.startMs) / 2),
     render: tl.totalMs,
@@ -61,6 +62,14 @@ test('capture stage stills', async ({ page }) => {
         timeout: 60_000,
       });
       await page.waitForTimeout(400);
+      if (beat === 'subagents') {
+        const card = page.locator('chat-subagent-card').last();
+        await expect(card).toBeAttached();
+        const collapsed = card.locator('[aria-expanded="false"]');
+        if (await collapsed.count()) await collapsed.first().click();
+        await card.scrollIntoViewIfNeeded();
+        await expect(card).toContainText(/120/);
+      }
       // What keeps a mistimed capture from shipping silently.
       if (beat === 'approve') {
         await expect(page.locator('chat-interrupt-panel')).toBeAttached();
@@ -68,6 +77,8 @@ test('capture stage stills', async ({ page }) => {
       }
       if (beat === 'render') {
         await expect(page.locator('a2ui-surface').first()).toBeAttached();
+        await expect(page.getByRole('textbox', { name: 'Follow-up notes' })).toBeVisible();
+        await expect(page.locator('a2ui-surface').first()).not.toContainText('Building UI');
         await expect(page.locator('chat-interrupt-panel')).toHaveCount(0);
       }
       const png = await page.screenshot({ type: 'png', fullPage: false });

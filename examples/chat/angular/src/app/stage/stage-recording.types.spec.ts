@@ -7,7 +7,7 @@ describe('validateStageRecording', () => {
   it('accepts a well-formed recording', () => {
     expect(validateStageRecording(MINIMAL)).toBe(MINIMAL);
   });
-  it('requires version 2, a thread id, and all four beats in order', () => {
+  it('requires version 2, a thread id, and all five beats in order', () => {
     expect(() => validateStageRecording({ ...MINIMAL, version: 1 })).toThrow(/version/);
     expect(() => validateStageRecording({ ...MINIMAL, threadId: '' })).toThrow(/threadId/);
     const noRender = { ...MINIMAL, runs: MINIMAL.runs.filter((r) => r.beat !== 'render') };
@@ -20,8 +20,8 @@ describe('validateStageRecording', () => {
     expect(() => validateStageRecording(bad)).toThrow(/run 0 has no events/);
   });
   it('rejects a reload run that carries events', () => {
-    const bad = { ...MINIMAL, runs: MINIMAL.runs.map((r, i) => (i === 1 ? { ...r, events: [ev(900)] } : r)) };
-    expect(() => validateStageRecording(bad)).toThrow(/run 1 is a reload and must have no events/);
+    const bad = { ...MINIMAL, runs: MINIMAL.runs.map((r) => (r.action.kind === 'reload' ? { ...r, events: [ev(900)] } : r)) };
+    expect(() => validateStageRecording(bad)).toThrow(/run 2 is a reload and must have no events/);
   });
   it('requires a resume run to follow the approve submit', () => {
     const bad = { ...MINIMAL, runs: MINIMAL.runs.filter((r) => r.action.kind !== 'resume') };

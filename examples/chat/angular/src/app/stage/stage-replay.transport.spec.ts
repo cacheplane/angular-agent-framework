@@ -35,8 +35,9 @@ describe('StageReplayTransport', () => {
     t.seek(tl.totalMs);
     const sig = new AbortController().signal;
     expect(await take(t.stream('chat', 'thread-1', {}, sig), 9)).toHaveLength(2); // run 0
-    expect(await take(t.stream('chat', 'thread-1', {}, sig), 9)).toHaveLength(1); // run 2 (run 1 is the reload)
-    expect(t.runIndex).toBe(3);
+    expect(await take(t.stream('chat', 'thread-1', {}, sig), 9)).toHaveLength(2); // research
+    expect(await take(t.stream('chat', 'thread-1', {}, sig), 9)).toHaveLength(1); // after reload
+    expect(t.runIndex).toBe(4);
   });
   it('counts applied events', async () => {
     const t = new StageReplayTransport(async () => MINIMAL);
@@ -119,17 +120,18 @@ describe('StageReplayTransport', () => {
   it('gates a later run on absolute time, not on its own offset', async () => {
     const t = new StageReplayTransport(async () => MINIMAL);
     await t.ready();
-    t.seek(50);
+    t.seek(100);
     const sig = new AbortController().signal;
     await take(t.stream('chat', 'thread-1', {}, sig), 9); // run 0 drains (0..50)
-    const iter = t.stream('chat', 'thread-1', {}, sig)[Symbol.asyncIterator](); // run 2 starts at 650
+    await take(t.stream('chat', 'thread-1', {}, sig), 9); // research drains (50..100)
+    const iter = t.stream('chat', 'thread-1', {}, sig)[Symbol.asyncIterator](); // after reload at 700
     let first: unknown = 'pending';
     void iter.next().then((r) => (first = r.value));
     await settle();
     expect(first).toBe('pending');
-    t.seek(650);
+    t.seek(700);
     await settle();
-    expect(first).toEqual(MINIMAL.runs[2].events[0].event);
+    expect(first).toEqual(MINIMAL.runs[3].events[0].event);
   });
   it('a stream started before reset() does not consume a run after it', async () => {
     let release!: () => void;

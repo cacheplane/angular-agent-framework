@@ -82,55 +82,58 @@ export const OPEN_SOURCE_STRIP = {
   cta: 'Fork on GitHub',
 } as const;
 
-// ── The stage rail (stage-rail spec §3–5): the four-claim ledger beside the
-// pinned demo. One label, one claim and one docs link per beat; the still
-// alt text describes public/screenshots/stage-<beat>.webp at the beat's settle.
-/** The beat map (`stage-beats.ts`) owns the beat names; the rail copy keys off it so the two cannot drift. */
+// The shared capability checklist and fallback still captions.
 export type StageBeatKey = StageBeat;
 export interface StageRailBeat {
   readonly beat: StageBeatKey;
-  /** Segment label in the act navigation bar. */
   readonly label: string;
-  /** The one line the rail says for this beat. */
   readonly claim: string;
-  /** The page that proves it. */
   readonly docs: { readonly label: string; readonly href: string };
-  /** Alt text for the fallback still: what the frame shows at this beat's settle. */
   readonly stillAlt: string;
 }
-
+export const STAGE_HEADING = 'Everything your agent needs on screen.';
+export const STAGE_SUBTITLE =
+  'Follow one workflow through tools, subagents, saved threads, approvals, and generated UI.';
 export const STAGE_RAIL: readonly StageRailBeat[] = [
   {
     beat: 'stream',
-    label: 'Tools',
-    claim: 'Tool calls and citations as signals.',
-    docs: { label: 'Tool calls', href: '/docs/chat/components/chat-tool-calls' },
+    label: 'Tools & citations',
+    claim: 'Tools & citations',
+    docs: { label: 'Docs', href: '/docs/chat/components/chat-tool-calls' },
     stillAlt:
-      'Threadplane chat beside its devtools: a streamed answer about Angular signals with a Sources row of three citations, and the devtools Timeline listing seven checkpoints',
+      'A backup cleanup review with tool results and linked retention policy citations in the chat.',
+  },
+  {
+    beat: 'subagents',
+    label: 'Subagents',
+    claim: 'Subagents',
+    docs: { label: 'Docs', href: '/docs/langgraph/guides/subgraphs' },
+    stillAlt:
+      'The cleanup workflow delegates a policy review to a research subagent, with its progress and findings visible in the chat.',
   },
   {
     beat: 'persist',
-    label: 'Persist',
-    claim: 'Durable threads, no license.',
-    docs: { label: 'Persistence', href: '/docs/langgraph/guides/persistence' },
+    label: 'Threads & branches',
+    claim: 'Threads & branches',
+    docs: { label: 'Docs', href: '/docs/langgraph/guides/persistence' },
     stillAlt:
-      'The thread restored after a reload and forked from an earlier checkpoint: a "Make it a haiku instead." turn with its three-line haiku reply, the cleanup prompt just sent beneath it, and the devtools Timeline showing ten checkpoints across two steps',
+      'The saved cleanup thread restored after reload and branched from an earlier checkpoint to revise the backup plan.',
   },
   {
     beat: 'approve',
-    label: 'Approve',
-    claim: 'Interrupts and approvals, built in.',
-    docs: { label: 'Interrupts', href: '/docs/langgraph/guides/interrupts' },
+    label: 'Interrupts & approval',
+    claim: 'Interrupts & approval',
+    docs: { label: 'Docs', href: '/docs/langgraph/guides/interrupts' },
     stillAlt:
-      'The agent paused inside delete_backups: an "Agent paused — review needed" panel with Accept, Edit, Respond and Ignore above a five-row table of backups, two marked retain, and the devtools Timeline holding at ten checkpoints',
+      'The cleanup agent paused for human review of the proposed backup deletions, with approval controls and retained backups visible.',
   },
   {
     beat: 'render',
-    label: 'Render',
-    claim: 'Generative UI on A2UI and json-render.',
-    docs: { label: '@threadplane/render', href: '/render' },
+    label: 'Generated UI',
+    claim: 'Generated UI',
+    docs: { label: 'Docs', href: '/render' },
     stillAlt:
-      "A generated contact form — Name, Email address, Subject, Message and a Send button — rendered from the agent's A2UI output inside the chat, with the render_a2ui_surface tool call above it",
+      'A generated cleanup summary in the chat showing deleted and retained backups after the approved operation.',
   },
 ];
 
@@ -239,8 +242,7 @@ export const appConfig: ApplicationConfig = {
  * single line, so it is shown whole. Declared after INSTALL_OPTIONS on purpose.
  */
 export const STAGE_CLOSE = {
-  claim: 'Feature complete for the final mile.',
-  install: INSTALL_OPTIONS[0].command,
+  claim: 'One workflow. Every step in your Angular app.',
   cta: { label: 'Spike it this week', href: INSTALL_OPTIONS[0].quickstartHref },
 } as const;
 

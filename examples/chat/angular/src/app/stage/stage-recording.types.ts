@@ -4,7 +4,7 @@ import type { ThreadState } from '@langchain/langgraph-sdk';
 /** One transport event with its offset from the start of its run. */
 export interface RecordedEvent { readonly tMs: number; readonly event: StreamEvent; }
 
-export const STAGE_BEATS = ['stream', 'persist', 'approve', 'render'] as const;
+export const STAGE_BEATS = ['stream', 'subagents', 'persist', 'approve', 'render'] as const;
 export type StageBeat = (typeof STAGE_BEATS)[number];
 
 /**

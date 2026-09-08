@@ -1,3 +1,12 @@
+/* Reverse replay rebuilds behind the browser's captured frame. Swap directly
+   when ready: crossfading transcript positions would look like jitter. */
+html:has(stage-mode), body:has(stage-mode) { overscroll-behavior: contain; }
+html:has(stage-mode)::view-transition-group(root),
+html:has(stage-mode)::view-transition-old(root),
+html:has(stage-mode)::view-transition-new(root) {
+  animation: none;
+}
+
 html, body {
   margin: 0;
   padding: 0;

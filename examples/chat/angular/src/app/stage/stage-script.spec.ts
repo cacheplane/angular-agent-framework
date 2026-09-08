@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { StageScript, STAGE_PROMPTS, type StageScriptHost } from './stage-script';
 
 describe('StageScript', () => {
-  it('walks the four beats in order, announcing each run\'s action before performing it', async () => {
+  it('walks the five beats in order, announcing each run\'s action before performing it', async () => {
     const log: string[] = [];
     let interrupt = false;
     let loading = false;
@@ -19,8 +19,9 @@ describe('StageScript', () => {
     await new StageScript(host).run();
     expect(log).toEqual([
       'begin:stream:submit', `submit:${STAGE_PROMPTS.stream}`,
+      'begin:subagents:submit', `submit:${STAGE_PROMPTS.subagents}`,
       'begin:persist:reload', 'reload',
-      'begin:persist:submit', `submit:${STAGE_PROMPTS.shorter}`,
+      'begin:persist:submit', `submit:${STAGE_PROMPTS.proposal}`,
       'begin:persist:submit', `submit:${STAGE_PROMPTS.fork}@0`,
       'begin:approve:submit', `submit:${STAGE_PROMPTS.approve}`,
       'begin:approve:resume', 'resume:approved',

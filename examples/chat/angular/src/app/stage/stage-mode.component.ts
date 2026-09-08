@@ -21,6 +21,7 @@ import {
   type InterruptAction,
 } from '@threadplane/chat';
 import { ChatDebugComponent } from '@threadplane/chat/debug';
+import { stagePresentationAgent } from './stage-interaction';
 import {
   FetchStreamTransport,
   injectAgent,
@@ -34,8 +35,9 @@ import { browserStageBridge, type StageBridge, type StageState } from './stage-b
 import { StageController } from './stage-controller';
 import { StageRecordingTransport } from './stage-recording.transport';
 import { StageReplayTransport } from './stage-replay.transport';
-import { StageScript, type StageScriptHost } from './stage-script';
+import { StageScript, STAGE_PROMPTS, type StageScriptHost } from './stage-script';
 import type { StageTimeline } from './stage-timeline';
+import { presentStageSeek } from './stage-rewind';
 
 declare global {
   interface Window {
@@ -137,6 +139,7 @@ function stageProviders(replay?: StageReplayTransport): Provider[] {
             onThreadId: (id: string) => threadId.set(id),
             transport: recording,
             transcriptNodeNames: TRANSCRIPT_NODE_NAMES,
+            subagentToolNames: ['research'],
           });
         }
         return scopedAgent(STAGE_REF, {
@@ -144,6 +147,7 @@ function stageProviders(replay?: StageReplayTransport): Provider[] {
           threadId,
           transport: inject(StageReplayTransport),
           transcriptNodeNames: TRANSCRIPT_NODE_NAMES,
+          subagentToolNames: ['research'],
         });
       },
     },
@@ -157,7 +161,7 @@ function stageProviders(replay?: StageReplayTransport): Provider[] {
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: stageProviders(),
   template: `
-    <div class="stage" [attr.data-phase]="controller()?.phase()" [attr.data-dock]="dock()">
+    <div class="stage" [attr.data-phase]="controller()?.phase()" [attr.data-dock]="inspectionDock() ?? dock()" [attr.data-debug-open]="debugOpen()">
       <div class="stage__bar">
         <span class="stage__url">demo.threadplane.ai</span>
         <span class="stage__pill" data-stage-pill [attr.data-live]="recording !== null">
@@ -175,7 +179,6 @@ function stageProviders(replay?: StageReplayTransport): Provider[] {
           <div
             class="stage__interrupt"
             data-stage-interrupt
-            [attr.data-inert]="recording === null"
             role="region"
             aria-label="Approval required"
           >
@@ -183,7 +186,7 @@ function stageProviders(replay?: StageReplayTransport): Provider[] {
               <chat-interrupt-panel [agent]="agent" (action)="onInterruptAction($event)" />
             }
           </div>
-          <chat [agent]="agent" [views]="catalog"></chat>
+          <chat [agent]="presentationAgent" [views]="catalog"></chat>
         </div>
         <!-- The dock input is read once (the panel restores it after the first
              render), so the two docks are two ELEMENTS under distinct storage
@@ -193,7 +196,10 @@ function stageProviders(replay?: StageReplayTransport): Provider[] {
             [agent]="debugAgent"
             dock="right"
             [defaultOpen]="true"
-            launcher="none"
+            launcher="floating"
+            (replayRequested)="openLiveDemo()"
+            (forkRequested)="openLiveDemo()"
+            (dockChange)="inspectionDock.set($event)"
             [storageKey]="storageKey + '-right'"
             (openChange)="onDebugOpenChange($event)"
           />
@@ -202,7 +208,10 @@ function stageProviders(replay?: StageReplayTransport): Provider[] {
             [agent]="debugAgent"
             dock="bottom"
             [defaultOpen]="true"
-            launcher="none"
+            launcher="floating"
+            (replayRequested)="openLiveDemo()"
+            (forkRequested)="openLiveDemo()"
+            (dockChange)="inspectionDock.set($event)"
             [storageKey]="storageKey + '-bottom'"
             (openChange)="onDebugOpenChange($event)"
           />
@@ -225,16 +234,17 @@ function stageProviders(replay?: StageReplayTransport): Provider[] {
          (libs/chat/debug/.../chat-debug.component.ts, .panel--right), so it is out of
          flow and would sit ON TOP of the transcript. 420 + 16 gutter = 436px. */
       .stage__column { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-      .stage[data-dock='right'] .stage__column { padding-right: var(--stage-devtools-width, 436px); }
+      .stage[data-dock='right'][data-debug-open='true'] .stage__column { padding-right: var(--stage-devtools-width, 436px); }
+      .stage[data-dock='left'][data-debug-open='true'] .stage__column { padding-left: var(--stage-devtools-width, 436px); }
       /* The bottom dock is fixed to the viewport bottom at 40vh; below 768px no
          panel renders at all, so the column keeps its full height. */
-      .stage[data-dock='bottom'] .stage__column { padding-bottom: 40vh; }
+      .stage[data-dock='bottom'][data-debug-open='true'] .stage__column { padding-bottom: 40vh; }
       .stage__column > chat { flex: 1; min-height: 0; }
       .stage__interrupt:empty { display: none; }
       .stage__interrupt { padding: 8px 12px 0; }
-      /* Replay is a recording, not a control surface: the panel is shown but
-         cannot be clicked, so a visitor cannot desync the transcript from t. */
-      .stage__interrupt[data-inert='true'] { pointer-events: none; }
+      /* The stage presents the workflow; raw call IDs remain in devtools.
+         Hiding them here also keeps the subagent heading readable on phones. */
+      :host ::ng-deep chat-subagent-card .sac__id { display: none; }
     `,
   ],
 })
@@ -259,6 +269,15 @@ export class StageMode {
   /** Non-null only in record mode. */
   protected readonly recording = inject(STAGE_RECORDING);
   protected readonly agent = injectAgent(STAGE_REF) as LangGraphAgent;
+  protected readonly presentationAgent = this.recording
+    ? this.agent
+    : stagePresentationAgent(this.agent, () => this.openLiveDemo());
+  protected readonly debugOpen = signal(true);
+  protected readonly inspectionDock = signal<'left' | 'right' | 'bottom' | null>(null);
+
+  protected openLiveDemo(): void {
+    window.open(new URL('/embed', window.location.href).href, '_top');
+  }
   /**
    * The devtools' agent contract types `state` as `Signal<Record<string,
    * unknown>>` while the untyped LangGraph agent exposes `Signal<unknown>`, so
@@ -280,7 +299,6 @@ export class StageMode {
    */
   protected readonly storageKey = `stage-debug-${Date.now()}`;
   protected readonly dock = signal<StageDock>(readStageDock());
-  private readonly debugPanel = viewChild(ChatDebugComponent);
   private readonly chat = viewChild(ChatComponent);
 
   readonly timeline = signal<StageTimeline | null>(null);
@@ -295,6 +313,7 @@ export class StageMode {
   private lastPosted = '';
   private seekTarget: number | null = null;
   private seekFrame: number | null = null;
+  private presenting = false;
   private pinFrame: number | null = null;
   /** A publish landed while a pin pair was in flight; one more pair follows it. */
   private pinPending = false;
@@ -322,21 +341,18 @@ export class StageMode {
     });
   }
 
-  /**
-   * The devtools panel dismisses itself on ANY document click (and on Escape),
-   * which on the stage means the first click in the transcript would hide it
-   * for good. The stage is a display surface, so a close is reversed the
-   * instant it is reported.
-   */
+  /** Let the panel close normally; its floating launcher can reopen it. */
   protected onDebugOpenChange(open: boolean): void {
-    if (open) return;
-    this.debugPanel()?.setOpen(true);
+    this.debugOpen.set(open);
   }
 
   /** Re-reads the dock whenever the frame crosses a breakpoint. */
   private watchDock(): void {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
-    const update = () => this.dock.set(readStageDock());
+    const update = () => {
+      this.inspectionDock.set(null);
+      this.dock.set(readStageDock());
+    };
     for (const query of [WIDE_QUERY, MEDIUM_QUERY]) {
       const mql = window.matchMedia(query);
       // `addEventListener` is missing on older MediaQueryList shims (and on the
@@ -397,30 +413,47 @@ export class StageMode {
       void this.controller()?.seek(t);
       return;
     }
-    if (this.seekFrame !== null) return;
+    if (this.seekFrame !== null || this.presenting) return;
     this.seekFrame = requestAnimationFrame(() => {
       this.seekFrame = null;
       const target = this.seekTarget;
       this.seekTarget = null;
-      if (target !== null) void this.controller()?.seek(target);
+      const controller = this.controller();
+      if (target === null || !controller) return;
+      this.presenting = true;
+      void presentStageSeek(target, controller, () => new Promise<void>((resolve) => {
+        // Rendering is paused during the transition callback. Use a task,
+        // not rAF, to let Angular settle before capturing the new frame.
+        setTimeout(() => {
+          this.chat()?.scrollToBottom();
+          resolve();
+        }, 32);
+      })).then(() => {
+        this.publish({ applied: controller.applied(), phase: controller.phase(), t: controller.t(), settled: true });
+      }).catch((err: unknown) => console.warn('[stage] presentation failed', err)).finally(() => {
+        this.presenting = false;
+        if (!this.destroyRef.destroyed && this.seekTarget !== null) this.requestSeek(this.seekTarget);
+      });
     });
   }
 
   protected async onInterruptAction(action: InterruptAction): Promise<void> {
-    // Replay's interrupt panel is inert; only the recorder resolves for real.
-    if (!this.recording) return;
+    if (!this.recording) {
+      this.openLiveDemo();
+      return;
+    }
     await this.agent.submit(null, {
       command: { resume: action === 'accept' ? 'approved' : 'denied' },
     } as never);
   }
 
   private publish(state: StageState): void {
-    const key = `${state.applied}|${state.phase}|${state.t}`;
+    const key = `${state.applied}|${state.phase}|${state.t}|${state.settled ?? false}`;
     if (key === this.lastPosted) return;
     this.lastPosted = key;
     this.bridge.postState(state);
     if (typeof window !== 'undefined') window.__stageApplied = state;
-    this.pinTranscript();
+    if (!state.settled) this.pinTranscript();
   }
 
   /**
@@ -469,11 +502,12 @@ export class StageMode {
 
   // ── Record mode ───────────────────────────────────────────────────────────
 
-  /** Drives the four beats against the LIVE agent, producing the recording. */
+  /** Drives the five beats against the LIVE agent, producing the recording. */
   private async record(): Promise<void> {
     const rec = this.recording;
     if (!rec) return;
     const agent = this.agent;
+    let researchCheckpointId: string | undefined;
     // A run is only "done" for the recording once its closing history refresh
     // has landed: the bridge refreshes history after a run closes, and a next
     // run started before that lands cancels the refresh, leaving the previous
@@ -497,6 +531,7 @@ export class StageMode {
         const checkpointId =
           checkpointIndex !== undefined ? agent.history()[checkpointIndex]?.id : undefined;
         await settle(agent.submit({ message }, checkpointId ? ({ checkpointId } as never) : undefined));
+        if (message === STAGE_PROMPTS.subagents) researchCheckpointId = agent.history()[0]?.id;
       },
       resume: async (value) => {
         await settle(agent.submit(null, { command: { resume: value } } as never));
@@ -523,13 +558,11 @@ export class StageMode {
       isRunning: () => agent.isLoading(),
       hasInterrupt: () => !!agent.interrupt?.(),
       forkIndex: () => {
-        // history() is newest-first, so the first checkpoint holding exactly
-        // the opening question + its answer is the fork point.
-        const history = agent.history();
-        const i = history.findIndex(
-          (s) => ((s.values as { messages?: unknown[] } | undefined)?.messages?.length ?? 0) === 2,
-        );
-        return i >= 0 ? i : history.length - 1;
+        // Capture the completed research turn before the 90-day proposal:
+        // the alternative keeps both sources and the child's findings.
+        const i = agent.history().findIndex((s) => s.id === researchCheckpointId);
+        if (i < 0) throw new Error('stage research checkpoint missing; refusing to fork without the saved research');
+        return i;
       },
       sleep,
     };

@@ -1,5 +1,7 @@
 # Stage rail redesign: a completeness ledger
 
+> **Superseded September 8:** [Current five-beat stage and mobile review spec](2026-09-08-homepage-stage-design.md) replaces this rail proposal. The four-segment bar, per-row proof copy, prominent checks, repeated closing ledger, and inline install command below are historical, not implementation requirements.
+
 **Date:** 2026-09-06
 **Status:** Design approved in brainstorming; awaiting spec review.
 **Surface:** `apps/website` only: `src/lib/positioning.ts`, `src/components/landing/StageAct.tsx`, `StageStills.tsx`, `src/styles/landing.css`, a build-time script under `src/lib/`, and `e2e/home-stage.spec.ts`.

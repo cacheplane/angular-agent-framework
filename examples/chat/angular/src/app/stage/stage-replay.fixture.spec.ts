@@ -28,17 +28,42 @@ describe.skipIf(!FIXTURE_EXISTS)('stage-replay.json', () => {
     return JSON.parse(String(tool?.content ?? '{}'));
   };
 
-  it('walks stream, persist, approve, render', () => {
-    expect(tl.beats.map((b) => b.beat)).toEqual(['stream', 'persist', 'approve', 'render']);
+  it('walks stream, subagents, persist, approve, render', () => {
+    expect(tl.beats.map((b) => b.beat)).toEqual(['stream', 'subagents', 'persist', 'approve', 'render']);
   });
   it('the stream beat calls search_documents and attaches citations', () => {
     expect(json(run('stream', 'submit'))).toMatch(/"name":\s*"search_documents"/);
     expect(json(run('stream', 'submit'))).toMatch(/citations/);
+    expect(json(run('stream', 'submit'))).toContain('demo-backup-retention');
+  });
+  it('the research beat dispatches research and carries child messages before the parent answers', () => {
+    const i = run('subagents', 'submit');
+    expect(json(i)).toMatch(/"name":\s*"research"/);
+    const children = rec.runs[i].events.filter(({ event }) => {
+      const ns = (event as { namespace?: string[] }).namespace;
+      return Array.isArray(ns) && ns.some((n) => n.startsWith('tools:'));
+    });
+    expect(children.length).toBeGreaterThan(1);
+    expect(children.some(({ event }) => event.type.startsWith('messages|'))).toBe(true);
+    expect(finalAiText(i).length).toBeGreaterThan(40);
+    expect(finalAiText(i)).toMatch(/120|retain/i);
+  });
+  it('policy, research and alternatives do not execute deletion or interrupt', () => {
+    for (let i = 0; i < run('approve', 'submit'); i++) {
+      expect(json(i)).not.toMatch(/"name":\s*"(?:delete_backups|request_approval)"/);
+      expect(json(i)).not.toContain('approval_request');
+    }
   });
   it('the persist beat has a reload with a history snapshot at its position and a fork', () => {
     const reload = run('persist', 'reload');
     expect(rec.histories.some((h) => h.afterRun === reload && h.states.length > 0)).toBe(true);
     expect(rec.runs.some((r) => r.action.kind === 'submit' && r.action.checkpointIndex !== undefined)).toBe(true);
+    const fork = rec.runs.findIndex((r) => r.action.kind === 'submit' && r.action.checkpointIndex !== undefined);
+    const action = rec.runs[fork].action;
+    if (action.kind !== 'submit') throw new Error('missing fork');
+    const source = rec.histories.filter((h) => h.afterRun === fork).at(-1)?.states[action.checkpointIndex!];
+    expect(JSON.stringify(source)).toContain('research');
+    expect(JSON.stringify(source)).toContain('demo-backup-retention');
   });
   it('every completed run close recorded a history snapshot, so the devtools timeline is never empty at a beat', () => {
     rec.runs.forEach((_, i) => {
@@ -57,10 +82,17 @@ describe.skipIf(!FIXTURE_EXISTS)('stage-replay.json', () => {
     expect(a).toMatch(/approval_request/);
     const audit = lastToolJson(run('approve', 'resume'));
     expect(Array.isArray(audit['deleted']) && (audit['deleted'] as unknown[]).length > 0).toBe(true);
+    expect(audit['deleted']).toEqual(expect.arrayContaining(['bk-2026-04-30-prod', 'bk-2026-02-01-staging']));
+    expect(audit['deleted']).toHaveLength(2);
+    expect(audit['freed_gb']).toBe(48.7);
+    expect(audit['remaining']).toBe(6);
     expect(finalAiText(run('approve', 'resume')).length).toBeLessThan(1400);
   });
   it('the render beat carries an A2UI payload', () => {
     expect(json(run('render', 'submit'))).toMatch(/a2ui_JSON/);
+    expect(json(run('render', 'submit'))).toMatch(/48\.7/);
+    expect(json(run('render', 'submit'))).toContain('TextField');
+    expect(json(run('render', 'submit'))).toContain('updateDataModel');
   });
   it('never contains an API key or bearer token', () => {
     expect(JSON.stringify(rec)).not.toMatch(/sk-[A-Za-z0-9]{10,}|Bearer /);

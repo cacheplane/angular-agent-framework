@@ -9,6 +9,7 @@ export const MINIMAL: StageRecording = {
   threadId: 'thread-1',
   runs: [
     { beat: 'stream', action: { kind: 'submit', message: 'Tell me about signals' }, events: [ev(0), ev(50)] },
+    { beat: 'subagents', action: { kind: 'submit', message: 'Research the tradeoffs' }, events: [ev(0), ev(50)] },
     { beat: 'persist', action: { kind: 'reload' }, events: [] },
     { beat: 'persist', action: { kind: 'submit', message: 'Shorter, please.' }, events: [ev(0)] },
     { beat: 'persist', action: { kind: 'submit', message: 'As a haiku.', checkpointIndex: 1 }, events: [ev(0)] },
@@ -16,5 +17,5 @@ export const MINIMAL: StageRecording = {
     { beat: 'approve', action: { kind: 'resume', value: 'approved' }, events: [ev(0)] },
     { beat: 'render', action: { kind: 'submit', message: 'Show me a form.' }, events: [ev(0), ev(2000)] },
   ],
-  histories: [{ afterRun: 1, states: [] }],
+  histories: [{ afterRun: 2, states: [] }],
 };

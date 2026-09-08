@@ -5,19 +5,11 @@ import { phaseReachedAt, runsStartedBy, type StagePhase, type StageTimeline, typ
 import type { StageReplayTransport } from './stage-replay.transport';
 
 /**
- * BOUNDARY CONVENTION. Two different questions are asked about the same
- * instant, and they answer differently on purpose:
- *
- * - ACTIONS are performed INCLUSIVELY at a run's `startMs`. Reaching a run's
- *   start means that run's action has fired, so its first events (recorded at
- *   tMs 0) are ready at that same instant.
- * - `phase()` names the moment RENDERED, which is `t` minus an epsilon (see
- *   `phaseReachedAt`). Runs are laid end to end, so a run's end is the next
- *   run's start; at that instant the outgoing run still owns the frame.
- *
- * Consumers must therefore NOT infer which action has fired from `phase()`:
- * at a boundary `phase()` still names the outgoing run while the incoming
- * run's action has already been performed.
+ * At a shared boundary, finish the outgoing run before starting the next
+ * action. This lets a still show a settled answer and its refreshed history
+ * without already submitting the next prompt or blanking for a reload.
+ * The first action starts at zero; later actions start strictly after their
+ * startMs. `phaseReachedAt` follows the same outgoing-frame convention.
  */
 
 /** Ceiling on how long a drain waits for the agent to go idle before moving on. */
@@ -226,7 +218,7 @@ export class StageController {
   /** How many recorded events fall at or before t in absolute recorded time. */
   private expectedApplied(t: number): number {
     let n = 0;
-    for (const r of this.timeline.runs) {
+    for (const r of runsStartedBy(this.timeline, t)) {
       for (const e of r.run.events) if (r.startMs + e.tMs <= t) n += 1;
     }
     return n;

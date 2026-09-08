@@ -66,7 +66,7 @@ describe('StageController against the real LangGraph agent', () => {
   });
 
   it('the reload run blanks and restores the transcript from recorded history', async () => {
-    await controller.seek(tl.runs[1].startMs);
+    await controller.seek(tl.runs[1].startMs + 1);
     await until(() => agent.messages().length === 2 && agent.history().length === 1);
     expect(agent.history()[0]?.id).toBe('cp-1');
   });

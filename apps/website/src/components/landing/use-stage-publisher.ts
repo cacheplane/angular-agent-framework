@@ -3,6 +3,7 @@ import {
   beatAt,
   crossedThreshold,
   inHold,
+  navigationProgress,
   isChecked,
   segmentState,
   STAGE_BEATS,
@@ -14,12 +15,15 @@ import {
 
 export type { StageMilestone } from '../../lib/stage-beats';
 
-export const STAGE_DEMO_ORIGIN = 'https://demo.threadplane.ai';
+export const STAGE_DEMO_ORIGIN = new URL(
+  process.env['NEXT_PUBLIC_STAGE_DEMO_ORIGIN'] || 'https://demo.threadplane.ai'
+).origin;
 export const STAGE_DEMO_URL = `${STAGE_DEMO_ORIGIN}/stage?t=0`;
 export const STAGE_MESSAGE_TYPE = 'tplane-stage';
 
 /** How often the publisher says hello to a frame that has not answered yet. */
 export const STAGE_HELLO_INTERVAL_MS = 500;
+export const STAGE_INTERACTION_IDLE_MS = 250;
 
 export interface StagePublisherDeps {
   section: HTMLElement;
@@ -82,11 +86,12 @@ function isReady(
   if (d['ready'] !== true) return false;
   if (!isFiniteNumber(d['totalMs'])) return false;
   const beats = d['beats'];
-  if (!Array.isArray(beats)) return false;
+  if (!Array.isArray(beats) || beats.length !== STAGE_BEATS.length)
+    return false;
   if (
     !beats.every(
-      (b: unknown) =>
-        isRange(b) && typeof (b as Record<string, unknown>)['beat'] === 'string'
+      (b: unknown, i: number) =>
+        isRange(b) && (b as Record<string, unknown>)['beat'] === STAGE_BEATS[i]
     )
   )
     return false;
@@ -106,6 +111,22 @@ export function createStagePublisher(deps: StagePublisherDeps): StagePublisher {
   const beatsSeen = new Set<StageBeat>();
   let disposed = false;
   let lastHello = -Infinity;
+  let lastMovement = performance.now();
+  let appliedT = -1;
+  const iframe = deps.section.querySelector<HTMLIFrameElement>('.stage-frame-iframe');
+  const setInteractive = (enabled: boolean) => {
+    deps.section.toggleAttribute('data-interactive', enabled);
+    if (iframe) {
+      iframe.toggleAttribute('inert', !enabled);
+      iframe.tabIndex = enabled ? 0 : -1;
+    }
+  };
+  const onScroll = () => {
+    lastMovement = performance.now();
+    setInteractive(false);
+  };
+  setInteractive(false);
+  window.addEventListener('scroll', onScroll, { passive: true });
   // The segment bar and the beat blocks both take `data-beat-state`: the bar
   // lights, and the block whose beat is `now` gets the pointer back (every
   // block shares one cell and is hidden by opacity alone).
@@ -119,18 +140,29 @@ export function createStagePublisher(deps: StagePublisherDeps): StagePublisher {
   const closes = [...deps.section.querySelectorAll('[data-stage-close]')];
 
   const onMessage = (e: MessageEvent) => {
-    if (e.origin !== STAGE_DEMO_ORIGIN) return;
+    if (
+      e.origin !== STAGE_DEMO_ORIGIN ||
+      !e.source ||
+      e.source !== deps.frameWindow()
+    )
+      return;
     const d = e.data as Record<string, unknown> | null;
     if (!d || typeof d !== 'object' || d['type'] !== STAGE_MESSAGE_TYPE) return;
     if (d['ready'] === true) {
       if (!isReady(d)) return;
       const first = ready === null;
       ready = d;
+      appliedT = -1;
+      onScroll();
+      for (const { el, beat } of segments) {
+        el.setAttribute('data-stage-target', String(navigationProgress(beat, ready)));
+      }
       lastT = -1; // re-post the current t after a (re)ready
       if (first) deps.onReady?.();
       return;
     }
     if (typeof d['applied'] === 'number' && typeof d['phase'] === 'string') {
+      if (d['settled'] === true && isFiniteNumber(d['t'])) appliedT = d['t'];
       deps.section.setAttribute(
         'data-sc-verify-state',
         `${d['phase']}:${d['applied']}`
@@ -143,6 +175,7 @@ export function createStagePublisher(deps: StagePublisherDeps): StagePublisher {
     tick() {
       if (disposed) return;
       const p = readProgress(deps.section);
+      if (p !== lastP) onScroll();
       // Verify hold, from scroll alone: the harness must see the authored hold even before the frame answers.
       const h = inHold(p);
       if (h !== hold) {
@@ -206,15 +239,19 @@ export function createStagePublisher(deps: StagePublisherDeps): StagePublisher {
       }
       // Seek.
       const t = timeAt(p, ready);
+      setInteractive(t === appliedT && performance.now() - lastMovement >= STAGE_INTERACTION_IDLE_MS);
       if (t === lastT) return;
       const w = deps.frameWindow();
       if (!w) return;
+      appliedT = -1;
       w.postMessage({ type: STAGE_MESSAGE_TYPE, t }, STAGE_DEMO_ORIGIN);
       lastT = t;
     },
     dispose() {
       disposed = true;
       window.removeEventListener('message', onMessage);
+      window.removeEventListener('scroll', onScroll);
+      setInteractive(false);
     },
   };
 }

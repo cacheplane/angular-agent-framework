@@ -16,6 +16,7 @@ export interface StageState {
   applied: number;
   phase: StagePhase;
   t: number;
+  settled?: boolean;
 }
 
 export interface StageBridge {
@@ -85,7 +86,7 @@ export function createStageBridge(env: BridgeEnv): StageBridge {
       post(lastReady);
     },
     postState(state) {
-      post({ applied: state.applied, phase: state.phase, t: state.t });
+      post({ applied: state.applied, phase: state.phase, t: state.t, ...(state.settled ? { settled: true } : {}) });
     },
   };
 }

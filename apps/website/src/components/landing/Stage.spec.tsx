@@ -12,6 +12,7 @@ import {
 
 /** Stands in for `STAGE_PROOF`: the page derives these from the recording. */
 const PROOF: Record<StageBeat, string> = {
+  subagents: '2 specialists',
   stream: '312 events · 1 tool call · 3 sources',
   persist: 'reloaded · 10 checkpoints · forked at step 1',
   approve: '1 interrupt pending · checkpoint 10 of 10',
@@ -31,7 +32,8 @@ vi.mock('../ui/BrowserFrame', () => ({
   ),
 }));
 
-function mockViewport(width: number, reducedMotion: boolean) {
+function mockViewport(width: number, reducedMotion: boolean, height = 900) {
+  Object.defineProperty(window, 'innerHeight', { configurable: true, value: height });
   Object.defineProperty(window, 'innerWidth', {
     configurable: true,
     value: width,
@@ -79,22 +81,29 @@ describe('Stage', () => {
     mockViewport(390, false);
     render(<Stage proof={PROOF} />);
     await flush();
-    expect(screen.getAllByTestId('stage-still-beat')).toHaveLength(4);
+    expect(screen.getAllByTestId('stage-still-beat')).toHaveLength(5);
     expect(document.querySelector('[data-stage-act]')).toBeNull();
-    // The real stills, carrying the same proof and the ledger ending.
-    expect(
-      document.querySelector(
-        '[data-testid="stage-still-beat"][data-beat="stream"] [data-stage-proof]'
-      )!.textContent
-    ).toBe(PROOF.stream);
+    expect(document.querySelector('[data-stage-proof]')).toBeNull();
+    for (const still of screen.getAllByTestId('stage-still-beat')) {
+      expect(still.firstElementChild?.className).toBe('stage-still-text');
+    }
+    expect(document.querySelectorAll('.stage-check')).toHaveLength(5);
     expect(screen.getByTestId('stage-stills-close')).toBeTruthy();
+  });
+
+  it('keeps stills on desktop windows too short for the pinned stage', async () => {
+    mockViewport(1280, false, 600);
+    render(<Stage proof={PROOF} />);
+    await flush();
+    expect(screen.getAllByTestId('stage-still-beat')).toHaveLength(5);
+    expect(document.querySelector('[data-stage-act]')).toBeNull();
   });
 
   it('keeps the stills under reduced motion on a wide viewport', async () => {
     mockViewport(1440, true);
     render(<Stage proof={PROOF} />);
     await flush();
-    expect(screen.getAllByTestId('stage-still-beat')).toHaveLength(4);
+    expect(screen.getAllByTestId('stage-still-beat')).toHaveLength(5);
     expect(document.querySelector('[data-stage-act]')).toBeNull();
   });
 
@@ -118,37 +127,36 @@ describe('Stage', () => {
     const actEl = document.querySelector('[data-stage-act]');
     expect(actEl).not.toBeNull();
     expect(actEl?.getAttribute('data-sc-act')).toBe('pin');
-    expect(actEl?.getAttribute('data-sc-span')).toBe('6');
+    expect(actEl?.getAttribute('data-sc-span')).toBe('7.3');
     expect(actEl?.getAttribute('data-state')).toBe('mounting');
     expect(actEl?.querySelector('[data-sc-stage]')).not.toBeNull();
-    // The rail: the segment bar, four beat blocks stacked in one cell, one
-    // hold line, and the closing ledger.
     const act = actEl!;
-    expect(act.querySelectorAll('[data-stage-segment]')).toHaveLength(4);
+    expect(act.querySelectorAll('[data-stage-segment]')).toHaveLength(5);
     expect(
       [...act.querySelectorAll('[data-stage-segment]')].map(
         (s) => s.textContent
       )
-    ).toEqual(['Tools', 'Persist', 'Approve', 'Render']);
-    expect(
-      act.querySelectorAll('[data-testid="stage-rail-beat"]')
-    ).toHaveLength(4);
-    // One check per beat block, four in the ledger.
-    expect(act.querySelectorAll('[data-stage-check]')).toHaveLength(4 + 4);
+    ).toEqual([
+      'Tools & citations',
+      'Subagents',
+      'Threads & branches',
+      'Interrupts & approval',
+      'Generated UI',
+    ]);
+    expect(act.querySelectorAll('[data-stage-check]')).toHaveLength(5);
+    expect(act.querySelector('[data-stage-proof]')).toBeNull();
+    expect(act.querySelectorAll('.stage-ledger')).toHaveLength(0);
     expect(
       act.querySelector('[data-testid="stage-rail-hold"]')!.textContent
     ).toBe('Keep scrolling to approve.');
     expect(
-      act.querySelector('[data-testid="stage-rail-close"]')
-    ).not.toBeNull();
-    expect(
       act.querySelector('[data-testid="stage-rail-close"]')!.textContent
-    ).toContain('Feature complete for the final mile.');
+    ).toContain('One workflow. Every step in your Angular app.');
     expect(
-      act.querySelector(
-        '[data-testid="stage-rail-beat"][data-beat="stream"] [data-stage-proof]'
-      )!.textContent
-    ).toBe(PROOF.stream);
+      screen.getByRole('heading', {
+        name: 'Everything your agent needs on screen.',
+      })
+    ).toBeTruthy();
     expect(screen.queryAllByTestId('stage-still-beat')).toHaveLength(0);
     // The engine collects acts with root.querySelectorAll('[data-sc-act]'),
     // which matches descendants only — so the mount root must contain the act
@@ -164,13 +172,11 @@ describe('Stage', () => {
     expect(skip?.getAttribute('href')).toBe('#stage-end');
     expect(document.getElementById('stage-end')).not.toBeNull();
     const segments = actEl!.querySelectorAll('a.stage-seg');
-    expect(segments).toHaveLength(4);
+    expect(segments).toHaveLength(5);
     segments.forEach((a) => expect(a.hasAttribute('tabindex')).toBe(false));
-    const cueLinks = actEl!.querySelectorAll(
-      '.stage-rail-beat a, .stage-rail-close a'
-    );
-    expect(cueLinks).toHaveLength(4 + 4 + 1);
-    cueLinks.forEach((a) => expect(a.getAttribute('tabindex')).toBe('-1'));
+    const docsLinks = actEl!.querySelectorAll('.stage-rail-beat .stage-doc');
+    expect(docsLinks).toHaveLength(5);
+    docsLinks.forEach((a) => expect(a.hasAttribute('tabindex')).toBe(false));
     // Each segment's href resolves to its beat block, so the anchor works
     // even when the click handler does not run.
     for (const b of STAGE_BEATS) {

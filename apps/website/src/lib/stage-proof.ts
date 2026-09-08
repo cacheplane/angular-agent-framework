@@ -5,9 +5,9 @@ import type { StageBeat } from './stage-beats';
 import { resolveWebsiteDir } from './website-dir';
 
 /**
- * Proof lines for the stage rail (spec §4): counts read from the committed
+ * Evidence for the stage recording: counts read from the committed
  * recording at build time. Nothing here is typed by hand; a segment whose
- * number cannot be derived is omitted, never estimated. The one phrase that is
+ * number cannot be derived is omitted, never estimated. This evidence is not visible checklist copy. The one phrase that is
  * a property rather than a count is "no generated code ran".
  *
  * Server-only: this module reads the recording with `node:fs`, so it must be
@@ -193,7 +193,19 @@ export function deriveStageProof(rec: Recording): Record<StageBeat, string> {
     'no generated code ran',
   ]);
 
-  return { stream, persist, approve, render };
+  const delegated = new Set<string>();
+  for (const run of rec.runs.filter((r) => r.beat === 'subagents')) {
+    for (const { event } of run.events) {
+      const namespace = (event as Dict)['namespace'];
+      const path = Array.isArray(namespace) ? namespace : [namespace];
+      for (const item of path) {
+        if (typeof item === 'string' && item.startsWith('tools:'))
+          delegated.add(item);
+      }
+    }
+  }
+  const subagents = counted(delegated.size, 'subagent') ?? '';
+  return { stream, subagents, persist, approve, render };
 }
 
 /**

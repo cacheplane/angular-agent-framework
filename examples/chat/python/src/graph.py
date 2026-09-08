@@ -140,6 +140,7 @@ SYSTEM_PROMPT = (
     "Format responses with markdown when useful (headings, lists, code blocks, tables). "
     "When the user asks about specific Angular topics or technical questions, "
     "use the `search_documents` tool to find authoritative information before answering. "
+    "Also use search_documents for demo backup policy questions. "
     "Cite sources inline using Pandoc-style citation references with the "
     "document `id` field as the refId, e.g. `[^ng-signals-overview]` or "
     "`[^ng-control-flow]`. Each first-use of a document gets an auto-numbered "
@@ -160,10 +161,16 @@ SYSTEM_PROMPT = (
     "tool returns, reply in two or three short sentences: what was deleted, "
     "how much space it freed, and what was kept and why. Do not restate the "
     "table and do not propose further steps unless the human declined. "
+    "Policy review, research and proposal comparisons are read-only: when "
+    "the user asks only to plan or compare, do not call delete_backups or "
+    "request_approval. Wait for an explicit request to execute the cleanup. "
     "When the user asks for in-depth research on a focused topic (history, "
     "motivation, comparison, deep-dive on something they want explained), "
     "call the `research` tool to dispatch a subagent that focuses on that "
-    "topic. Pass the topic verbatim or as a concise rephrasing, and pass "
+    "topic. Before calling research, write one short sentence announcing "
+    "the delegation in the SAME assistant message as the tool call. "
+    "Do not defer that announcement until after the child returns. "
+    "Pass the topic verbatim or as a concise rephrasing, and pass "
     "`subagent_type=\"research\"` so the UI surfaces a subagent card while "
     "the child runs. Use the subagent's returned summary to compose your "
     "final answer. Do not call `research` for trivial chit-chat or simple "
@@ -253,6 +260,23 @@ DOCUMENTS = [
     },
 ]
 
+# Fictional demo policy, published by the demo alongside its recorded run.
+# Kept separate so the existing Angular welcome prompts retain their corpus.
+RETENTION_DOCUMENTS = [
+    {
+        "id": "demo-backup-retention",
+        "title": "Demo backup policy — retention windows",
+        "url": "https://demo.threadplane.ai/retention-policy.md#retention-windows",
+        "snippet": "In this fictional demo, routine backups at least 90 days old are eligible for review. A conservative alternative keeps 120 days. Compare both windows before choosing; age alone never authorizes deletion.",
+    },
+    {
+        "id": "demo-backup-holds",
+        "title": "Demo backup policy — holds and approval",
+        "url": "https://demo.threadplane.ai/retention-policy.md#holds-and-approval",
+        "snippet": "Always preserve backups marked retain: true. List the inventory for the chosen age window, exclude retained rows, and require explicit human approval before deletion. Keep the returned deletion audit and freed space in the cleanup report. The demo inventory is frozen at 2026-09-05.",
+    },
+]
+
 
 @tool
 def search_documents(query: str) -> str:
@@ -264,6 +288,8 @@ def search_documents(query: str) -> str:
     something to cite.
     """
     q = (query or "").lower()
+    if "backup" in q or "retention" in q:
+        return json.dumps(RETENTION_DOCUMENTS)
     hits = [
         d
         for d in DOCUMENTS

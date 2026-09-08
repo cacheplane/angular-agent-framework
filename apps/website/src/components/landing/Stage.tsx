@@ -5,11 +5,13 @@ import { StageAct } from './StageAct';
 import type { StageBeat } from '../../lib/stage-beats';
 
 export const STAGE_MIN_WIDTH = 1024;
+/** The full checklist and install action need this much vertical space. */
+export const STAGE_MIN_HEIGHT = 720;
 type Mode = 'stills' | 'act';
 
 function actAllowed(): boolean {
   if (typeof window === 'undefined') return false;
-  if (window.innerWidth < STAGE_MIN_WIDTH) return false;
+  if (window.innerWidth < STAGE_MIN_WIDTH || window.innerHeight < STAGE_MIN_HEIGHT) return false;
   return !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 

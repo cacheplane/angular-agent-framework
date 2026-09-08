@@ -8,6 +8,7 @@ import type { StageBeat } from '../../lib/stage-beats';
 
 /** Stands in for `STAGE_PROOF`: the page derives these from the recording. */
 const PROOF: Record<StageBeat, string> = {
+  subagents: '2 specialists',
   stream: '312 events · 1 tool call · 3 sources',
   persist: 'reloaded · 10 checkpoints · forked at step 1',
   approve: '1 interrupt pending · checkpoint 10 of 10',
@@ -15,11 +16,12 @@ const PROOF: Record<StageBeat, string> = {
 };
 
 describe('StageStills', () => {
-  it('renders four beats in order, each with its still, phone source, and a filled beat block', () => {
+  it('renders five beats in order, each with its still, phone source, and a filled beat block', () => {
     render(<StageStills proof={PROOF} />);
     const beats = screen.getAllByTestId('stage-still-beat');
     expect(beats.map((b) => b.getAttribute('data-beat'))).toEqual([
       'stream',
+      'subagents',
       'persist',
       'approve',
       'render',
@@ -38,34 +40,26 @@ describe('StageStills', () => {
       // The beat block (stage-rail spec §3.2, §6): the still IS the settle,
       // so its check is always filled.
       expect(b.querySelector('.stage-check[data-checked]')).not.toBeNull();
-      expect(b.querySelector('.stage-claim')!.textContent).toBe(rail.claim);
+      expect(b.querySelector('.stage-capability')!.textContent).toBe(
+        rail.label
+      );
       expect(b.querySelector('a.stage-doc')!.getAttribute('href')).toBe(
         rail.docs.href
       );
-      expect(b.querySelector('[data-stage-proof]')!.textContent).toBe(
-        PROOF[rail.beat]
-      );
+      expect(b.querySelector('[data-stage-proof]')).toBeNull();
+      expect(b.firstElementChild?.className).toBe('stage-still-text');
     }
   });
 
-  it('renders the ledger ending once after the four stills, with focusable links', () => {
+  it('renders the install ending once after the five stills, with focusable links', () => {
     render(<StageStills proof={PROOF} />);
     const close = screen.getByTestId('stage-stills-close');
     const items = close.querySelectorAll('.stage-ledger li');
-    expect(items).toHaveLength(4);
-    for (const [i, li] of [...items].entries()) {
-      expect(li.querySelector('.stage-check[data-checked]')).not.toBeNull();
-      expect(li.textContent).toContain(STAGE_RAIL[i].claim);
-      expect(li.querySelector('a.stage-doc')!.getAttribute('href')).toBe(
-        STAGE_RAIL[i].docs.href
-      );
-    }
+    expect(items).toHaveLength(0);
     expect(close.querySelector('.stage-claim')!.textContent).toBe(
       STAGE_CLOSE.claim
     );
-    expect(close.querySelector('.stage-install code')!.textContent).toBe(
-      STAGE_CLOSE.install
-    );
+    expect(close.querySelector('.stage-install code')).toBeNull();
     expect(
       close.querySelector('a.stage-install-cta')!.getAttribute('href')
     ).toBe(STAGE_CLOSE.cta.href);
@@ -74,7 +68,7 @@ describe('StageStills', () => {
     // nothing is taken out of the tab order. Four beat docs links, four
     // ledger links, one CTA.
     const anchors = document.querySelectorAll('section#stage a');
-    expect(anchors).toHaveLength(4 + 4 + 1);
+    expect(anchors).toHaveLength(5 + 1);
     anchors.forEach((a) => expect(a.hasAttribute('tabindex')).toBe(false));
   });
 
@@ -83,7 +77,7 @@ describe('StageStills', () => {
     expect(document.querySelector('section#stage')).not.toBeNull();
     expect(document.getElementById('stage-heading')).not.toBeNull();
     expect(
-      screen.getByRole('heading', { level: 3, name: STAGE_RAIL[2].claim })
+      screen.getByRole('heading', { level: 3, name: STAGE_RAIL[2].label })
     ).toBeTruthy();
   });
 });

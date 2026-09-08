@@ -23,7 +23,8 @@ const READY = {
   ready: true,
   totalMs: 40_000,
   beats: [
-    { beat: 'stream', startMs: 0, endMs: 12_000 },
+    { beat: 'stream', startMs: 0, endMs: 6_000 },
+    { beat: 'subagents', startMs: 6_000, endMs: 12_000 },
     { beat: 'persist', startMs: 12_000, endMs: 20_000 },
     { beat: 'approve', startMs: 20_000, endMs: 32_000 },
     { beat: 'render', startMs: 32_000, endMs: 40_000 },
@@ -34,10 +35,59 @@ const READY = {
 
 /** The publisher under test; `afterEach` disposes it so a failing case cannot leak a listener. */
 let current: StagePublisher | null = null;
+let messageSource: Window | null = null;
+
+describe('settled frame interaction', () => {
+  it('waits for idle and the current seek, then locks immediately on page scroll', () => {
+    let now = 0;
+    const clock = vi.spyOn(performance, 'now').mockImplementation(() => now);
+    const { section, pub } = setup({ rail: el => {
+      el.innerHTML = '<iframe class="stage-frame-iframe" inert tabindex="-1"></iframe>';
+    } });
+    const frame = section.querySelector('iframe')!;
+    pub.tick();
+    now = 300;
+    pub.tick();
+    expect(frame.hasAttribute('inert')).toBe(true);
+    fromDemo({ type: STAGE_MESSAGE_TYPE, applied: 0, phase: 'stream', t: 0 });
+    pub.tick();
+    expect(frame.hasAttribute('inert')).toBe(true);
+    fromDemo({ type: STAGE_MESSAGE_TYPE, applied: 0, phase: 'stream', t: 0, settled: true });
+    pub.tick();
+    expect(section.hasAttribute('data-interactive')).toBe(true);
+    expect(frame.hasAttribute('inert')).toBe(false);
+    expect(frame.tabIndex).toBe(0);
+    window.dispatchEvent(new Event('scroll'));
+    expect(frame.hasAttribute('inert')).toBe(true);
+    expect(frame.tabIndex).toBe(-1);
+    now = 600;
+    pub.tick();
+    expect(frame.hasAttribute('inert')).toBe(false);
+    section.style.setProperty('--sc-p', '0.2');
+    pub.tick();
+    now = 900;
+    pub.tick();
+    expect(frame.hasAttribute('inert')).toBe(true);
+    section.style.setProperty('--sc-p', '0');
+    pub.tick();
+    now = 1200;
+    pub.tick();
+    expect(frame.hasAttribute('inert')).toBe(true);
+    fromDemo({ type: STAGE_MESSAGE_TYPE, applied: 0, phase: 'stream', t: 0, settled: true });
+    pub.tick();
+    expect(frame.hasAttribute('inert')).toBe(false);
+    pub.dispose();
+    clock.mockRestore();
+  });
+});
 
 function fromDemo(data: unknown) {
   window.dispatchEvent(
-    new MessageEvent('message', { origin: STAGE_DEMO_ORIGIN, data })
+    new MessageEvent('message', {
+      origin: STAGE_DEMO_ORIGIN,
+      source: messageSource,
+      data,
+    })
   );
 }
 
@@ -56,6 +106,7 @@ function setup(
   const frame = {
     postMessage: (m: unknown, origin: string) => posted.push({ m, origin }),
   } as unknown as Window;
+  messageSource = frame;
   const track = vi.fn();
   const onReady = vi.fn();
   const pub = createStagePublisher({
@@ -157,6 +208,22 @@ describe('stage publisher', () => {
     expect(posted).toHaveLength(0);
   });
 
+  it('rejects stale four-beat, reordered, duplicate, and foreign-window ready messages', () => {
+    const { onReady, frame } = setup({ ready: false });
+    fromDemo({
+      ...READY,
+      beats: READY.beats.filter((b) => b.beat !== 'subagents'),
+    });
+    fromDemo({ ...READY, beats: [...READY.beats].reverse() });
+    fromDemo({ ...READY, beats: READY.beats.map(() => READY.beats[0]) });
+    messageSource = window;
+    fromDemo(READY);
+    expect(onReady).not.toHaveBeenCalled();
+    messageSource = frame;
+    fromDemo(READY);
+    expect(onReady).toHaveBeenCalledTimes(1);
+  });
+
   it('ignores messages from other origins', () => {
     const { section } = setup();
     window.dispatchEvent(
@@ -177,7 +244,7 @@ describe('stage publisher', () => {
       t: 900,
     });
     expect(section.getAttribute('data-sc-verify-state')).toBe('stream:42');
-    const a = beatWindows()[2];
+    const a = beatWindows()[3];
     section.style.setProperty('--sc-p', String(a.from + (a.to - a.from) * 0.5));
     pub.tick();
     expect(section.getAttribute('data-sc-verify-hold')).toBe('true');
@@ -188,12 +255,12 @@ describe('stage publisher', () => {
 
   it('tracks enter once, each beat once, the threshold once, complete once', () => {
     const { section, track, pub } = setup();
-    const a = beatWindows()[2];
+    const a = beatWindows()[3];
     const th = a.from + (a.to - a.from) * APPROVE_HOLD.to;
     for (const p of [
       0.01,
       0.02,
-      beatWindows()[1].from + 0.01,
+      beatWindows()[2].from + 0.01,
       th - 0.01,
       th + 0.01,
       th + 0.02,
@@ -232,7 +299,7 @@ describe('stage publisher', () => {
     expect(seg('stream')).toBe('now');
     expect(seg('persist')).toBe('todo');
     expect(checked('stream')).toBe(false);
-    section.style.setProperty('--sc-p', String(beatWindows()[1].from + 0.01));
+    section.style.setProperty('--sc-p', String(beatWindows()[2].from + 0.01));
     pub.tick();
     expect(seg('stream')).toBe('done');
     expect(checked('stream')).toBe(true);
@@ -240,7 +307,7 @@ describe('stage publisher', () => {
     pub.tick();
     expect(
       section.querySelectorAll('[data-stage-check][data-checked]')
-    ).toHaveLength(4);
+    ).toHaveLength(5);
   });
 
   it('marks the current beat block `now` so the visible cue owns the pointer', () => {
@@ -253,7 +320,7 @@ describe('stage publisher', () => {
     pub.tick();
     expect(block('stream')).toBe('now');
     expect(block('persist')).toBe('todo');
-    section.style.setProperty('--sc-p', String(beatWindows()[1].from + 0.01));
+    section.style.setProperty('--sc-p', String(beatWindows()[2].from + 0.01));
     pub.tick();
     expect(block('stream')).toBe('done');
     expect(block('persist')).toBe('now');
@@ -283,7 +350,7 @@ describe('stage publisher', () => {
     pub.tick();
     expect(
       section.querySelectorAll('[data-stage-check][data-checked]')
-    ).toHaveLength(4);
+    ).toHaveLength(5);
     section.style.setProperty('--sc-p', '0.05');
     pub.tick();
     expect(
@@ -307,7 +374,7 @@ describe('stage publisher', () => {
         }
       },
     });
-    section.style.setProperty('--sc-p', String(beatWindows()[1].from + 0.01));
+    section.style.setProperty('--sc-p', String(beatWindows()[2].from + 0.01));
     pub.tick();
     expect(
       section.querySelectorAll('[data-stage-check="stream"][data-checked]')
@@ -335,8 +402,8 @@ describe('stage publisher', () => {
         '[data-stage-segment], [data-stage-beat], [data-stage-check], [data-stage-close]'
       ),
     ];
-    expect(els).toHaveLength(13);
-    section.style.setProperty('--sc-p', String(beatWindows()[1].from + 0.01));
+    expect(els).toHaveLength(16);
+    section.style.setProperty('--sc-p', String(beatWindows()[2].from + 0.01));
     pub.tick();
     const sets = els.map((el) => vi.spyOn(el, 'setAttribute'));
     const removes = els.map((el) => vi.spyOn(el, 'removeAttribute'));
@@ -381,6 +448,7 @@ describe('stage publisher', () => {
     pub.tick();
     expect(posted).toHaveLength(0);
     w = frame;
+    fromDemo(READY);
     pub.tick();
     expect(posted).toHaveLength(1);
     expect(posted[0]).toEqual({
@@ -468,6 +536,7 @@ describe('stage publisher', () => {
     const frame = {
       postMessage: (m: unknown, origin: string) => posted.push({ m, origin }),
     } as unknown as Window;
+    messageSource = frame;
     const track = vi.fn();
     const onReady = vi.fn();
 
@@ -482,13 +551,16 @@ describe('stage publisher', () => {
       fromDemo(READY);
       ioCallback?.([{ isIntersecting: true }]);
     });
-    expect(onReady).toHaveBeenCalledTimes(1);
+    expect(onReady).not.toHaveBeenCalled();
     section.style.setProperty('--sc-p', '0.25');
     act(() => pump());
     expect(posted).toHaveLength(0); // the frame has not loaded
 
     rerender({ frameWindow: () => frame });
-    act(() => pump());
+    act(() => {
+      fromDemo(READY);
+      pump();
+    });
     expect(posted).toHaveLength(1);
     expect(track.mock.calls[0]?.[0]).toBe('enter');
     unmount();
@@ -529,6 +601,7 @@ describe('stage publisher', () => {
     const frame = {
       postMessage: (m: unknown, origin: string) => posted.push({ m, origin }),
     } as unknown as Window;
+    messageSource = frame;
     let thrown = 0;
     const track = vi.fn(() => {
       if (thrown === 0) {
