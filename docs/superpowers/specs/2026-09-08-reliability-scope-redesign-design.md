@@ -121,6 +121,15 @@ Each of these pins something this design deliberately changes, and must be updat
 - The small second `[data-surface="dark"]` band further down the homepage (97px, in the stage area). It inherits the §4.2 token change and should be looked at during verification, but is not redesigned here.
 - The `.arch-flow-log-source` badge contrast issue in the docs, already tracked separately.
 
+**Checked, not redesigned (2026-09-08).** The `[data-surface="dark"]` token
+change also re-grounds the `FinalCTA` dark variant on `/langgraph`, `/ag-ui`,
+`/chat` and `/render`, which share one component. Verified on the rendered
+`/langgraph`: ground `#0B1622 → #0F1C2E`, primary button ink-on-signal,
+secondary now `#15253E` with an `rgba(255,255,255,.2)` edge and a near-white
+label, ghost in amber, no horizontal overflow. The secondary button is the one
+element that visibly improves — it was the same grey-black-on-navy mismatch the
+proof cards had, and unlike the cards it still exists.
+
 ## 8. Verification
 
 - `npx nx test website` and `npx nx lint website` — the CI commands, not `vitest --root`.
