@@ -355,11 +355,6 @@
   }
 }
 
-/* .pilot-eyebrow is the last survivor of the retired PilotBlock rules; the
- * rest went with the TeamsBlock rewrite. */
-.pilot-eyebrow {
-  margin-bottom: 16px;
-}
 
 /* RecentArticles — components/landing/RecentArticles.tsx */
 .recent-articles-rail {
@@ -2451,7 +2446,10 @@ a.preflight-row:hover .preflight-challenge {
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 700;
-  color: var(--color-signal);
+  /* NOT --color-signal. The ATC theme split the accent role precisely to keep
+   * that yellow out of text: #FFAF00 is 1.78:1 on this surface, where these
+   * markers are 10px. --color-accent is the interactive ink, at 14.86:1. */
+  color: var(--color-accent);
 }
 .field-report-foot {
   display: flex;
