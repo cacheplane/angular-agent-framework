@@ -1331,7 +1331,7 @@ with:
 .nav-bar[data-surface='transparent'] .nav-trigger-caret {
   color: var(--color-accent);
 }
-.nav-bar[data-surface='transparent'] .btn[data-variant='primary'] {
+.nav-bar[data-surface='transparent'] [data-ui='button'][data-variant='primary'] {
   background: var(--color-accent);
   color: var(--color-text-inverted);
 }
@@ -1350,7 +1350,7 @@ with:
 }
 ```
 
-Confirm the CTA selector matches what `Button` renders — it stamps `data-variant` and `data-size` on its root (`src/components/ui/Button.tsx:68,94`). If the class name is not `.btn`, use the one it actually emits.
+The CTA selector is `[data-ui='button'][data-variant='primary']`, verified against `src/components/ui/Button.tsx:64-70,92-98`: `Button` stamps `data-ui="button"`, `data-variant`, and `data-size` on its root and adds **no class of its own** — `className={cn(className)}` passes through only what the caller supplies, and the nav's CTA supplies none. A `.btn` selector would match nothing and fail silently. Note also that a `Button` with `href` renders an `<a>`, so it is `getByRole('link')` in tests, not `getByRole('button')`.
 
 - [ ] **Step 3: Write the e2e**
 
@@ -1538,7 +1538,7 @@ Then add the condensed padding and the demoted CTA:
   padding-top: 10px;
   padding-bottom: 10px;
 }
-.nav-bar[data-route='docs'] .btn[data-variant='primary'] {
+.nav-bar[data-route='docs'] [data-ui='button'][data-variant='primary'] {
   background: none;
   color: var(--color-accent);
   padding-inline: 0;
