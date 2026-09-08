@@ -59,10 +59,23 @@ export const LINK_B_Y = 270;
 export const APRON_A = { x0: 232, x1: 440, y0: 112, y1: 186 } as const;
 export const APRON_B = { x0: 232, x1: 910, y0: 292, y1: 372 } as const;
 
-/** Stand box side, and the two gate rows that hang off the concourses. */
+/**
+ * Stand box side, and the two gate rows that hang off the concourses.
+ *
+ * `standCy` is the stand square's centre y, `labelY` the callsign's baseline —
+ * both in field coordinates, before the counter-rotation each stand applies
+ * about its own centre. The stub is the leader line back to the concourse.
+ */
 export const STAND = 38;
-export const ROW1 = { box: 140, name: 172, stubTop: 178, stubBot: 190 } as const;
-export const ROW2 = { box: 332, name: 364, stubTop: 288, stubBot: 306 } as const;
+export const ROW1 = { standCy: 140, labelY: 172, stubTop: 178, stubBot: 190 } as const;
+export const ROW2 = { standCy: 332, labelY: 364, stubTop: 288, stubBot: 306 } as const;
+
+/**
+ * A mark that is not square is sized by width at this ratio; the AWS wordmark
+ * is the only one so far, and it appears twice — at gate B6 and again in the
+ * margin provider row. Stated once so the two cannot drift apart.
+ */
+export const WIDE_RATIO = 1.67;
 
 export interface Gate {
   readonly gate: string;
@@ -70,7 +83,7 @@ export interface Gate {
   readonly name: string;
   /** Optical height. Deliberately per-mark; see the spec test. */
   readonly s: number;
-  /** Optical width, for wordmarks that are not square. B6 only. */
+  /** Optical width, for a wordmark that is not square: always `s * WIDE_RATIO`. */
   readonly w?: number;
   readonly x: number;
 }
@@ -79,22 +92,59 @@ export const GATES_A: readonly Gate[] = [
   { gate: 'A1', src: '/logos/langgraph.svg', name: 'LANGGRAPH', s: 21, x: 318 },
 ];
 
+/** B6's optical height, named so its width can be derived from it in place. */
+const B6_H = 12;
+
 export const GATES_B: readonly Gate[] = [
   { gate: 'B1', src: '/logos/ag-ui.svg', name: 'AG-UI', s: 19, x: 268 },
   { gate: 'B2', src: '/logos/runtimes/crewai.svg', name: 'CREWAI', s: 22, x: 380 },
   { gate: 'B3', src: '/logos/runtimes/mastra.svg', name: 'MASTRA', s: 16, x: 492 },
   { gate: 'B4', src: '/logos/runtimes/pydantic.svg', name: 'PYDANTIC AI', s: 21, x: 604 },
   { gate: 'B5', src: '/logos/runtimes/microsoft.svg', name: 'MS AGENT FWK', s: 19, x: 716 },
-  // The AWS wordmark is 1.67:1, so it is the one mark sized by width. Using it
-  // for Strands is honest — Strands is an AWS project. The rejected
+  // The AWS wordmark is not square, so it is the one mark sized by width — and
+  // that width is derived from WIDE_RATIO rather than measured a second time.
+  // Using it for Strands is honest — Strands is an AWS project. The rejected
   // alternative was the word "AWS" in Archivo Black, which out-weighed every
   // real logo on the plate.
-  { gate: 'B6', src: '/logos/providers/bedrock.svg', name: 'AWS STRANDS', s: 12, w: 30, x: 828 },
+  {
+    gate: 'B6',
+    src: '/logos/providers/bedrock.svg',
+    name: 'AWS STRANDS',
+    s: B6_H,
+    w: Math.round(B6_H * WIDE_RATIO),
+    x: 828,
+  },
 ];
 
+/**
+ * The whole pairing, stated once: each concourse owns a gate row, an apron and
+ * a side. `gatesAbove` is which side of the concourse its gates hang on — row 1
+ * sits above concourse A, row 2 below concourse B — which the component needs
+ * to aim the stub tick and which the spec needs to read the row's ordering.
+ * Anything that re-derives "A is the up row" from the constant names is a
+ * second copy of this table.
+ */
 export const CONCOURSES = [
-  { id: 'A', label: 'CONCOURSE A', pkg: '@threadplane/langgraph', box: CONC_A, gates: GATES_A },
-  { id: 'B', label: 'CONCOURSE B', pkg: '@threadplane/ag-ui', box: CONC_B, gates: GATES_B },
+  {
+    id: 'A',
+    label: 'CONCOURSE A',
+    pkg: '@threadplane/langgraph',
+    box: CONC_A,
+    gates: GATES_A,
+    row: ROW1,
+    apron: APRON_A,
+    gatesAbove: true,
+  },
+  {
+    id: 'B',
+    label: 'CONCOURSE B',
+    pkg: '@threadplane/ag-ui',
+    box: CONC_B,
+    gates: GATES_B,
+    row: ROW2,
+    apron: APRON_B,
+    gatesAbove: false,
+  },
 ] as const;
 
 /**
@@ -117,9 +167,8 @@ export const PROVIDERS = [
   { src: '/logos/providers/azure.svg', name: 'Azure OpenAI' },
   { src: '/logos/providers/bedrock.svg', name: 'Amazon Bedrock' },
 ] as const;
+/** `y` is the marks' centre line; each is `size` tall and WIDE_RATIO wide if wide. */
 export const PROVIDER_ROW = { y: 518, size: 20, x0: 30, step: 76, labelY: 492 } as const;
-/** The AWS mark again, in the margin. Same 1.67:1 ratio. */
-export const WIDE_RATIO = 1.67;
 
 /** Chart furniture lives in the margin, never on the field. */
 export const SCALE_BAR = { x0: 742, x1: 842, y: 512 } as const;

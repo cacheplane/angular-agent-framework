@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
@@ -6,19 +6,43 @@ import {
   APRON_B,
   CONC_A,
   CONC_B,
+  CONCOURSES,
   FIELD,
   GATES_A,
   GATES_B,
+  LINK_A_Y,
+  LINK_B_Y,
   MAIN,
   NEAT,
+  NORTH,
+  PLANE_PATH,
   PROVIDERS,
-  ROW1,
-  ROW2,
+  PROVIDER_ROW,
+  ROT,
+  RWY_N,
+  RWY_S,
+  SCALE_BAR,
   STAND,
+  TWY_E,
+  TWY_N,
+  TWY_S,
+  VIEW,
+  WIDE_RATIO,
   rotate,
 } from './airport-diagram';
 
 const WEBSITE = resolve(__dirname, '../..');
+
+/**
+ * Each stand counter-rotates by -ROT about its own centre, so the square it
+ * sweeps in field coordinates is wider than the square itself: STAND / 2 is
+ * the half-side, this is the half-extent. Using STAND / 2 lets a stand poke
+ * ~1.1 units past an apron edge with the suite green.
+ */
+const RAD = (ROT * Math.PI) / 180;
+const STAND_HALF = (STAND / 2) * (Math.abs(Math.cos(RAD)) + Math.abs(Math.sin(RAD)));
+
+const NEAT_BOTTOM = NEAT.y + NEAT.height;
 
 describe('airport diagram geometry', () => {
   it('keeps all four rotated field corners inside the neat line', () => {
@@ -33,43 +57,114 @@ describe('airport diagram geometry', () => {
       expect(p.x, `corner ${x},${y} left`).toBeGreaterThan(NEAT.x);
       expect(p.x, `corner ${x},${y} right`).toBeLessThan(NEAT.x + NEAT.width);
       expect(p.y, `corner ${x},${y} top`).toBeGreaterThan(NEAT.y);
-      expect(p.y, `corner ${x},${y} bottom`).toBeLessThan(NEAT.y + NEAT.height);
+      expect(p.y, `corner ${x},${y} bottom`).toBeLessThan(NEAT_BOTTOM);
+    }
+  });
+
+  it('holds every drawn structure inside the field that claims to bound them', () => {
+    // FIELD is only worth testing corners for if it actually bounds the
+    // drawing. Without this, a concourse or an apron can run off the plate —
+    // past the viewBox, even — while the corner test above stays green,
+    // because nothing else compares a structure against FIELD at all.
+    // Comparisons are inclusive: the runways ARE the field's top and bottom
+    // edges and the main terminal ITS west edge, by design.
+    const inside = (label: string, x0: number, x1: number, y0: number, y1: number) => {
+      expect(x0, `${label} left`).toBeGreaterThanOrEqual(FIELD.x0);
+      expect(x1, `${label} right`).toBeLessThanOrEqual(FIELD.x1);
+      expect(y0, `${label} top`).toBeGreaterThanOrEqual(FIELD.y0);
+      expect(y1, `${label} bottom`).toBeLessThanOrEqual(FIELD.y1);
+    };
+
+    const boxes = [
+      ['MAIN', MAIN],
+      ['CONC_A', CONC_A],
+      ['CONC_B', CONC_B],
+      ['APRON_A', APRON_A],
+      ['APRON_B', APRON_B],
+    ] as const;
+    for (const [label, b] of boxes) inside(label, b.x0, b.x1, b.y0, b.y1);
+
+    for (const [label, r] of [
+      ['RWY_N', RWY_N],
+      ['RWY_S', RWY_S],
+    ] as const) {
+      inside(label, FIELD.x0, FIELD.x1, r.y, r.y + r.h);
+    }
+
+    // The two parallel taxiways run the full width; the east one connects them.
+    for (const [label, y] of [
+      ['TWY_N', TWY_N],
+      ['TWY_S', TWY_S],
+    ] as const) {
+      inside(label, FIELD.x0, FIELD.x1, y, y);
+    }
+    inside('TWY_E', TWY_E, TWY_E, TWY_N, TWY_S);
+
+    for (const c of CONCOURSES) {
+      for (const g of c.gates) {
+        inside(
+          `stand ${g.gate}`,
+          g.x - STAND_HALF,
+          g.x + STAND_HALF,
+          c.row.standCy - STAND_HALF,
+          c.row.standCy + STAND_HALF
+        );
+      }
     }
   });
 
   it('parks every stand inside its apron', () => {
-    const r = STAND / 2;
-    const rows = [
-      { xs: GATES_A.map((g) => g.x), cy: ROW1.box, apron: APRON_A },
-      { xs: GATES_B.map((g) => g.x), cy: ROW2.box, apron: APRON_B },
-    ];
-    for (const { xs, cy, apron } of rows) {
-      for (const x of xs) {
-        expect(x - r, `stand at ${x} left`).toBeGreaterThanOrEqual(apron.x0);
-        expect(x + r, `stand at ${x} right`).toBeLessThanOrEqual(apron.x1);
-        expect(cy - r, `stand at ${x} top`).toBeGreaterThanOrEqual(apron.y0);
-        expect(cy + r, `stand at ${x} bottom`).toBeLessThanOrEqual(apron.y1);
+    for (const { gates, row, apron, id } of CONCOURSES) {
+      for (const g of gates) {
+        expect(g.x - STAND_HALF, `${g.gate} left of apron ${id}`).toBeGreaterThanOrEqual(apron.x0);
+        expect(g.x + STAND_HALF, `${g.gate} right of apron ${id}`).toBeLessThanOrEqual(apron.x1);
+        expect(row.standCy - STAND_HALF, `${g.gate} top of apron ${id}`).toBeGreaterThanOrEqual(
+          apron.y0
+        );
+        expect(row.standCy + STAND_HALF, `${g.gate} bottom of apron ${id}`).toBeLessThanOrEqual(
+          apron.y1
+        );
+      }
+    }
+  });
+
+  it('stacks each row so the box, the callsign and the stub never collide', () => {
+    // Every value in a row is a y, and only their order makes the row legible:
+    // the callsign hangs below the stand box, and the stub runs from the
+    // concourse to the far side of the pair. Slide the box down onto its own
+    // label and every other geometry test here still passes.
+    for (const { row, gatesAbove, id } of CONCOURSES) {
+      const top = row.standCy - STAND_HALF;
+      const bottom = row.standCy + STAND_HALF;
+      expect(row.labelY, `${id} callsign clears the stand box`).toBeGreaterThan(bottom);
+      expect(row.stubTop, `${id} stub`).toBeLessThan(row.stubBot);
+      if (gatesAbove) {
+        // Gates sit above the concourse, so the stub starts below the callsign.
+        expect(row.stubTop, `${id} stub clears the callsign`).toBeGreaterThan(row.labelY);
+      } else {
+        // Gates sit below the concourse, so the stub ends above the stand box.
+        expect(row.stubBot, `${id} stub clears the stand box`).toBeLessThan(top);
       }
     }
   });
 
   it('lands every gate stub on the concourse it belongs to', () => {
-    // Row 1 hangs above concourse A, row 2 below concourse B. If either stub
-    // stops short the gates float, which reads as a drawing error.
-    expect(ROW1.stubBot).toBe(CONC_A.y0);
-    expect(ROW2.stubTop).toBe(CONC_B.y1);
-    expect(ROW1.stubTop).toBeLessThan(ROW1.stubBot);
-    expect(ROW2.stubTop).toBeLessThan(ROW2.stubBot);
+    // If either stub stops short the gates float, which reads as a drawing
+    // error. Which side the row hangs on comes from CONCOURSES, not from the
+    // ROW1/ROW2 names.
+    for (const { row, box, gatesAbove, id } of CONCOURSES) {
+      if (gatesAbove) expect(row.stubBot, `${id} stub meets the concourse`).toBe(box.y0);
+      else expect(row.stubTop, `${id} stub meets the concourse`).toBe(box.y1);
+      expect(row.stubTop, `${id} stub`).toBeLessThan(row.stubBot);
+    }
   });
 
   it('keeps every gate within the span of its concourse', () => {
-    for (const g of GATES_A) {
-      expect(g.x, `${g.gate} x`).toBeGreaterThan(CONC_A.x0);
-      expect(g.x, `${g.gate} x`).toBeLessThan(CONC_A.x1);
-    }
-    for (const g of GATES_B) {
-      expect(g.x, `${g.gate} x`).toBeGreaterThan(CONC_B.x0);
-      expect(g.x, `${g.gate} x`).toBeLessThan(CONC_B.x1);
+    for (const { gates, box, id } of CONCOURSES) {
+      for (const g of gates) {
+        expect(g.x, `${g.gate} x in concourse ${id}`).toBeGreaterThan(box.x0);
+        expect(g.x, `${g.gate} x in concourse ${id}`).toBeLessThan(box.x1);
+      }
     }
   });
 
@@ -78,14 +173,25 @@ describe('airport diagram geometry', () => {
     // still render as a building and the section would quietly stop arguing.
     expect(GATES_A.length).toBeGreaterThan(0);
     expect(GATES_B.length).toBeGreaterThan(0);
+    for (const c of CONCOURSES) expect(c.gates.length, `concourse ${c.id}`).toBeGreaterThan(0);
   });
 
-  it('sizes each mark individually, and only the AWS wordmark by width', () => {
+  it('sizes each mark individually, and any wordmark at the wide ratio', () => {
     // One shared height reads wrong: Mastra is wide and heavy, Anthropic is a
-    // narrow wedge. `w` is the escape hatch for the one 1.67:1 wordmark.
+    // narrow wedge. `w` is the escape hatch for a wordmark that is not square,
+    // and it is derived from `s` so the ratio is stated once. A second
+    // wordmark is allowed to join; an off-ratio one is not.
     const all = [...GATES_A, ...GATES_B];
-    for (const g of all) expect(g.s, `${g.gate} size`).toBeGreaterThan(0);
-    expect(all.filter((g) => g.w !== undefined).map((g) => g.gate)).toEqual(['B6']);
+    for (const g of all) {
+      expect(g.s, `${g.gate} size`).toBeGreaterThan(0);
+      if (g.w !== undefined) {
+        expect(g.w, `${g.gate} width`).toBeGreaterThan(g.s);
+        expect(
+          Math.abs(g.w - g.s * WIDE_RATIO),
+          `${g.gate} w ${g.w} vs s ${g.s} x ${WIDE_RATIO} = ${g.s * WIDE_RATIO}`
+        ).toBeLessThanOrEqual(1);
+      }
+    }
   });
 
   it('points every mark at a file that exists', () => {
@@ -94,8 +200,62 @@ describe('airport diagram geometry', () => {
     }
   });
 
-  it('places the main terminal west of both concourses', () => {
-    expect(MAIN.x1).toBeLessThanOrEqual(CONC_A.x0);
-    expect(MAIN.x1).toBeLessThanOrEqual(CONC_B.x0);
+  it('places the main terminal west of both concourses, and connects it to each', () => {
+    // Strictly west: at equality the two connector paths would be zero-length
+    // and the terminal would read as fused to the concourses.
+    expect(MAIN.x1).toBeLessThan(CONC_A.x0);
+    expect(MAIN.x1).toBeLessThan(CONC_B.x0);
+    for (const [label, y, box] of [
+      ['LINK_A_Y', LINK_A_Y, CONC_A],
+      ['LINK_B_Y', LINK_B_Y, CONC_B],
+    ] as const) {
+      // A connector leaves the terminal wall and lands on the concourse wall,
+      // so it has to fall inside both y spans. Move a concourse up or down
+      // without moving its link and the line detaches at one end.
+      expect(y, `${label} leaves the terminal`).toBeGreaterThan(MAIN.y0);
+      expect(y, `${label} leaves the terminal`).toBeLessThan(MAIN.y1);
+      expect(y, `${label} lands on the concourse`).toBeGreaterThan(box.y0);
+      expect(y, `${label} lands on the concourse`).toBeLessThan(box.y1);
+    }
+  });
+
+  it('keeps the margin band below the neat line and inside the view', () => {
+    // Chart furniture is off-airport by construction, not by prose: the
+    // provider row, the scale bar and the north arrow all live between the
+    // neat line and the bottom of the viewBox. PROVIDER_ROW.y is the marks'
+    // centre line, so the row's own height has to be counted at both edges.
+    const markTop = PROVIDER_ROW.y - PROVIDER_ROW.size / 2;
+    const markBottom = PROVIDER_ROW.y + PROVIDER_ROW.size / 2;
+    expect(PROVIDER_ROW.labelY, 'off-airport label').toBeGreaterThan(NEAT_BOTTOM);
+    expect(PROVIDER_ROW.labelY, 'off-airport label').toBeLessThan(markTop);
+    expect(markTop, 'provider marks').toBeGreaterThan(NEAT_BOTTOM);
+    expect(markBottom, 'provider marks').toBeLessThanOrEqual(VIEW.height);
+    expect(SCALE_BAR.y, 'scale bar').toBeGreaterThan(NEAT_BOTTOM);
+    expect(SCALE_BAR.y, 'scale bar').toBeLessThanOrEqual(VIEW.height);
+    expect(SCALE_BAR.x0, 'scale bar').toBeLessThan(SCALE_BAR.x1);
+    expect(SCALE_BAR.x1, 'scale bar').toBeLessThanOrEqual(VIEW.width);
+    expect(NORTH.y, 'north arrow').toBeGreaterThan(NEAT_BOTTOM);
+    expect(NORTH.y, 'north arrow').toBeLessThanOrEqual(VIEW.height);
+    expect(NORTH.x, 'north arrow').toBeLessThanOrEqual(VIEW.width);
+
+    // The widest mark is a wordmark, so the row's right edge is ratio-scaled.
+    const rowRight =
+      PROVIDER_ROW.x0 +
+      (PROVIDERS.length - 1) * PROVIDER_ROW.step +
+      PROVIDER_ROW.size * WIDE_RATIO;
+    expect(rowRight, 'provider row fits the view').toBeLessThanOrEqual(VIEW.width);
+    expect(rowRight, 'provider row clears the scale bar').toBeLessThan(SCALE_BAR.x0);
+  });
+});
+
+describe('airport diagram marks', () => {
+  it('draws the same plane the shared PlaneMark draws', () => {
+    // PLANE_PATH is a second copy of the `d` in ui/PlaneMark.tsx, because the
+    // plate needs the raw path inside a transform rather than the component.
+    // PlaneMark is used across the whole site and is not this module's to
+    // change, so the duplication is checked here instead of asserted in a
+    // comment.
+    const mark = readFileSync(resolve(WEBSITE, 'src/components/ui/PlaneMark.tsx'), 'utf8');
+    expect(mark, 'PlaneMark.tsx no longer draws PLANE_PATH').toContain(PLANE_PATH);
   });
 });
