@@ -74,9 +74,10 @@ export function Reliability() {
         * scope band begins — which is where the ATC app puts its frequency
         * bar. It lived inside the hero until 2026-09-08, when it read as a
         * stray navy bar 78px above a much larger band of near-identical navy.
-        * Keep the two colours distinct: the bar is --color-scope flat, the band
-        * is a gradient that only reaches that value at its bottom, and that
-        * difference is what stops the bar dissolving into it. */}
+        * Keep the two colours distinct: the bar is --color-scope #15253E; the
+        * band is a darker gradient (#0B1622 → #0F1C2E) that never reaches it,
+        * so the bar sits lighter against the band below, and that difference
+        * is what stops the bar dissolving into it. */}
       <p className="proof-masthead">{HERO_TRUST_LINE}</p>
       <Container>
         <div className="proof-strip">
@@ -117,7 +118,7 @@ export function Reliability() {
               </g>
               <circle className="proof-ladder-dot" cx="350" cy="26" r="2.5" />
             </svg>
-            <ul className="proof-strip-cells" role="list">
+            <ul className="proof-strip-cells" role="list" aria-label="Published scores">
               {PROOF_CELLS.map((cell) => (
                 <li className="proof-strip-cell" key={cell.caption}>
                   {cell.value ? (

@@ -91,17 +91,19 @@ The section takes `id="compatibility"` and `surface="tinted"`, matching the patt
 
 **This retires the filter fix.** An earlier draft of this design normalised every mark with `filter: brightness(0) invert(1)`. Once the row is on a light section there are no logos left on dark, so the filter is unnecessary and there is nothing to guard. Fewer moving parts. (The HVTrust badge stays in the dark band, but it is a grey-and-green pill that already reads there.)
 
-**Grouped, not a flat run.** The eight marks currently sit in one row where a model provider is adjacent to a protocol as though they were the same kind of thing:
+**Grouped, not a flat run.** The marks currently sit in one row where a model provider is adjacent to a protocol as though they were the same kind of thing. Grouped, and with every integration named:
 
-- **Model providers** — OpenAI, Anthropic, Gemini, Bedrock
-- **Agent runtimes** — Mastra, CrewAI, AWS Strands, + 4 more
+- **Model providers** — OpenAI, Anthropic, Gemini, Bedrock, Azure OpenAI
+- **Agent runtimes** — Mastra, CrewAI, Pydantic AI, Microsoft Agent Framework, AWS Strands
 - **Protocols** — LangGraph, AG-UI
 
-Grouping is the actual information. It also gives "+ 4 more" an honest home inside the group it belongs to, and lets a name-only entry read as normal rather than as a broken image.
+Grouping is the actual information, and it lets a name-only entry read as normal rather than as a broken image.
+
+**No hidden count.** An earlier draft closed the runtimes group with a "+ 4 more" badge. Grouping is what killed it rather than housing it: the badge could only render inside one group, and the hidden entries did not all belong to that group — Azure OpenAI is a model provider, so "+ N more runtimes" could not be stated honestly under any count. All of the previously hidden marks already existed on disk, so naming the full twelve costs nothing and removes a number that only stayed correct if an editor remembered to decrement it.
 
 **The compatibility claim becomes visible.** Today it lives only as `alt=""` / `aria-hidden` plus a spec comment: `Reliability.spec.tsx` guards that no wording implies these companies are customers. On its own section the claim can be stated in words — "Compatibility, not endorsement — no company here is claimed as a customer" — which is a stronger guarantee than a hidden attribute. The existing guard moves with the component and keeps asserting the attributes.
 
-`RIBBON_ITEMS`, `RIBBON_MORE_COUNT` and the `AdapterGuideLink` usage move out of `Reliability.tsx` into the new component.
+`RIBBON_ITEMS` and the `AdapterGuideLink` usage move out of `Reliability.tsx` into the new component; the items land as `COMPATIBILITY_GROUPS`. `RIBBON_MORE_COUNT` does not move — per "No hidden count" above, it is deleted.
 
 ## 6. Guards this touches
 

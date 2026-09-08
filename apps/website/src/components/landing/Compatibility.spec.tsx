@@ -8,6 +8,7 @@ describe('Compatibility', () => {
     const section = container.querySelector('[data-ui="section"]');
     expect(section?.getAttribute('data-surface')).toBe('tinted');
     expect(section?.getAttribute('id')).toBe('compatibility');
+    expect(section?.getAttribute('aria-labelledby')).toBe('compatibility-heading');
   });
 
   it('lists twelve integrations across three groups', () => {

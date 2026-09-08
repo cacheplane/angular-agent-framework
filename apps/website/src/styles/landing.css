@@ -1094,7 +1094,6 @@
   padding: 0;
 }
 .proof-strip-cell {
-  position: relative;
   /* Grid items default to min-width:auto; the long mono source URLs would then
    * push the columns past the container. */
   min-width: 0;
@@ -1179,7 +1178,11 @@
 }
 @media (max-width: 900px) {
   .proof-strip-grid {
-    gap: 32px;
+    /* Has to stay clear of the cells' 44px row gutter. At the old 32px the gap
+     * between two ROWS of figures beat the gap between the figures block and
+     * the receipts block — the same grouping inversion .proof-strip-cells
+     * above argues against, just one level up. */
+    gap: 48px;
   }
   .proof-strip-cells {
     grid-template-columns: repeat(2, 1fr);

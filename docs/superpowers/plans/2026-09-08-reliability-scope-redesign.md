@@ -248,13 +248,18 @@ Replace the `.proof-strip-cell` rule with:
 
 ```css
 .proof-strip-cell {
-  position: relative;
   /* Grid items default to min-width:auto; the long mono source URLs would then
    * push the columns past the container. */
   min-width: 0;
-  padding: 0 20px 0 0;
 }
 ```
+
+> **Superseded during execution (2026-09-08).** This step originally added
+> `padding: 0 20px 0 0;` to the cell. Do not re-introduce it: the column gutter
+> is now the grid's own `column-gap` — `.proof-strip-cells` carries
+> `gap: 44px 40px` — and a cell padding on top of that is double spacing.
+> `position: relative` also went: it was the containing block for the `::before`
+> highlight that Step 2 deletes, and nothing inside a cell is positioned now.
 
 - [ ] **Step 2: Delete the rules that no longer have anything to style**
 
@@ -368,6 +373,17 @@ In `Reliability.tsx`, between `<SectionHeader />` and the `<ul className="proof-
 ```
 
 - [ ] **Step 5: Style it**
+
+> **Superseded during execution (2026-09-08).** Two changes to the block below.
+> The `max-width: 700px` cap is gone: capped and left-aligned inside a wider
+> container, the waterline sat roughly 210px left of the band's centre and the
+> instrument read as stray marks rather than a divider. It spans the full
+> content width instead, which centres the waterline.
+> With the cap gone the svg is `width: 100%` over a 700-wide viewBox, so below
+> 700px the whole drawing scales down and the strokes would scale with it —
+> the rungs go sub-pixel at 375px. Both stroke rules therefore also carry
+> `vector-effect: non-scaling-stroke`, which holds the hairline weight at any
+> scale. Take the shipped rules in `landing.css` as authoritative.
 
 Append to `landing.css`:
 

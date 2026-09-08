@@ -104,7 +104,7 @@ export function Compatibility() {
                         className="compatibility-logo"
                       />
                     ) : null}
-                    <span className="compatibility-name">{item.name}</span>
+                    <span>{item.name}</span>
                   </li>
                 ))}
               </ul>

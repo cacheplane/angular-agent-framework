@@ -56,6 +56,9 @@ describe('Reliability', () => {
     expect(mark?.textContent).toBe('');
     expect(screen.getByText('Climb performance')).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Audited, scored, published.' }).id).toBe('proof-heading');
+    // The public-copy contract scan reads only content/**, so component copy is
+    // guarded here alone: a sourced score is not a customer claim.
+    expect(container.textContent).not.toMatch(/trusted by|customers|our clients|powered by/i);
   });
 
   it('frames the section as a climb and hides the instrument from assistive tech', () => {
