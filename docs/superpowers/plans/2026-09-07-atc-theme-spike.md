@@ -538,6 +538,31 @@ In `apps/website/src/styles/docs.css`, set both diagram-kit sans rules:
 
 Leave every diagram rule already on `var(--font-mono)` alone — mono was never Inter.
 
+- [ ] **Step 3b: Record the next/font constraint in `ui.css`**
+
+`ui.css`'s FONTS note explains that website font vars are supplied by
+`next/font` on `<html>`, that those `<html>`-level values WIN over `theme.css`,
+and that raw literals like `Inter, system-ui` never match because next/font
+registers its family under a hashed name.
+
+That makes `--font-diagram` fragile in a way nothing else records: the value
+`theme.css` emits for it IS a raw `Inter, system-ui, sans-serif` stack, so if
+`layout.tsx` ever stops defining `--font-diagram` via `next/font`, the
+diagrams silently fall back to `system-ui`, every glyph width changes, and the
+geometry this token exists to protect breaks. Between this task and Task 6
+that is exactly the state the site is in.
+
+Append to the FONTS comment block in `apps/website/src/styles/ui.css`:
+
+```
+ * --font-diagram is diagram-only and MUST keep being supplied by next/font in
+ * layout.tsx. theme.css emits it as a raw `Inter, ...` stack, which next/font's
+ * hashed family never matches — so if the loader is removed, diagrams silently
+ * fall back to system-ui, every glyph width shifts, and
+ * e2e/home-architecture.spec.ts (which measures text runs against their cards)
+ * is the only thing that will notice.
+```
+
 - [ ] **Step 4: Verify the carve-out is exactly three declarations**
 
 ```bash
