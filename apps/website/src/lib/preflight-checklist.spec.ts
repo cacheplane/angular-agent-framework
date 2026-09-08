@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
   PREFLIGHT_OURS,
   PREFLIGHT_YOURS,
@@ -60,5 +60,19 @@ describe('preflight checklist data', () => {
     const row = AIRWORTHINESS.find((r) => r.challenge === 'Angular support');
     expect(row?.response).toContain(String(WEBSITE_SUPPORTED_ANGULAR_MAJORS[0]));
     expect(row?.response).toContain(String(WEBSITE_SUPPORTED_ANGULAR_MAJORS.at(-1)));
+
+    // The assertions above cannot tell a derived "20-22" from a typed one —
+    // they agree until someone bumps a major, and by then the homepage has
+    // been wrong for a release. So move the dependency and check the value
+    // follows it. A hardcoded string will not.
+    vi.resetModules();
+    vi.doMock('../components/pricing/angular-support.mjs', () => ({
+      WEBSITE_SUPPORTED_ANGULAR_MAJORS: Object.freeze([41, 42, 43]),
+    }));
+    const { AIRWORTHINESS: moved } = await import('./preflight-checklist');
+    vi.doUnmock('../components/pricing/angular-support.mjs');
+    vi.resetModules();
+
+    expect(moved.find((r) => r.challenge === 'Angular support')?.response).toBe('41–43');
   });
 });
