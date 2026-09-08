@@ -951,7 +951,94 @@ git commit -m "feat(website): docs shell takes the signal as a rule, not a fill"
 
 ---
 
-## Task 11: Verification
+## Task 11: Sweep the remaining hardcoded brand colours
+
+Added after Task 2's review found that the plan named only 3 of the 24
+hardcoded old-brand sites in `apps/website/src`. The rest would have survived
+the retheme as blue islands.
+
+**Files:**
+- Modify: `apps/website/src/styles/landing.css` (lines ~631, 945, 1027, 1046)
+- Modify: `apps/website/src/styles/docs.css` (lines ~334, 1623, 1696)
+- Modify: `apps/website/src/styles/ui.css` (comments at ~252, 258)
+- Modify: `apps/website/src/components/landing/chat-landing/ChatLandingCodeShowcase.tsx:25`
+- Modify: `apps/website/src/styles/style-contracts.spec.ts:239` (comment prose only)
+
+- [ ] **Step 1: List what is left**
+
+```bash
+grep -rn "004090\|0, 64, 144\|64c3fd\|64C3FD\|100, 195, 253" apps/website/src --include="*.css" --include="*.tsx" --include="*.ts"
+```
+
+Tasks 8, 9 and 10 should already have cleared `landing.css:49-50`,
+`ui.css:176-199` and `docs.css:1697`. Everything still listed is this task.
+
+- [ ] **Step 2: Replace the light-surface tints**
+
+These are all backgrounds, so they take the yellow. Replace the colour only,
+keeping each rule's existing alpha:
+
+- `docs.css` `--callout-tone-surface: rgba(0, 64, 144, 0.06)` → `rgba(255, 175, 0, 0.10)`
+- `docs.css` `background: rgba(0, 64, 144, 0.1)` → `rgba(255, 175, 0, 0.14)`
+- `docs.css` `background: rgba(0, 64, 144, 0.08)` → `rgba(255, 175, 0, 0.12)`
+- `landing.css` `background: rgba(0, 64, 144, 0.04)` → `rgba(255, 175, 0, 0.08)`
+
+The yellow alphas are raised slightly because `#FFAF00` is a much lighter
+colour than `#004090`; at the original alpha the tint is invisible on white.
+
+- [ ] **Step 3: Replace the dark-surface gradients**
+
+`landing.css` lines ~631, ~1027 and ~1046 are decorative gradients sitting on
+dark surfaces, currently `rgba(100, 195, 253, …)`. Swap the triple to
+`255, 175, 0`, keeping every alpha exactly as-is.
+
+- [ ] **Step 4: The one that must NOT become yellow**
+
+`ChatLandingCodeShowcase.tsx:25` is `--chat-user-bg: #004090`, and line 26 is
+`--chat-user-color: #ffffff`. White on aviation yellow is **1.84:1**. This one
+takes the scope navy so the pairing keeps working:
+
+```
+  --chat-user-bg: #15253E;
+```
+
+(It is a string inside a displayed code snippet, so it teaches the palette to
+readers rather than styling anything — which is exactly why it should not
+teach an inaccessible pairing.)
+
+- [ ] **Step 5: Correct the two comments that now describe the old palette**
+
+`ui.css` ~252 and ~258 explain the focus ring in terms of `#004090` and
+`#64c3fd`. Rewrite them for the current palette: the primary button's fill is
+now the signal yellow, the ring is scope navy on light, and the dark scope
+re-points the accent to yellow. `style-contracts.spec.ts:239`'s `why:` string
+makes the same stale claim — update the prose. Do not change the assertion.
+
+- [ ] **Step 6: Confirm the sweep is complete**
+
+```bash
+grep -rn "004090\|0, 64, 144\|64c3fd\|64C3FD\|100, 195, 253" apps/website/src --include="*.css" --include="*.tsx" --include="*.ts"
+```
+
+Expected: no results. `apps/website/src/app/icon.svg` still contains `#004090`
+and that is correct — the favicon is out of scope per spec §7.
+
+- [ ] **Step 7: Test and commit**
+
+```bash
+npx nx test website
+```
+
+Expected: PASS.
+
+```bash
+git add apps/website/src
+git commit -m "fix(website): sweep the last hardcoded navy out of the light and dark surfaces"
+```
+
+---
+
+## Task 12: Verification
 
 No code. This is where the two load-bearing e2e specs get their say.
 
