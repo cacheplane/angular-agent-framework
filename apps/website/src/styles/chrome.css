@@ -40,6 +40,20 @@
   }
 }
 
+/* Docs condenses to one height at every width. The three marketing steps exist
+ * because padding grows at md while the tall link row only appears at lg; docs
+ * keeps the short padding throughout, so it has no such asymmetry. Still
+ * measured, not derived — e2e/nav-height.spec.ts pins both ladders.
+ *
+ * This beats the media queries above regardless of source order: `:has()`
+ * takes the specificity of its most specific argument, so this scores (0,3,0)
+ * against plain `:root`'s (0,1,0), and media queries add nothing. The <nav> is
+ * server-rendered, so it matches on first paint with no flash of the taller
+ * marketing bar. */
+:root:has(.nav-bar[data-route='docs']) {
+  --nav-h: 58px;
+}
+
 /* Footer */
 .footer-root {
   background: var(--color-surface);
@@ -96,55 +110,83 @@
 .nav-link:hover {
   color: var(--color-accent);
 }
-.nav-demo-dropdown {
-  position: relative;
-}
-.nav-demo-trigger {
-  color: var(--color-text-secondary);
-  background: none;
-  border: none;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-.nav-demo-trigger:hover {
-  color: var(--color-accent);
-}
-.nav-demo-caret {
-  font-size: 10px;
-  transition: transform 0.2s;
-  transform: rotate(0);
-}
-.nav-demo-caret[data-open] {
-  transform: rotate(180deg);
-}
-.nav-demo-menu {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  margin-top: 8px;
-  min-width: 180px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  box-shadow: var(--shadow-md);
-  overflow: hidden;
-  z-index: 60;
-}
-.nav-demo-item {
-  display: block;
-  padding: 10px 14px;
-  color: var(--color-text-secondary);
-  text-decoration: none;
-}
-.nav-demo-item:hover {
-  color: var(--color-accent);
-}
+/* Two surfaces, no shadow in either.
+ *
+ * Transparent is only ever reached on a HERO_ROUTES page at scroll 0, where the
+ * ground behind the bar is the hero's saturated yellow. Navy on that yellow is
+ * roughly 8:1, so this is a stylistic state, not an accessibility concession. */
 .nav-bar {
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
-  box-shadow: var(--shadow-sm);
+  transition: background 0.2s, border-color 0.2s;
+}
+.nav-bar[data-surface='transparent'] {
+  background: transparent;
+  border-bottom-color: transparent;
+}
+.nav-bar[data-surface='transparent'] .nav-link,
+.nav-bar[data-surface='transparent'] .nav-trigger,
+.nav-bar[data-surface='transparent'] .nav-trigger-caret {
+  color: var(--color-accent);
+}
+.nav-bar[data-surface='transparent'] [data-ui='button'][data-variant='primary'] {
+  background: var(--color-accent);
+  color: var(--color-text-inverted);
+}
+/* Inside docs the bar is chrome around the reader's content, not the page's
+ * headline, so it condenses: the md/lg padding step is flattened back to the
+ * phone's 16px at every width, and the CTA demotes from a fill button to a
+ * text link.
+ *
+ * The demotion is also what makes the height flat. The `padding-block: 12px;
+ * margin-block: -12px` pair below is the same hit-area trick as .nav-hamburger:
+ * it pads the box for a larger click target, then pulls it back with an equal
+ * negative margin, so the flex row sizes off the *margin* box — which is a flat
+ * 16px regardless of the element's own content height. That is what actually
+ * holds the 58px; `height: auto` is belt-and-braces on top of it (verified by
+ * mutation: setting `height: 40px` back here still measures a flat 58px once
+ * the negative margin is in place). With the margin box pinned at 16px, the
+ * 25px logo is the tallest thing left in the row, so 16 + 25 + 16 + the 1px
+ * border measures 58px from 375px up. Raising the padding here without
+ * re-measuring --nav-h above is what re-opens the dead-space bug.
+ *
+ * `Button` stamps data-ui/data-variant/data-size and adds no class of its own,
+ * so this has to select on the attributes — a `.btn` selector matches nothing
+ * and fails silently. */
+.nav-bar[data-route='docs'] > div {
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+.nav-bar[data-route='docs'] [data-ui='button'][data-variant='primary'] {
+  background: none;
+  color: var(--color-accent);
+  height: auto;
+  padding-inline: 0;
+  border-color: transparent;
+  box-shadow: none;
+  /* line-height:1 plus zero padding collapses the hit area to the text
+   * itself — ~16px tall (14px text + the 1px transparent border on each
+   * side). Same trick as .nav-hamburger below: pad the box for a larger
+   * click target, then pull it back with an equal negative margin so the
+   * flex row sizes off the unchanged margin box — neither the visual
+   * position nor the 58px nav height moves. 12px matches the row's own
+   * 16px top/bottom padding with room to spare, so the taller hit area
+   * still lands inside the bar instead of leaking into the content below. */
+  padding-block: 12px;
+  margin-block: -12px;
+}
+.nav-scroll-sentinel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 8px;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-bar {
+    transition: none;
+  }
 }
 .nav-hamburger {
   color: var(--color-text-primary);
@@ -192,138 +234,10 @@
 .nav-mobile-dialog-close:focus-visible {
   background: var(--color-surface-dim);
 }
-.nav-mtabs {
-  display: flex;
-  gap: 6px;
-  padding: 4px;
-  background: rgba(0, 0, 0, 0.03);
-  border-radius: 10px;
-}
-.nav-mtab {
-  flex: 1;
-  text-align: center;
-  padding: 10px 0;
-  font-size: 15px;
-  font-weight: 500;
-  font-family: var(--font-sans);
-  background: transparent;
-  color: var(--color-text-muted);
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  min-height: 44px;
-}
-.nav-mtab[data-active] {
-  background: var(--color-accent-surface);
-  color: var(--color-accent);
-}
-.nav-msubtabs-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
 .nav-mobile-list {
   display: flex;
   flex-direction: column;
   gap: 2px;
-}
-.nav-mobile-content-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.nav-mobile-item {
-  display: block;
-  padding: 12px 14px;
-  border-radius: 8px;
-  font-size: 16px;
-  line-height: 24px;
-  min-height: 44px;
-  text-decoration: none;
-  font-family: var(--font-sans);
-  color: var(--color-text-secondary);
-  background: transparent;
-}
-.nav-mobile-item[data-active] {
-  color: var(--color-accent);
-  background: var(--color-accent-surface);
-}
-.nav-mobile-item--strong {
-  font-weight: 600;
-}
-.nav-msubtabs {
-  display: flex;
-  gap: 4px;
-  padding: 3px;
-  background: rgba(0, 0, 0, 0.03);
-  border-radius: 8px;
-}
-.nav-msubtab {
-  flex: 1;
-  text-align: center;
-  padding: 8px 0;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  font-weight: 600;
-  background: transparent;
-  color: var(--color-text-muted);
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  min-height: 36px;
-}
-.nav-msubtab[data-active] {
-  background: var(--color-accent-surface);
-  color: var(--color-accent);
-}
-.nav-mobile-demo-link {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 14px;
-  border-radius: 8px;
-  min-height: 44px;
-  color: var(--color-accent);
-  background: var(--color-accent-surface);
-  text-decoration: none;
-  font-family: var(--font-sans);
-  font-weight: 600;
-}
-.nav-mobile-section-toggle {
-  width: 100%;
-  text-align: left;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 12px 14px;
-  min-height: 48px;
-  border-radius: 8px;
-  font-family: var(--font-sans);
-  font-size: 16px;
-  line-height: 24px;
-  color: var(--color-text-primary);
-}
-.nav-mobile-chevron {
-  transition: transform 0.25s ease;
-  flex-shrink: 0;
-  transform: rotate(0);
-}
-.nav-mobile-chevron[data-open] {
-  transform: rotate(180deg);
-}
-.nav-mobile-site-link {
-  display: block;
-  padding: 14px 14px;
-  border-radius: 8px;
-  font-size: 16px;
-  line-height: 24px;
-  min-height: 48px;
-  color: var(--color-text-secondary);
-  text-decoration: none;
-  font-family: var(--font-sans);
 }
 .nav-mobile-github-link {
   display: flex;
@@ -463,17 +377,219 @@
   font-family: var(--font-sans);
 }
 
-/* Mobile docs-search entry (polish arc PR 3) — button reset to match the
- * .nav-mobile-item link styling it shares. */
-.nav-mobile-search {
-  width: 100%;
-  text-align: left;
+/* Nav panels
+ *
+ * No borders and no dividers anywhere: the hovered item separates itself with a
+ * soft shadow on white. Yellow is fill-only (1.84:1 on white) so it appears
+ * here only as the footer arrow chip — never as text, never as a panel wash. */
+.nav-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--color-text-secondary);
 }
-.nav-mobile-search:focus-visible {
-  outline: none;
-  box-shadow: var(--shadow-focus);
+.nav-trigger-caret {
+  color: var(--color-text-muted);
+  transition: transform 0.18s;
+}
+.nav-trigger-caret[data-open] {
+  transform: rotate(180deg);
+}
+.nav-panel-shell {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 60;
+}
+.nav-panel {
+  background: var(--color-surface-tinted, #fafafa);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(10, 10, 10, 0.08), 0 8px 24px rgba(10, 10, 10, 0.06);
+  padding: 28px 24px 24px;
+  animation: nav-panel-in 140ms ease-out;
+}
+@keyframes nav-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-panel {
+    animation: none;
+  }
+}
+.nav-panel-cols {
+  display: grid;
+  gap: 26px;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+}
+/* The Libraries panel is one column of four items that must sit side by side,
+ * not three columns of stacked items like Docs and Solutions. The tracks
+ * therefore belong on the column itself — putting them on .nav-panel-cols
+ * gives a four-track grid exactly one child wide, which left three quarters of
+ * the panel empty. e2e/nav-panels.spec.ts measures this. */
+.nav-panel[data-columns='1'] .nav-panel-cols {
+  grid-template-columns: 1fr;
+}
+.nav-panel[data-columns='1'] .nav-panel-col {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 6px;
+}
+.nav-panel-col-head {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin: 0 0 12px 13px;
+}
+.nav-panel-item {
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+  padding: 12px 13px;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+.nav-panel-item:hover,
+.nav-panel-item:focus-visible {
+  background: var(--color-surface);
+  box-shadow: 0 1px 2px rgba(10, 10, 10, 0.06), 0 6px 16px rgba(10, 10, 10, 0.05);
+}
+.nav-panel-item-chip {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(21, 37, 62, 0.07);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-accent);
+  flex: none;
+}
+.nav-panel-item-label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--color-accent);
+}
+.nav-panel-item-desc {
+  display: block;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+  margin-top: 4px;
+}
+.nav-panel-footer {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 18px;
+}
+.nav-panel-footer-lead {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-text-muted);
+  padding-left: 13px;
+}
+.nav-panel-footer .nav-panel-item-chip {
+  background: var(--color-signal, #ffaf00);
+  color: var(--color-text-primary);
+}
+/* Not a no-op: unlayered author CSS beats Tailwind's @layer utilities, so this
+ * pins the element's position and defeats any future `relative` utility added
+ * here — keeping .nav-panel-shell's containing block on .nav-bar > div below. */
+.nav-desktop {
+  position: static;
+}
+.nav-bar > div {
+  position: relative;
+}
+
+/* Mobile drill-in
+ *
+ * Rows are full-width and at least 44px tall — this is the whole surface on a
+ * phone, so nothing here gets denser than the desktop panel. */
+.nav-mobile-back {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  padding: 11px 10px 13px;
+  background: none;
+  border: none;
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.nav-mobile-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 13px 10px;
+  border-radius: 9px;
+  background: none;
+  border: none;
+  text-align: left;
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+.nav-mobile-row svg {
+  margin-left: auto;
+  color: var(--color-text-muted);
+}
+.nav-mobile-panel {
+  animation: nav-level-in 0.18s ease-out;
+}
+.nav-mobile-group + .nav-mobile-group {
+  margin-top: 18px;
+}
+/* The desktop footer's row layout has room for the lead phrase beside the
+ * link; mobile's narrower column does not, so the two wrap onto the same
+ * baseline instead of one above the other. Stack them here — scoped to the
+ * mobile drill-in only, so the desktop footer is untouched. */
+.nav-mobile-panel .nav-panel-footer {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  margin-top: 18px;
+}
+.nav-mobile-panel .nav-panel-footer-lead {
+  padding-left: 10px;
+}
+@keyframes nav-level-in {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-mobile-panel {
+    animation: none;
+  }
 }
