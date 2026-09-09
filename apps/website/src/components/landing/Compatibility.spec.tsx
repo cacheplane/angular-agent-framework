@@ -1,70 +1,151 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
-import { Compatibility, COMPATIBILITY_GROUPS } from './Compatibility';
+import { Compatibility } from './Compatibility';
+import { CONCOURSES, GATES_A, GATES_B, PROVIDERS } from '../../lib/airport-diagram';
 
 describe('Compatibility', () => {
-  it('renders a light section with a stable id', () => {
+  it('renders the signal surface with the ids the homepage spine depends on', () => {
+    // e2e/website.spec.ts asserts homepage order by heading id. Renaming
+    // either of these turns that spec red for a reason nobody will guess.
     const { container } = render(<Compatibility />);
     const section = container.querySelector('[data-ui="section"]');
-    expect(section?.getAttribute('data-surface')).toBe('tinted');
+    expect(section?.getAttribute('data-surface')).toBe('signal');
     expect(section?.getAttribute('id')).toBe('compatibility');
     expect(section?.getAttribute('aria-labelledby')).toBe('compatibility-heading');
+    expect(container.querySelector('#compatibility-heading')?.textContent).toBe(
+      'Every stack has a gate.',
+    );
   });
 
-  it('lists twelve integrations across three groups', () => {
-    render(<Compatibility />);
-    // The suite otherwise iterates the same constant the component renders
-    // from, so it cannot see content disappear: a reviewer deleted the whole
-    // Protocols group — LangGraph and AG-UI, the two with first-party
-    // adapters — and every other test stayed green.
-    expect(COMPATIBILITY_GROUPS).toHaveLength(3);
-    expect(COMPATIBILITY_GROUPS.map((g) => g.label)).toEqual([
-      'Model providers',
-      'Agent runtimes',
-      'Protocols',
-    ]);
-    expect(COMPATIBILITY_GROUPS.flatMap((g) => g.items)).toHaveLength(12);
-    for (const name of ['LangGraph', 'AG-UI', 'OpenAI', 'Anthropic']) {
-      expect(screen.getByText(name)).toBeTruthy();
+  it('names every gate and every provider in the HTML stack, not only on the plate', () => {
+    // The marks are decorative and the plate itself is aria-hidden, so this
+    // list is the section's ONLY accessible content. Scoped to .airport-stack
+    // on purpose: an unscoped getAllByText also matches the SVG's own <text>,
+    // so deleting the whole stack would leave the gate half of this green
+    // while a screen reader heard nothing.
+    const { container } = render(<Compatibility />);
+    const stack = container.querySelector('.airport-stack');
+    expect(stack, 'the accessible stack is gone').toBeTruthy();
+    const list = within(stack as HTMLElement);
+    for (const g of [...GATES_A, ...GATES_B]) {
+      expect(list.getAllByText(g.long ?? g.name).length).toBeGreaterThan(0);
+    }
+    for (const p of PROVIDERS) {
+      expect(list.getAllByText(p.name).length).toBeGreaterThan(0);
     }
   });
 
-  it('groups every item under a labelled heading', () => {
-    render(<Compatibility />);
-    for (const group of COMPATIBILITY_GROUPS) {
-      expect(screen.getByText(group.label)).toBeTruthy();
-      for (const item of group.items) expect(screen.getByText(item.name)).toBeTruthy();
+  it('draws a stand for every gate and a concourse for every adapter', () => {
+    // Without this the plate is untestable furniture: replace <Plate /> with
+    // an empty <figure /> and every other test here still passes, because the
+    // stack alone carries all the names.
+    const { container } = render(<Compatibility />);
+    expect(container.querySelectorAll('[data-diagram="airport"]').length).toBe(1);
+    expect(container.querySelectorAll('[data-stand]').length).toBe(
+      GATES_A.length + GATES_B.length,
+    );
+    expect(container.querySelectorAll('[data-concourse]').length).toBe(CONCOURSES.length);
+  });
+
+  it('spells out in the list the name the stand had to abbreviate', () => {
+    // `MS AGENT FWK` exists because a 38px stand has room for nothing longer.
+    // The list has room, and it is what a screen reader hears, so the two
+    // surfaces get different strings on purpose — which is the whole reason
+    // `Gate.long` exists and the only thing that keeps it from rotting.
+    const { container } = render(<Compatibility />);
+    const stack = container.querySelector('.airport-stack');
+    expect(stack, 'the accessible stack is gone').toBeTruthy();
+    const abbreviated = [...GATES_A, ...GATES_B].filter((g) => g.long);
+    expect(abbreviated.length, 'no gate carries a long form any more').toBeGreaterThan(0);
+    for (const g of abbreviated) {
+      const list = within(stack as HTMLElement);
+      expect(list.getAllByText(g.long as string).length).toBeGreaterThan(0);
+      expect(list.queryByText(g.name), `the stack still shows "${g.name}"`).toBeNull();
+      // ...and the plate still draws the short one, or the abbreviation was
+      // simply a bug rather than a constraint.
+      expect(container.querySelector(`[data-stand="${g.gate}"]`)?.textContent).toContain(g.name);
     }
-    // The label is a bare <p>, so the list only carries an accessible name if
-    // aria-labelledby actually points at it.
-    for (const group of COMPATIBILITY_GROUPS) {
-      expect(screen.getByRole('list', { name: group.label })).toBeTruthy();
+  });
+
+  it('shows both adapters as the two concourses', () => {
+    // Read off the stack, for the reason above — the plate is aria-hidden, so
+    // matching the package names there proves nothing about what is announced.
+    // Each name is paired with its concourse: an adapter labelled with the
+    // other one's package would otherwise pass.
+    const { container } = render(<Compatibility />);
+    const labels = Array.from(
+      container.querySelectorAll('.airport-stack .airport-stack-label'),
+    ).map((el) => el.textContent ?? '');
+    for (const c of CONCOURSES) {
+      expect(
+        labels.some((t) => t.includes(c.label) && t.includes(c.pkg)),
+        `${c.label} is not labelled ${c.pkg}`,
+      ).toBe(true);
+    }
+  });
+
+  it('keeps the whole plate out of the accessibility tree', () => {
+    // role="presentation" does NOT inherit to descendants, so the plate's own
+    // <text> — runway ids, taxiway letters, "2000 FT" — leaked to screen
+    // readers as unnamed chart noise. aria-hidden takes the subtree with it,
+    // which is what leaves .airport-stack as the band's accessible content.
+    const { container } = render(<Compatibility />);
+    const plate = container.querySelector('[data-diagram="airport"]');
+    expect(plate?.getAttribute('aria-hidden')).toBe('true');
+  });
+
+  it('marks every logo decorative, since the visible name carries the meaning', () => {
+    const { container } = render(<Compatibility />);
+    const marks = container.querySelectorAll('image, img.airport-mark');
+    expect(marks.length).toBeGreaterThan(0);
+    for (const m of Array.from(marks)) {
+      expect(m.getAttribute('aria-hidden')).toBe('true');
     }
   });
 
   it('states compatibility in words and never implies a customer', () => {
     const { container } = render(<Compatibility />);
-    // The claim used to exist only as alt="" plus a spec comment. A reader
-    // could not see it. Now it is on the page.
     expect(screen.getByText(/Compatibility, not endorsement/)).toBeTruthy();
     expect(container.textContent).not.toMatch(/trusted by|customers|our clients|powered by/i);
   });
 
-  it('marks every logo decorative, since the visible name carries the meaning', () => {
+  it('says Threadplane never talks to model providers, not that it never sees them', () => {
+    // never-SEES is a data claim the docs do not support; never-TALKS-TO is
+    // structural. This is the same failure mode #1067 had to correct.
+    //
+    // The positive half is scoped to .airport-stack, for the same reason as
+    // the gate-name test above: the plate carries this sentence too, as an
+    // aria-hidden <text>, so an unscoped read of container.textContent stays
+    // green while the claim disappears from the phone form and from every
+    // accessible surface the band has. The negative half stays unscoped —
+    // "never sees" must not appear anywhere in the section, drawn or spoken.
     const { container } = render(<Compatibility />);
-    const logos = container.querySelectorAll('img.compatibility-logo');
-    const withLogos = COMPATIBILITY_GROUPS.flatMap((g) => g.items).filter((i) => i.logoSrc);
-    expect(logos).toHaveLength(withLogos.length);
-    for (const img of Array.from(logos)) {
-      expect(img.getAttribute('aria-hidden')).toBe('true');
-      expect(img.getAttribute('alt')).toBe('');
-    }
+    const stack = container.querySelector('.airport-stack');
+    expect(stack, 'the accessible stack is gone').toBeTruthy();
+    expect(within(stack as HTMLElement).getByText(/never talks to them/i)).toBeTruthy();
+    expect(container.textContent).not.toMatch(/never sees/i);
   });
 
-  it('links to the adapter guide', () => {
-    render(<Compatibility />);
-    expect(
-      screen.getByRole('link', { name: 'Choose an adapter →' }).getAttribute('href'),
-    ).toBe('/docs/choosing-an-adapter');
+  it('carries the adapter-guide CTA', () => {
+    // By its stable hook, not its copy: the label and the href belong to
+    // AdapterGuideLink and are asserted in AdapterGuideLink.spec.tsx. All this
+    // band owns is that the link is here.
+    const { container } = render(<Compatibility />);
+    expect(container.querySelectorAll('[data-cta="home_adapter_guide"]').length).toBe(1);
+  });
+
+  it('ships a phone form driven by the same gate table as the plate', () => {
+    // A seven-stand rotated airfield has no 390px form. The precedent is
+    // .arch-stack: hide the figure below the breakpoint (1024px here, not the
+    // usual 768px — see landing.css) and show an HTML list built from the same
+    // data, never a sideways scroll.
+    const { container } = render(<Compatibility />);
+    expect(container.querySelector('.airport-figure')).toBeTruthy();
+    const stack = container.querySelector('.airport-stack');
+    expect(stack).toBeTruthy();
+    const items = stack!.querySelectorAll('.airport-stack-gates li');
+    expect(items).toHaveLength(GATES_A.length + GATES_B.length);
+    expect(screen.getByRole('list', { name: /CONCOURSE A/ })).toBeTruthy();
+    expect(screen.getByRole('list', { name: /CONCOURSE B/ })).toBeTruthy();
   });
 });

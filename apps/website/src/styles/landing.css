@@ -1991,60 +1991,240 @@
   text-align: center;
 }
 
-/* Compatibility — light ground on purpose: these marks are drawn for light
- * backgrounds and were invisible on the dark band. */
-.compatibility-groups {
-  margin-top: 26px;
+/* Compatibility — an FAA-style airport diagram on the signal surface
+ * (spec: docs/superpowers/specs/2026-09-08-compatibility-airport-diagram-design.md).
+ *
+ * The yellow ground is load-bearing, not decoration: every mark here is a dark
+ * logo drawn for a light ground (Anthropic #181818, CrewAI and Pydantic
+ * #111827, LangGraph #1C3C3C), so they render bare with no chip. That is why
+ * these marks were invisible on the dark band before #1067 split them out.
+ *
+ * Two values carry the meaning with no legend: partner stands are white,
+ * the main terminal — Threadplane — is ink. */
+.airport-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  padding-bottom: 18px;
+  margin-bottom: 40px;
+  border-bottom: 1.5px solid var(--color-border-strong);
 }
-.compatibility-group {
-  padding: 16px 0;
-  border-top: 1px solid var(--color-border);
-}
-.compatibility-group-label {
+.airport-eyebrow {
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: 0.17em;
+  color: var(--color-text-muted);
+  margin: 0 0 13px;
+}
+.airport-heading {
+  font-family: var(--font-display);
+  font-size: clamp(30px, 5vw, 46px);
+  line-height: 1.02;
+  letter-spacing: -0.018em;
+  margin: 0;
+  max-width: 12ch;
+}
+.airport-chart-id {
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  line-height: 2;
+  white-space: nowrap;
   color: var(--color-text-muted);
   margin: 0;
 }
-.compatibility-items {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px 26px;
-  list-style: none;
-  margin: 10px 0 0;
-  padding: 0;
+.airport-figure {
+  margin: 0;
 }
-.compatibility-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  white-space: nowrap;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--color-text-primary);
+.ap-svg {
+  display: block;
+  width: 100%;
+  height: auto;
 }
-.compatibility-logo {
-  width: 17px;
-  height: 17px;
-  object-fit: contain;
+
+/* Airfield */
+.ap-neat {
+  fill: none;
+  stroke: var(--color-ink);
+  stroke-width: 1.4;
 }
-.compatibility-footer {
+.ap-tick {
+  fill: none;
+  stroke: var(--color-ink);
+  stroke-width: 1;
+  opacity: 0.6;
+}
+.ap-pavement {
+  fill: var(--color-ink);
+}
+.ap-rwy-id {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  fill: var(--color-signal);
+}
+.ap-taxiway,
+.ap-stub,
+.ap-link {
+  fill: none;
+  stroke: var(--color-ink);
+}
+.ap-taxiway {
+  stroke-width: 1.6;
+}
+.ap-stub {
+  stroke-width: 1.4;
+}
+.ap-link {
+  stroke-width: 3.5;
+}
+.ap-twy-disc {
+  fill: var(--color-signal);
+  stroke: var(--color-ink);
+  stroke-width: 1.2;
+}
+.ap-twy-letter {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  font-weight: 700;
+  fill: var(--color-ink);
+}
+.ap-apron {
+  fill: none;
+  stroke: var(--color-ink);
+  stroke-opacity: 0.3;
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+.ap-hatch-line {
+  stroke: var(--color-ink);
+  stroke-width: 0.9;
+  opacity: 0.7;
+}
+
+/* Buildings */
+.ap-main {
+  fill: var(--color-ink);
+}
+.ap-plane {
+  fill: var(--color-signal);
+}
+.ap-main-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  fill: var(--color-signal);
+}
+.ap-main-sub {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  fill: var(--color-signal);
+  fill-opacity: 0.66;
+}
+.ap-conc {
+  fill: url(#ap-hatch);
+  stroke: var(--color-ink);
+  stroke-width: 1.4;
+}
+.ap-conc-plate {
+  fill: var(--color-signal);
+}
+.ap-conc-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  fill: var(--color-ink);
+}
+/* The package name sits on the concourse's 45-degree hatch, and the label's
+ * knockout plate only covers the line above it — hatch strokes ran straight
+ * through the glyphs. A painted-under halo cuts the hatch per-glyph, which
+ * beats widening the plate: the plate is sized by a font-metric estimate
+ * (6.6 * length), so anything that depends on it breaks silently when the
+ * type changes. This does not. */
+.ap-conc-pkg {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  fill: var(--color-ink);
+  fill-opacity: 0.78;
+  paint-order: stroke;
+  stroke: var(--color-signal);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+
+/* Stands */
+.ap-stand-box {
+  fill: #ffffff;
+  stroke: var(--color-ink);
+  stroke-width: 1.5;
+}
+.ap-gate-tab {
+  fill: var(--color-ink);
+}
+.ap-gate-id {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  font-weight: 700;
+  fill: var(--color-signal);
+}
+.ap-callsign {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  fill: var(--color-ink);
+  fill-opacity: 0.74;
+}
+
+/* Margin */
+.ap-off {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  fill: var(--color-text-muted);
+}
+.ap-furniture {
+  opacity: 0.7;
+}
+.ap-furniture path {
+  fill: none;
+  stroke: var(--color-ink);
+  stroke-width: 1.2;
+}
+.ap-furniture .ap-north {
+  fill: var(--color-ink);
+  stroke: none;
+}
+.ap-furniture text {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  font-weight: 700;
+  fill: var(--color-ink);
+}
+
+/* Footer */
+.airport-footer {
   display: flex;
   align-items: center;
   gap: 18px;
   flex-wrap: wrap;
-  border-top: 1px solid var(--color-border);
+  border-top: 1.5px solid var(--color-border-strong);
+  margin-top: 26px;
   padding-top: 18px;
 }
 /* AdapterGuideLink REPLACES its className rather than appending, so without a
- * rule here the anchor renders as plain body text. The mono-uppercase
- * treatment came from the dark band, where --color-accent was amber against
- * white; on this light ground it resolves to navy against near-black ink — a
- * very small hue step at 11px. The weight bump and the hover colour are what
- * make it read as a CTA, not the case and tracking alone. */
+ * rule here the anchor renders as plain body text. On the signal surface
+ * --color-accent resolves to ink, which is 10.73:1 on the yellow ground. */
 .compatibility-link {
   font-family: var(--font-mono);
   font-size: 11px;
@@ -2061,6 +2241,96 @@
   font-size: 12.5px;
   color: var(--color-text-muted);
   margin: 0;
+}
+
+/* Narrow form: the same gates as an HTML list, driven by the same data.
+ * The plate is hidden here instead of scrolled sideways — the .arch-stack
+ * precedent from the architecture diagram.
+ *
+ * VISUALLY hidden on desktop, never `display: none`. The plate is
+ * aria-hidden, and the five provider names exist ONLY in this list, so
+ * display:none would leave the whole band with no accessible content on
+ * desktop. Same idiom as .stage-skip above, and pinned by a style contract
+ * in style-contracts.spec.ts because nothing else can see it break. */
+.airport-stack {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+/* 1023px, not the 767px this band's siblings use. `.ap-svg` is width:100%, so
+ * the 1000-unit plate scales with its container: at a 768px viewport that
+ * container is ~707px and the plate renders at 0.71, putting callsigns at 6.0px
+ * and gate ids at 5.3px. Everything from 768 to ~1000px was a chart nobody
+ * could read. A min-width plus a scrolling container is the other way out and
+ * the spec rules it out for this band, so tablets get the list. */
+@media (max-width: 1023px) {
+  .airport-figure {
+    display: none;
+  }
+  .airport-stack {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+    clip-path: none;
+    white-space: normal;
+    margin-top: 8px;
+  }
+  .airport-head {
+    display: block;
+  }
+  .airport-chart-id {
+    text-align: left;
+    margin-top: 16px;
+  }
+}
+.airport-stack-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--color-text-secondary);
+  margin: 22px 0 10px;
+}
+.airport-stack-gates,
+.airport-stack-providers {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.airport-stack-providers {
+  grid-template-columns: repeat(2, 1fr);
+}
+.airport-stack-gates li,
+.airport-stack-providers li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+.airport-stack-gate {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  background: var(--color-ink);
+  color: var(--color-signal);
+  border-radius: 2px;
+  padding: 3px 5px;
+}
+.airport-mark {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
 }
 
 /* Preflight checklist.
