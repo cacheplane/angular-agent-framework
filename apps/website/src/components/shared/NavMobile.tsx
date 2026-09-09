@@ -19,7 +19,7 @@ import { Button } from '../ui/Button';
 import { GitHubIcon } from '../ui/GitHubIcon';
 import { GITHUB_REPO_URL } from '../../lib/positioning';
 import { DocsContextContent } from '../docs/DocsControlPlane';
-import { NavPanelItem } from './NavDesktop';
+import { NavPanelBody } from './NavPanelBody';
 import { NAV_TRIGGERS } from './nav-config';
 
 const toAnalyticsLibrary = (library: LibraryId | null): AnalyticsLibrary => {
@@ -436,38 +436,12 @@ export function NavMobile({
 
               {panel ? (
                 <div className="nav-mobile-panel">
-                  {panel.columns.map((column, index) => (
-                    <div
-                      key={column.heading ?? index}
-                      className="nav-mobile-group"
-                    >
-                      {column.heading ? (
-                        <span className="nav-panel-col-head">
-                          {column.heading}
-                        </span>
-                      ) : null}
-                      {column.items.map((item) => (
-                        <NavPanelItem
-                          key={item.ctaId}
-                          item={item}
-                          surface="mobile_nav"
-                          onNavigate={() => closeMobileMenu()}
-                        />
-                      ))}
-                    </div>
-                  ))}
-                  {panel.footer ? (
-                    <div className="nav-panel-footer">
-                      <span className="nav-panel-footer-lead">
-                        {panel.footer.lead}
-                      </span>
-                      <NavPanelItem
-                        item={panel.footer}
-                        surface="mobile_nav"
-                        onNavigate={() => closeMobileMenu()}
-                      />
-                    </div>
-                  ) : null}
+                  <NavPanelBody
+                    panel={panel}
+                    surface="mobile_nav"
+                    columnClassName="nav-mobile-group"
+                    onNavigate={() => closeMobileMenu()}
+                  />
                 </div>
               ) : null}
             </div>
