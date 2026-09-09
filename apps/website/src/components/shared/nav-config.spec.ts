@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { HERO_ROUTES, NAV_TRIGGERS, navItems } from './nav-config';
+import { NAV_TRIGGERS, navItems } from './nav-config';
 import { docsConfig } from '../../lib/docs-config';
 import { getAllSolutionSlugs } from '../../lib/solutions-data';
 
@@ -87,11 +87,5 @@ describe('nav-config', () => {
       'Solutions',
       'Pricing',
     ]);
-  });
-
-  it('lists only routes that actually render a hero', () => {
-    // Landing pages join this list in the change that gives each one a hero.
-    // Listing a white page here renders navy links over nothing.
-    expect(HERO_ROUTES).toEqual(['/']);
   });
 });

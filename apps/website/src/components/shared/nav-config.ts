@@ -243,13 +243,3 @@ export function navItems(): readonly NavItem[] {
     return trigger.panel.footer ? [...items, trigger.panel.footer] : items;
   });
 }
-
-/**
- * Routes whose page opens on a colored hero, where the bar renders transparent
- * at scroll 0.
- *
- * `/` is the only one today. The library landing pages open on white; listing
- * one before it has a hero renders navy links over a white page with no bar
- * behind them. Each page joins this list in the change that gives it a hero.
- */
-export const HERO_ROUTES: readonly string[] = ['/'];
