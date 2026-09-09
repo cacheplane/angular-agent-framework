@@ -3,10 +3,7 @@ import { useState, useEffect } from 'react';
 import type { PublicFormPolicy } from '../../lib/growth/form-policy';
 import { FORM_POLICY_REFRESH_MESSAGE } from '../../lib/growth/form-client';
 import { analyticsEvents } from '../../lib/analytics/events';
-import {
-  track,
-  trackWhitepaperDownloadClick,
-} from '../../lib/analytics/client';
+import { track } from '../../lib/analytics/client';
 import { Button } from '../ui/Button';
 import {
   Field,
@@ -237,23 +234,8 @@ export function AnnouncementToast({
             <FormStatus
               tone="failure"
               title="That did not send."
-              detail="You can still get the guide."
-            >
-              <a
-                href="/whitepaper.pdf"
-                download="angular-agent-readiness-guide.pdf"
-                onClick={() => {
-                  trackWhitepaperDownloadClick('overview', {
-                    surface: 'toast',
-                    source_section: 'announcement-toast',
-                    cta_id: 'toast_direct_download',
-                  });
-                  dismiss();
-                }}
-              >
-                Download the PDF directly
-              </a>
-            </FormStatus>
+              detail="Try again in a moment."
+            />
           ) : null}
         </form>
       )}

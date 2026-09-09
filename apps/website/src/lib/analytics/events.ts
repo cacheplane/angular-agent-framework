@@ -94,7 +94,6 @@ export type CtaId =
   | 'footer_ag_ui'
   // Announcement toast
   | 'toast_get_guide'
-  | 'toast_direct_download'
   // Docs surfaces — copy buttons take a dynamic label fallback
   | 'copy_code'
   | 'copy_prompt'
