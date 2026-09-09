@@ -82,7 +82,6 @@ export type CtaId =
   | 'hero_proof_pill'
   // Whitepaper block on home
   | 'home_whitepaper_direct'
-  | 'home_whitepaper_direct_inline'
   // Why this exists section
   | 'home_why_pilot_to_prod'
   // Pricing tier CTAs

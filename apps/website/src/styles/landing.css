@@ -287,16 +287,6 @@
 .wp-form {
   max-width: 520px;
 }
-.wp-already {
-  margin-top: 4px;
-  font-size: 13px;
-  color: var(--color-text-muted);
-  font-family: var(--font-sans);
-}
-.wp-already a {
-  color: var(--color-accent);
-  text-decoration: underline;
-}
 .wp-cover-wrap {
   display: flex;
   justify-content: center;

@@ -20,7 +20,7 @@ const formPolicy: PublicFormPolicy = {
     contact: 'Contact disclosure',
     newsletter: 'Newsletter disclosure',
     whitepaper:
-      'Send me the guide and a short, three-email follow-up from Brian about building with Threadplane. Unsubscribe anytime.',
+      'We will never spam you or share your email address.',
   },
 };
 
@@ -64,13 +64,18 @@ describe('WhitePaperBlock', () => {
     expect(events).toContain('marketing:whitepaper_signup_success');
   });
 
-  it('shows the direct PDF link in the failure block', async () => {
+  it('offers no direct download from the failure block', async () => {
+    // Removed on request: the PDF is reachable only through a successful
+    // submission now, so a failed send tells the reader to retry rather than
+    // handing over the file. The success block still links it, because that
+    // reader has already given their address and the copy promises it.
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 500 }));
     render(<WhitePaperBlock formPolicy={formPolicy} paper="chat" />);
     fireEvent.change(screen.getByLabelText('Work email'), { target: { value: 'reader@acme.com' } });
     fireEvent.click(screen.getByRole('button', { name: 'Get the field report' }));
     await waitFor(() => expect(screen.getByRole('alert')).toBeTruthy());
-    expect(screen.getByRole('link', { name: 'Download the PDF directly' }).getAttribute('href')).toBe('/whitepapers/chat.pdf');
+    expect(screen.getByText('Try again in a moment.')).toBeTruthy();
+    expect(screen.queryByRole('link', { name: /Download the PDF/ })).toBeNull();
   });
 
   it('validates on blur, focuses the field on an invalid submit, and clears once valid', () => {
