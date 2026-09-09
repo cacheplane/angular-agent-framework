@@ -46,6 +46,12 @@ const docsLevel: MobileLevel = { kind: 'panel', id: 'docs' };
 const initialLevel = (isDocsPage: boolean): MobileLevel =>
   isDocsPage ? docsLevel : rootLevel;
 
+/** Structural equality for the two-shape MobileLevel union. */
+const sameLevel = (a: MobileLevel, b: MobileLevel): boolean =>
+  a.kind === 'panel' && b.kind === 'panel'
+    ? a.id === b.id
+    : a.kind === b.kind;
+
 const mobilePanel = (id: string) => {
   const trigger = NAV_TRIGGERS.find((entry) => entry.id === id);
   return trigger?.kind === 'panel' ? trigger.panel : undefined;
@@ -202,11 +208,15 @@ export function NavMobile({
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.preventDefault();
-        // Escape retraces the way in: it pops a level the reader pushed, and
-        // only dismisses the drawer from the level it opened at. On a docs
-        // route that home level is the docs tree, not the root list — Escape
-        // there closes the drawer rather than stranding it one level up.
-        if (level.kind === 'panel' && !(isDocsPage && level.id === 'docs')) {
+        // Escape pops a level the reader pushed, and dismisses the drawer
+        // from the level it opened at. Comparing against
+        // initialLevel(isDocsPage) — rather than hardcoding the docs case —
+        // is what makes this correct on a docs route: the drawer opens
+        // pre-pushed to the docs level there, so Escape has nothing to pop
+        // back to and closes instead. The protected test 'closes on Escape
+        // and restores focus to the sole trigger' runs on a docs route and
+        // depends on this falling through to closeMobileMenu().
+        if (!sameLevel(level, initialLevel(isDocsPage))) {
           setLevel(rootLevel);
           return;
         }
@@ -413,11 +423,16 @@ export function NavMobile({
                     </div>
                   ))}
                   {panel.footer ? (
-                    <NavPanelItem
-                      item={panel.footer}
-                      surface="mobile_nav"
-                      onNavigate={() => closeMobileMenu()}
-                    />
+                    <div className="nav-panel-footer">
+                      <span className="nav-panel-footer-lead">
+                        {panel.footer.lead}
+                      </span>
+                      <NavPanelItem
+                        item={panel.footer}
+                        surface="mobile_nav"
+                        onNavigate={() => closeMobileMenu()}
+                      />
+                    </div>
                   ) : null}
                 </div>
               ) : null}

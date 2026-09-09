@@ -708,6 +708,19 @@
 .nav-mobile-group + .nav-mobile-group {
   margin-top: 18px;
 }
+/* The desktop footer's row layout has room for the lead phrase beside the
+ * link; mobile's narrower column does not, so the two wrap onto the same
+ * baseline instead of one above the other. Stack them here — scoped to the
+ * mobile drill-in only, so the desktop footer is untouched. */
+.nav-mobile-panel .nav-panel-footer {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  margin-top: 18px;
+}
+.nav-mobile-panel .nav-panel-footer-lead {
+  padding-left: 10px;
+}
 @keyframes nav-level-in {
   from {
     opacity: 0;

@@ -249,6 +249,19 @@ describe('Docs mobile navigation', () => {
     expect(within(dialog).queryByRole('link', { name: /@threadplane\/chat/ })).toBeNull();
   });
 
+  it('shows the footer lead above the Choosing-an-adapter link in the Libraries level', () => {
+    pathnameRef.current = '/';
+    render(<Nav />);
+    fireEvent.click(screen.getByRole('button', { name: 'Open menu' }));
+    const dialog = screen.getByRole('dialog', { name: 'Mobile navigation' });
+
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Libraries' }));
+    expect(within(dialog).getByText('Not sure which one?')).toBeTruthy();
+    expect(
+      within(dialog).getByRole('link', { name: /Choosing an adapter/ }).getAttribute('href'),
+    ).toBe('/docs/choosing-an-adapter');
+  });
+
   it('shows the marketing Docs panel off a docs route', () => {
     pathnameRef.current = '/';
     render(<Nav />);
