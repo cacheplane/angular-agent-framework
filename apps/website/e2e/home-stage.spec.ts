@@ -43,6 +43,23 @@ const progress = (page: Page) =>
   );
 
 test.describe('homepage stage', () => {
+  test('gradual playback replaces the render introduction with an editable surface', async ({ page }) => {
+    test.skip(process.env['STAGE_LIVE_FRAME'] !== 'true', 'requires the matching stage replay deployment');
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/');
+    const act = page.locator('[data-stage-act]');
+    await expect(act).toHaveAttribute('data-state', 'ready');
+    const frame = page.frameLocator('.stage-frame-iframe');
+    for (const p of [0.87, 0.89, 0.91, 0.93, 0.95, 1]) {
+      await scrollAct(page, p);
+      await expect(act).toHaveAttribute('data-interactive', '', { timeout: 30_000 });
+    }
+    const notes = frame.getByRole('textbox', { name: 'Follow-up notes' });
+    await notes.fill('Verify the next retention review.');
+    await expect(notes).toHaveValue('Verify the next retention review.');
+    await expect(frame.locator('a2ui-surface')).toHaveCount(1);
+  });
+
   test('settled replay allows State inspection and form edits; page motion resumes playback', async ({ page }) => {
     test.skip(process.env['STAGE_LIVE_FRAME'] !== 'true', 'requires the matching stage replay deployment');
     await page.setViewportSize({ width: 1440, height: 900 });
