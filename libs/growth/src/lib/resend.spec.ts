@@ -9,6 +9,7 @@ import {
   unsubscribeActionUrlValue,
 } from './tokens.ts';
 import {
+  APPROVED_ATTACHMENT_PATHS,
   RECIPIENT_EMAIL_SENDER,
   sendRecipientEmail,
   type RecipientDeliveryPolicy,
@@ -134,6 +135,19 @@ function harness(overrides: { job?: GrowthJob; response?: unknown } = {}) {
       markProviderRejection,
     },
   };
+}
+
+const APPROVED_GUIDE = {
+  filename: 'angular-streaming-guide.pdf',
+  path: 'https://threadplane.ai/whitepapers/angular.pdf',
+};
+
+function fulfillmentJob() {
+  return job({
+    kind: 'fulfill',
+    idempotencyKey: 'fulfill:whitepaper:contact',
+    payload: { fulfillment_kind: 'whitepaper' },
+  });
 }
 
 const message = {
@@ -369,6 +383,166 @@ describe('sendRecipientEmail', () => {
       ],
     });
   });
+
+  it('attaches an approved deliverable to fulfillment mail', async () => {
+    const test = harness({ job: fulfillmentJob() });
+
+    await sendRecipientEmail(
+      test.database,
+      {
+        ...message,
+        campaignTemplate: undefined,
+        attachments: [
+          {
+            filename: 'angular-streaming-guide.pdf',
+            path: 'https://threadplane.ai/whitepapers/angular.pdf',
+          },
+        ],
+      },
+      productionPolicy(),
+      test.dependencies
+    );
+
+    expect(test.send.mock.calls[0]?.[0]).toMatchObject({
+      attachments: [
+        {
+          filename: 'angular-streaming-guide.pdf',
+          path: 'https://threadplane.ai/whitepapers/angular.pdf',
+        },
+      ],
+    });
+  });
+
+  it.each(APPROVED_ATTACHMENT_PATHS)(
+    'submits the approved deliverable path %s unchanged',
+    async (path) => {
+      const test = harness({ job: fulfillmentJob() });
+
+      await sendRecipientEmail(
+        test.database,
+        {
+          ...message,
+          campaignTemplate: undefined,
+          attachments: [{ filename: 'guide.pdf', path }],
+        },
+        productionPolicy(),
+        test.dependencies
+      );
+
+      expect(test.send.mock.calls[0]?.[0]).toMatchObject({
+        attachments: [{ filename: 'guide.pdf', path }],
+      });
+    }
+  );
+
+  it('sends no attachments key when fulfillment mail carries no file', async () => {
+    const test = harness({ job: fulfillmentJob() });
+
+    await sendRecipientEmail(
+      test.database,
+      { ...message, campaignTemplate: undefined },
+      productionPolicy(),
+      test.dependencies
+    );
+
+    expect(test.send.mock.calls[0]?.[0]).not.toHaveProperty('attachments');
+  });
+
+  it('rejects an attachment on a campaign step', async () => {
+    const test = harness();
+
+    await expect(
+      sendRecipientEmail(
+        test.database,
+        {
+          ...message,
+          attachments: [
+            {
+              filename: 'angular-streaming-guide.pdf',
+              path: 'https://threadplane.ai/whitepapers/angular.pdf',
+            },
+          ],
+        },
+        productionPolicy(),
+        test.dependencies
+      )
+    ).rejects.toThrow(/Only fulfill mail carries an attachment/u);
+    expect(test.send).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    'https://threadplane.ai/whitepapers/angular.pdf?x=1',
+    'https://threadplane.ai/../etc/passwd',
+    'https://evil.example/whitepapers/angular.pdf',
+    'http://threadplane.ai/whitepaper.pdf',
+    'https://threadplane.ai/whitepapers/Angular.pdf',
+    'file:///etc/passwd',
+    '/whitepaper.pdf',
+  ])('rejects the off-registry attachment path %s', async (path) => {
+    const test = harness({ job: fulfillmentJob() });
+
+    await expect(
+      sendRecipientEmail(
+        test.database,
+        {
+          ...message,
+          campaignTemplate: undefined,
+          attachments: [{ filename: 'guide.pdf', path }],
+        },
+        productionPolicy(),
+        test.dependencies
+      )
+    ).rejects.toThrow(/attachment\.path/u);
+    expect(test.send).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    '',
+    'guide.exe',
+    'guide.pdf.exe',
+    '../guide.pdf',
+    'Guide.pdf',
+    'guide report.pdf',
+    'guide.pdf\nBcc: victim@example.com',
+  ])('rejects the unsafe attachment filename %j', async (filename) => {
+    const test = harness({ job: fulfillmentJob() });
+
+    await expect(
+      sendRecipientEmail(
+        test.database,
+        {
+          ...message,
+          campaignTemplate: undefined,
+          attachments: [
+            {
+              filename,
+              path: 'https://threadplane.ai/whitepapers/angular.pdf',
+            },
+          ],
+        },
+        productionPolicy(),
+        test.dependencies
+      )
+    ).rejects.toThrow(/attachment\.filename/u);
+    expect(test.send).not.toHaveBeenCalled();
+  });
+
+  it.each([[[]], [[APPROVED_GUIDE, APPROVED_GUIDE]]])(
+    'rejects an attachment list that is not exactly one file (%j)',
+    async (attachments) => {
+      const test = harness({ job: fulfillmentJob() });
+
+      await expect(
+        sendRecipientEmail(
+          test.database,
+          { ...message, campaignTemplate: undefined, attachments },
+          productionPolicy(),
+          test.dependencies
+        )
+      ).rejects.toThrow(/exactly one attachment/u);
+      expect(test.send).not.toHaveBeenCalled();
+    }
+  );
 
   it('returns an explicit rejection for a resolved provider error without recording acceptance', async () => {
     const test = harness({
