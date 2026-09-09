@@ -13,9 +13,15 @@
       }
     },
     {
-      "match": { "userMessage": "reserve", "hasToolResult": true },
+      "match": { "userMessage": "reserve", "hasToolResult": true, "toolResultContains": "Reserved North Pines" },
       "response": {
         "content": "North Pines is reserved for 2 nights — confirmation TP-0288."
+      }
+    },
+    {
+      "match": { "userMessage": "reserve", "hasToolResult": true, "toolResultContains": "Nothing was booked." },
+      "response": {
+        "content": "The reservation for the North Pines campsite was not booked."
       }
     },
     {
@@ -63,7 +69,7 @@
       }
     },
     {
-      "match": { "userMessage": "reserve" },
+      "match": { "userMessage": "reserve", "hasToolResult": false },
       "response": {
         "toolCalls": [
           {
