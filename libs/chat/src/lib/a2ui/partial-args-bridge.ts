@@ -17,6 +17,7 @@ export interface PartialArgsBridge {
 
 interface BridgeState {
   parser: ReturnType<typeof createPartialJsonParser>;
+  args: string;
   /** Number of envelopes already dispatched to the store. */
   dispatchedCount: number;
   /** Surface ids for which a createSurface (real or synthesised) has been
@@ -179,6 +180,7 @@ export function createPartialArgsBridge(store: A2uiSurfaceStore): PartialArgsBri
     if (!s) {
       s = {
         parser: createPartialJsonParser(),
+        args: '',
         dispatchedCount: 0,
         createDispatched: new Set(),
         poisoned: false,
@@ -191,17 +193,21 @@ export function createPartialArgsBridge(store: A2uiSurfaceStore): PartialArgsBri
   function push(toolCallId: string, argsSoFar: string): void {
     const state = stateOf(toolCallId);
     if (state.poisoned) return;
+    if (argsSoFar === state.args) return;
     // Pre-check: poison if the args string isn't a valid JSON prefix.
     if (!isValidJsonPrefix(argsSoFar)) {
       state.poisoned = true;
       return;
     }
     try {
-      // Reset the parser to a fresh state and feed the entire cumulative
-      // string. The parser is monotonic — same input always yields the
-      // same tree — so re-parsing is safe and avoids delta-tracking bugs.
-      state.parser = createPartialJsonParser();
-      state.parser.push(argsSoFar);
+      // Cumulative stream updates normally append. Replaying every previous
+      // character on each update makes a fast-forward seek quadratic.
+      if (!argsSoFar.startsWith(state.args)) {
+        state.parser = createPartialJsonParser();
+        state.args = '';
+      }
+      state.parser.push(argsSoFar.slice(state.args.length));
+      state.args = argsSoFar;
     } catch {
       state.poisoned = true;
       return;
