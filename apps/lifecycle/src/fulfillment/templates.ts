@@ -37,27 +37,49 @@ export type FulfillmentTemplateInput = z.infer<
   typeof FulfillmentTemplateInputSchema
 >;
 
+/**
+ * A file the recipient message carries. `path` is the public URL Resend
+ * fetches the bytes from at send time, so the attachment is always the
+ * currently deployed PDF; `filename` is what the recipient sees. Both are
+ * re-checked against a closed registry in libs/growth before submission.
+ */
+export interface RecipientAttachment {
+  readonly filename: string;
+  readonly path: string;
+}
+
 export interface RecipientTemplate {
   readonly subject: string;
   readonly body: string;
+  /** Set only by the whitepaper context; every other context sends no file. */
+  readonly attachment?: RecipientAttachment;
 }
 
+/**
+ * The filenames match the ones apps/website WhitePaperForm.tsx puts on the
+ * on-page download, so the attachment and the direct download are the same
+ * name to a contact who takes both.
+ */
 const WHITEPAPERS = {
   overview: {
     subject: 'Your Angular agent readiness guide',
     url: 'https://threadplane.ai/whitepaper.pdf',
+    filename: 'angular-agent-readiness-guide.pdf',
   },
   angular: {
     subject: 'Your Angular streaming guide',
     url: 'https://threadplane.ai/whitepapers/angular.pdf',
+    filename: 'angular-streaming-guide.pdf',
   },
   render: {
     subject: 'Your Angular generative UI guide',
     url: 'https://threadplane.ai/whitepapers/render.pdf',
+    filename: 'angular-genui-guide.pdf',
   },
   chat: {
     subject: 'Your Angular agent chat guide',
     url: 'https://threadplane.ai/whitepapers/chat.pdf',
+    filename: 'angular-chat-guide.pdf',
   },
 } as const;
 
@@ -84,9 +106,12 @@ export function renderFulfillmentTemplate(
   switch (input.context) {
     case 'whitepaper': {
       const paper = WHITEPAPERS[input.paper];
+      // The guide rides along as an attachment. The link stays as a fallback
+      // for mail gateways that strip attachments from an unfamiliar sender.
       return {
         subject: paper.subject,
-        body: `Here is the guide you requested:\n${paper.url}\n\nRead it when you have a quiet hour.\nIf something in it does not hold up in your own code, reply and tell me.`,
+        body: `Here is the guide you requested, attached to this message.\n\nIf the attachment does not come through, it is also here:\n${paper.url}\n\nRead it when you have a quiet hour.\nIf something in it does not hold up in your own code, reply and tell me.`,
+        attachment: { filename: paper.filename, path: paper.url },
       };
     }
     case 'newsletter':
