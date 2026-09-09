@@ -76,6 +76,10 @@ The AG-UI adapter extends the neutral `Agent` contract with AG-UI-specific proto
 |-------|------|-------------|
 | `customEvents()` | `CustomStreamEvent[]` | Custom events emitted by the backend during a run. Accumulates per run; resets when `RUN_STARTED` arrives. |
 | `clientTools` | `ClientToolsCapability` | Browser client-tool catalog, pending calls, and result resolution used by `<chat [clientTools]>`. |
+| `ready` | `Promise<void>` | Resolves after configured persisted state is hydrated. |
+| `interruptSession()` | `InterruptSessionSnapshot` | Full batch, generation, ownership phase, and retained resume attempt. |
+| `reconcileInterrupt()` | `Promise<void>` | Applies authoritative recovery using the application-provided persistence reconciler. |
+| `dispose()` | `void` | Stops local work; providers call it on injector destruction. Does not cancel backend checkpoints. |
 | `subagents()` | `Map<string, Subagent>` | Subagent runs from `SUBAGENT_*` events, keyed by `subagentRunId`, plus the `ACTIVITY_*` convention (`activityType: 'subagent'`, keyed by `messageId`), projected to the neutral subagent contract. |
 
 `injectAgent()` returns the `AgUiAgent` type — the neutral `Agent` contract plus these AG-UI-specific fields — so they are reachable directly, no cast required:
@@ -100,11 +104,15 @@ Use the runtime-neutral submit shape for normal chat input:
 await chat.submit({ message: 'Summarize this document' });
 ```
 
-Resume an interrupt by passing a `resume` payload:
+Resume a pending single interrupt by passing the payload expected by the backend:
 
 ```ts
 await chat.submit({ resume: { approved: true } });
 ```
+
+Native batches require every pending ID exactly once; cancelled entries omit payload. Capture `chat.interruptSession().generation` when rendering approval controls and pass `{ interruptGeneration: generation }` as the second submit argument to reject stale decisions. For the Mastra integration, configure `interruptTransport: 'mastra-command'` on the provider.
+
+Await `chat.ready` before showing restored controls. `retry()` can resend the retained decision after a proven pre-dispatch failure; uncertain delivery requires `chat.reconcileInterrupt()` with authoritative backend evidence before another attempt. These extensions do not imply the same recovery API on the LangGraph adapter.
 
 ## Regenerate semantics
 

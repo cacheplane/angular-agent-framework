@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import { INTERRUPT_GUIDANCE } from '../../lib/interrupt-guidance';
 
 function loadVersion(): string {
   const candidates = [
@@ -48,6 +49,8 @@ function buildLlmsTxt(): string {
     '- ChatComponent, ChatMessageListComponent, ChatInputComponent — composable Angular components consuming the runtime-neutral Agent contract.',
     '- mockLangGraphAgent — testing utility with a writable signal-backed LangGraphAgent.',
     '- runAgentConformance / runAgentWithHistoryConformance — conformance suites for adapter authors.',
+    '',
+    INTERRUPT_GUIDANCE,
     '',
     '## Minimal LangGraph example',
     "import { provideAgent, injectAgent } from '@threadplane/langgraph';",

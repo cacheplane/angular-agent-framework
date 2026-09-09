@@ -1,5 +1,5 @@
 ---
-description: How the interrupts example drafts a refund, pauses at interrupt(), and resumes from an approval card, plus typed payloads and timeout strategies
+description: Pause and resume a LangGraph refund workflow, with typed payloads, captured-command retry, server checkpoint restoration, and timeout strategies
 ---
 
 # Interrupts
@@ -47,7 +47,7 @@ Splitting extraction from narration is deliberate: the card needs typed fields, 
 Notice the `kind` field on the payload. It is not required by LangGraph; it is how the frontend tells this interrupt apart from any other one the graph might raise. Notice too that the node validates what came back: a resume value that is not a dictionary, or one whose `approved` is missing or false, is treated as a rejection.
 
 <Callout type="tip" title="A resumed node re-executes from the top">
-LangGraph resumes by running the interrupting node again, and `interrupt()` returns the resume value instead of pausing a second time. Every line above the `interrupt()` call therefore runs twice, so keep that stretch free of side effects. Reading state, as the example does, is safe; charging a card there is not.
+LangGraph resumes by running the interrupting node again, and `interrupt()` returns the resume value instead of pausing a second time. Every line above the `interrupt()` call runs again, including on later retries, so keep that stretch free of side effects. Reading state, as the example does, is safe; charging a card there is not.
 </Callout>
 
 ### Routing on the decision
@@ -130,6 +130,10 @@ LangGraph re-runs the interrupting node, `interrupt()` returns the resume value,
 `retry()` retains command-only submissions, including a resume with no message payload, and replays the captured command and update values. It does not append another user message. The values are captured when submitted, so later edits to the caller's object cannot change the retry. A retry also drops the previous request's abort signal, allowing a fresh request after that signal was aborted.
 
 Before retrying a resume whose server outcome is unknown, inspect the thread's current checkpoint. A transport failure does not prove the server rejected the decision. Checkpoint hydration restores pending interrupts when you reconnect to the same thread; retaining the thread ID and the server checkpoint is required. This adapter's retry support does not add a client claim ledger, compare-and-swap storage, or transactional rollback of streamed client state.
+
+The retry is retained in the current client instance; reopening a browser restores the server checkpoint, not that instance's captured retry command. Inspect the restored pending interrupt and the backend outcome before deciding what action to offer. Neither a stopped stream nor a dismissed approval card proves that the backend completed or cancelled the work.
+
+The runtime-neutral contract supplies `interrupt()` for display and `submit({ resume })` for the application's decision. AG-UI's `persistence`, `ready`, `interruptSession()`, `interruptGeneration`, and `reconcileInterrupt()` are adapter-specific extensions, not LangGraph restoration options. Its `requestNotDispatched` retry rule also does not describe LangGraph's captured-command retry. Server checkpoint retention and safe handling of repeated side effects remain backend responsibilities.
 
 ### Migration note
 
@@ -264,7 +268,7 @@ Avoid running server-side and client-side timeouts together. If both fire, the s
 </Callout>
 
 <Callout type="info" title="Checkpoint persistence saves you">
-Because interrupts are checkpointed, the operator can close the browser, come back hours later, and still approve or reject the pending action. The graph state is frozen in the checkpoint store, not in browser memory.
+With a durable server checkpointer and the same thread ID, the operator can close the browser and later restore an action that is still pending. A lost or expired checkpoint cannot be recreated from browser state; another operator or a server timeout may also have already answered it.
 </Callout>
 
 ## What's Next

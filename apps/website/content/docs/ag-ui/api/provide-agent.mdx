@@ -46,8 +46,12 @@ const agent = injectAgent(); // AgUiAgent<Record<string, unknown>>
 | `url` | `string` | HTTP endpoint for the AG-UI backend agent. Required. |
 | `agentId` | `string` | Agent identifier, when the endpoint serves more than one agent. |
 | `threadId` | `string` | Thread to connect to on start. Omit to begin a fresh conversation. |
+| `interruptTransport` | `InterruptTransport` | `auto` (default), `protocol`, `legacy-command`, or `mastra-command`. Native batches win in `auto`; select the Mastra command profile for the Mastra integration. |
+| `persistence` | `AgUiInterruptPersistence` | Application-owned store and optional authoritative reconciler. Requires a stable configured `threadId` and scoped namespace. |
 | `headers` | `Record<string, string>` | Extra HTTP headers sent with every request. |
 | `telemetry` | `AgentRuntimeTelemetrySink \| false` | Omit for automatic development-only collection, pass `false` to disable it, or pass an app-owned sink to receive the runtime lifecycle events yourself. |
+
+With persistence enabled, await `agent.ready` before displaying restored approval controls. The store must implement atomic `compareAndSwap`; browser state alone cannot restore a lost backend checkpoint. The provider disposes the adapter when its injector is destroyed, stopping local work without cancelling backend checkpoints.
 
 ## Static versus factory config
 

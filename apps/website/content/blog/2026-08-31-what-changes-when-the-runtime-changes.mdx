@@ -299,7 +299,7 @@ I believe it holds, because the contract is built on the protocol event vocabula
 But belief is not measurement, and I am not going to dress one up as the other.
 
 Two smaller caveats.
-The interrupt path accepts two conventions — the protocol-standard `RUN_FINISHED` interrupt outcome, and the `CUSTOM` `on_interrupt` event the LangGraph bridge emits — and within a single run the first signal wins.
+The interrupt path accepts two conventions — the protocol-standard `RUN_FINISHED` interrupt outcome, and the `CUSTOM` `on_interrupt` event the LangGraph bridge emits — and retains both in one session. Updated September 9, 2026: native batches take precedence in `auto` mode regardless of arrival order; Mastra uses the explicit `mastra-command` profile.
 And the subagent path rests on the protocol's `SUBAGENT_*` events, which the adapter consumes directly; each measured runtime reaches them through a small in-tree emitter, as [the measurement post](/blog/we-measured-the-runtime-swap#what-stayed-partial) records.
 
 *Editor's note: the measurement exists.*

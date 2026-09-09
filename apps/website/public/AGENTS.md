@@ -70,5 +70,17 @@ export class ChatComponent {
 - Scoped config: re-provide `provideAgent({ apiUrl, assistantId })` in a component `providers` array for a subtree
 - Testing: use `MockAgentTransport` — never mock `injectAgent()` itself
 
+
+## Interrupts and recovery
+
+- Both adapters expose `interrupt()` and `submit({ resume })`; the backend defines the decision payload.
+- AG-UI `auto` prefers native interrupt batches regardless of event order. Answer every pending native ID once; `status: 'cancelled'` entries omit `payload`.
+- For Mastra, set `interruptTransport: 'mastra-command'`. The adapter sends the decision in `forwardedProps.command.resume` and observed correlation IDs in `command.interruptEvent`. The campsite example rejects with `{ approved: false }`.
+- AG-UI restoration is opt-in through `persistence`: stable `threadId`, scoped namespace, and application-owned atomic compare-and-swap storage. Await `agent.ready` before rendering restored decisions.
+- Capture `interruptSession().generation` when rendering and pass it as the `interruptGeneration` submit option to reject stale controls.
+- Retry the retained decision only after proven non-dispatch or authoritative reconciliation. Configure `persistence.reconcile` and call `agent.reconcileInterrupt()` for uncertain outcomes; a network error alone does not prove non-execution.
+- These recovery APIs are AG-UI extensions. LangGraph uses its own thread/checkpoint APIs. Client storage cannot recreate a lost backend checkpoint or guarantee exactly-once side effects.
+- An approval card closing or local streaming stopping does not prove backend completion or cancellation.
+
 ## Version check
 If this file is stale, fetch the latest: https://threadplane.ai/llms-full.txt
