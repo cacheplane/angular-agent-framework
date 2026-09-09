@@ -6,7 +6,6 @@ import { getLibraryConfig, type LibraryId } from '../../lib/docs-config';
 import { LogoMark } from '../ui/LogoMark';
 import { NavDesktop } from './NavDesktop';
 import { NavMobile } from './NavMobile';
-import { useNavSurface } from './useNavSurface';
 
 export function Nav() {
   const pathname = usePathname();
@@ -21,38 +20,31 @@ export function Nav() {
   const docsLibrary = (getLibraryConfig(activeLibrary)?.id ??
     null) as LibraryId | null;
   const navRef = useRef<HTMLElement>(null);
-  const { surface, sentinelRef } = useNavSurface(pathname);
 
   return (
-    <>
-      {/* Outside the fixed <nav> so it actually scrolls: `body` is its
-          containing block, so `top: 0` is the top of the document. */}
-      <div ref={sentinelRef} className="nav-scroll-sentinel" aria-hidden="true" />
-      <nav
-        ref={navRef}
-        className="fixed top-0 left-0 right-0 z-50 nav-bar"
-        data-site-navigation=""
-        data-surface={surface}
-        data-route={isDocsPage ? 'docs' : 'marketing'}
-      >
-        {/* Top bar */}
-        <div className="flex items-center justify-between px-6 py-4 md:px-8 md:py-5">
-          <Link href="/" className="nav-logo-link">
-            <LogoMark size="md" />
-          </Link>
+    <nav
+      ref={navRef}
+      className="fixed top-0 left-0 right-0 z-50 nav-bar"
+      data-site-navigation=""
+      data-route={isDocsPage ? 'docs' : 'marketing'}
+    >
+      {/* Top bar */}
+      <div className="flex items-center justify-between px-6 py-4 md:px-8 md:py-5">
+        <Link href="/" className="nav-logo-link">
+          <LogoMark size="md" />
+        </Link>
 
-          {/* Desktop links */}
-          <NavDesktop />
+        {/* Desktop links */}
+        <NavDesktop />
 
-          <NavMobile
-            isDocsPage={isDocsPage}
-            docsLibrary={docsLibrary}
-            activeSection={activeSection}
-            activeSlug={activeSlug}
-            navRef={navRef}
-          />
-        </div>
-      </nav>
-    </>
+        <NavMobile
+          isDocsPage={isDocsPage}
+          docsLibrary={docsLibrary}
+          activeSection={activeSection}
+          activeSlug={activeSlug}
+          navRef={navRef}
+        />
+      </div>
+    </nav>
   );
 }
