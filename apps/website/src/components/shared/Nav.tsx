@@ -1,69 +1,14 @@
 'use client';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { getLibraryConfig, type LibraryId } from '../../lib/docs-config';
-import {
-  trackCtaClick,
-  trackExternalLinkClick,
-} from '../../lib/analytics/client';
-import type { AnalyticsLibrary } from '../../lib/analytics/events';
 import { LogoMark } from '../ui/LogoMark';
-import { Button } from '../ui/Button';
-import { GitHubIcon } from '../ui/GitHubIcon';
-import { GITHUB_REPO_URL } from '../../lib/positioning';
-import { DEMOS, demoCtaSuffix } from '../../lib/demos';
-import { DocsContextContent } from '../docs/DocsControlPlane';
-import { NavDesktop, links, trackNavLink } from './NavDesktop';
+import { NavDesktop } from './NavDesktop';
+import { NavMobile } from './NavMobile';
 import { useNavSurface } from './useNavSurface';
 
-const toAnalyticsLibrary = (library: LibraryId | null): AnalyticsLibrary => {
-  switch (library) {
-    case 'langgraph':
-    case 'render':
-    case 'chat':
-    case 'ag-ui':
-      return library;
-    default:
-      return 'unknown';
-  }
-};
-
-
-function MenuIcon() {
-  return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 20 20"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      aria-hidden="true"
-    >
-      <path d="M3 5h14M3 10h14M3 15h14" />
-    </svg>
-  );
-}
-
-function CloseIcon() {
-  return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 20 20"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      aria-hidden="true"
-    >
-      <path d="M5 5l10 10M15 5L5 15" />
-    </svg>
-  );
-}
-
 export function Nav() {
-  const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const isDocsPage = pathname.startsWith('/docs');
   const pathParts = pathname.split('/').filter(Boolean);
@@ -77,118 +22,6 @@ export function Nav() {
     null) as LibraryId | null;
   const navRef = useRef<HTMLElement>(null);
   const { surface, sentinelRef } = useNavSurface(pathname);
-  const mobileTriggerRef = useRef<HTMLButtonElement>(null);
-  const mobileDialogRef = useRef<HTMLDivElement>(null);
-  const restoreMobileFocusRef = useRef(false);
-  const pendingMobileSearchRef = useRef(false);
-  const cancelScheduledMobileRestoreRef = useRef<(() => void) | null>(null);
-  const cancelScheduledMobileRestore = useCallback(() => {
-    cancelScheduledMobileRestoreRef.current?.();
-    cancelScheduledMobileRestoreRef.current = null;
-  }, []);
-  const closeMobileMenu = useCallback((openSearch = false) => {
-    restoreMobileFocusRef.current = true;
-    pendingMobileSearchRef.current = openSearch;
-    setOpen(false);
-  }, []);
-
-  const [mobileTab, setMobileTab] = useState<'site' | 'docs'>(
-    isDocsPage ? 'docs' : 'site'
-  );
-
-  // Lock body scroll when mobile menu is open
-  useEffect(() => {
-    if (open) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [open]);
-  useEffect(() => {
-    const nav = navRef.current;
-    const siteContent = document.getElementById('site-content');
-    if (nav) nav.inert = open;
-    if (siteContent) siteContent.inert = open;
-    return () => {
-      if (nav) nav.inert = false;
-      if (siteContent) siteContent.inert = false;
-    };
-  }, [open]);
-  useEffect(() => {
-    if (typeof window.matchMedia !== 'function') return undefined;
-    const desktop = window.matchMedia('(min-width: 64rem)');
-    const closeAtDesktop = ({ matches }: Pick<MediaQueryList, 'matches'>) => {
-      if (!matches) return;
-      restoreMobileFocusRef.current = false;
-      pendingMobileSearchRef.current = false;
-      cancelScheduledMobileRestore();
-      setOpen(false);
-    };
-    const handleChange = (event: MediaQueryListEvent) => closeAtDesktop(event);
-    desktop.addEventListener('change', handleChange);
-    closeAtDesktop(desktop);
-    return () => desktop.removeEventListener('change', handleChange);
-  }, [cancelScheduledMobileRestore]);
-  useEffect(() => {
-    if (open || !restoreMobileFocusRef.current) return undefined;
-    const restoreFocusAndSearch = () => {
-      cancelScheduledMobileRestoreRef.current = null;
-      if (!restoreMobileFocusRef.current) return;
-      restoreMobileFocusRef.current = false;
-      mobileTriggerRef.current?.focus();
-      if (pendingMobileSearchRef.current) {
-        pendingMobileSearchRef.current = false;
-        document.dispatchEvent(
-          new KeyboardEvent('keydown', { key: 'k', metaKey: true })
-        );
-      }
-    };
-    if (typeof window.requestAnimationFrame === 'function') {
-      const frame = window.requestAnimationFrame(restoreFocusAndSearch);
-      cancelScheduledMobileRestoreRef.current = () =>
-        window.cancelAnimationFrame(frame);
-    } else {
-      const timer = window.setTimeout(restoreFocusAndSearch, 0);
-      cancelScheduledMobileRestoreRef.current = () =>
-        window.clearTimeout(timer);
-    }
-    return cancelScheduledMobileRestore;
-  }, [cancelScheduledMobileRestore, open]);
-  useEffect(() => {
-    if (!open) return undefined;
-    const dialog = mobileDialogRef.current;
-    const focusable = () =>
-      Array.from(
-        dialog?.querySelectorAll<HTMLElement>(
-          'a[href], button:not(:disabled), [tabindex]:not([tabindex="-1"])'
-        ) ?? []
-      );
-    focusable()[0]?.focus();
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        closeMobileMenu();
-        return;
-      }
-      if (event.key !== 'Tab') return;
-      const items = focusable();
-      const first = items[0];
-      const last = items.at(-1);
-      if (!first || !last) return;
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-    document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, [closeMobileMenu, open]);
 
   return (
     <>
@@ -211,175 +44,15 @@ export function Nav() {
           {/* Desktop links */}
           <NavDesktop />
 
-          {/* Mobile hamburger */}
-          <button
-            ref={mobileTriggerRef}
-            className="lg:hidden inline-flex items-center justify-center nav-hamburger"
-            onClick={() => {
-              setOpen(!open);
-              if (!open) setMobileTab(isDocsPage ? 'docs' : 'site');
-            }}
-            aria-expanded={open}
-            aria-hidden={open || undefined}
-            tabIndex={open ? -1 : 0}
-            aria-label="Open menu"
-          >
-            {open ? <CloseIcon /> : <MenuIcon />}
-          </button>
+          <NavMobile
+            isDocsPage={isDocsPage}
+            docsLibrary={docsLibrary}
+            activeSection={activeSection}
+            activeSlug={activeSlug}
+            navRef={navRef}
+          />
         </div>
       </nav>
-
-      {/* Mobile full-screen overlay — rendered outside nav to avoid stacking context issues */}
-      {open && (
-        <div
-          ref={mobileDialogRef}
-          role="dialog"
-          aria-modal="true"
-          aria-label="Mobile navigation"
-          className="lg:hidden fixed left-0 right-0 bottom-0 nav-mobile-overlay"
-        >
-          <div className="nav-mobile-overlay-inner">
-            <button
-              type="button"
-              className="nav-mobile-dialog-close"
-              aria-label="Close menu"
-              onClick={() => closeMobileMenu()}
-            >
-              <CloseIcon />
-            </button>
-
-            {/* Primary tabs — only on docs pages */}
-            {isDocsPage && (
-              <div className="nav-mtabs">
-                <button
-                  onClick={() => setMobileTab('site')}
-                  className="nav-mtab"
-                  data-active={mobileTab === 'site' || undefined}
-                >
-                  Site
-                </button>
-                <button
-                  onClick={() => setMobileTab('docs')}
-                  className="nav-mtab"
-                  data-active={mobileTab === 'docs' || undefined}
-                >
-                  Docs
-                </button>
-              </div>
-            )}
-
-            {mobileTab === 'docs' && isDocsPage ? (
-              <div
-                onClickCapture={(event) => {
-                  const link = (
-                    event.target as HTMLElement
-                  ).closest<HTMLAnchorElement>('a[data-docs-navlink]');
-                  if (!link) return;
-                  trackCtaClick({
-                    surface: 'mobile_nav',
-                    destination_url: link.getAttribute('href') ?? link.href,
-                    cta_id: 'mobile_nav_docs_page',
-                    cta_text: link.textContent?.trim() ?? 'Docs page',
-                    library: toAnalyticsLibrary(docsLibrary),
-                  });
-                }}
-              >
-                <DocsContextContent
-                  activeLibrary={docsLibrary}
-                  activeSection={activeSection || 'getting-started'}
-                  activeSlug={activeSlug || 'introduction'}
-                  mobile
-                  onNavigate={() => closeMobileMenu()}
-                  onSearchHandoff={() => closeMobileMenu(true)}
-                />
-              </div>
-            ) : null}
-
-            {/* Site content */}
-            {(mobileTab === 'site' || !isDocsPage) && (
-              <div className="nav-mobile-list">
-                {links.map((l) => {
-                  const LinkEl = l.external ? 'a' : Link;
-                  const extraProps = l.external
-                    ? { target: '_blank', rel: 'noopener noreferrer' }
-                    : {};
-                  return (
-                    <LinkEl
-                      key={l.href}
-                      href={l.href}
-                      {...extraProps}
-                      onClick={() => {
-                        trackNavLink(l.label, l.href, l.external, 'mobile_nav');
-                        closeMobileMenu();
-                      }}
-                      className="nav-mobile-site-link"
-                    >
-                      {l.label}
-                    </LinkEl>
-                  );
-                })}
-                {DEMOS.map((demo) => (
-                  <a
-                    key={demo.key}
-                    href={demo.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => {
-                      trackExternalLinkClick(demo.href, {
-                        surface: 'mobile_nav',
-                        cta_id: `mobile_nav_demo_${demoCtaSuffix(demo.key)}`,
-                        cta_text: demo.label,
-                      });
-                      closeMobileMenu();
-                    }}
-                    className="nav-mobile-site-link"
-                  >
-                    {demo.label}
-                  </a>
-                ))}
-                <a
-                  href={GITHUB_REPO_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => {
-                    trackExternalLinkClick(
-                      GITHUB_REPO_URL,
-                      {
-                        surface: 'mobile_nav',
-                        cta_id: 'mobile_nav_github',
-                        cta_text: 'GitHub',
-                      }
-                    );
-                    closeMobileMenu();
-                  }}
-                  className="nav-mobile-github-link"
-                >
-                  <GitHubIcon /> GitHub
-                </a>
-                <div className="nav-mobile-cta-wrap">
-                  <Button
-                    variant="primary"
-                    size="lg"
-                    href="/contact"
-                    onClick={() => {
-                      trackCtaClick({
-                        surface: 'mobile_nav',
-                        destination_url: '/contact',
-                        cta_id: 'mobile_nav_talk_to_us',
-                        cta_text: 'Talk to Us',
-                      });
-                      closeMobileMenu();
-                    }}
-                    className="nav-mobile-cta"
-                  >
-                    Talk to Us
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </>
   );
 }
