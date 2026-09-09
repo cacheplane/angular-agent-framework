@@ -58,6 +58,10 @@ npx nx e2e website -- --testFiles=e2e/nav-height.spec.ts
 
 **An entrance animation makes geometry assertions flaky.** A test that samples several `boundingBox()` values in sequence can read them mid-interpolation — Task 4's four-item layout test failed roughly one run in five with a ~2px discrepancy after a 140ms transform was added. Await `getAnimations().finished` on the animating element before sampling. Waiting for the animation to settle is legitimate; a fixed `waitForTimeout` or a retry-until-green loop is masking, and the assertions themselves must not change.
 
+**Several worktrees on this machine run this same suite.** Ports 4308 (website) and 4300 (the cockpit runtime webServer) are contended, and a neighbouring worktree can start a server *during* your run — which surfaces as a wall of `net::ERR_CONNECTION_REFUSED` with zero assertion failures, not as a normal test failure. Read the failures before believing them: if every one is a connection error, it is contention, not your change.
+
+Never kill a server whose working directory is a different worktree — another session is using it. Identify a holder with `lsof -ti tcp:4308` then `lsof -a -p <pid> -d cwd -Fn`. To run in isolation regardless of who holds what, start your own server on a free port and point Playwright at it with `BASE_URL` (`playwright.config.ts` skips its own webServers when `BASE_URL` is set). Kill only orphans confirmed to be from this worktree.
+
 **Free the port first.** A previous run's `next-server` can outlive it and hold the Playwright web-server port, and the failure does not say so. If a spec run hangs or the server will not start, find and kill the orphan before debugging anything else — one was found 19 minutes stale on port 4308 during Task 4. A stale server is also perfectly capable of serving an OLD bundle, so a green run against one proves nothing.
 
 **Tests that will break, and which task fixes each.** These exist today in `src/components/shared/Nav.spec.tsx` and assert the old IA. Do not delete them ahead of time — each is rewritten in the task that changes its behavior:
