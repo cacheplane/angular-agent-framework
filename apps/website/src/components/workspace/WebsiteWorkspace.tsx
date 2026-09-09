@@ -294,6 +294,36 @@ function WebsiteWorkspaceSurface({
     [handleMobileModalPresenceChange]
   );
 
+  /*
+   * Re-apply the URL fragment once the shell owns the scrolling.
+   *
+   * A hard load of `/docs/…#heading` — every shared link, search result and
+   * docs-search deep link takes that shape — starts with the article rendered
+   * straight into the document, so the browser performs its native scroll to
+   * the fragment against the page scroller. Mounting this surface then makes
+   * `html:has([data-website-workspace-host])` match, which is
+   * `overflow: hidden` (styles/docs.css); the page scroller disappears, that
+   * scroll is discarded, and the real scroller — `.docs-workspace-article`,
+   * mounted with it — starts at zero. Nothing puts the reader back, so the
+   * heading they followed is left off screen with no error anywhere.
+   *
+   * This runs once, on the mount that takes the scrolling over. Later
+   * fragment navigation is same-document and the browser handles it inside
+   * the pane on its own. Guarded by e2e/docs-deep-link.spec.ts.
+   */
+  useEffect(() => {
+    const fragment = window.location.hash.slice(1);
+    if (!fragment) return;
+    let id: string;
+    try {
+      id = decodeURIComponent(fragment);
+    } catch {
+      // A malformed escape is not an element id either way.
+      return;
+    }
+    document.getElementById(id)?.scrollIntoView({ block: 'start' });
+  }, []);
+
   return (
     <ThemeProvider theme="light">
       <div className="website-workspace-host" data-website-workspace-host="">
