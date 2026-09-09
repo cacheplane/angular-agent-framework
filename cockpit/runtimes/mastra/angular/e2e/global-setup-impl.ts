@@ -12,7 +12,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { portsFor } from '../../../../../cockpit/ports.mjs';
-import { startAimock, type AimockHandle } from '@threadplane-internal/e2e-harness';
+import { resolveAimockLaunch, startAimock, type AimockHandle } from '@threadplane-internal/e2e-harness';
 
 const ports = portsFor('cockpit-runtimes-mastra-angular');
 const angularProject = 'cockpit-runtimes-mastra-angular';
@@ -57,7 +57,8 @@ export default async function globalSetup(): Promise<void> {
   const fixturesDir = resolve(__dirname, 'fixtures');
   const serviceDir = resolve(root, backendCwd);
 
-  const aimock = await startAimock({ mode: 'replay', fixturePath: fixturesDir });
+  const launch = resolveAimockLaunch(fixturesDir);
+  const aimock = await startAimock(launch.startOptions);
   console.log(`[mastra-harness] aimock listening at ${aimock.baseUrl}`);
 
   // The service is self-contained (own package.json + lockfile, deps NOT in
@@ -77,7 +78,7 @@ export default async function globalSetup(): Promise<void> {
       ...process.env,
       PORT: String(backendPort),
       AG_UI_INTERNAL_TOKEN: INTERNAL_TOKEN,
-      OPENAI_API_KEY: 'test-not-used',
+      OPENAI_API_KEY: launch.openaiApiKey,
       OPENAI_BASE_URL: aimock.baseUrl,
       AG_UI_MASTRA_DB_PATH: join(dbDir, 'mastra.db'),
     },

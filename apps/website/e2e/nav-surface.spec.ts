@@ -1,44 +1,111 @@
-import { test, expect } from '@playwright/test';
-import { HERO_ROUTES } from '../src/components/shared/nav-config';
+import { test, expect, type Page } from '@playwright/test';
 
 /**
- * A hand-maintained hero-route list drifts. A unit test over the list cannot
- * catch a page that stopped rendering a hero, so the guard has to visit the
- * page and read the computed background.
+ * The bar is one CSS surface: a translucent white over a backdrop blur, on
+ * every route at every scroll position. There is no route list, no sentinel,
+ * no observer and no `data-surface` attribute any more, so there is nothing
+ * here to assert about state — only that the single surface is actually the
+ * one that renders.
  *
- * The background is asserted with `toHaveCSS` rather than a one-shot
- * `getComputedStyle` read: `.nav-bar` transitions `background` over 200ms, so
- * the attribute flips a fifth of a second before the colour finishes moving,
- * and a single read lands mid-fade on a partial alpha. `toHaveCSS` retries,
- * which is what makes this assert the resting surface instead of the timing.
+ * Two things can silently take that away, which is why this suite reads the
+ * computed style out of a real browser rather than trusting the source:
+ *
+ * 1. The blur is prefixed by Lightning CSS, not by hand. Writing
+ *    `-webkit-backdrop-filter` in chrome.css makes Lightning collapse the pair
+ *    down to the prefixed property alone, and Chromium does not implement
+ *    `-webkit-backdrop-filter` at all — the bar keeps its 72% alpha and loses
+ *    the blur, which is an unreadable smear rather than a visible failure.
+ * 2. Anything that reintroduces a scroll- or route-dependent surface brings
+ *    back the hydration flash this replaced.
  */
-for (const route of HERO_ROUTES) {
-  test(`the nav is transparent at rest on ${route}`, async ({ page }) => {
-    await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto(route);
-    const nav = page.locator('nav').first();
-    await expect(nav).toHaveAttribute('data-surface', 'transparent');
-    await expect(nav).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
-  });
 
-  test(`the nav solidifies once ${route} is scrolled`, async ({ page }) => {
-    await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto(route);
-    await page.mouse.wheel(0, 600);
+const DOCS_ROUTE = '/docs/langgraph/getting-started/introduction';
 
-    const nav = page.locator('nav').first();
-    await expect(nav).toHaveAttribute('data-surface', 'solid');
-    await expect(nav).not.toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+interface BarSurface {
+  readonly background: string;
+  readonly backdropFilter: string;
+  readonly boxShadow: string;
+  readonly borderBottomColor: string;
+}
+
+async function readBarSurface(page: Page): Promise<BarSurface> {
+  return page.evaluate(() => {
+    const bar = document.querySelector('.nav-bar');
+    if (!bar) throw new Error('no .nav-bar on the page');
+    const style = getComputedStyle(bar);
+    return {
+      background: style.backgroundColor,
+      backdropFilter: style.backdropFilter,
+      boxShadow: style.boxShadow,
+      borderBottomColor: style.borderBottomColor,
+    };
   });
 }
 
-test('the nav is solid on a route with no hero', async ({ page }) => {
+/** The alpha of an `rgb()`/`rgba()` computed colour; 1 when none is present. */
+function alphaOf(color: string): number {
+  const parts = color.match(/-?[\d.]+/g);
+  if (!parts) throw new Error(`unparseable colour: ${color}`);
+  return parts.length >= 4 ? Number(parts[3]) : 1;
+}
+
+for (const [label, route] of [
+  ['the marketing hero', '/'],
+  ['a docs page', DOCS_ROUTE],
+] as const) {
+  test(`the nav bar is translucent and blurred on ${label}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(route);
+    await expect(page.locator('nav').first()).toBeVisible();
+
+    const surface = await readBarSurface(page);
+
+    // Strictly between 0 and 1: fully opaque is the old solid bar, fully
+    // transparent is the old hero state. Neither exists any more.
+    const alpha = alphaOf(surface.background);
+    expect(alpha, `background was ${surface.background}`).toBeGreaterThan(0);
+    expect(alpha, `background was ${surface.background}`).toBeLessThan(1);
+
+    // `none` here is the Lightning-CSS prefix trap in the header comment: the
+    // translucency survives it, so only this read catches it.
+    expect(surface.backdropFilter).not.toBe('none');
+    expect(surface.backdropFilter).toContain('blur');
+
+    // The redesign removed the shadow deliberately; the hairline is the edge.
+    expect(surface.boxShadow).toBe('none');
+    expect(surface.borderBottomColor).not.toBe('rgba(0, 0, 0, 0)');
+  });
+}
+
+/**
+ * The guard for the whole simplification. `useNavSurface`, its 8px sentinel and
+ * its IntersectionObserver existed only to change this value on scroll; if any
+ * of that comes back — or a scroll listener, or a route-conditional class —
+ * these two reads stop matching.
+ *
+ * Proved non-vacuous by mutation: adding a rule that repaints `.nav-bar` once
+ * the page is scrolled fails this case on the background line.
+ */
+test('the nav bar surface does not change when the page is scrolled', async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto('/docs/langgraph/getting-started/introduction');
-  await expect(page.locator('nav').first()).toHaveAttribute(
-    'data-surface',
-    'solid',
-  );
+  await page.goto('/');
+  await expect(page.locator('nav').first()).toBeVisible();
+
+  const atTop = await readBarSurface(page);
+
+  await page.mouse.wheel(0, 900);
+  await page.waitForFunction(() => window.scrollY > 400);
+  // Long enough that a reintroduced 200ms surface transition would have
+  // finished, so a difference here is a real difference and not a fade caught
+  // mid-flight.
+  await page.waitForTimeout(600);
+  const scrolled = await readBarSurface(page);
+
+  expect(scrolled).toEqual(atTop);
 });
 
 /**
@@ -48,11 +115,9 @@ test('the nav is solid on a route with no hero', async ({ page }) => {
  * also result from a filled button that happened to be 25px tall, so nothing
  * else asserts the surface actually changed.
  *
- * Marketing is asserted as "has a fill", not "has a yellow fill": at rest
- * (scroll 0) `/` is a HERO_ROUTES page with a transparent `.nav-bar`, and the
- * transparent-surface rule inverts the CTA to a navy fill rather than leaving
- * it in its normal yellow — asserting a specific colour here would encode
- * that scroll-position inversion and break the moment either theme changes.
+ * Marketing is asserted as "has a fill", not "has a yellow fill", so the case
+ * survives a retheme; the docs side can name its colour because the demotion is
+ * specifically to `--color-accent` as a text link.
  *
  * Both reads use `toHaveCSS`, not a one-shot `getComputedStyle`: the button
  * itself transitions `background-color`/`color` over 120ms on mount, so an
@@ -73,7 +138,7 @@ test('the nav CTA is a filled button on marketing but a text link on docs', asyn
     'rgba(0, 0, 0, 0)',
   );
 
-  await page.goto('/docs/langgraph/getting-started/introduction');
+  await page.goto(DOCS_ROUTE);
   const docsCta = page
     .locator('nav')
     .first()

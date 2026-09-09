@@ -287,16 +287,6 @@
 .wp-form {
   max-width: 520px;
 }
-.wp-already {
-  margin-top: 4px;
-  font-size: 13px;
-  color: var(--color-text-muted);
-  font-family: var(--font-sans);
-}
-.wp-already a {
-  color: var(--color-accent);
-  text-decoration: underline;
-}
 .wp-cover-wrap {
   display: flex;
   justify-content: center;
@@ -1330,7 +1320,23 @@
   width: 100%;
 }
 .arch-figure .tp-diagram-svg {
-  min-width: 1024px;
+  /* Scale to the container instead of scrolling. The docs kit floors every
+   * figure at a render width so shrinking the SVG cannot shrink its text into
+   * illegibility, and marketing caps it at 860 -- but min-width beats
+   * max-width, so those two pinned this diagram at exactly 1024px: it never
+   * scaled, wasted ~96px of the container on desktop, and scrolled sideways
+   * below that. Both constraints are dropped here, and the legibility the
+   * floor was protecting is handled by the breakpoint instead: below 1024px
+   * the phone stack takes over, so the SVG never renders under ~944px
+   * (13.5px type at ~10px, its smallest legible size). */
+  min-width: 0;
+}
+/* Specificity, not preference: the marketing cap is
+ * `.tp-diagram-figure[data-scale] .tp-diagram-svg` (0,3,0), so a plain
+ * `.arch-figure .tp-diagram-svg` (0,2,0) loses to it and the diagram stays
+ * pinned at 860px. This selector has to out-rank it to let the figure fill. */
+.arch-figure .tp-diagram-figure[data-scale] .tp-diagram-svg {
+  max-width: none;
 }
 .arch-figure text {
   font-family: var(--font-diagram);
@@ -1489,7 +1495,7 @@
 .arch-stack {
   display: none;
 }
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
   .arch-figure .tp-diagram-figure {
     display: none;
   }
@@ -1922,31 +1928,16 @@
   letter-spacing: 0.08em;
   fill: var(--color-signal);
 }
-.ap-taxiway,
 .ap-stub,
 .ap-link {
   fill: none;
   stroke: var(--color-ink);
-}
-.ap-taxiway {
-  stroke-width: 1.6;
 }
 .ap-stub {
   stroke-width: 1.4;
 }
 .ap-link {
   stroke-width: 3.5;
-}
-.ap-twy-disc {
-  fill: var(--color-signal);
-  stroke: var(--color-ink);
-  stroke-width: 1.2;
-}
-.ap-twy-letter {
-  font-family: var(--font-mono);
-  font-size: 8.5px;
-  font-weight: 700;
-  fill: var(--color-ink);
 }
 .ap-apron {
   fill: none;
@@ -2090,11 +2081,6 @@
 .compatibility-link:hover,
 .compatibility-link:focus-visible {
   color: var(--color-accent-hover);
-}
-.compatibility-disclaimer {
-  font-size: 12.5px;
-  color: var(--color-text-muted);
-  margin: 0;
 }
 
 /* Narrow form: the same gates as an HTML list, driven by the same data.

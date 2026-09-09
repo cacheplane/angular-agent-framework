@@ -35,14 +35,45 @@ test.describe('cockpit runtimes/mastra: camping trip planner', () => {
     await expect(dialog).toContainText('$90.00');
   });
 
-  test('Approve resumes the suspended run and the reservation completes', async ({ page }) => {
-    await page.goto('/');
-    await page.getByText('Reserve the campsite').click();
-    const dialog = page.locator('dialog.chat-approval-card');
-    await expect(dialog).toBeVisible({ timeout: 30_000 });
-    await dialog.getByRole('button', { name: 'Approve' }).click();
-    await expect(page.getByText(/reserved for 2 nights/i)).toBeVisible({ timeout: 30_000 });
-  });
+  for (const approved of [true, false]) {
+    const action = approved ? 'Approve' : 'Cancel';
+    test(`${action} sends the decision and displays the matching reservation outcome`, async ({ page }) => {
+      if (process.env['AIMOCK_MODE'] === 'record') test.setTimeout(120_000);
+      await page.goto('/');
+      await page.getByText('Reserve the campsite').click();
+      const dialog = page.locator('dialog.chat-approval-card');
+      await expect(dialog).toBeVisible({ timeout: 30_000 });
+      await expect(dialog).toContainText('North Pines');
+      await expect(dialog).toContainText('$90.00');
+
+      const resumed = page.waitForResponse(response => {
+        if (response.request().method() !== 'POST' || !response.url().endsWith('/agent')) return false;
+        return response.request().postDataJSON()?.forwardedProps?.command?.resume?.approved === approved;
+      });
+      await dialog.getByRole('button', { name: action, exact: true }).click();
+      const response = await resumed;
+      expect(response.status()).toBe(200);
+      const command = response.request().postDataJSON().forwardedProps.command;
+      expect(command.interruptEvent.toolCallId).toEqual(expect.any(String));
+      expect(command.interruptEvent.runId).toEqual(expect.any(String));
+      const events = (await response.text()).split('\n')
+        .filter(line => line.startsWith('data: '))
+        .map(line => JSON.parse(line.slice(6)));
+      const result = events.find(event => event.type === 'TOOL_CALL_RESULT');
+      expect(result?.toolCallId).toBe(command.interruptEvent.toolCallId);
+      expect(result?.content).toContain(approved ? 'Reserved North Pines' : 'Nothing was booked.');
+      await expect(dialog).not.toBeVisible();
+      const reply = page.locator('chat-message[data-role="assistant"]').last();
+      await expect(reply).toContainText(approved
+        ? /reserved|confirmed|booked/i
+        : /declined|cancelled|canceled|not.{0,20}(booked|completed|confirmed|reserved)|nothing.{0,20}booked/i);
+      if (approved) {
+        await expect(reply).not.toContainText(/declined|cancelled|canceled|nothing.{0,20}booked|not.{0,20}(booked|completed|confirmed|reserved)/i);
+      } else {
+        await expect(reply).not.toContainText('TP-0288');
+      }
+    });
+  }
 
   // Delegation: the supervisor calls the registered weather_forecaster
   // sub-agent (wire tool `agent-weather_forecaster`); the server-side

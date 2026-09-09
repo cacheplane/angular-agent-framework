@@ -289,7 +289,9 @@ test.describe('homepage airport diagram', () => {
       CONCOURSES.length
     );
     await expect(page.locator(`${PLATE} [data-main-terminal]`)).toHaveCount(1);
-    await expect(page.locator(`${PLATE} .ap-taxiway`)).toHaveCount(3);
+    // The N/S/E taxiways were removed on request. Asserted as absent rather
+    // than dropped, so re-adding them is a deliberate act and not a drift.
+    await expect(page.locator(`${PLATE} .ap-taxiway`)).toHaveCount(0);
     await expect(page.locator(`${PLATE} .ap-furniture`)).toHaveCount(1);
     // The off-airport row is the section's central argument rendered as
     // geometry — the five providers sit OUTSIDE the neat line because

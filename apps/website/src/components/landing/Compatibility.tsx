@@ -4,7 +4,6 @@ import { AdapterGuideLink } from './AdapterGuideLink';
 import {
   CHART_ID,
   CONCOURSES,
-  DISCLAIMER,
   EYEBROW,
   FIELD,
   HEADLINE,
@@ -23,9 +22,6 @@ import {
   STAND,
   TICK_X,
   TICK_Y,
-  TWY_E,
-  TWY_N,
-  TWY_S,
   VIEW,
   type Gate,
   type Row,
@@ -43,17 +39,6 @@ function Runway({ y, h, left, right }: RunwayGeometry) {
       </text>
       <text className="ap-rwy-id" x={FIELD.x1 - 18} y={y + h - 2.5} textAnchor="end">
         {right}
-      </text>
-    </g>
-  );
-}
-
-function TaxiwayLetter({ x, y, ch }: { x: number; y: number; ch: string }) {
-  return (
-    <g>
-      <circle className="ap-twy-disc" cx={x} cy={y} r={7.5} />
-      <text className="ap-twy-letter" x={x} y={y + 3.4} textAnchor="middle">
-        {ch}
       </text>
     </g>
   );
@@ -168,12 +153,6 @@ function Plate() {
         <Runway {...RWY_N} />
         <Runway {...RWY_S} />
 
-        <path className="ap-taxiway" d={`M${FIELD.x0} ${TWY_N} H${FIELD.x1}`} />
-        <path className="ap-taxiway" d={`M${FIELD.x0} ${TWY_S} H${FIELD.x1}`} />
-        <path className="ap-taxiway" d={`M${TWY_E} ${TWY_N} V${TWY_S}`} />
-        <TaxiwayLetter x={PIVOT.x} y={TWY_N} ch="N" />
-        <TaxiwayLetter x={PIVOT.x} y={TWY_S} ch="S" />
-        <TaxiwayLetter x={TWY_E} y={PIVOT.y} ch="E" />
 
         {/* The one structure that IS Threadplane: solid ink. Partner stands are
             white, so the two values carry the meaning with no legend. */}
@@ -359,7 +338,6 @@ export function Compatibility() {
 
         <div className="airport-footer">
           <AdapterGuideLink className="compatibility-link" />
-          <p className="compatibility-disclaimer">{DISCLAIMER}</p>
         </div>
       </Container>
     </Section>

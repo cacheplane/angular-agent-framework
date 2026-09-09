@@ -25,13 +25,22 @@
  * the docs column, and the mobile drawer (top: nav-h - 1px) hung 14px below the
  * nav it is supposed to be attached to. These are measured, not derived, so
  * only a real browser can hold them honest: e2e/nav-height.spec.ts asserts
- * nav.height === --nav-h at each of the three steps. */
+ * nav.height === --nav-h at each of the three steps.
+ *
+ * --nav-row-pad is that same row's block padding on its own — the `py-4
+ * md:py-5` half of `px-6 py-4 md:px-8 md:py-5`. It has only TWO steps, not
+ * three: padding grows at md and never again, so the lg entry below is
+ * deliberately absent and 20px carries through. .nav-panel-shell reads it to
+ * bridge the gap between a trigger and its panel (see the note there), so a
+ * wrong value here is a dead zone, not a cosmetic drift. */
 :root {
   --nav-h: 58px;
+  --nav-row-pad: 16px;
 }
 @media (min-width: 768px) {
   :root {
     --nav-h: 66px;
+    --nav-row-pad: 20px;
   }
 }
 @media (min-width: 1024px) {
@@ -52,6 +61,12 @@
  * marketing bar. */
 :root:has(.nav-bar[data-route='docs']) {
   --nav-h: 58px;
+  /* Docs pins the row's padding to a flat 16px at every width (see the
+   * `.nav-bar[data-route='docs'] > div` rule below), so the bridge has to
+   * shrink with it. Left at the marketing 20px the shell would start 4px
+   * ABOVE the trigger row's bottom edge and lie over the triggers, swallowing
+   * the mouseenter that switches from one panel to the next. */
+  --nav-row-pad: 16px;
 }
 
 /* Footer */
@@ -110,28 +125,43 @@
 .nav-link:hover {
   color: var(--color-accent);
 }
-/* Two surfaces, no shadow in either.
+/* One surface, no shadow, no state.
  *
- * Transparent is only ever reached on a HERO_ROUTES page at scroll 0, where the
- * ground behind the bar is the hero's saturated yellow. Navy on that yellow is
- * roughly 8:1, so this is a stylistic state, not an accessibility concession. */
+ * A translucent, blurred bar reads correctly over the hero's saturated yellow
+ * AND over white content, so there is nothing to switch: no route list, no
+ * sentinel, no observer, and — critically — no hydration-dependent state, which
+ * is what used to paint a white bar over the yellow hero until React caught up.
+ *
+ * The two fallbacks below are not optional. A translucent bar whose blur does
+ * not run is an unreadable smear of hero yellow behind grey links, so both the
+ * unsupported case and the reduced-transparency preference fall all the way
+ * back to the opaque white surface.
+ *
+ * Do NOT add `-webkit-backdrop-filter` by hand. Lightning CSS (Next's CSS
+ * pipeline) prefixes this for us — it emits the -webkit- line, and expands the
+ * @supports condition below into `not ((-webkit-…) or (…))` on its own. Writing
+ * the prefixed property in this file makes Lightning collapse the pair to the
+ * *prefixed one only*, and Chromium has no `-webkit-backdrop-filter` at all
+ * (`CSS.supports('-webkit-backdrop-filter','blur(1px)')` is false), so the blur
+ * silently stops running in Chrome. Measured: the bar over the hero sampled
+ * rgb(255,233,184) — a flat alpha blend with no saturate — until the hand
+ * prefix came out. The @supports fallback cannot catch it either, because
+ * Chrome does support the unprefixed property it is asking about. */
 .nav-bar {
-  background: var(--color-surface);
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: saturate(180%) blur(14px);
   border-bottom: 1px solid var(--color-border);
-  transition: background 0.2s, border-color 0.2s;
 }
-.nav-bar[data-surface='transparent'] {
-  background: transparent;
-  border-bottom-color: transparent;
+@supports not (backdrop-filter: blur(1px)) {
+  .nav-bar {
+    background: var(--color-surface);
+  }
 }
-.nav-bar[data-surface='transparent'] .nav-link,
-.nav-bar[data-surface='transparent'] .nav-trigger,
-.nav-bar[data-surface='transparent'] .nav-trigger-caret {
-  color: var(--color-accent);
-}
-.nav-bar[data-surface='transparent'] [data-ui='button'][data-variant='primary'] {
-  background: var(--color-accent);
-  color: var(--color-text-inverted);
+@media (prefers-reduced-transparency: reduce) {
+  .nav-bar {
+    background: var(--color-surface);
+    backdrop-filter: none;
+  }
 }
 /* Inside docs the bar is chrome around the reader's content, not the page's
  * headline, so it condenses: the md/lg padding step is flattened back to the
@@ -174,19 +204,6 @@
    * still lands inside the bar instead of leaking into the content below. */
   padding-block: 12px;
   margin-block: -12px;
-}
-.nav-scroll-sentinel {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 8px;
-  pointer-events: none;
-}
-@media (prefers-reduced-motion: reduce) {
-  .nav-bar {
-    transition: none;
-  }
 }
 .nav-hamburger {
   color: var(--color-text-primary);
@@ -366,16 +383,6 @@
 .toast-mt-section {
   margin-top: 8px;
 }
-.toast-download-link {
-  display: inline-flex;
-  align-items: center;
-  min-height: 24px;
-  margin-top: 0;
-  font-size: 12px;
-  color: var(--color-text-muted);
-  text-decoration: underline;
-  font-family: var(--font-sans);
-}
 
 /* Nav panels
  *
@@ -399,7 +406,15 @@
 }
 .nav-panel-shell {
   position: absolute;
-  top: 100%;
+  /* Hit area starts at the trigger's bottom edge, not the row's. The row's
+   * py-4/md:py-5 padding used to sit between trigger and panel belonging to
+   * neither, so a traverse slower than CLOSE_DELAY_MS closed the panel and
+   * left the pointer over nothing that could reopen it. The padding below is
+   * a transparent bridge: it makes the gap part of the shell, so mouseenter
+   * fires the instant the pointer leaves the trigger. The visible .nav-panel
+   * does not move. e2e/nav-panels.spec.ts drives this with a stepped move. */
+  top: calc(100% - var(--nav-row-pad));
+  padding-top: var(--nav-row-pad);
   left: 0;
   right: 0;
   z-index: 60;
@@ -513,6 +528,18 @@
  * here — keeping .nav-panel-shell's containing block on .nav-bar > div below. */
 .nav-desktop {
   position: static;
+  /* The row is `items-center`, so this box would otherwise shrink to its own
+   * tallest child and float in the middle of the row's content. On docs that
+   * left 2.5px between its bottom edge and where .nav-panel-shell's bridge
+   * starts — a second, smaller version of the dead zone the bridge exists to
+   * close, since the row's content height there is set by the 25px logo, not
+   * by these 20px links. Stretching pins the bottom edge to the content box
+   * so the two hit areas meet exactly. Children stay centred by this
+   * element's own `items-center`, so nothing moves: measured on /docs, the
+   * panel still rests at y=57 and the bar still measures 58px. On marketing
+   * the 40px CTA already made this box the full content height, so there
+   * stretching is a no-op. */
+  align-self: stretch;
 }
 .nav-bar > div {
   position: relative;

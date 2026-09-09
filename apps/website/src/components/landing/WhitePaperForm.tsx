@@ -55,11 +55,17 @@ export function WhitePaperForm({
   const inputId = `${idPrefix}-email`;
   const disclosureId = `${idPrefix}-growth-disclosure`;
 
-  const directLink = (ctaId: 'home_whitepaper_direct' | 'home_whitepaper_direct_inline', label: string) => (
+  const directLink = (label: string) => (
     <a
       href={pdf.href}
       download={pdf.download}
-      onClick={() => trackWhitepaperDownloadClick(paper, { surface, source_section: sourceSection, cta_id: ctaId })}
+      onClick={() =>
+        trackWhitepaperDownloadClick(paper, {
+          surface,
+          source_section: sourceSection,
+          cta_id: 'home_whitepaper_direct',
+        })
+      }
     >
       {label}
     </a>
@@ -79,7 +85,7 @@ export function WhitePaperForm({
   if (form.status === 'sent') {
     return (
       <FormStatus tone="success" title="Check your inbox." detail="The guide is on its way, and the PDF is here too.">
-        {directLink('home_whitepaper_direct', 'Download the PDF directly')}
+        {directLink('Download the PDF directly')}
       </FormStatus>
     );
   }
@@ -118,11 +124,8 @@ export function WhitePaperForm({
         {formPolicy.disclosures.whitepaper}
       </p>
       {form.status === 'failed' ? (
-        <FormStatus tone="failure" title="That did not send." detail="You can still get the guide.">
-          {directLink('home_whitepaper_direct', 'Download the PDF directly')}
-        </FormStatus>
+        <FormStatus tone="failure" title="That did not send." detail="Try again in a moment." />
       ) : null}
-      <p className="wp-already">Already on the list? {directLink('home_whitepaper_direct_inline', 'Download the PDF directly.')}</p>
     </form>
   );
 }
