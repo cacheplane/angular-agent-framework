@@ -39,11 +39,11 @@ export function Hero() {
             ))}
           </h1>
           <p className="hero-subhead">
-            {HERO_SUBHEAD_SEGMENTS.map((segment) =>
-              segment.highlight ? (
-                <span className="marker-highlight" key={segment.text}>{segment.text}</span>
+            {HERO_SUBHEAD_SEGMENTS.map((segment, index) =>
+              segment.href ? (
+                <a className="marker-highlight" href={segment.href} target="_blank" rel="noopener noreferrer" key={index}>{segment.text}</a>
               ) : (
-                <React.Fragment key={segment.text}>{segment.text}</React.Fragment>
+                <React.Fragment key={index}>{segment.text}</React.Fragment>
               ),
             )}
           </p>

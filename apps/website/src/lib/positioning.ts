@@ -12,22 +12,30 @@ export const HERO_H1 = 'The open-source thread-plane for agents.';
  */
 export const HERO_H1_LINES: readonly string[] = ['The open-source', 'thread-plane', 'for agents.'];
 export const HERO_SUBHEAD =
-  'Chat, durable threads, persistence, human approvals, and generative UI for Angular, on LangGraph and AG-UI. Your backend stays where it is.';
+  'Make agent work persistent, durable, visible, reviewable, and resumable.';
 
 /**
- * The subhead, split so Hero.tsx can marker-highlight the boundary claim.
+ * The subhead, split so each workflow capability links to its documentation.
  * HERO_SUBHEAD stays the single source of truth: positioning.spec.ts asserts
  * these segments join back to it character for character, so the two cannot
- * drift. Exactly one segment is highlighted — a second one in a sentence this
- * short reads as decoration and cancels the emphasis.
+ * drift. Linked terms retain the hero's ink underline treatment.
  */
 export interface HeroSubheadSegment {
   text: string;
-  highlight?: boolean;
+  href?: string;
 }
 export const HERO_SUBHEAD_SEGMENTS: readonly HeroSubheadSegment[] = [
-  { text: 'Chat, durable threads, persistence, human approvals, and generative UI for Angular, on LangGraph and AG-UI. ' },
-  { text: 'Your backend stays where it is.', highlight: true },
+  { text: 'Make agent work ' },
+  { text: 'persistent', href: '/docs/langgraph/guides/persistence' },
+  { text: ', ' },
+  { text: 'durable', href: '/docs/langgraph/guides/persistence#choosing-a-checkpointer' },
+  { text: ', ' },
+  { text: 'visible', href: '/docs/chat/components/chat-tool-calls' },
+  { text: ', ' },
+  { text: 'reviewable', href: '/docs/langgraph/guides/interrupts' },
+  { text: ', and ' },
+  { text: 'resumable', href: '/docs/langgraph/guides/persistence#checkpoint-recovery' },
+  { text: '.' },
 ];
 
 export const HERO_PRIMARY_LABEL = 'Install Threadplane';

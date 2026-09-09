@@ -7,6 +7,7 @@ import {
   HERO_H1,
   HERO_SECONDARY_HREF,
   HERO_SUBHEAD,
+  HERO_SUBHEAD_SEGMENTS,
 } from '../../lib/positioning';
 
 const trackMock = vi.hoisted(() => vi.fn());
@@ -57,10 +58,13 @@ describe('Hero', () => {
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe(HERO_H1);
     expect(screen.getByText(HERO_EYEBROW)).toBeTruthy();
     expect(document.querySelector('.hero-subhead')?.textContent).toBe(HERO_SUBHEAD);
-    expect(document.querySelector('.hero-subhead .marker-highlight')?.textContent).toBe(
-      'Your backend stays where it is.',
-    );
-    expect(document.querySelectorAll('.hero-subhead .marker-highlight')).toHaveLength(1);
+    expect(document.querySelectorAll('.hero-subhead a.marker-highlight')).toHaveLength(5);
+    for (const segment of HERO_SUBHEAD_SEGMENTS.filter((s) => s.href)) {
+      const link = screen.getByRole('link', { name: segment.text, exact: true });
+      expect(link.getAttribute('href')).toBe(segment.href);
+      expect(link.getAttribute('target')).toBe('_blank');
+      expect(link.getAttribute('rel')).toBe('noopener noreferrer');
+    }
     expect(document.querySelector('.hero-chip-row')).toBeNull();
     expect(screen.queryByText(/six months/)).toBeNull();
     expect(screen.queryByRole('link', { name: /Talk to our engineers/ })).toBeNull();
