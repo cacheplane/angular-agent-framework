@@ -10,103 +10,22 @@ import {
 import { Button } from '../ui/Button';
 import { GitHubIcon } from '../ui/GitHubIcon';
 import { GITHUB_REPO_URL } from '../../lib/positioning';
-import { LibraryMark } from '../docs/LibraryMark';
-import { NAV_TRIGGERS, type NavItem, type NavPanel } from './nav-config';
+import { NavPanelBody } from './NavPanelBody';
+import { NAV_TRIGGERS, type NavPanel } from './nav-config';
 
 /** Long enough to cross the gap between trigger and panel diagonally. */
 const OPEN_DELAY_MS = 100;
 const CLOSE_DELAY_MS = 150;
 
-export function trackNavItem(item: NavItem, surface: 'nav' | 'mobile_nav') {
-  const ctaId: `nav_${string}` | `mobile_nav_${string}` =
-    surface === 'nav' ? `nav_${item.ctaId}` : `mobile_nav_${item.ctaId}`;
-  if (item.external) {
-    trackExternalLinkClick(item.href, {
-      surface,
-      cta_id: ctaId,
-      cta_text: item.label,
-    });
-    return;
-  }
-  trackCtaClick({
-    surface,
-    destination_url: item.href,
-    cta_id: ctaId,
-    cta_text: item.label,
-  });
-}
-
-export function NavPanelItem({
-  item,
-  surface,
-  onNavigate,
-}: {
-  item: NavItem;
-  surface: 'nav' | 'mobile_nav';
-  onNavigate?: () => void;
-}) {
-  const Icon = item.icon;
-  const body = (
-    <>
-      <span className="nav-panel-item-chip" aria-hidden="true">
-        {item.library ? (
-          <LibraryMark library={item.library} size={20} />
-        ) : Icon ? (
-          <Icon size={16} aria-hidden={true} />
-        ) : null}
-      </span>
-      <span className="nav-panel-item-text">
-        <span className="nav-panel-item-label">{item.label}</span>
-        <span className="nav-panel-item-desc">{item.description}</span>
-      </span>
-    </>
-  );
-  const onClick = () => {
-    trackNavItem(item, surface);
-    onNavigate?.();
-  };
-
-  if (item.external) {
-    return (
-      <a
-        href={item.href}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={onClick}
-        className="nav-panel-item"
-      >
-        {body}
-      </a>
-    );
-  }
-  return (
-    <Link href={item.href} onClick={onClick} className="nav-panel-item">
-      {body}
-    </Link>
-  );
-}
-
 function Panel({ panel, id }: { panel: NavPanel; id: string }) {
   return (
     <div id={id} className="nav-panel" data-columns={panel.columns.length}>
-      <div className="nav-panel-cols">
-        {panel.columns.map((column, index) => (
-          <div key={column.heading ?? index} className="nav-panel-col">
-            {column.heading ? (
-              <span className="nav-panel-col-head">{column.heading}</span>
-            ) : null}
-            {column.items.map((item) => (
-              <NavPanelItem key={item.ctaId} item={item} surface="nav" />
-            ))}
-          </div>
-        ))}
-      </div>
-      {panel.footer ? (
-        <div className="nav-panel-footer">
-          <span className="nav-panel-footer-lead">{panel.footer.lead}</span>
-          <NavPanelItem item={panel.footer} surface="nav" />
-        </div>
-      ) : null}
+      <NavPanelBody
+        panel={panel}
+        surface="nav"
+        columnsClassName="nav-panel-cols"
+        columnClassName="nav-panel-col"
+      />
     </div>
   );
 }
