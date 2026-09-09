@@ -104,4 +104,18 @@ describe('Compatibility', () => {
     const { container } = render(<Compatibility />);
     expect(container.querySelectorAll('[data-cta="home_adapter_guide"]').length).toBe(1);
   });
+
+  it('ships a phone form driven by the same gate table as the plate', () => {
+    // A seven-stand rotated airfield has no 390px form. The precedent is
+    // .arch-stack: hide the figure under 768px and show an HTML list built
+    // from the same data, never a sideways scroll.
+    const { container } = render(<Compatibility />);
+    expect(container.querySelector('.airport-figure')).toBeTruthy();
+    const stack = container.querySelector('.airport-stack');
+    expect(stack).toBeTruthy();
+    const items = stack!.querySelectorAll('.airport-stack-gates li');
+    expect(items).toHaveLength(GATES_A.length + GATES_B.length);
+    expect(screen.getByRole('list', { name: /CONCOURSE A/ })).toBeTruthy();
+    expect(screen.getByRole('list', { name: /CONCOURSE B/ })).toBeTruthy();
+  });
 });
