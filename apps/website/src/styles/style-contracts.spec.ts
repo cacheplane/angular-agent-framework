@@ -470,6 +470,48 @@ describe('style contracts', () => {
     });
   });
 
+  /**
+   * The compatibility band's accessibility rests entirely on one CSS idiom,
+   * and nothing else in the repo can see it break. The plate is
+   * `aria-hidden="true"`, so `.airport-stack` is the section's only accessible
+   * content — and the five model-provider names and the "never talks to them"
+   * claim exist nowhere else in the DOM. Switch the desktop rule to
+   * `display: none` and every unit test and every e2e case stays green while a
+   * screen reader hears an empty section. A review of this band already caught
+   * exactly that once.
+   */
+  describe('landing.css airport stack is hidden visually, never removed', () => {
+    const css = loadStylesheet('landing.css');
+    const desktop = baseDeclarationsFor(css, '.airport-stack');
+    const narrow = mediaBlock(css, '(max-width: 1023px)');
+
+    it('hides the desktop stack with the clip-path idiom', () => {
+      // Asserted positively first so the `not.toMatch` below cannot pass
+      // against an empty string if the rule is ever renamed away.
+      expect(desktop, '.airport-stack has no rule outside a media query').not.toBe('');
+      expect(desktop).toMatch(/position:\s*absolute/);
+      expect(desktop).toMatch(/clip-path:\s*inset\(50%\)/);
+      expect(desktop).toMatch(/width:\s*1px/);
+    });
+
+    it('never takes the stack out of the accessibility tree', () => {
+      expect(desktop).not.toMatch(/display:\s*none/);
+      expect(desktop).not.toMatch(/visibility:\s*hidden/);
+    });
+
+    /**
+     * The plate and the stack must swap at the same width, or one viewport
+     * band gets both or neither. 1023px rather than the usual 767px is
+     * measured: `.ap-svg` is `width: 100%`, so at 768px the 1000-unit plate
+     * renders at ~0.71 and its callsigns land at 6px.
+     */
+    it('swaps the plate for the stack at one breakpoint', () => {
+      expect(declarationsFor(narrow, '.airport-figure')).toMatch(/display:\s*none/);
+      expect(declarationsFor(narrow, '.airport-stack')).toMatch(/position:\s*static/);
+      expect(declarationsFor(narrow, '.airport-stack')).toMatch(/clip-path:\s*none/);
+    });
+  });
+
   describe('landing.css stage act', () => {
     const css = loadStylesheet('landing.css');
 
