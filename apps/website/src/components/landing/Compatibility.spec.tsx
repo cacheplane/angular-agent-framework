@@ -28,7 +28,7 @@ describe('Compatibility', () => {
     expect(stack, 'the accessible stack is gone').toBeTruthy();
     const list = within(stack as HTMLElement);
     for (const g of [...GATES_A, ...GATES_B]) {
-      expect(list.getAllByText(g.name).length).toBeGreaterThan(0);
+      expect(list.getAllByText(g.long ?? g.name).length).toBeGreaterThan(0);
     }
     for (const p of PROVIDERS) {
       expect(list.getAllByText(p.name).length).toBeGreaterThan(0);
@@ -45,6 +45,26 @@ describe('Compatibility', () => {
       GATES_A.length + GATES_B.length,
     );
     expect(container.querySelectorAll('[data-concourse]').length).toBe(CONCOURSES.length);
+  });
+
+  it('spells out in the list the name the stand had to abbreviate', () => {
+    // `MS AGENT FWK` exists because a 38px stand has room for nothing longer.
+    // The list has room, and it is what a screen reader hears, so the two
+    // surfaces get different strings on purpose — which is the whole reason
+    // `Gate.long` exists and the only thing that keeps it from rotting.
+    const { container } = render(<Compatibility />);
+    const stack = container.querySelector('.airport-stack');
+    expect(stack, 'the accessible stack is gone').toBeTruthy();
+    const abbreviated = [...GATES_A, ...GATES_B].filter((g) => g.long);
+    expect(abbreviated.length, 'no gate carries a long form any more').toBeGreaterThan(0);
+    for (const g of abbreviated) {
+      const list = within(stack as HTMLElement);
+      expect(list.getAllByText(g.long as string).length).toBeGreaterThan(0);
+      expect(list.queryByText(g.name), `the stack still shows "${g.name}"`).toBeNull();
+      // ...and the plate still draws the short one, or the abbreviation was
+      // simply a bug rather than a constraint.
+      expect(container.querySelector(`[data-stand="${g.gate}"]`)?.textContent).toContain(g.name);
+    }
   });
 
   it('shows both adapters as the two concourses', () => {
@@ -92,8 +112,17 @@ describe('Compatibility', () => {
   it('says Threadplane never talks to model providers, not that it never sees them', () => {
     // never-SEES is a data claim the docs do not support; never-TALKS-TO is
     // structural. This is the same failure mode #1067 had to correct.
+    //
+    // The positive half is scoped to .airport-stack, for the same reason as
+    // the gate-name test above: the plate carries this sentence too, as an
+    // aria-hidden <text>, so an unscoped read of container.textContent stays
+    // green while the claim disappears from the phone form and from every
+    // accessible surface the band has. The negative half stays unscoped —
+    // "never sees" must not appear anywhere in the section, drawn or spoken.
     const { container } = render(<Compatibility />);
-    expect(container.textContent).toMatch(/never talks to them/i);
+    const stack = container.querySelector('.airport-stack');
+    expect(stack, 'the accessible stack is gone').toBeTruthy();
+    expect(within(stack as HTMLElement).getByText(/never talks to them/i)).toBeTruthy();
     expect(container.textContent).not.toMatch(/never sees/i);
   });
 
@@ -107,8 +136,9 @@ describe('Compatibility', () => {
 
   it('ships a phone form driven by the same gate table as the plate', () => {
     // A seven-stand rotated airfield has no 390px form. The precedent is
-    // .arch-stack: hide the figure under 768px and show an HTML list built
-    // from the same data, never a sideways scroll.
+    // .arch-stack: hide the figure below the breakpoint (1024px here, not the
+    // usual 768px — see landing.css) and show an HTML list built from the same
+    // data, never a sideways scroll.
     const { container } = render(<Compatibility />);
     expect(container.querySelector('.airport-figure')).toBeTruthy();
     const stack = container.querySelector('.airport-stack');

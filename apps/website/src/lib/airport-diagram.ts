@@ -107,6 +107,13 @@ export interface Gate {
   readonly gate: string;
   readonly src: string;
   readonly name: string;
+  /**
+   * The unabbreviated name, when the 38px stand forced a short one. The plate
+   * always draws `name`; the HTML stack — the band's only accessible content,
+   * and its whole phone form — draws `long ?? name`, so a screen reader is
+   * never handed an abbreviation that exists purely for the drawing.
+   */
+  readonly long?: string;
   /** Optical height. Deliberately per-mark; see the spec test. */
   readonly s: number;
   /** Optical width, for a wordmark that is not square: always `s * WIDE_RATIO`. */
@@ -123,7 +130,14 @@ export const GATES_B: readonly Gate[] = [
   { gate: 'B2', src: '/logos/runtimes/crewai.svg', name: 'CREWAI', s: 22, x: 380 },
   { gate: 'B3', src: '/logos/runtimes/mastra.svg', name: 'MASTRA', s: 16, x: 492 },
   { gate: 'B4', src: '/logos/runtimes/pydantic.svg', name: 'PYDANTIC AI', s: 21, x: 604 },
-  { gate: 'B5', src: '/logos/runtimes/microsoft.svg', name: 'MS AGENT FWK', s: 19, x: 716 },
+  {
+    gate: 'B5',
+    src: '/logos/runtimes/microsoft.svg',
+    name: 'MS AGENT FWK',
+    long: 'MICROSOFT AGENT FRAMEWORK',
+    s: 19,
+    x: 716,
+  },
   // The AWS wordmark is not square, so it is the one mark sized by width. Both
   // numbers are written literally like every other value in this table; the
   // spec checks the pair against WIDE_RATIO, and WIDE_RATIO against the file.
@@ -210,6 +224,6 @@ export const PLANE_PATH = 'M4 34.5 58 6 40 58l-11.5-16.5L36 22 20 37.5z';
 
 export const EYEBROW = 'AIRPORT DIAGRAM';
 export const HEADLINE = 'Every stack has a gate.';
-export const CHART_ID = ['THREADPLANE INTL  (TPL)', 'ANGULAR · LANGGRAPH & AG-UI'] as const;
+export const CHART_ID = ['THREADPLANE INTL (TPL)', 'ANGULAR · LANGGRAPH & AG-UI'] as const;
 export const DISCLAIMER =
   'Compatibility, not endorsement — no company here is claimed as a customer.';

@@ -330,7 +330,10 @@ export function Compatibility() {
                       loading="lazy"
                       decoding="async"
                     />
-                    <span>{g.name}</span>
+                    {/* The plate draws `name` because a 38px stand has room for
+                        nothing longer. This list has room, and it is what a
+                        screen reader hears, so it spells the name out. */}
+                    <span>{g.long ?? g.name}</span>
                   </li>
                 ))}
               </ul>

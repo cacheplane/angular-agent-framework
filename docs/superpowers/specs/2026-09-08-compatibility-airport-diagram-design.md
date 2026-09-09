@@ -62,7 +62,7 @@ A single SVG, `viewBox="0 0 1000 536"`.
   The frame does **not** rotate.
 - **Airfield group rotated −3.5°** about `(500, 230)`. Nothing on a real plate is
   axis-aligned, and this is the single cheapest signal that it is a chart rather
-  than a flowchart. Extents are held to x 44–944, y 58–419 so no rotated corner
+  than a flowchart. Extents are held to x 56–944, y 58–419 so no rotated corner
   crosses the neat line.
 - **Runways** 09L-27R (y 58, h 11) and 09R-27L (y 408, h 11): solid ink bars with
   knocked-out yellow designators.
@@ -93,7 +93,12 @@ else's, ink is ours.**
 | B3 | `/logos/runtimes/mastra.svg` | MASTRA | 16 |
 | B4 | `/logos/runtimes/pydantic.svg` | PYDANTIC AI | 21 |
 | B5 | `/logos/runtimes/microsoft.svg` | MS AGENT FWK | 19 |
-| B6 | `/logos/providers/bedrock.svg` | AWS STRANDS | 12 × 30 |
+| B6 | `/logos/providers/bedrock.svg` | AWS STRANDS | 12 × 20 |
+
+`MS AGENT FWK` is an abbreviation the 38px stand forces. It is the plate's
+label only: `Gate.long` carries `MICROSOFT AGENT FRAMEWORK` and the HTML stack
+renders `long ?? name`, so the phone list and every screen reader get the whole
+name — the one the band this replaced used.
 
 **Sizes are per-mark and non-negotiable.** One shared `height` reads wrong: Mastra
 is wide and heavy, Anthropic is a narrow wedge, Microsoft is a dense square. These
@@ -142,11 +147,19 @@ this problem shape.
 - **`src/styles/landing.css`** — the `.compatibility-*` block (currently ~lines
   2007–2075) is replaced.
 
-## 4. Mobile
+## 4. Narrow viewports
 
-Copies the `arch-stack` precedent verbatim: at `@media (max-width: 767px)` the
-SVG figure is hidden and an HTML gate list is shown, grouped by concourse, driven
-by the same exported gate table. Never a sideways scroll.
+Copies the `arch-stack` precedent, but at `@media (max-width: 1023px)` rather
+than the usual 767px: the SVG figure is hidden and an HTML gate list is shown,
+grouped by concourse, driven by the same exported gate table. Never a sideways
+scroll.
+
+The wider breakpoint is measured, not a preference. `.ap-svg` is `width: 100%`,
+so the 1000-unit plate scales with its container: at a 768px viewport the
+container is ~707px and the plate renders at 0.71, putting callsigns at 6.0px and
+gate ids at 5.3px. Everything between 768 and ~1000px is a chart nobody can read,
+so tablets get the list instead. A `min-width` plus a scrolling container is
+ruled out above.
 
 A seven-stand rotated airfield has no 390px form. This is a real share of the
 work, not a detail.
@@ -190,5 +203,9 @@ items and one accessible-named list per group — none of which will exist.
   in today's homepage set, and there is no mark for it. Today's set is kept.
 - **The band gets taller** than the 634px it replaces, and sits directly above
   `EnterpriseArchitecture` — two large technical figures back to back. Accepted.
+- **`TPL` is a real assigned IATA code** (Draughon-Miller Central Texas
+  Regional, Temple, TX), borrowed for the fictional `THREADPLANE INTL` because
+  the initials fit; it is recorded here rather than left to be discovered, the
+  same way `AL-0059` was.
 - **The control tower symbol is not built.** It was drawn and offered (T2); T1
   was chosen. Available if the plate later reads as under-furnished.

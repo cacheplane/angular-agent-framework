@@ -5,6 +5,7 @@ import {
   GATES_B,
   MAIN,
   NEAT,
+  PROVIDERS,
   VIEW,
 } from '../src/lib/airport-diagram';
 
@@ -290,6 +291,13 @@ test.describe('homepage airport diagram', () => {
     await expect(page.locator(`${PLATE} [data-main-terminal]`)).toHaveCount(1);
     await expect(page.locator(`${PLATE} .ap-taxiway`)).toHaveCount(3);
     await expect(page.locator(`${PLATE} .ap-furniture`)).toHaveCount(1);
+    // The off-airport row is the section's central argument rendered as
+    // geometry — the five providers sit OUTSIDE the neat line because
+    // Threadplane never talks to them. Check 6 below measures where they are
+    // drawn, and a walk over an empty NodeList reports no issues, so without
+    // these two counts deleting the whole row leaves both suites green.
+    await expect(page.locator(`${PLATE} .ap-off`)).toHaveCount(1);
+    await expect(page.locator(`${PLATE} > image`)).toHaveCount(PROVIDERS.length);
 
     await plate.scrollIntoViewIfNeeded();
     await expect(plate).toBeVisible();
@@ -322,6 +330,41 @@ test.describe('homepage airport diagram', () => {
     expect(drawn.top).toBeGreaterThanOrEqual(0);
     expect(drawn.right).toBeLessThanOrEqual(VIEW.width);
     expect(drawn.bottom).toBeLessThanOrEqual(VIEW.height);
+  });
+
+  test('hands a tablet the gate list rather than a plate at 0.7 scale', async ({ page }) => {
+    // `.ap-svg` is width:100%/height:auto, so the 1000-unit plate scales with
+    // its container: at a 768px viewport that container is ~707px, the plate
+    // renders at 0.71, and callsigns land at 6.0px with gate ids at 5.3px.
+    // The other two cases here test 1440 and 390 and straddle the hole
+    // entirely, which is how it survived review. The stack therefore takes
+    // over at 1023px, not the usual 767px — and never as a sideways scroll,
+    // which the spec rules out for this band.
+    await page.setViewportSize({ width: 900, height: 900 });
+    await page.goto('/');
+    await page.locator('#compatibility').scrollIntoViewIfNeeded();
+
+    await expect(page.locator('.airport-figure')).toBeHidden();
+
+    // toBeVisible() is not enough on its own: on desktop the stack is hidden
+    // by clip-path at 1px square, which Playwright still calls visible. Its
+    // laid-out width is what says the list is the form a tablet actually gets.
+    const stack = page.locator('.airport-stack');
+    await expect(stack).toBeVisible();
+    const box = await stack.boundingBox();
+    expect(box, 'the accessible stack is not laid out at all').not.toBeNull();
+    expect(
+      box?.width ?? 0,
+      'the gate list is still clipped to its 1px visually-hidden box at 900px'
+    ).toBeGreaterThan(200);
+
+    await expect(stack.locator('.airport-stack-gates li')).toHaveCount(
+      STAND_COUNT
+    );
+    const wide = await page.evaluate(
+      () => document.documentElement.scrollWidth > window.innerWidth
+    );
+    expect(wide, 'no horizontal page scroll on a tablet').toBe(false);
   });
 
   test('lists the same gates on a phone instead of scrolling the drawing sideways', async ({
