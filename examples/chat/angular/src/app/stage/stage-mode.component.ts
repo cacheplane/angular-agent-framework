@@ -22,6 +22,7 @@ import {
 } from '@threadplane/chat';
 import { ChatDebugComponent } from '@threadplane/chat/debug';
 import { stagePresentationAgent } from './stage-interaction';
+import { stageWheelOwnership } from './stage-wheel';
 import {
   FetchStreamTransport,
   injectAgent,
@@ -273,6 +274,7 @@ export class StageMode {
     ? this.agent
     : stagePresentationAgent(this.agent, () => this.openLiveDemo());
   protected readonly debugOpen = signal(true);
+  private exploring = false;
   protected readonly inspectionDock = signal<'left' | 'right' | 'bottom' | null>(null);
 
   protected openLiveDemo(): void {
@@ -307,7 +309,14 @@ export class StageMode {
   /** TEST SEAM. Replaced by the spec; browser bridge by default. */
   bridge: StageBridge =
     typeof window === 'undefined'
-      ? { onSeek: () => () => undefined, postReady: () => undefined, postState: () => undefined }
+      ? {
+          onSeek: () => () => undefined,
+          onExplore: () => () => undefined,
+          postReady: () => undefined,
+          postState: () => undefined,
+          postExplore: () => undefined,
+          postWheel: () => false,
+        }
       : browserStageBridge();
 
   private lastPosted = '';
@@ -320,6 +329,12 @@ export class StageMode {
 
   constructor() {
     this.watchDock();
+    if (!this.recording && typeof window !== 'undefined') {
+      this.destroyRef.onDestroy(this.bridge.onExplore((value) => { this.exploring = value; }));
+      this.destroyRef.onDestroy(stageWheelOwnership(window, () => this.exploring,
+        (x, y) => this.bridge.postWheel(x, y),
+        () => { this.exploring = false; this.bridge.postExplore(false); }));
+    }
     this.destroyRef.onDestroy(() => {
       if (typeof cancelAnimationFrame === 'function') {
         if (this.seekFrame !== null) cancelAnimationFrame(this.seekFrame);

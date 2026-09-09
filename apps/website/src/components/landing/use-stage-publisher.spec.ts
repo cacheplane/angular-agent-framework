@@ -91,6 +91,38 @@ function fromDemo(data: unknown) {
   );
 }
 
+describe('explicit exploration', () => {
+  it('routes wheel to the page by default and restores it after Escape', () => {
+    let now = 0;
+    const clock = vi.spyOn(performance, 'now').mockImplementation(() => now);
+    const scroll = vi.spyOn(window, 'scrollBy').mockImplementation(() => undefined);
+    const { section, pub, posted } = setup({ rail: s => {
+      s.innerHTML = '<button data-stage-explore aria-pressed="false">Explore chat</button>';
+    } });
+    pub.tick();
+    fromDemo({ type: STAGE_MESSAGE_TYPE, applied: 0, phase: 'stream', t: 0, settled: true });
+    now = 300;
+    pub.tick();
+    fromDemo({ type: STAGE_MESSAGE_TYPE, wheel: { deltaX: 0, deltaY: 80 } });
+    expect(scroll).toHaveBeenCalledWith({ left: 0, top: 80, behavior: 'instant' });
+    now = 600;
+    pub.tick();
+    const button = section.querySelector('button')!;
+    button.click();
+    expect(button.textContent).toBe('Resume walkthrough');
+    expect(posted.at(-1)?.m).toEqual({ type: STAGE_MESSAGE_TYPE, explore: true });
+    fromDemo({ type: STAGE_MESSAGE_TYPE, wheel: { deltaX: 0, deltaY: 80 } });
+    expect(scroll).toHaveBeenCalledTimes(1);
+    fromDemo({ type: STAGE_MESSAGE_TYPE, explore: false });
+    expect(button.textContent).toBe('Explore chat');
+    button.click();
+    window.dispatchEvent(new Event('scroll'));
+    expect(section.hasAttribute('data-exploring')).toBe(false);
+    clock.mockRestore();
+    scroll.mockRestore();
+  });
+});
+
 function setup(
   opts: {
     frameWindow?: () => Window | null;

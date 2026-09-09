@@ -21,6 +21,9 @@ export interface StageState {
 
 export interface StageBridge {
   onSeek(cb: (t: number) => void): () => void;
+  onExplore(cb: (explore: boolean) => void): () => void;
+  postExplore(explore: boolean): void;
+  postWheel(deltaX: number, deltaY: number): boolean;
   postReady(ready: StageReady): void;
   postState(state: StageState): void;
 }
@@ -54,10 +57,22 @@ export function createStageBridge(env: BridgeEnv): StageBridge {
   // arrived with an empty referrer still receives the handshake.
   let lastReady: Record<string, unknown> | null = null;
   const post = (msg: Record<string, unknown>) => {
-    if (!embedded || parentOrigin === null) return;
+    if (!embedded || parentOrigin === null) return false;
     env.parent.postMessage({ type: STAGE_MESSAGE_TYPE, ...msg }, parentOrigin);
+    return true;
   };
   return {
+    onExplore(cb) {
+      const handler = (e: MessageEvent) => {
+        if (e.source !== env.parent || !isAllowedParentOrigin(e.origin)) return;
+        const d = e.data;
+        if (d?.type === STAGE_MESSAGE_TYPE && typeof d.explore === 'boolean') cb(d.explore);
+      };
+      env.self.addEventListener('message', handler);
+      return () => env.self.removeEventListener('message', handler);
+    },
+    postExplore(explore) { post({ explore }); },
+    postWheel(deltaX, deltaY) { return post({ wheel: { deltaX, deltaY } }); },
     onSeek(cb) {
       const handler = (e: MessageEvent) => {
         if (e.source !== env.parent) return;

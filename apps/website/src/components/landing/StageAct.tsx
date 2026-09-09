@@ -177,14 +177,19 @@ export function StageAct({ onFallback }: Props) {
                 />
               </div>
             </BrowserFrame>
-            <a
-              className="stage-frame-open"
-              href={STAGE_DEMO_ORIGIN}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Open the live demo →
-            </a>
+            <div className="stage-frame-actions">
+              <button type="button" className="stage-explore" data-stage-explore aria-pressed="false" disabled>
+                Explore chat
+              </button>
+              <a
+                className="stage-frame-open"
+                href={STAGE_DEMO_ORIGIN}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Open the live demo →
+              </a>
+            </div>
           </div>
           <div className="stage-rail">
             <nav className="stage-checklist" aria-label="Workflow capabilities">

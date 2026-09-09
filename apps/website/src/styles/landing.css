@@ -1106,6 +1106,11 @@
   font-size: 13px;
   justify-self: end;
 }
+.stage-frame-actions { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.stage-explore { font: inherit; font-size: 13px; color: inherit; background: transparent; border: 1px solid #b8b8b8; border-radius: 6px; padding: 3px 10px; cursor: pointer; }
+.stage-explore:disabled { opacity: .45; cursor: default; }
+.stage-explore[aria-pressed='true'] { background: #eef3ff; border-color: #7289b9; }
+.stage-explore:focus-visible { outline: 2px solid #3963a8; outline-offset: 3px; }
 /* Persistent capability checklist; only the hold cue and final CTA fade. */
 .stage-rail {
   display: grid;
