@@ -2100,7 +2100,15 @@ git commit -m "feat(website): replace the mobile tab strip with a drill-in stack
 
 From `NavDesktop.tsx`, delete `DemoDropdown`, the `links` array, and `trackNavLink` — Task 8 removed the last importer.
 
-From `chrome.css`, delete `.nav-demo-dropdown`, `.nav-demo-trigger`, `.nav-demo-trigger:hover`, `.nav-demo-caret`, `.nav-demo-caret[data-open]`, `.nav-demo-menu`, `.nav-demo-item`, `.nav-demo-item:hover`, `.nav-mtabs`, `.nav-mtab`, `.nav-mtab[data-active]`, `.nav-msubtabs-wrap`, `.nav-msubtabs`, `.nav-msubtab`, `.nav-msubtab[data-active]`, and `.nav-mobile-site-link`.
+The `.nav-demo-*` block was already removed during Task 4. What remains is a larger set of orphans than this plan originally listed — Task 8's drill-in rewrite orphaned three more, and several predate this branch entirely.
+
+Audited on the current tree: each of the following is **defined in `chrome.css` and referenced from no `.tsx`/`.ts` in `src/` or `e2e/`, from no other stylesheet, and by no dynamic class construction**:
+
+`.nav-mobile-chevron` · `.nav-mobile-content-list` · `.nav-mobile-demo-link` · `.nav-mobile-item` · `.nav-mobile-item--strong` · `.nav-mobile-search` · `.nav-mobile-section-toggle` · `.nav-mobile-site-link` · `.nav-msubtab` · `.nav-msubtabs` · `.nav-msubtabs-wrap` · `.nav-mtab` · `.nav-mtabs`
+
+**Re-verify each one yourself before deleting it** — that audit is a snapshot and Task 8 may have moved since. For each class, check `.tsx`/`.ts` under `src/` and `e2e/`, every other file in `src/styles/`, `src/app/global.css`, and any template-literal className construction. Delete only what you confirm is unreferenced, and say which you checked. A class deleted while something still uses it is a silent visual regression — exactly the failure mode this branch has produced five times.
+
+Note that several of these (`.nav-msubtab*`, `.nav-mobile-item*`, `.nav-mobile-demo-link`, `.nav-mobile-search`, `.nav-mobile-section-toggle`, `.nav-mobile-content-list`, `.nav-mobile-chevron`) were already dead before this branch started. Removing them is in scope — they are the same drawer's leftovers — but call them out separately in the commit message so the diff is not mistaken for fallout from the redesign.
 
 - [ ] **Step 2: Prove nothing still references them**
 
