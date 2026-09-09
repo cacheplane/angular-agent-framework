@@ -1907,31 +1907,16 @@
   letter-spacing: 0.08em;
   fill: var(--color-signal);
 }
-.ap-taxiway,
 .ap-stub,
 .ap-link {
   fill: none;
   stroke: var(--color-ink);
-}
-.ap-taxiway {
-  stroke-width: 1.6;
 }
 .ap-stub {
   stroke-width: 1.4;
 }
 .ap-link {
   stroke-width: 3.5;
-}
-.ap-twy-disc {
-  fill: var(--color-signal);
-  stroke: var(--color-ink);
-  stroke-width: 1.2;
-}
-.ap-twy-letter {
-  font-family: var(--font-mono);
-  font-size: 8.5px;
-  font-weight: 700;
-  fill: var(--color-ink);
 }
 .ap-apron {
   fill: none;
@@ -2075,11 +2060,6 @@
 .compatibility-link:hover,
 .compatibility-link:focus-visible {
   color: var(--color-accent-hover);
-}
-.compatibility-disclaimer {
-  font-size: 12.5px;
-  color: var(--color-text-muted);
-  margin: 0;
 }
 
 /* Narrow form: the same gates as an HTML list, driven by the same data.

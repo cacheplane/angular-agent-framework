@@ -17,9 +17,6 @@ import {
   RWY_S,
   SCALE_BAR,
   STAND,
-  TWY_E,
-  TWY_N,
-  TWY_S,
   VIEW,
   WIDE_RATIO,
   rotate,
@@ -97,15 +94,6 @@ describe('airport diagram geometry', () => {
     ] as const) {
       inside(label, FIELD.x0, FIELD.x1, r.y, r.y + r.h);
     }
-
-    // The two parallel taxiways run the full width; the east one connects them.
-    for (const [label, y] of [
-      ['TWY_N', TWY_N],
-      ['TWY_S', TWY_S],
-    ] as const) {
-      inside(label, FIELD.x0, FIELD.x1, y, y);
-    }
-    inside('TWY_E', TWY_E, TWY_E, TWY_N, TWY_S);
 
     for (const c of CONCOURSES) {
       for (const g of c.gates) {

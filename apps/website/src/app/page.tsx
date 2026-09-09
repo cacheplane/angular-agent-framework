@@ -35,14 +35,15 @@ export default function HomePage() {
       <Compatibility />
       <EnterpriseArchitecture />
 
+      {/* The open-source full stop: a loud dark band with one fork CTA. Copy
+          lives in OPEN_SOURCE_STRIP (positioning.ts). */}
+      <OpenSourceStrip />
+
       {/* The four capability beats (stream, persist, approve, render): stills
           by default, the pinned live act on wide, motion-tolerant viewports
           (live-stage spec §3, §8). Copy lives in STAGE_RAIL (positioning.ts). */}
       <Stage proof={STAGE_PROOF} />
 
-      {/* The open-source full stop: a loud dark band with one fork CTA. Copy
-          lives in OPEN_SOURCE_STRIP (positioning.ts). */}
-      <OpenSourceStrip />
       <TeamsBlock formPolicy={formPolicy} />
       <HomeFAQ />
       <RecentArticles />

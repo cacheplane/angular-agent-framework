@@ -29,13 +29,13 @@ export function TeamsBlock({ formPolicy }: { formPolicy: PublicFormPolicy }) {
         <div className="teams-grid">
           <div>
             <Eyebrow tone="accent" className="teams-eyebrow">
-              Preflight briefing
+              What breaks between a demo and production
               <span className="teams-eyebrow-meta">
-                {' '}· {FIELD_REPORT.pages} pages · free
+                {' '}· {FIELD_REPORT.pages} pages
               </span>
             </Eyebrow>
             <h2 id="field-report-heading" className="teams-heading">
-              What breaks between a demo and production.
+              Free preflight briefing for agentic UI
             </h2>
             <WhitePaperForm
               paper="overview"

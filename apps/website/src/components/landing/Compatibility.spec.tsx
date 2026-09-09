@@ -103,26 +103,26 @@ describe('Compatibility', () => {
     }
   });
 
-  it('states compatibility in words and never implies a customer', () => {
+  it('never implies a customer, and no longer needs a disclaimer to say so', () => {
+    // The "Compatibility, not endorsement" line was removed on request. The
+    // claim it guarded against still matters, so the negative assertion stays:
+    // nothing in the band may read as an endorsement in the first place.
     const { container } = render(<Compatibility />);
-    expect(screen.getByText(/Compatibility, not endorsement/)).toBeTruthy();
+    expect(screen.queryByText(/Compatibility, not endorsement/)).toBeNull();
     expect(container.textContent).not.toMatch(/trusted by|customers|our clients|powered by/i);
   });
 
-  it('says Threadplane never talks to model providers, not that it never sees them', () => {
-    // never-SEES is a data claim the docs do not support; never-TALKS-TO is
-    // structural. This is the same failure mode #1067 had to correct.
+  it('never claims Threadplane cannot see model providers', () => {
+    // The strip used to read "OFF AIRPORT - BEHIND YOUR BACKEND. THREADPLANE
+    // NEVER TALKS TO THEM." and this guard held the positive half of that
+    // claim in place. The label is now "All AI Models supported" on request,
+    // so the structural never-TALKS-TO claim is off the homepage entirely.
     //
-    // The positive half is scoped to .airport-stack, for the same reason as
-    // the gate-name test above: the plate carries this sentence too, as an
-    // aria-hidden <text>, so an unscoped read of container.textContent stays
-    // green while the claim disappears from the phone form and from every
-    // accessible surface the band has. The negative half stays unscoped —
-    // "never sees" must not appear anywhere in the section, drawn or spoken.
+    // The negative half stays, and matters more: never-SEES is a data claim
+    // the docs do not support, and it is the overclaim #1067 had to correct.
+    // It must not appear anywhere in the band, drawn or spoken.
     const { container } = render(<Compatibility />);
-    const stack = container.querySelector('.airport-stack');
-    expect(stack, 'the accessible stack is gone').toBeTruthy();
-    expect(within(stack as HTMLElement).getByText(/never talks to them/i)).toBeTruthy();
+    expect(container.querySelector('.airport-stack'), 'the accessible stack is gone').toBeTruthy();
     expect(container.textContent).not.toMatch(/never sees/i);
   });
 

@@ -26,7 +26,7 @@ export const ARCHITECTURE_EYEBROW = 'Architecture';
 export const ARCHITECTURE_HEADLINE =
   'The UI layer between your users and your agents.';
 export const ARCHITECTURE_BODY =
-  'Threadplane lives inside your Angular application and talks to your agents through the LangGraph SDK or AG-UI. Everything on the right is yours.';
+  'Threadplane lives inside your Angular application and talks to your agents through the LangGraph SDK or AG-UI.';
 export const ARCHITECTURE_LABEL =
   'Threadplane is the UI layer between your users and your agents: it lives inside your Angular application, reaches LangGraph agents first-class through the LangGraph SDK and any AG-UI server through the AG-UI protocol, and leaves the model choice to your runtime.';
 
