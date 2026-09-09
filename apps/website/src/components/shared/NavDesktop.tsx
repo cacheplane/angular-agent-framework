@@ -17,36 +17,6 @@ import { NAV_TRIGGERS, type NavItem, type NavPanel } from './nav-config';
 const OPEN_DELAY_MS = 100;
 const CLOSE_DELAY_MS = 150;
 
-export const links = [
-  { label: 'Pilot to Prod', href: '/pilot-to-prod', external: false },
-  { label: 'Docs', href: '/docs', external: false },
-  { label: 'Pricing', href: '/pricing', external: false },
-];
-
-export function trackNavLink(
-  label: string,
-  href: string,
-  external: boolean,
-  surface: 'nav' | 'mobile_nav'
-) {
-  const slug = label
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '_')
-    .replace(/^_|_$/g, '');
-  const ctaId: `nav_${string}` | `mobile_nav_${string}` =
-    surface === 'nav' ? `nav_${slug}` : `mobile_nav_${slug}`;
-  if (external) {
-    trackExternalLinkClick(href, { surface, cta_id: ctaId, cta_text: label });
-    return;
-  }
-  trackCtaClick({
-    surface,
-    destination_url: href,
-    cta_id: ctaId,
-    cta_text: label,
-  });
-}
-
 export function trackNavItem(item: NavItem, surface: 'nav' | 'mobile_nav') {
   const ctaId: `nav_${string}` | `mobile_nav_${string}` =
     surface === 'nav' ? `nav_${item.ctaId}` : `mobile_nav_${item.ctaId}`;

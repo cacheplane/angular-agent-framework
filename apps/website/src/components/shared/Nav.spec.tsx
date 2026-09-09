@@ -343,6 +343,32 @@ describe('Docs mobile navigation', () => {
     );
   });
 
+  it('returns focus to the trigger row a popped level came from', () => {
+    pathnameRef.current = '/';
+    render(<Nav />);
+    fireEvent.click(screen.getByRole('button', { name: 'Open menu' }));
+    const dialog = screen.getByRole('dialog', { name: 'Mobile navigation' });
+
+    // Both pop paths, one after the other, against the same drawer: the
+    // "Back to menu" button and Escape must land in the same place, and that
+    // place is the row the reader pushed from — not whatever the focus trap's
+    // query happens to list first. (jsdom's multi-clause querySelectorAll
+    // groups by clause instead of returning document order, so an assertion
+    // written against `focusable()[0]` would encode the wrong element and
+    // pass while a real browser did something else.)
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Libraries' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Back to menu' }));
+    expect(document.activeElement).toBe(
+      within(dialog).getByRole('button', { name: 'Libraries' }),
+    );
+
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Libraries' }));
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(document.activeElement).toBe(
+      within(dialog).getByRole('button', { name: 'Libraries' }),
+    );
+  });
+
   it('tags mobile panel analytics with the trigger it came from', () => {
     pathnameRef.current = '/';
     render(<Nav />);

@@ -234,138 +234,10 @@
 .nav-mobile-dialog-close:focus-visible {
   background: var(--color-surface-dim);
 }
-.nav-mtabs {
-  display: flex;
-  gap: 6px;
-  padding: 4px;
-  background: rgba(0, 0, 0, 0.03);
-  border-radius: 10px;
-}
-.nav-mtab {
-  flex: 1;
-  text-align: center;
-  padding: 10px 0;
-  font-size: 15px;
-  font-weight: 500;
-  font-family: var(--font-sans);
-  background: transparent;
-  color: var(--color-text-muted);
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  min-height: 44px;
-}
-.nav-mtab[data-active] {
-  background: var(--color-accent-surface);
-  color: var(--color-accent);
-}
-.nav-msubtabs-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
 .nav-mobile-list {
   display: flex;
   flex-direction: column;
   gap: 2px;
-}
-.nav-mobile-content-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.nav-mobile-item {
-  display: block;
-  padding: 12px 14px;
-  border-radius: 8px;
-  font-size: 16px;
-  line-height: 24px;
-  min-height: 44px;
-  text-decoration: none;
-  font-family: var(--font-sans);
-  color: var(--color-text-secondary);
-  background: transparent;
-}
-.nav-mobile-item[data-active] {
-  color: var(--color-accent);
-  background: var(--color-accent-surface);
-}
-.nav-mobile-item--strong {
-  font-weight: 600;
-}
-.nav-msubtabs {
-  display: flex;
-  gap: 4px;
-  padding: 3px;
-  background: rgba(0, 0, 0, 0.03);
-  border-radius: 8px;
-}
-.nav-msubtab {
-  flex: 1;
-  text-align: center;
-  padding: 8px 0;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  font-weight: 600;
-  background: transparent;
-  color: var(--color-text-muted);
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  min-height: 36px;
-}
-.nav-msubtab[data-active] {
-  background: var(--color-accent-surface);
-  color: var(--color-accent);
-}
-.nav-mobile-demo-link {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 14px;
-  border-radius: 8px;
-  min-height: 44px;
-  color: var(--color-accent);
-  background: var(--color-accent-surface);
-  text-decoration: none;
-  font-family: var(--font-sans);
-  font-weight: 600;
-}
-.nav-mobile-section-toggle {
-  width: 100%;
-  text-align: left;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 12px 14px;
-  min-height: 48px;
-  border-radius: 8px;
-  font-family: var(--font-sans);
-  font-size: 16px;
-  line-height: 24px;
-  color: var(--color-text-primary);
-}
-.nav-mobile-chevron {
-  transition: transform 0.25s ease;
-  flex-shrink: 0;
-  transform: rotate(0);
-}
-.nav-mobile-chevron[data-open] {
-  transform: rotate(180deg);
-}
-.nav-mobile-site-link {
-  display: block;
-  padding: 14px 14px;
-  border-radius: 8px;
-  font-size: 16px;
-  line-height: 24px;
-  min-height: 48px;
-  color: var(--color-text-secondary);
-  text-decoration: none;
-  font-family: var(--font-sans);
 }
 .nav-mobile-github-link {
   display: flex;
@@ -503,21 +375,6 @@
   color: var(--color-text-muted);
   text-decoration: underline;
   font-family: var(--font-sans);
-}
-
-/* Mobile docs-search entry (polish arc PR 3) — button reset to match the
- * .nav-mobile-item link styling it shares. */
-.nav-mobile-search {
-  width: 100%;
-  text-align: left;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--color-text-secondary);
-}
-.nav-mobile-search:focus-visible {
-  outline: none;
-  box-shadow: var(--shadow-focus);
 }
 
 /* Nav panels

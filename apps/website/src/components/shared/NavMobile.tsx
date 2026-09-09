@@ -109,6 +109,14 @@ export function NavMobile({
   const mobileTriggerRef = useRef<HTMLButtonElement>(null);
   const mobileDialogRef = useRef<HTMLDivElement>(null);
   const mobileBackRef = useRef<HTMLButtonElement>(null);
+  /** The root trigger rows, so a pop can land back on the one it came from. */
+  const rootRowRefs = useRef(new Map<string, HTMLButtonElement>());
+  /**
+   * Which root row a pending pop should focus. Read by the per-level focus
+   * effect below: the row does not exist while the panel level is mounted,
+   * so the restore has to wait until root has rendered.
+   */
+  const pendingRootFocusRef = useRef<string | null>(null);
   const restoreMobileFocusRef = useRef(false);
   const pendingMobileSearchRef = useRef(false);
   const cancelScheduledMobileRestoreRef = useRef<(() => void) | null>(null);
@@ -125,6 +133,16 @@ export function NavMobile({
   const [level, setLevel] = useState<MobileLevel>(() =>
     initialLevel(isDocsPage)
   );
+
+  /**
+   * Pop back to the root list, remembering the trigger row the reader came
+   * from. Pushing lands on the level's "Back to menu" row; popping mirrors it
+   * by landing back on that trigger, so the two moves are symmetric.
+   */
+  const popToRoot = useCallback((fromId: string) => {
+    pendingRootFocusRef.current = fromId;
+    setLevel(rootLevel);
+  }, []);
 
   useEffect(() => {
     if (open) setLevel(initialLevel(isDocsPage));
@@ -202,9 +220,19 @@ export function NavMobile({
           'a[href], button:not(:disabled), [tabindex]:not([tabindex="-1"])'
         ) ?? []
       );
-    // A pushed level leads with its back row; land there so the way out is
-    // the first thing the keyboard reaches.
-    (mobileBackRef.current ?? focusable()[0])?.focus();
+    // A pop returns to the trigger row it came from — an explicit ref, never
+    // `focusable()[0]`: jsdom's multi-clause querySelectorAll groups by clause
+    // rather than returning document order, so index 0 there is not the
+    // element a browser would hand back.
+    const pendingRootFocus = pendingRootFocusRef.current;
+    if (pendingRootFocus !== null) {
+      pendingRootFocusRef.current = null;
+      rootRowRefs.current.get(pendingRootFocus)?.focus();
+    } else {
+      // A pushed level leads with its back row; land there so the way out is
+      // the first thing the keyboard reaches.
+      (mobileBackRef.current ?? focusable()[0])?.focus();
+    }
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.preventDefault();
@@ -219,7 +247,7 @@ export function NavMobile({
         // sole trigger' runs on a docs route and depends on this falling
         // through to closeMobileMenu() at the opening level.
         if (level.kind === 'panel' && !sameLevel(level, initialLevel(isDocsPage))) {
-          setLevel(rootLevel);
+          popToRoot(level.id);
           return;
         }
         closeMobileMenu();
@@ -240,7 +268,7 @@ export function NavMobile({
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [closeMobileMenu, isDocsPage, level, open]);
+  }, [closeMobileMenu, isDocsPage, level, open, popToRoot]);
 
   // The docs level hosts the live docs tree, but only on a docs route — there
   // is no docs context anywhere else, so the marketing panel stands in.
@@ -291,7 +319,7 @@ export function NavMobile({
                   ref={mobileBackRef}
                   type="button"
                   className="nav-mobile-back"
-                  onClick={() => setLevel(rootLevel)}
+                  onClick={() => popToRoot(level.id)}
                 >
                   <ChevronLeft size={16} strokeWidth={2} aria-hidden="true" />
                   Back to menu
@@ -322,6 +350,10 @@ export function NavMobile({
                       <button
                         key={trigger.id}
                         type="button"
+                        ref={(node) => {
+                          if (node) rootRowRefs.current.set(trigger.id, node);
+                          else rootRowRefs.current.delete(trigger.id);
+                        }}
                         className="nav-mobile-row"
                         onClick={() => setLevel({ kind: 'panel', id: trigger.id })}
                       >
