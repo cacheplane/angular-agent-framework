@@ -255,21 +255,6 @@ export function AnnouncementToast({
               </a>
             </FormStatus>
           ) : null}
-          <a
-            href="/whitepaper.pdf"
-            download="angular-agent-readiness-guide.pdf"
-            onClick={() => {
-              trackWhitepaperDownloadClick('overview', {
-                surface: 'toast',
-                source_section: 'announcement-toast',
-                cta_id: 'toast_direct_download',
-              });
-              dismiss();
-            }}
-            className="toast-download-link"
-          >
-            or download directly
-          </a>
         </form>
       )}
 

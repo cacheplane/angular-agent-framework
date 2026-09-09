@@ -1315,7 +1315,23 @@
   width: 100%;
 }
 .arch-figure .tp-diagram-svg {
-  min-width: 1024px;
+  /* Scale to the container instead of scrolling. The docs kit floors every
+   * figure at a render width so shrinking the SVG cannot shrink its text into
+   * illegibility, and marketing caps it at 860 -- but min-width beats
+   * max-width, so those two pinned this diagram at exactly 1024px: it never
+   * scaled, wasted ~96px of the container on desktop, and scrolled sideways
+   * below that. Both constraints are dropped here, and the legibility the
+   * floor was protecting is handled by the breakpoint instead: below 1024px
+   * the phone stack takes over, so the SVG never renders under ~944px
+   * (13.5px type at ~10px, its smallest legible size). */
+  min-width: 0;
+}
+/* Specificity, not preference: the marketing cap is
+ * `.tp-diagram-figure[data-scale] .tp-diagram-svg` (0,3,0), so a plain
+ * `.arch-figure .tp-diagram-svg` (0,2,0) loses to it and the diagram stays
+ * pinned at 860px. This selector has to out-rank it to let the figure fill. */
+.arch-figure .tp-diagram-figure[data-scale] .tp-diagram-svg {
+  max-width: none;
 }
 .arch-figure text {
   font-family: var(--font-diagram);
@@ -1474,7 +1490,7 @@
 .arch-stack {
   display: none;
 }
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
   .arch-figure .tp-diagram-figure {
     display: none;
   }
