@@ -54,7 +54,7 @@ test('landing page renders the spine in order (live-stage spec §3)', async ({ p
     'architecture-heading',
     'stage-heading',
     'open-source-heading',
-    'pilot-heading',
+    'field-report-heading',
     'faq-heading',
   ];
   const tops: number[] = [];

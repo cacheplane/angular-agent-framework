@@ -3,6 +3,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { TeamsBlock } from './TeamsBlock';
+import { FIELD_REPORT } from '../../lib/field-report';
 
 vi.mock('../../lib/analytics/client', () => ({
   track: vi.fn(),
@@ -16,22 +17,58 @@ const formPolicy = {
 } as never;
 
 describe('TeamsBlock', () => {
-  it('renders the pilot heading, four outcomes, four phases, both CTAs, and one email form', () => {
+  it('leads with the ask: eyebrow, heading, then the form', () => {
     const { container } = render(<TeamsBlock formPolicy={formPolicy} />);
-    expect(screen.getByRole('heading', { name: 'Shipping inside a large Angular platform?' }).id).toBe('pilot-heading');
-    expect(container.querySelectorAll('.pilot-row')).toHaveLength(4);
-    expect(container.querySelectorAll('.pilot-step')).toHaveLength(4);
-    expect(screen.getByRole('link', { name: 'Talk to an engineer' }).getAttribute('href')).toBe('/contact?source=home_enterprise&track=enterprise');
-    expect(screen.getByRole('link', { name: 'See the pilot program' }).getAttribute('href')).toBe('/pilot-to-prod');
+    const heading = screen.getByRole('heading', { level: 2 });
+    expect(heading.textContent).toBe('What breaks between a demo and production.');
+    expect(heading.id).toBe('field-report-heading');
     expect(container.querySelectorAll('form')).toHaveLength(1);
     expect(screen.getByLabelText('Work email')).toBeTruthy();
-    expect(screen.getByText('Whitepaper disclosure')).toBeTruthy();
+    expect(screen.getByText(formPolicy.disclosures.whitepaper)).toBeTruthy();
   });
 
-  it('frames the field report as the takeaway, not a second section', () => {
-    render(<TeamsBlock formPolicy={formPolicy} />);
-    expect(screen.getByText('Field report')).toBeTruthy();
-    expect(screen.getByText('From Prototype to Production')).toBeTruthy();
-    expect(screen.queryByRole('heading', { name: 'The last-mile gap in Angular AI.' })).toBeNull();
+  it('derives the page count rather than typing it', () => {
+    // The section claimed "18 pages" for a 17-page document. Reading it from
+    // FIELD_REPORT means the guard against the PDF covers this string too.
+    const { container } = render(<TeamsBlock formPolicy={formPolicy} />);
+    const eyebrow = container.querySelector('[data-ui="eyebrow"]');
+    expect(eyebrow?.textContent).toContain(`${FIELD_REPORT.pages} pages`);
+    expect(eyebrow?.textContent).toContain('Preflight briefing');
+  });
+
+  it('shows the briefing beside the ask', () => {
+    const { container } = render(<TeamsBlock formPolicy={formPolicy} />);
+    expect(container.querySelector('.field-report-paper')).toBeTruthy();
+  });
+
+  it('makes contact the secondary ask, not a rival button', () => {
+    // Two same-weight buttons is what stopped the old section saying which
+    // ask mattered. The arrow is decorative so the accessible name stays clean.
+    const { container } = render(<TeamsBlock formPolicy={formPolicy} />);
+    const link = screen.getByRole('link', { name: 'Talk to an engineer' });
+    expect(link.getAttribute('href')).toBe('/contact?source=home_enterprise&track=enterprise');
+    expect(link.getAttribute('data-ui')).not.toBe('button');
+    // Exactly one button in the whole section, and it belongs to the form.
+    // (SubmitButton wraps Button, so the form's submit carries data-ui too.)
+    const buttons = container.querySelectorAll('[data-ui="button"]');
+    expect(buttons).toHaveLength(1);
+    expect(buttons[0].closest('form')).toBeTruthy();
+  });
+
+  it('no longer repeats the pilot programme the dedicated page owns', () => {
+    const { container } = render(<TeamsBlock formPolicy={formPolicy} />);
+    expect(container.querySelectorAll('.pilot-step')).toHaveLength(0);
+    expect(container.querySelectorAll('.pilot-row')).toHaveLength(0);
+    expect(screen.queryByRole('link', { name: 'See the pilot program' })).toBeNull();
+  });
+
+  it('never advertises topics the document does not contain', () => {
+    // "Error boundaries", "fallbacks" and "observability" each return zero
+    // matches in whitepaper.pdf. They were on this page for months.
+    const { container } = render(<TeamsBlock formPolicy={formPolicy} />);
+    const text = container.textContent ?? '';
+    for (const phrase of ['Error boundaries', 'fallbacks', 'observability', '18 pages']) {
+      expect(text).not.toContain(phrase);
+    }
   });
 });

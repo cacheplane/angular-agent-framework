@@ -3,10 +3,14 @@ import { Container } from '../ui/Container';
 import { Section } from '../ui/Section';
 import { Eyebrow } from '../ui/Eyebrow';
 import { WhitePaperForm, type WhitepaperId } from './WhitePaperForm';
+import { FIELD_REPORT } from '../../lib/field-report';
 
 const ROWS = [
-  { claim: 'Six production-readiness dimensions', tail: '18 pages' },
-  { claim: 'Error boundaries, fallbacks, observability, deploy', tail: 'concrete patterns' },
+  { claim: 'Six production-readiness dimensions', tail: `${FIELD_REPORT.pages} pages` },
+  // Was "Error boundaries, fallbacks, observability, deploy" — three phrases
+  // with zero matches in whitepaper.pdf. These are the document's actual
+  // chapters.
+  { claim: 'Streaming, persistence, tool calls, approvals, generative UI, testing', tail: 'the six chapters' },
   { claim: 'No vendor pitch — what we learned shipping it', tail: 'free' },
 ];
 
@@ -54,7 +58,7 @@ export function WhitePaperBlock({
           <div className="wp-cover-wrap" aria-hidden="true">
             <div className="wp-paper">
               <div>
-                <div className="wp-cover-badge">Field report · 18 pages</div>
+                <div className="wp-cover-badge">Field report · {FIELD_REPORT.pages} pages</div>
                 <div className="wp-cover-title">From Prototype to Production</div>
                 <div className="wp-cover-desc">Six production-readiness dimensions for Angular AI teams.</div>
               </div>
