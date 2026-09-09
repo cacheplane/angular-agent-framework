@@ -102,13 +102,43 @@ test.describe('desktop nav panels', () => {
     );
     await expect(page.locator('.nav-panel')).toBeVisible({ timeout: 2000 });
 
-    // The dead zone between the trigger row and the panel belongs to neither
-    // element; crossing it schedules a close that entering the panel must cancel.
+    // Read the resting geometry: the entrance animation translates the panel
+    // by 4px, so an un-settled box would move the waypoints below.
+    await page.locator('.nav-panel').evaluate((el) =>
+      Promise.all(el.getAnimations().map((animation) => animation.finished)),
+    );
+    const rowBox = await page.locator('.nav-desktop').boundingBox();
+    const panelBox = await page.locator('.nav-panel').boundingBox();
     const itemBox = await page
       .locator('.nav-panel .nav-panel-item')
       .first()
       .boundingBox();
-    if (!itemBox) throw new Error('Panel item has no box');
+    if (!rowBox || !panelBox || !itemBox)
+      throw new Error('Nav geometry has no box');
+
+    // The band between the trigger row's bottom edge and the panel's top edge
+    // is the row's own `py-4 md:py-5` padding. It is real space the pointer
+    // has to cross, and it used to belong to neither element: leaving the row
+    // scheduled a close, and only arriving at the panel could cancel it.
+    const gapTop = rowBox.y + rowBox.height;
+    const gapBottom = panelBox.y;
+    expect(gapBottom).toBeGreaterThan(gapTop);
+
+    // Cross that band DELIBERATELY SLOWLY — three stops of 120ms, ~360ms in
+    // total, comfortably past NavDesktop's CLOSE_DELAY_MS of 150ms. A quick
+    // traverse merely outruns the close timer, so it passes on fast hardware
+    // whether or not the gap is bridged (that is how this shipped red on CI
+    // and green locally). Dwelling longer than the grace asserts the thing
+    // that actually keeps the panel open: .nav-panel-shell's transparent
+    // top padding makes the band part of the shell, so the pointer never
+    // leaves the panel's own subtree and no close is ever scheduled.
+    const x = triggerBox.x + triggerBox.width / 2;
+    for (const y of [gapTop + 1, (gapTop + gapBottom) / 2, gapBottom - 1]) {
+      await page.mouse.move(x, y, { steps: 5 });
+      await page.waitForTimeout(120);
+    }
+    await expect(page.locator('.nav-panel')).toBeVisible();
+
     await page.mouse.move(
       itemBox.x + itemBox.width / 2,
       itemBox.y + itemBox.height / 2,

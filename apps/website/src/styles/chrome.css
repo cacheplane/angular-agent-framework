@@ -25,13 +25,22 @@
  * the docs column, and the mobile drawer (top: nav-h - 1px) hung 14px below the
  * nav it is supposed to be attached to. These are measured, not derived, so
  * only a real browser can hold them honest: e2e/nav-height.spec.ts asserts
- * nav.height === --nav-h at each of the three steps. */
+ * nav.height === --nav-h at each of the three steps.
+ *
+ * --nav-row-pad is that same row's block padding on its own — the `py-4
+ * md:py-5` half of `px-6 py-4 md:px-8 md:py-5`. It has only TWO steps, not
+ * three: padding grows at md and never again, so the lg entry below is
+ * deliberately absent and 20px carries through. .nav-panel-shell reads it to
+ * bridge the gap between a trigger and its panel (see the note there), so a
+ * wrong value here is a dead zone, not a cosmetic drift. */
 :root {
   --nav-h: 58px;
+  --nav-row-pad: 16px;
 }
 @media (min-width: 768px) {
   :root {
     --nav-h: 66px;
+    --nav-row-pad: 20px;
   }
 }
 @media (min-width: 1024px) {
@@ -52,6 +61,12 @@
  * marketing bar. */
 :root:has(.nav-bar[data-route='docs']) {
   --nav-h: 58px;
+  /* Docs pins the row's padding to a flat 16px at every width (see the
+   * `.nav-bar[data-route='docs'] > div` rule below), so the bridge has to
+   * shrink with it. Left at the marketing 20px the shell would start 4px
+   * ABOVE the trigger row's bottom edge and lie over the triggers, swallowing
+   * the mouseenter that switches from one panel to the next. */
+  --nav-row-pad: 16px;
 }
 
 /* Footer */
@@ -399,7 +414,15 @@
 }
 .nav-panel-shell {
   position: absolute;
-  top: 100%;
+  /* Hit area starts at the trigger's bottom edge, not the row's. The row's
+   * py-4/md:py-5 padding used to sit between trigger and panel belonging to
+   * neither, so a traverse slower than CLOSE_DELAY_MS closed the panel and
+   * left the pointer over nothing that could reopen it. The padding below is
+   * a transparent bridge: it makes the gap part of the shell, so mouseenter
+   * fires the instant the pointer leaves the trigger. The visible .nav-panel
+   * does not move. e2e/nav-panels.spec.ts drives this with a stepped move. */
+  top: calc(100% - var(--nav-row-pad));
+  padding-top: var(--nav-row-pad);
   left: 0;
   right: 0;
   z-index: 60;
@@ -513,6 +536,18 @@
  * here — keeping .nav-panel-shell's containing block on .nav-bar > div below. */
 .nav-desktop {
   position: static;
+  /* The row is `items-center`, so this box would otherwise shrink to its own
+   * tallest child and float in the middle of the row's content. On docs that
+   * left 2.5px between its bottom edge and where .nav-panel-shell's bridge
+   * starts — a second, smaller version of the dead zone the bridge exists to
+   * close, since the row's content height there is set by the 25px logo, not
+   * by these 20px links. Stretching pins the bottom edge to the content box
+   * so the two hit areas meet exactly. Children stay centred by this
+   * element's own `items-center`, so nothing moves: measured on /docs, the
+   * panel still rests at y=57 and the bar still measures 58px. On marketing
+   * the 40px CTA already made this box the full content height, so there
+   * stretching is a no-op. */
+  align-self: stretch;
 }
 .nav-bar > div {
   position: relative;
