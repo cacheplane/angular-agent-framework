@@ -64,6 +64,15 @@ class StubAgent {
 }
 
 describe('provideAgent', () => {
+  it('disposes the adapter when its injector is destroyed', async () => {
+    TestBed.configureTestingModule({ providers: [provideAgent({ url: 'http://test.invalid', telemetry: false })] });
+    const ref = TestBed.runInInjectionContext(() => injectAgent());
+    const dispose = vi.spyOn(ref, 'dispose');
+    TestBed.resetTestingModule();
+    expect(dispose).toHaveBeenCalledOnce();
+    await expect(ref.submit({ message: 'too late' })).rejects.toThrow(/disposed/);
+  });
+
   it('rejects a hostile signal before invoking fetch without reporting', async () => {
     const reportOperationFailure = vi.fn();
     const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 200 }));

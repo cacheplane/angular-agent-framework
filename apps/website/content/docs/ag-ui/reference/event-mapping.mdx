@@ -69,15 +69,15 @@ One prompt against this graph produces the following sequence. The order is the 
 
 ## Event reference
 
-The adapter exposes `messages`, `status`, `isLoading`, `error`, `toolCalls`, `state`, `interrupt`, `subagents`, and `customEvents` as Signals, `events$` as an Observable, and `clientTools` as a capability, alongside the `submit`, `retry`, `stop`, and `regenerate` methods. The tables below name the surface each event writes to.
+The adapter exposes `messages`, `status`, `isLoading`, `error`, `toolCalls`, `state`, `interrupt`, `interruptSession`, `subagents`, and `customEvents` as Signals, `events$` as an Observable, and `clientTools` as a capability. Alongside `submit`, `retry`, `stop`, and `regenerate`, it provides the hydration Promise `ready`, `reconcileInterrupt()`, and `dispose()`. The tables below name the surface each event writes to.
 
 ### Run lifecycle
 
 | AG-UI event | Surface | Behavior |
 | --- | --- | --- |
-| `RUN_STARTED` | `status`, `isLoading`, `error`, `interrupt`, `customEvents`, `subagents` | Sets `status` to `running` and `isLoading` to `true`; clears the error, the pending interrupt, the accumulated custom events, the subagent map, and any unfinished tool-argument buffer. Ignored when the event's run id does not match the run already bound to this delivery. |
-| `RUN_FINISHED` (no outcome, or a success outcome) | `status`, `isLoading`, `messages` | Completes the run, sets `status` to `idle` and `isLoading` to `false`, and settles the run's messages. Ignored on the same run-id gate as `RUN_STARTED`. |
-| `RUN_FINISHED` (outcome `{ type: 'interrupt' }`) | `interrupt`, `status`, `isLoading` | Sets `interrupt` to `{ id, value: { interrupts, runId }, resumable: true }`, ends the run as paused, and returns the agent to `idle`. A `CUSTOM` `on_interrupt` that already paused this run keeps its own value. |
+| `RUN_STARTED` | `status`, `isLoading`, `error`, `interrupt`, `interruptSession`, `customEvents`, `subagents` | Sets `status` to `running` and `isLoading` to `true`; clears the error, visible interrupt, custom events, subagents, and unfinished tool-argument buffer. A matching resume becomes `acknowledged`; the claim is retained until a terminal outcome, rather than treated as completed. Ignored when the run id does not match this delivery. |
+| `RUN_FINISHED` (no outcome, or a success outcome) | `status`, `isLoading`, `messages`, `interruptSession` | Settles the run and returns to `idle`. A collected compatibility interrupt becomes pending at this boundary; otherwise the run completes. Ignored on the same run-id gate as `RUN_STARTED`. |
+| `RUN_FINISHED` (outcome `{ type: 'interrupt' }`) | `interrupt`, `interruptSession`, `status`, `isLoading` | Records the full native batch as pending, projects `{ id, value: { interrupts, runId }, resumable: true }`, and returns to `idle`. In default `auto` mode the native batch takes precedence over compatibility events in either arrival order. |
 | `RUN_ERROR` | `status`, `isLoading`, `error` | Ends the run as failed, sets `status` to `error`, stops loading, and stores the event's `message` as an error (the raw event when no message is present). Ignored on the same run-id gate as `RUN_STARTED`. |
 | `STEP_STARTED`, `STEP_FINISHED` | none | Not reduced. Node boundaries pass through untouched. |
 
@@ -150,7 +150,7 @@ The citations bridge reads `state.citations`, an object keyed by message id, and
 
 | AG-UI event | Surface | Behavior |
 | --- | --- | --- |
-| `CUSTOM` named `on_interrupt` | `interrupt`, `status`, `isLoading` | Sets `interrupt` to `{ id, value, resumable: true }`, ends the run as paused, and returns the agent to `idle`. A string `value` is JSON-parsed first. |
+| `CUSTOM` named `on_interrupt` | `interrupt`, `interruptSession`, `status`, `isLoading` | Collects a compatibility interrupt, parsing a string value as JSON. The batch becomes pending at a terminal event or clean transport close. A native batch retains precedence in `auto` mode. |
 | `CUSTOM` named `state_update` with an object value | `customEvents`, `events$` | Appends `{ name, data }` to `customEvents` and emits `{ type: 'state_update', data }` on `events$`. |
 | `CUSTOM` (every other name) | `customEvents`, `events$` | Appends `{ name, data }` to `customEvents` and emits `{ type: 'custom', name, data }` on `events$`. |
 
@@ -176,7 +176,11 @@ Text and tool events may also carry a `subagentRunId`. An attributed content eve
 
 ## Submit, stop, and failures
 
-`agent.submit({ message })` builds a local user message, appends it to `messages` and to the source agent's own list, and starts the run. When `message` is omitted no user message is appended and the run still starts. `submit({ resume })` is a separate path: it clears the pending interrupt and replays the run with the resume payload, shaped by how that interrupt arrived. `agent.retry()` re-runs the last input without appending the message again, and `agent.regenerate(index)` truncates the transcript back to the preceding user message before re-running.
+`agent.submit({ message })` builds a local user message, appends it to `messages` and the source agent's list, and starts the run. Omitting `message` starts a run without appending a user message, provided no interrupt blocks new input. `submit({ resume })` requires a pending batch and claims it before dispatch. Native responses must cover every pending ID exactly once; a single unwrapped value is accepted only for a single interrupt. Ordinary input and regeneration cannot abandon a pending approval.
+
+`agent.retry()` replays captured input without appending the user message again. For a resume, an error carrying `requestNotDispatched: true` retains the pending batch and exact decision for retry. Uncertain delivery or failure after acknowledgement requires `reconcileInterrupt()` with an application-provided authoritative reconciler before retrying. A failed resume restores committed protocol messages and state; provisional stream changes do not become the next request's baseline, though failed messages may remain visible in the local transcript. Native snapshots are authoritative, while compatibility pause state commits at a terminal event or clean close.
+
+`interruptTransport` selects `auto`, `protocol`, `legacy-command`, or `mastra-command`. In `auto`, native outcomes use top-level `resume`; compatibility payloads use `forwardedProps.command.resume`, with `command.interruptEvent` for Mastra payloads carrying `toolCallId`. Select a command profile explicitly if the backend requires it even when native events are present.
 
 `agent.stop()` ends the current run locally as aborted, clears the error, and calls `source.abortRun()`. Whether the backend stops producing depends on the AG-UI source implementation.
 

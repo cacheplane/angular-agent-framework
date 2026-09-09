@@ -11,6 +11,7 @@ export const appConfig: ApplicationConfig = {
       }
       return {
         url: connection.url,
+        interruptTransport: 'mastra-command',
       };
     }),
   ],

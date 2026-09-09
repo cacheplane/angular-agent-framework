@@ -18,13 +18,13 @@ This page records the AG-UI wire behavior measured for Mastra on 2026-08-31. It 
 
 The service refuses to boot without `AG_UI_INTERNAL_TOKEN`, rejects any non-health route without a matching header, and maps an error from the underlying observable to a `RUN_ERROR` frame rather than dropping the socket. Any route other than `/ok` that arrives without a matching header returns `401 {"detail":"unauthorized"}`; with a valid token, an unknown path or method returns `404 {"detail":"not found"}` and an unregistered topic returns `404 {"detail":"no such topic: <topic>"}`.
 
-In your own application this is still an ordinary `provideAgent({ url: '/agent' })`; the example in this repository passes a factory only because it resolves its endpoint at runtime. The token is injected by the dev proxy in front of the app, never by the browser.
+In your own application this is still an ordinary `provideAgent({ url: '/agent', interruptTransport: 'mastra-command' })`; the example in this repository passes a factory only because it resolves its endpoint at runtime. The token is injected by the dev proxy in front of the app, never by the browser.
 
 ## Interrupts arrive by both conventions
 
 Mastra is the only measured runtime that signals an interrupt twice: it emits a `CUSTOM` event named `on_interrupt` **and** finishes the run with the protocol-standard interrupt outcome.
 
-AWS Strands and Microsoft Agent Framework emit only the outcome. The LangGraph bridge emits only `on_interrupt`. The adapter accepts either, and within a single run the first signal it sees wins, so a runtime that emits both is handled without special-casing.
+AWS Strands and Microsoft Agent Framework emit only the outcome. The LangGraph bridge emits only `on_interrupt`. The adapter retains both forms in one session. The native batch drives the display projection, while `interruptSession().legacy?.value` preserves the Mastra suspend details used by the approval card.
 
 ## Resume uses interruptEvent
 
@@ -40,7 +40,7 @@ Mastra reads resume data from `forwardedProps.command.interruptEvent`, carrying 
 }
 ```
 
-That is a third distinct shape. Strands and Microsoft Agent Framework read a top-level `resume` array; the LangGraph bridge reads `forwardedProps.command.resume`. Application code passes one neutral `submit({ resume })` and the adapter derives the wire shape from how the interrupt arrived.
+That is a third distinct shape. Strands and Microsoft Agent Framework read a top-level `resume` array; the LangGraph bridge reads `forwardedProps.command.resume`. Application code passes one neutral `submit({ resume })`. The Mastra provider selects `interruptTransport: 'mastra-command'` explicitly because this backend emits both compatibility and native interrupts, and `auto` otherwise selects the native wire shape.
 
 ## Suspend and resume require persistent storage
 

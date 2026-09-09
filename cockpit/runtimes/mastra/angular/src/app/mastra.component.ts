@@ -50,8 +50,9 @@ interface PackingList {
  *   packing list.
  * - A suspended tool (`reserve_campsite`) surfaces BOTH interrupt
  *   conventions: CUSTOM `on_interrupt` (payload carrying toolCallId + runId)
- *   and the protocol-standard RUN_FINISHED interrupt outcome. The reducer's
- *   first-signal-wins rule keeps the Mastra-shaped payload, so
+ *   and the protocol-standard RUN_FINISHED interrupt outcome. The session
+ *   retains the Mastra payload alongside the native batch. The explicit
+ *   `mastra-command` transport in app.config.ts ensures
  *   `submit({ resume })` goes out as
  *   `forwardedProps.command = { resume, interruptEvent: { toolCallId, runId } }`
  *   — exactly what the Mastra bridge requires to resume the suspended run.
@@ -251,13 +252,13 @@ export class MastraComponent {
 
   // #region approval-actions
   /**
-   * The pending Mastra suspend. The reducer stores the parsed CUSTOM
+   * The pending Mastra suspend. The session retains the parsed CUSTOM
    * `on_interrupt` payload: `{ type: 'mastra_suspend', toolCallId, toolName,
-   * suspendPayload, args, resumeSchema, runId }` (first-signal-wins over the
-   * RUN_FINISHED outcome that follows it on the wire).
+   * suspendPayload, args, resumeSchema, runId }` alongside the native
+   * RUN_FINISHED outcome that follows it on the wire.
    */
   private readonly suspendValue = computed(() => {
-    return this.agent.interrupt?.()?.value as
+    return this.agent.interruptSession().legacy?.value as
       | { toolName?: string; suspendPayload?: { site?: string; nights?: number; total_usd?: number } }
       | undefined;
   });

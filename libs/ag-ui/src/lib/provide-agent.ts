@@ -1,7 +1,7 @@
-import { InjectionToken, inject, isDevMode, type Provider } from '@angular/core';
+import { DestroyRef, InjectionToken, inject, isDevMode, type Provider } from '@angular/core';
 import { HttpAgent } from '@ag-ui/client';
 import type { AgentRef, AgentRuntimeTelemetrySink } from '@threadplane/chat';
-import { toAgent, ɵtoAgentWithProtectedErrors, type AgUiAgent } from './to-agent';
+import { toAgent, ɵtoAgentWithProtectedErrors, type AgUiAgent, type ToAgentOptions } from './to-agent';
 import {
   createRuntimeProtectedFetch,
   ɵAG_UI_RUNTIME_OPERATION_REPORTER,
@@ -13,6 +13,10 @@ import {
  * telemetry sink.
  */
 export interface AgentConfig {
+  /** Explicit compatibility wire profile; auto prefers protocol-native outcomes. */
+  interruptTransport?: ToAgentOptions['interruptTransport'];
+  /** Optional application-owned durable thread storage and reconciliation. */
+  persistence?: ToAgentOptions['persistence'];
   /** Endpoint URL of the AG-UI HTTP agent (e.g. `'http://localhost:8000/agent'`). Required. */
   url: string;
   /** Agent identifier, when the endpoint serves more than one agent. */
@@ -52,10 +56,13 @@ function buildAgUiAgent(configOrFactory: AgentConfig | (() => AgentConfig)): AgU
       ? { fetch: createRuntimeProtectedFetch(reportOperationFailure) }
       : {}),
   });
-  const options = { telemetry: config.telemetry };
-  return reportOperationFailure === null
+  if (config.persistence && !config.threadId) throw new Error('Interrupt persistence requires a stable configured threadId');
+  const options = { telemetry: config.telemetry, interruptTransport: config.interruptTransport, persistence: config.persistence };
+  const adapter = reportOperationFailure === null
     ? toAgent(source, options)
     : ɵtoAgentWithProtectedErrors(source, options);
+  inject(DestroyRef).onDestroy(() => adapter.dispose());
+  return adapter;
 }
 
 function isAgentRef<T>(x: unknown): x is AgentRef<T> {

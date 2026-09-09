@@ -16,14 +16,14 @@ import { CHAT_INPUT_STYLES } from '../../styles/chat-input.styles';
 
 /**
  * Submits a trimmed message to the agent.
- * Returns the trimmed string on success, or `null` if the input was empty.
+ * Returns the trimmed string on dispatch, or `null` for empty or blocked input.
  */
 export function submitMessage(
   agent: Agent,
   text: string,
 ): string | null {
   const trimmed = text.trim();
-  if (!trimmed) return null;
+  if (!trimmed || agent.isInputBlocked?.()) return null;
   void agent.submit({ message: trimmed });
   return trimmed;
 }
@@ -106,7 +106,7 @@ export class ChatInputComponent {
 
   /** Submit is allowed only when not loading and there's non-whitespace text. */
   readonly canSubmit = computed(() => {
-    if (this.isLoading()) return false;
+    if (this.isLoading() || this.agent().isInputBlocked?.()) return false;
     return this.messageText().trim().length > 0;
   });
 

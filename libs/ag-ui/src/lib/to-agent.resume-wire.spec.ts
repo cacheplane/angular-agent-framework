@@ -90,6 +90,7 @@ interface WireHarness {
 function wireHarness(
   threadId: string,
   responses: Array<(request: Record<string, unknown>) => Response>,
+  options: Parameters<typeof toAgent>[1] = {},
 ): WireHarness {
   const bodies: Array<Record<string, unknown>> = [];
   let call = 0;
@@ -105,7 +106,7 @@ function wireHarness(
     threadId,
     fetch: fetchMock as unknown as ConstructorParameters<typeof HttpAgent>[0]['fetch'],
   });
-  return { agent: toAgent(source), source, bodies: () => bodies };
+  return { agent: toAgent(source, options), source, bodies: () => bodies };
 }
 
 describe('AWS Strands resume over the wire (0.0.59 top-level resume array)', () => {
@@ -144,7 +145,7 @@ describe('AWS Strands resume over the wire (0.0.59 top-level resume array)', () 
     expect(messages[0]).toEqual((measuredMessages as unknown[])[0]);
   });
 
-  it('lets a plain submit abandon the interrupt without tripping the 0.0.59 pending-interrupt gate', async () => {
+  it('rejects a plain submit while retaining the pending interrupt ledger', async () => {
     const { agent, source, bodies } = wireHarness('th-int-555800', [
       (request) => sseResponseFromFixture('strands-interrupt.sse', request),
       (request) => syntheticSuccessResponse(request),
@@ -153,13 +154,14 @@ describe('AWS Strands resume over the wire (0.0.59 top-level resume array)', () 
     await agent.submit({ message: 'Schedule a meeting with Dana about the Q3 roadmap.' });
     expect(source.pendingInterrupts).toHaveLength(1);
 
-    // Pre-0.0.59 semantics: a plain message after an interrupt just runs.
-    // Without the adapter clearing the ledger, 0.0.59's onInitialize throws
-    // AGUIError before any request is sent.
-    await agent.submit({ message: 'Never mind, cancel that.' });
+    const pendingInterrupts = [...source.pendingInterrupts];
+    const messages = agent.messages();
+    await expect(agent.submit({ message: 'Never mind, cancel that.' })).rejects.toThrow('Resolve the pending interrupt');
     expect(agent.error()).toBeUndefined();
-    expect(bodies()).toHaveLength(2);
-    expect(bodies()[1]['resume']).toBeUndefined();
+    expect(bodies()).toHaveLength(1);
+    expect(source.pendingInterrupts).toEqual(pendingInterrupts);
+    expect(agent.messages()).toEqual(messages);
+    expect(agent.interrupt!()).toBeDefined();
   });
 });
 
@@ -209,7 +211,7 @@ describe('Mastra resume over the wire (forwardedProps shape preserved)', () => {
     const { agent, source, bodies } = wireHarness('thread-hitl-1', [
       (request) => sseResponseFromFixture('mastra-reinterrupt.sse', request),
       (request) => syntheticSuccessResponse(request),
-    ]);
+    ], { interruptTransport: 'mastra-command' });
 
     await agent.submit({ message: 'Schedule a meeting with Dana about the Q4 roadmap.' });
     expect(agent.interrupt!()).toBeDefined();
