@@ -482,7 +482,9 @@ describe('style contracts', () => {
      */
     it('the stage pin is sticky — the engine only warns when it is not', () => {
       expect(declarationsFor(css, '.stage-pin')).toMatch(/position:\s*sticky/);
-      expect(declarationsFor(css, '.stage-act [data-sc-cue]')).toMatch(/opacity:\s*0/);
+      expect(declarationsFor(css, '.stage-act [data-sc-cue]')).toMatch(
+        /opacity:\s*0/
+      );
     });
 
     /**
@@ -492,11 +494,15 @@ describe('style contracts', () => {
      * marks the block `now` or the ledger active.
      */
     it("a hidden cue does not intercept the visible one's clicks", () => {
-      expect(declarationsFor(css, '.stage-act [data-sc-cue]')).toMatch(/pointer-events:\s*none/);
-      expect(declarationsFor(css, ".stage-rail-beat[data-beat-state='now']")).toMatch(
+      expect(declarationsFor(css, '.stage-act [data-sc-cue]')).toMatch(
+        /pointer-events:\s*none/
+      );
+      expect(
+        declarationsFor(css, ".stage-rail-beat[data-beat-state='now']")
+      ).toMatch(/pointer-events:\s*auto/);
+      expect(declarationsFor(css, '.stage-rail-close[data-active]')).toMatch(
         /pointer-events:\s*auto/
       );
-      expect(declarationsFor(css, '.stage-rail-close[data-active]')).toMatch(/pointer-events:\s*auto/);
     });
 
     /**
@@ -507,15 +513,22 @@ describe('style contracts', () => {
      * rows instead, the grid split its height across both and pushed the hold
      * line ~150px below the beat block.
      */
-    it('the segment bar and the checks have a visible state, and the ledger shares the cues cell', () => {
-      expect(declarationsFor(css, ".stage-seg[data-beat-state='now']::before")).toMatch(
+    it('shows square checks in persistent rows without dividing lines', () => {
+      expect(declarationsFor(css, '.stage-check')).toMatch(
+        /border-radius:\s*5px/
+      );
+      expect(declarationsFor(css, '.stage-check[data-checked]')).toMatch(
         /background:/
       );
-      expect(declarationsFor(css, '.stage-check[data-checked]')).toMatch(/background:/);
-      expect(declarationsFor(css, '.stage-rail-cues')).toMatch(/grid-area:\s*2\s*\/\s*1\s*;/);
-      expect(declarationsFor(css, '.stage-rail-close')).toMatch(/grid-area:\s*2\s*\/\s*1\s*;/);
-      expect(declarationsFor(css, '.stage-rail-beat')).toMatch(/grid-area:\s*1\s*\/\s*1\s*;/);
-      expect(declarationsFor(css, '.stage-rail-hold')).toMatch(/grid-area:\s*2\s*\/\s*1\s*;/);
+      expect(declarationsFor(css, '.stage-rail-beat')).toMatch(
+        /display:\s*flex/
+      );
+      expect(declarationsFor(css, '.stage-rail-beat')).not.toMatch(
+        /border-bottom:|grid-area:/
+      );
+      expect(declarationsFor(css, '.stage-checklist')).toMatch(
+        /display:\s*grid/
+      );
     });
   });
 });

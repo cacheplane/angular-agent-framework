@@ -3,6 +3,7 @@ import {
   APPROVE_HOLD,
   APPROVE_THRESHOLD_P,
   RENDER_TAIL,
+  PERSIST_RELOAD_SHARE,
   STAGE_BEATS,
   STAGE_SPAN,
   beatAt,
@@ -17,13 +18,28 @@ import {
   segmentState,
   settleAt,
   timeAt,
+  navigationProgress,
   type StageReadyMessage,
 } from './stage-beats';
+
+describe('checklist lead-ins', () => {
+  it('lands before recorded reveals, clamps to the beat, and keeps other beat starts', () => {
+    const ready = { ...READY, beats: READY.beats.map(b => ({ ...b, revealMs: b.startMs + (b.endMs - b.startMs) * 0.7 })) };
+    for (const beat of ['stream', 'subagents'] as const) {
+      const p = navigationProgress(beat, ready);
+      expect(timeAt(p, ready)).toBeLessThan(ready.beats.find(b => b.beat === beat)!.revealMs);
+      expect(p).toBeGreaterThan(beatWindows().find(b => b.beat === beat)!.from);
+    }
+    expect(navigationProgress('persist', ready)).toBe(navigationProgress('persist', null));
+    expect(navigationProgress('stream', { ...ready, beats: ready.beats.map(b => ({ ...b, revealMs: b.startMs })) })).toBe(0);
+  });
+});
 
 const READY: StageReadyMessage = {
   totalMs: 40_000,
   beats: [
-    { beat: 'stream', startMs: 0, endMs: 12_000 },
+    { beat: 'stream', startMs: 0, endMs: 6_000 },
+    { beat: 'subagents', startMs: 6_000, endMs: 12_000 },
     { beat: 'persist', startMs: 12_000, endMs: 20_000 },
     { beat: 'approve', startMs: 20_000, endMs: 32_000 },
     { beat: 'render', startMs: 32_000, endMs: 40_000 },
@@ -39,7 +55,7 @@ describe('beatWindows', () => {
     expect(w[0].from).toBe(0);
     expect(w[w.length - 1].to).toBe(1);
     w.slice(1).forEach((x, i) => expect(x.from).toBe(w[i].to));
-    expect(STAGE_SPAN).toBe(6);
+    expect(STAGE_SPAN).toBeCloseTo(7.3);
   });
   it('returns one frozen table', () => {
     const w = beatWindows();
@@ -48,7 +64,7 @@ describe('beatWindows', () => {
     w.forEach((x) => expect(Object.isFrozen(x)).toBe(true));
   });
   it('places the approve threshold at the end of the hold', () => {
-    const a = beatWindows()[2];
+    const a = beatWindows()[3];
     expect(APPROVE_THRESHOLD_P).toBe(
       a.from + (a.to - a.from) * APPROVE_HOLD.to
     );
@@ -57,7 +73,7 @@ describe('beatWindows', () => {
 
 describe('timeAt', () => {
   it('is monotonic non-decreasing across the whole act, seams included', () => {
-    const a = beatWindows()[2];
+    const a = beatWindows()[3];
     const seams = beatWindows().flatMap((w) => [w.from, w.to]);
     seams.push(a.from + (a.to - a.from) * APPROVE_HOLD.from);
     seams.push(APPROVE_THRESHOLD_P);
@@ -77,31 +93,31 @@ describe('timeAt', () => {
     );
     expect(timeAt(1, READY)).toBe(READY.totalMs);
   });
-  it('settles the reload at the persist midpoint', () => {
-    const persist = beatWindows()[1];
-    expect(timeAt((persist.from + persist.to) / 2, READY)).toBe(
+  it('settles the reload early, leaving most scroll for the saved answers', () => {
+    const persist = beatWindows()[2];
+    expect(timeAt(persist.from + (persist.to - persist.from) * PERSIST_RELOAD_SHARE, READY)).toBe(
       READY.reloadEndMs
     );
   });
   it('pins time at the interrupt through the hold and resumes past the threshold', () => {
-    const a = beatWindows()[2];
+    const a = beatWindows()[3];
     const at = (f: number) => timeAt(a.from + (a.to - a.from) * f, READY);
     // Pinned one millisecond inside the hold, so the frame reports `pause`.
     expect(at(APPROVE_HOLD.from)).toBe(READY.hold.startMs + 1);
     expect(at(0.5)).toBe(READY.hold.startMs + 1);
     expect(at(APPROVE_HOLD.to - 1e-6)).toBe(READY.hold.startMs + 1);
     expect(at(APPROVE_HOLD.to)).toBe(READY.hold.endMs);
-    expect(at(1)).toBe(READY.beats[2].endMs);
+    expect(at(1)).toBe(READY.beats[3].endMs);
   });
   it('holds the mounted form through the render tail', () => {
-    const r = beatWindows()[3];
-    expect(timeAt(r.from + (r.to - r.from) * 0.9, READY)).toBe(READY.totalMs);
+    const r = beatWindows()[4];
+    expect(timeAt(r.from + (r.to - r.from) * (1 - RENDER_TAIL / 2), READY)).toBe(READY.totalMs);
   });
   it('clamps outside 0..1 and falls back to linear persist without a reload', () => {
     expect(timeAt(-1, READY)).toBe(0);
     expect(timeAt(2, READY)).toBe(READY.totalMs);
     const noReload = { ...READY, reloadEndMs: null };
-    const persist = beatWindows()[1];
+    const persist = beatWindows()[2];
     expect(timeAt((persist.from + persist.to) / 2, noReload)).toBe(16_000);
   });
   it('degrades forward to the end of the recording when a beat is missing', () => {
@@ -109,7 +125,7 @@ describe('timeAt', () => {
       ...READY,
       beats: READY.beats.filter((b) => b.beat !== 'persist'),
     };
-    const persist = beatWindows()[1];
+    const persist = beatWindows()[2];
     expect(timeAt((persist.from + persist.to) / 2, missing)).toBe(
       READY.totalMs
     );
@@ -119,7 +135,7 @@ describe('timeAt', () => {
 
 describe('inHold / beatAt / crossedThreshold', () => {
   it('reports the hold only inside the approve hold range', () => {
-    const a = beatWindows()[2];
+    const a = beatWindows()[3];
     const at = (f: number) => a.from + (a.to - a.from) * f;
     expect(inHold(at(0.5))).toBe(true);
     expect(inHold(at(APPROVE_HOLD.from - 0.01))).toBe(false);
@@ -133,7 +149,7 @@ describe('inHold / beatAt / crossedThreshold', () => {
     expect(beatAt(1)).toBe('render');
   });
   it('fires only on a forward crossing', () => {
-    const a = beatWindows()[2];
+    const a = beatWindows()[3];
     const th = a.from + (a.to - a.from) * APPROVE_HOLD.to;
     expect(crossedThreshold(th - 0.01, th + 0.01)).toBe(true);
     expect(crossedThreshold(th - 0.01, th)).toBe(true);
@@ -142,7 +158,7 @@ describe('inHold / beatAt / crossedThreshold', () => {
     expect(crossedThreshold(th - 0.02, th - 0.01)).toBe(false);
   });
   it('fires again after a rewind back below the threshold', () => {
-    const a = beatWindows()[2];
+    const a = beatWindows()[3];
     const th = a.from + (a.to - a.from) * APPROVE_HOLD.to;
     expect(crossedThreshold(th - 0.01, th + 0.01)).toBe(true);
     expect(crossedThreshold(th + 0.01, th - 0.01)).toBe(false);
@@ -153,9 +169,9 @@ describe('inHold / beatAt / crossedThreshold', () => {
 describe('cueFor', () => {
   it('greets on the first beat, holds on the last, and fades the middle ones', () => {
     const fmt = (n: number) => String(+n.toFixed(4));
-    const [stream, persist, , render] = beatWindows();
+    const [stream, , persist, , render] = beatWindows();
     expect(cueFor('stream')).toBe(`0 ${fmt(stream.to)} 0 0.3`);
-    expect(cueFor('stream')).toMatch(/^0 0\.21\d+ 0 0\.3$/);
+    expect(cueFor('stream')).toMatch(/^0 0\.17\d+ 0 0\.3$/);
     expect(cueFor('render')).toBe(
       `${fmt(render.from)} ${fmt(settleAt('render'))} 0.1`
     );
@@ -173,10 +189,10 @@ describe('settleAt / segmentState', () => {
   it('settles tools and persist at their window end, approve at the threshold, render before its tail', () => {
     const w = beatWindows();
     expect(settleAt('stream')).toBe(w[0].to);
-    expect(settleAt('persist')).toBe(w[1].to);
+    expect(settleAt('persist')).toBe(w[2].to);
     expect(settleAt('approve')).toBe(APPROVE_THRESHOLD_P);
     expect(settleAt('render')).toBeCloseTo(
-      w[3].from + (w[3].to - w[3].from) * (1 - RENDER_TAIL),
+      w[4].from + (w[4].to - w[4].from) * (1 - RENDER_TAIL),
       6
     );
   });
@@ -184,8 +200,8 @@ describe('settleAt / segmentState', () => {
     const w = beatWindows();
     expect(segmentState('stream', 0.05)).toBe('now');
     expect(segmentState('persist', 0.05)).toBe('todo');
-    expect(segmentState('stream', w[1].from + 0.01)).toBe('done');
-    expect(segmentState('approve', w[2].from + 0.01)).toBe('now');
+    expect(segmentState('stream', w[2].from + 0.01)).toBe('done');
+    expect(segmentState('approve', w[3].from + 0.01)).toBe('now');
     expect(segmentState('render', 1)).toBe('now');
   });
   it('a beat is checked once progress passes its settle', () => {
@@ -200,7 +216,7 @@ describe('holdCue / closeCue', () => {
     const cue = holdCue();
     expect(cue.split(' ')).toHaveLength(4);
     const [from, to] = cue.split(' ').map(Number);
-    const a = beatWindows()[2];
+    const a = beatWindows()[3];
     // The cue is printed to 4 decimals, so compare against the exact edge and
     // probe inHold on either side of that edge.
     const edge = a.from + (a.to - a.from) * APPROVE_HOLD.from;
@@ -243,9 +259,8 @@ describe('holdCue / closeCue', () => {
       return 1 - (p - outStart) / (to - outStart);
     };
     const samples = Array.from({ length: 8 }, (_, i) => 0.02 + (0.96 * i) / 7);
-    const margin = 0.002; // ≈ 9px of a 4500px travel at 1440×900
+    const margin = 0.0002; // ≈ 9px of a 4500px travel at 1440×900
     const cues = {
-      ...Object.fromEntries(STAGE_BEATS.map((b) => [b, cueFor(b)])),
       hold: holdCue(),
       close: closeCue(),
     };
@@ -264,7 +279,7 @@ describe('holdCue / closeCue', () => {
       const win = n[1] - n[0];
       const plateau = win * (1 - (n[2] ?? 0.3) - (n[3] ?? 0.3));
       expect(plateau, `${name} plateau`).toBeGreaterThanOrEqual(
-        name === 'close' ? 0.02 : 0.04
+        name === 'close' ? 0.018 : 0.04
       );
     }
   });

@@ -1,5 +1,7 @@
 # Homepage live stage: one real run, scrubbed by scroll
 
+> **Stage design superseded September 8:** [Current five-beat stage and mobile review spec](2026-09-08-homepage-stage-design.md) is authoritative for the narrative, rail, frame sizing, scroll timing, reverse playback, mobile layout, and install action. The four-beat examples and stage-specific decisions below are historical. Unrelated homepage architecture decisions remain in effect.
+
 **Date:** 2026-09-05
 **Status:** Design approved in brainstorming; awaiting spec review.
 **Surface:** `apps/website` (homepage), `examples/chat/angular` (a new `/stage` route and a seekable replay), `libs/langgraph` (only if the seek needs an adapter hook).
@@ -170,4 +172,3 @@ Three plans, each shippable on its own and each leaving the homepage working.
 1. **Restructure.** The cuts and merges of §3 with the existing components: Reliability with its receipts and logo footer, the final mile promoted, the folded final CTA, the merged teams block, the four-question FAQ, the moved FAQ entries and coding-agent prompt landing in docs. No stage yet; the four capability `FeatureBlock`s stay in place until plan 3 replaces them. Measurable on its own against §9.
 2. **The stage in the demo app.** The `/stage` route, `StageReplayTransport` with seek, the record mode and script, the committed `stage-replay.json` and its fixture spec, the still recorder. Verifiable in isolation by driving `/stage?t=` from a query parameter before the website exists.
 3. **The stage on the homepage.** The vendored engine, the pinned act and rail, the protocol, the beat map, the fallbacks, `shoot.mjs` in e2e, analytics. Replaces the four `FeatureBlock`s.
-

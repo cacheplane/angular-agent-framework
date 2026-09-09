@@ -22,7 +22,7 @@
  *   npx playwright test -c examples/chat/angular/e2e/record-stage-live.config.ts record-stage-fixture
  *
  * Takes vary: the model is free to answer how it likes, so record several and
- * commit the best COMPLETE one (the recorder's own assertions — seven runs in
+ * commit the best COMPLETE one (the recorder's own assertions — eight runs in
  * the exact beat order, a truthy threadId — reject incomplete takes for you).
  * Picking a take is the same latitude a demo video has. Editing what the model
  * said is not: that is what this config exists to stop.

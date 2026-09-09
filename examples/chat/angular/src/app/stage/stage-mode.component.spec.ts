@@ -22,11 +22,11 @@ describe('StageMode', () => {
 
   afterEach(() => StageMode.enableAutoBoot());
 
-  it('renders the chat, the devtools region, and an inert interrupt host', () => {
+  it('renders the chat, devtools, and an interactive interrupt host', () => {
     const el = fx.nativeElement as HTMLElement;
     expect(el.querySelector('chat')).toBeTruthy();
     expect(el.querySelector('chat-debug')).toBeTruthy();
-    expect(el.querySelector('[data-stage-interrupt]')?.getAttribute('data-inert')).toBe('true');
+    expect(el.querySelector('[data-stage-interrupt]')?.hasAttribute('data-inert')).toBe(false);
     expect(el.querySelector('[data-stage-pill]')?.textContent).toMatch(/recorded LangGraph run/i);
   });
 
@@ -164,7 +164,7 @@ describe('StageMode', () => {
     const tl = buildTimeline(MINIMAL);
     // MINIMAL's run 1 is the reload; anchor to it so the assertion cannot
     // collapse to null === null if the fixture ever loses its reload run.
-    const reload = tl.runs[1];
+    const reload = tl.runs.find((r) => r.run.action.kind === 'reload')!;
     expect(reload.run.action.kind).toBe('reload');
     expect(posted[0]).toMatchObject({
       totalMs: expect.any(Number),
@@ -174,13 +174,16 @@ describe('StageMode', () => {
     expect(posted.some((p) => (p as { phase?: string }).phase === 'stream')).toBe(true);
   });
 
-  it('keeps the devtools open when a click lands outside the panel', async () => {
+  it('allows closing devtools and reopening them through the launcher', async () => {
     const el = fx.nativeElement as HTMLElement;
     const region = () => el.querySelector('[role="region"][aria-label="Chat devtools"]');
     expect(region()).toBeTruthy();
     document.dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true }));
     fx.detectChanges();
     await fx.whenStable();
+    fx.detectChanges();
+    expect(region()).toBeNull();
+    el.querySelector<HTMLButtonElement>('[aria-label="Open chat devtools"]')!.click();
     fx.detectChanges();
     expect(region()).toBeTruthy();
   });

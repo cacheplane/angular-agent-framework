@@ -5,7 +5,13 @@
  * so the rail's cue windows (derived from the shares) and the seek targets
  * (derived from the recording) are two views of one table.
  */
-export const STAGE_BEATS = ['stream', 'persist', 'approve', 'render'] as const;
+export const STAGE_BEATS = [
+  'stream',
+  'subagents',
+  'persist',
+  'approve',
+  'render',
+] as const;
 export type StageBeat = (typeof STAGE_BEATS)[number];
 
 /** The scroll milestones the publisher reports (`marketing:stage_progress`). */
@@ -14,22 +20,25 @@ export type StageMilestone = 'enter' | 'beat' | 'threshold' | 'complete';
 /** Viewport-heights of scroll each beat owns. Approve is the peak by a visible margin. */
 export const STAGE_SHARES: Readonly<Record<StageBeat, number>> = {
   stream: 1.3,
+  subagents: 1.3,
   persist: 1.2,
   approve: 2.4,
   render: 1.1,
 };
-export const STAGE_SPAN = Object.values(STAGE_SHARES).reduce(
-  (a, b) => a + b,
-  0
+export const STAGE_SPAN = Number(
+  Object.values(STAGE_SHARES)
+    .reduce((a, b) => a + b, 0)
+    .toFixed(1)
 );
 /** Fractions of the approve beat: linear → hold → threshold and resume. */
-export const APPROVE_HOLD = { from: 0.35, to: 0.7 } as const;
+export const APPROVE_HOLD = { from: 0.46, to: 0.58 } as const;
+export const PERSIST_RELOAD_SHARE = 0.12;
 /** The last slice of the render beat holds on the mounted form. */
 export const RENDER_TAIL = 0.15;
 
 export interface StageReadyMessage {
   totalMs: number;
-  beats: readonly { beat: StageBeat; startMs: number; endMs: number }[];
+  beats: readonly { beat: StageBeat; startMs: number; endMs: number; revealMs?: number }[];
   hold: { startMs: number; endMs: number };
   reloadEndMs: number | null;
 }
@@ -46,7 +55,7 @@ const WINDOWS: readonly Readonly<BeatWindow>[] = Object.freeze(
     let acc = 0;
     return STAGE_BEATS.map((beat) => {
       const from = acc / STAGE_SPAN;
-      acc += STAGE_SHARES[beat];
+      acc = Number((acc + STAGE_SHARES[beat]).toFixed(1));
       return Object.freeze({ beat, from, to: acc / STAGE_SPAN });
     });
   })()
@@ -61,6 +70,19 @@ export const APPROVE_THRESHOLD_P =
 
 export function beatWindows(): readonly Readonly<BeatWindow>[] {
   return WINDOWS;
+}
+
+/** About 150px of lead-in at 900px viewport height; payload timing comes from the frame. */
+export function navigationProgress(beat: StageBeat, ready: StageReadyMessage | null): number {
+  const w = WINDOWS[STAGE_BEATS.indexOf(beat)];
+  const b = ready?.beats.find(b => b.beat === beat);
+  if ((beat === 'stream' || beat === 'subagents') && b &&
+      typeof b.revealMs === 'number' && Number.isFinite(b.revealMs) && b.endMs > b.startMs &&
+      b.revealMs >= b.startMs && b.revealMs <= b.endMs) {
+    const reveal = w.from + (w.to - w.from) * ((b.revealMs - b.startMs) / (b.endMs - b.startMs));
+    return Math.max(w.from, reveal - 0.025);
+  }
+  return w.from + Math.min(0.02, (w.to - w.from) * 0.1);
 }
 
 const clamp01 = (x: number) => (x < 0 ? 0 : x > 1 ? 1 : x);
@@ -89,7 +111,11 @@ function local(p: number): { beat: StageBeat; f: number } {
 
 export function inHold(p: number): boolean {
   const { beat, f } = local(p);
-  return beat === 'approve' && f >= APPROVE_HOLD.from && f < APPROVE_HOLD.to;
+  return (
+    beat === 'approve' &&
+    f >= APPROVE_HOLD.from - 1e-12 &&
+    f < APPROVE_HOLD.to - 1e-12
+  );
 }
 
 /** True when scroll moved forward across the approve threshold between two frames. */
@@ -111,9 +137,9 @@ export function timeAt(p: number, ready: StageReadyMessage): number {
     case 'persist': {
       const mid = ready.reloadEndMs;
       if (mid === null) return Math.round(lerp(b.startMs, b.endMs, f));
-      return f < 0.5
-        ? Math.round(lerp(b.startMs, mid, f / 0.5))
-        : Math.round(lerp(mid, b.endMs, (f - 0.5) / 0.5));
+      return f < PERSIST_RELOAD_SHARE
+        ? Math.round(lerp(b.startMs, mid, f / PERSIST_RELOAD_SHARE))
+        : Math.round(lerp(mid, b.endMs, (f - PERSIST_RELOAD_SHARE) / (1 - PERSIST_RELOAD_SHARE)));
     }
     case 'approve': {
       const holdPin = Math.min(ready.hold.startMs + 1, ready.hold.endMs);
@@ -122,7 +148,7 @@ export function timeAt(p: number, ready: StageReadyMessage): number {
       // One millisecond INSIDE the hold: the frame treats a boundary instant as
       // belonging to the outgoing run (phaseReachedAt subtracts an epsilon), so
       // pinning at hold.startMs exactly would report `stream`, not `pause`.
-      if (f < APPROVE_HOLD.to) return holdPin;
+      if (f < APPROVE_HOLD.to - 1e-12) return holdPin;
       return Math.round(
         lerp(
           ready.hold.endMs,
