@@ -158,6 +158,9 @@ describe('StageMode', () => {
       onSeek: () => () => undefined,
       postReady: (r) => posted.push(r),
       postState: (s) => posted.push(s),
+      onExplore: () => () => undefined,
+      postExplore: () => undefined,
+      postWheel: () => false,
     };
     await fx.componentInstance.boot(new URLSearchParams('t=0'));
     fx.detectChanges();

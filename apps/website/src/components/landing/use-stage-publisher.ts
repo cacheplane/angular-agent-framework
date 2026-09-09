@@ -114,14 +114,39 @@ export function createStagePublisher(deps: StagePublisherDeps): StagePublisher {
   let lastMovement = performance.now();
   let appliedT = -1;
   const iframe = deps.section.querySelector<HTMLIFrameElement>('.stage-frame-iframe');
+  const exploreButton = deps.section.querySelector<HTMLButtonElement>('[data-stage-explore]');
+  let exploring = false;
+  const setExploring = (value: boolean) => {
+    if (exploring === value) return;
+    exploring = value;
+    deps.section.toggleAttribute('data-exploring', value);
+    if (exploreButton) {
+      exploreButton.textContent = value ? 'Resume walkthrough' : 'Explore chat';
+      exploreButton.setAttribute('aria-pressed', String(value));
+    }
+    deps.frameWindow()?.postMessage({ type: STAGE_MESSAGE_TYPE, explore: value }, STAGE_DEMO_ORIGIN);
+  };
+  const toggleExploring = () => {
+    if (deps.section.hasAttribute('data-interactive')) setExploring(!exploring);
+  };
+  const onKey = (event: KeyboardEvent) => {
+    if (event.key === 'Escape' && exploring) {
+      setExploring(false);
+      exploreButton?.focus({ preventScroll: true });
+    }
+  };
+  exploreButton?.addEventListener('click', toggleExploring);
+  window.addEventListener('keydown', onKey);
   const setInteractive = (enabled: boolean) => {
     deps.section.toggleAttribute('data-interactive', enabled);
+    if (exploreButton) exploreButton.disabled = !enabled;
     if (iframe) {
       iframe.toggleAttribute('inert', !enabled);
       iframe.tabIndex = enabled ? 0 : -1;
     }
   };
   const onScroll = () => {
+    setExploring(false);
     lastMovement = performance.now();
     setInteractive(false);
   };
@@ -148,6 +173,22 @@ export function createStagePublisher(deps: StagePublisherDeps): StagePublisher {
       return;
     const d = e.data as Record<string, unknown> | null;
     if (!d || typeof d !== 'object' || d['type'] !== STAGE_MESSAGE_TYPE) return;
+    if (d['explore'] === false) {
+      setExploring(false);
+      exploreButton?.focus({ preventScroll: true });
+      return;
+    }
+    const wheel = d['wheel'] as { deltaX?: unknown; deltaY?: unknown } | undefined;
+    if (ready && !exploring && wheel && isFiniteNumber(wheel.deltaX) && isFiniteNumber(wheel.deltaY)) {
+      onScroll();
+      const limit = window.innerHeight * 2;
+      window.scrollBy({
+        left: Math.max(-limit, Math.min(limit, wheel.deltaX)),
+        top: Math.max(-limit, Math.min(limit, wheel.deltaY)),
+        behavior: 'instant',
+      });
+      return;
+    }
     if (d['ready'] === true) {
       if (!isReady(d)) return;
       const first = ready === null;
@@ -249,6 +290,9 @@ export function createStagePublisher(deps: StagePublisherDeps): StagePublisher {
     },
     dispose() {
       disposed = true;
+      setExploring(false);
+      exploreButton?.removeEventListener('click', toggleExploring);
+      window.removeEventListener('keydown', onKey);
       window.removeEventListener('message', onMessage);
       window.removeEventListener('scroll', onScroll);
       setInteractive(false);
