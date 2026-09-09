@@ -8,6 +8,7 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { LibraryId } from '../../lib/docs-config';
 import {
   trackCtaClick,
@@ -17,9 +18,9 @@ import type { AnalyticsLibrary } from '../../lib/analytics/events';
 import { Button } from '../ui/Button';
 import { GitHubIcon } from '../ui/GitHubIcon';
 import { GITHUB_REPO_URL } from '../../lib/positioning';
-import { DEMOS, demoCtaSuffix } from '../../lib/demos';
 import { DocsContextContent } from '../docs/DocsControlPlane';
-import { links, trackNavLink } from './NavDesktop';
+import { NavPanelItem } from './NavDesktop';
+import { NAV_TRIGGERS } from './nav-config';
 
 const toAnalyticsLibrary = (library: LibraryId | null): AnalyticsLibrary => {
   switch (library) {
@@ -33,6 +34,22 @@ const toAnalyticsLibrary = (library: LibraryId | null): AnalyticsLibrary => {
   }
 };
 
+/**
+ * Where the drawer is in its drill-in stack: the list of triggers, or one
+ * trigger's panel. Depth carries what the Site/Docs tab strip used to.
+ */
+type MobileLevel = { kind: 'root' } | { kind: 'panel'; id: string };
+
+const rootLevel: MobileLevel = { kind: 'root' };
+const docsLevel: MobileLevel = { kind: 'panel', id: 'docs' };
+/** Stable references, so re-running the open reset cannot churn a render. */
+const initialLevel = (isDocsPage: boolean): MobileLevel =>
+  isDocsPage ? docsLevel : rootLevel;
+
+const mobilePanel = (id: string) => {
+  const trigger = NAV_TRIGGERS.find((entry) => entry.id === id);
+  return trigger?.kind === 'panel' ? trigger.panel : undefined;
+};
 
 function MenuIcon() {
   return (
@@ -85,6 +102,7 @@ export function NavMobile({
   const [open, setOpen] = useState(false);
   const mobileTriggerRef = useRef<HTMLButtonElement>(null);
   const mobileDialogRef = useRef<HTMLDivElement>(null);
+  const mobileBackRef = useRef<HTMLButtonElement>(null);
   const restoreMobileFocusRef = useRef(false);
   const pendingMobileSearchRef = useRef(false);
   const cancelScheduledMobileRestoreRef = useRef<(() => void) | null>(null);
@@ -98,9 +116,13 @@ export function NavMobile({
     setOpen(false);
   }, []);
 
-  const [mobileTab, setMobileTab] = useState<'site' | 'docs'>(
-    isDocsPage ? 'docs' : 'site'
+  const [level, setLevel] = useState<MobileLevel>(() =>
+    initialLevel(isDocsPage)
   );
+
+  useEffect(() => {
+    if (open) setLevel(initialLevel(isDocsPage));
+  }, [isDocsPage, open]);
 
   // Lock body scroll when mobile menu is open
   useEffect(() => {
@@ -166,16 +188,28 @@ export function NavMobile({
   useEffect(() => {
     if (!open) return undefined;
     const dialog = mobileDialogRef.current;
+    // Queried live on every keydown, so the trap only ever sees the controls
+    // the current level actually renders.
     const focusable = () =>
       Array.from(
         dialog?.querySelectorAll<HTMLElement>(
           'a[href], button:not(:disabled), [tabindex]:not([tabindex="-1"])'
         ) ?? []
       );
-    focusable()[0]?.focus();
+    // A pushed level leads with its back row; land there so the way out is
+    // the first thing the keyboard reaches.
+    (mobileBackRef.current ?? focusable()[0])?.focus();
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.preventDefault();
+        // Escape retraces the way in: it pops a level the reader pushed, and
+        // only dismisses the drawer from the level it opened at. On a docs
+        // route that home level is the docs tree, not the root list — Escape
+        // there closes the drawer rather than stranding it one level up.
+        if (level.kind === 'panel' && !(isDocsPage && level.id === 'docs')) {
+          setLevel(rootLevel);
+          return;
+        }
         closeMobileMenu();
         return;
       }
@@ -194,7 +228,14 @@ export function NavMobile({
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [closeMobileMenu, open]);
+  }, [closeMobileMenu, isDocsPage, level, open]);
+
+  // The docs level hosts the live docs tree, but only on a docs route — there
+  // is no docs context anywhere else, so the marketing panel stands in.
+  const docsTreeLevel =
+    level.kind === 'panel' && level.id === 'docs' && isDocsPage;
+  const panel =
+    level.kind === 'panel' && !docsTreeLevel ? mobilePanel(level.id) : undefined;
 
   return (
     <>
@@ -202,10 +243,7 @@ export function NavMobile({
       <button
         ref={mobileTriggerRef}
         className="lg:hidden inline-flex items-center justify-center nav-hamburger"
-        onClick={() => {
-          setOpen(!open);
-          if (!open) setMobileTab(isDocsPage ? 'docs' : 'site');
-        }}
+        onClick={() => setOpen(!open)}
         aria-expanded={open}
         aria-hidden={open || undefined}
         tabIndex={open ? -1 : 0}
@@ -236,95 +274,54 @@ export function NavMobile({
                 <CloseIcon />
               </button>
 
-              {/* Primary tabs — only on docs pages */}
-              {isDocsPage && (
-                <div className="nav-mtabs">
-                  <button
-                    onClick={() => setMobileTab('site')}
-                    className="nav-mtab"
-                    data-active={mobileTab === 'site' || undefined}
-                  >
-                    Site
-                  </button>
-                  <button
-                    onClick={() => setMobileTab('docs')}
-                    className="nav-mtab"
-                    data-active={mobileTab === 'docs' || undefined}
-                  >
-                    Docs
-                  </button>
-                </div>
-              )}
-
-              {mobileTab === 'docs' && isDocsPage ? (
-                <div
-                  onClickCapture={(event) => {
-                    const link = (
-                      event.target as HTMLElement
-                    ).closest<HTMLAnchorElement>('a[data-docs-navlink]');
-                    if (!link) return;
-                    trackCtaClick({
-                      surface: 'mobile_nav',
-                      destination_url: link.getAttribute('href') ?? link.href,
-                      cta_id: 'mobile_nav_docs_page',
-                      cta_text: link.textContent?.trim() ?? 'Docs page',
-                      library: toAnalyticsLibrary(docsLibrary),
-                    });
-                  }}
+              {level.kind === 'panel' ? (
+                <button
+                  ref={mobileBackRef}
+                  type="button"
+                  className="nav-mobile-back"
+                  onClick={() => setLevel(rootLevel)}
                 >
-                  <DocsContextContent
-                    activeLibrary={docsLibrary}
-                    activeSection={activeSection || 'getting-started'}
-                    activeSlug={activeSlug || 'introduction'}
-                    mobile
-                    onNavigate={() => closeMobileMenu()}
-                    onSearchHandoff={() => closeMobileMenu(true)}
-                  />
-                </div>
+                  <ChevronLeft size={16} strokeWidth={2} aria-hidden="true" />
+                  Back to menu
+                </button>
               ) : null}
 
-              {/* Site content */}
-              {(mobileTab === 'site' || !isDocsPage) && (
+              {level.kind === 'root' ? (
                 <div className="nav-mobile-list">
-                  {links.map((l) => {
-                    const LinkEl = l.external ? 'a' : Link;
-                    const extraProps = l.external
-                      ? { target: '_blank', rel: 'noopener noreferrer' }
-                      : {};
-                    return (
-                      <LinkEl
-                        key={l.href}
-                        href={l.href}
-                        {...extraProps}
+                  {NAV_TRIGGERS.map((trigger) =>
+                    trigger.kind === 'link' ? (
+                      <Link
+                        key={trigger.id}
+                        href={trigger.href}
                         onClick={() => {
-                          trackNavLink(l.label, l.href, l.external, 'mobile_nav');
+                          trackCtaClick({
+                            surface: 'mobile_nav',
+                            destination_url: trigger.href,
+                            cta_id: `mobile_nav_${trigger.ctaId}`,
+                            cta_text: trigger.label,
+                          });
                           closeMobileMenu();
                         }}
-                        className="nav-mobile-site-link"
+                        className="nav-mobile-row"
                       >
-                        {l.label}
-                      </LinkEl>
-                    );
-                  })}
-                  {DEMOS.map((demo) => (
-                    <a
-                      key={demo.key}
-                      href={demo.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => {
-                        trackExternalLinkClick(demo.href, {
-                          surface: 'mobile_nav',
-                          cta_id: `mobile_nav_demo_${demoCtaSuffix(demo.key)}`,
-                          cta_text: demo.label,
-                        });
-                        closeMobileMenu();
-                      }}
-                      className="nav-mobile-site-link"
-                    >
-                      {demo.label}
-                    </a>
-                  ))}
+                        {trigger.label}
+                      </Link>
+                    ) : (
+                      <button
+                        key={trigger.id}
+                        type="button"
+                        className="nav-mobile-row"
+                        onClick={() => setLevel({ kind: 'panel', id: trigger.id })}
+                      >
+                        {trigger.label}
+                        <ChevronRight
+                          size={16}
+                          strokeWidth={2}
+                          aria-hidden="true"
+                        />
+                      </button>
+                    )
+                  )}
                   <a
                     href={GITHUB_REPO_URL}
                     target="_blank"
@@ -364,7 +361,66 @@ export function NavMobile({
                     </Button>
                   </div>
                 </div>
-              )}
+              ) : null}
+
+              {docsTreeLevel ? (
+                <div
+                  onClickCapture={(event) => {
+                    const link = (
+                      event.target as HTMLElement
+                    ).closest<HTMLAnchorElement>('a[data-docs-navlink]');
+                    if (!link) return;
+                    trackCtaClick({
+                      surface: 'mobile_nav',
+                      destination_url: link.getAttribute('href') ?? link.href,
+                      cta_id: 'mobile_nav_docs_page',
+                      cta_text: link.textContent?.trim() ?? 'Docs page',
+                      library: toAnalyticsLibrary(docsLibrary),
+                    });
+                  }}
+                >
+                  <DocsContextContent
+                    activeLibrary={docsLibrary}
+                    activeSection={activeSection || 'getting-started'}
+                    activeSlug={activeSlug || 'introduction'}
+                    mobile
+                    onNavigate={() => closeMobileMenu()}
+                    onSearchHandoff={() => closeMobileMenu(true)}
+                  />
+                </div>
+              ) : null}
+
+              {panel ? (
+                <div className="nav-mobile-panel">
+                  {panel.columns.map((column, index) => (
+                    <div
+                      key={column.heading ?? index}
+                      className="nav-mobile-group"
+                    >
+                      {column.heading ? (
+                        <span className="nav-panel-col-head">
+                          {column.heading}
+                        </span>
+                      ) : null}
+                      {column.items.map((item) => (
+                        <NavPanelItem
+                          key={item.ctaId}
+                          item={item}
+                          surface="mobile_nav"
+                          onNavigate={() => closeMobileMenu()}
+                        />
+                      ))}
+                    </div>
+                  ))}
+                  {panel.footer ? (
+                    <NavPanelItem
+                      item={panel.footer}
+                      surface="mobile_nav"
+                      onNavigate={() => closeMobileMenu()}
+                    />
+                  ) : null}
+                </div>
+              ) : null}
             </div>
           </div>,
           document.body

@@ -208,63 +208,107 @@ describe('Docs mobile navigation', () => {
     ).toBe('https://github.com/cacheplane/angular-agent-framework');
   });
 
-  it('retires Examples from mobile navigation without changing primary destinations or demos', () => {
+  it('opens pre-pushed to the docs tree on a docs route, with no tab strip', () => {
+    pathnameRef.current = '/docs/langgraph/guides/streaming';
+    render(<Nav />);
+    fireEvent.click(screen.getByRole('button', { name: 'Open menu' }));
+    const dialog = screen.getByRole('dialog', { name: 'Mobile navigation' });
+
+    expect(within(dialog).queryByRole('button', { name: 'Site' })).toBeNull();
+    expect(within(dialog).getByRole('button', { name: 'Search docs' })).toBeTruthy();
+    expect(within(dialog).getByRole('button', { name: 'Learn' })).toBeTruthy();
+    expect(within(dialog).getByRole('button', { name: 'Back to menu' })).toBeTruthy();
+  });
+
+  it('opens at the root on a marketing route', () => {
     pathnameRef.current = '/';
     render(<Nav />);
     fireEvent.click(screen.getByRole('button', { name: 'Open menu' }));
-
     const dialog = screen.getByRole('dialog', { name: 'Mobile navigation' });
-    expect(within(dialog).queryByRole('link', { name: 'Examples' })).toBeNull();
-    expect(
-      within(dialog)
-        .getByRole('link', { name: 'Pilot to Prod' })
-        .getAttribute('href'),
-    ).toBe('/pilot-to-prod');
-    expect(
-      within(dialog).getByRole('link', { name: 'Docs' }).getAttribute('href'),
-    ).toBe('/docs');
-    expect(
-      within(dialog).getByRole('link', { name: 'Pricing' }).getAttribute('href'),
-    ).toBe('/pricing');
-    expect(
-      within(dialog)
-        .getByRole('link', { name: 'LangGraph demo' })
-        .getAttribute('href'),
-    ).toBe(
-      'https://demo.threadplane.ai',
+
+    expect(within(dialog).getByRole('button', { name: 'Libraries' })).toBeTruthy();
+    expect(within(dialog).getByRole('link', { name: 'Pricing' }).getAttribute('href')).toBe(
+      '/pricing',
     );
-    expect(
-      within(dialog)
-        .getByRole('link', { name: 'AG-UI demo' })
-        .getAttribute('href'),
-    ).toBe(
-      'https://ag-ui.threadplane.ai',
-    );
-    expect(
-      within(dialog)
-        .getByRole('link', { name: /GitHub/ })
-        .getAttribute('href'),
-    ).toBe(
-      'https://github.com/cacheplane/angular-agent-framework',
-    );
+    expect(within(dialog).queryByRole('button', { name: 'Back to menu' })).toBeNull();
   });
 
-  it('uses the existing header trigger for the control-plane Docs drawer', () => {
+  it('pushes a level and comes back', () => {
+    pathnameRef.current = '/';
+    render(<Nav />);
+    fireEvent.click(screen.getByRole('button', { name: 'Open menu' }));
+    const dialog = screen.getByRole('dialog', { name: 'Mobile navigation' });
+
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Libraries' }));
+    expect(
+      within(dialog).getByRole('link', { name: /@threadplane\/chat/ }).getAttribute('href'),
+    ).toBe('/chat');
+
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Back to menu' }));
+    expect(within(dialog).getByRole('button', { name: 'Libraries' })).toBeTruthy();
+    expect(within(dialog).queryByRole('link', { name: /@threadplane\/chat/ })).toBeNull();
+  });
+
+  it('shows the marketing Docs panel off a docs route', () => {
+    pathnameRef.current = '/';
+    render(<Nav />);
+    fireEvent.click(screen.getByRole('button', { name: 'Open menu' }));
+    const dialog = screen.getByRole('dialog', { name: 'Mobile navigation' });
+
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Docs' }));
+    expect(
+      within(dialog).getByRole('link', { name: /Quick start/ }).getAttribute('href'),
+    ).toBe('/docs/langgraph/getting-started/quickstart');
+    expect(within(dialog).queryByRole('button', { name: 'Learn' })).toBeNull();
+  });
+
+  it('Escape pops a level before it closes the drawer', async () => {
+    pathnameRef.current = '/';
     render(<Nav />);
     const trigger = screen.getByRole('button', { name: 'Open menu' });
     fireEvent.click(trigger);
-
     const dialog = screen.getByRole('dialog', { name: 'Mobile navigation' });
-    expect(dialog).toBeTruthy();
-    // Scoped to the drawer: the desktop bar now has a `Docs` panel trigger too,
-    // so the bare role query would match two buttons.
-    expect(
-      within(dialog).getByRole('button', { name: 'Docs' }).getAttribute('data-active'),
-    ).not.toBeNull();
-    expect(screen.getByRole('button', { name: 'Search docs' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Learn' })).toBeTruthy();
-    expect(screen.queryByRole('button', { name: 'Settings' })).toBeNull();
-    expect(within(screen.getByRole('dialog')).getByRole('button', { name: 'Close menu' })).toBeTruthy();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Solutions' }));
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(screen.getByRole('dialog', { name: 'Mobile navigation' })).toBeTruthy();
+    // Scoped to the drawer: the desktop bar renders its own `Solutions`
+    // trigger in jsdom, so the bare query matches two buttons and throws.
+    expect(within(dialog).getByRole('button', { name: 'Solutions' })).toBeTruthy();
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    // Awaited, not read straight after the unmount: the restore runs in the
+    // frame after the drawer leaves the DOM, as the sibling close tests show.
+    await waitFor(() => expect(document.activeElement).toBe(trigger));
+  });
+
+  it('moves focus into the level it just pushed', () => {
+    pathnameRef.current = '/';
+    render(<Nav />);
+    fireEvent.click(screen.getByRole('button', { name: 'Open menu' }));
+    const dialog = screen.getByRole('dialog', { name: 'Mobile navigation' });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Libraries' }));
+
+    expect(document.activeElement).toBe(
+      within(dialog).getByRole('button', { name: 'Back to menu' }),
+    );
+  });
+
+  it('tags mobile panel analytics with the trigger it came from', () => {
+    pathnameRef.current = '/';
+    render(<Nav />);
+    fireEvent.click(screen.getByRole('button', { name: 'Open menu' }));
+    const dialog = screen.getByRole('dialog', { name: 'Mobile navigation' });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Libraries' }));
+    fireEvent.click(within(dialog).getByRole('link', { name: /@threadplane\/render/ }));
+
+    expect(trackCtaClick).toHaveBeenCalledWith({
+      surface: 'mobile_nav',
+      destination_url: '/render',
+      cta_id: 'mobile_nav_libraries_render',
+      cta_text: '@threadplane/render',
+    });
   });
 
   it('closes from the global control inside the dialog and restores trigger focus', async () => {
@@ -451,16 +495,6 @@ describe('Docs mobile navigation', () => {
     ));
     expect(searchObservation).toEqual({ drawerWasMounted: false, focusedTrigger: true });
     document.removeEventListener('keydown', searchListener);
-  });
-
-  it('preserves the Site tab alongside the Docs control plane', () => {
-    render(<Nav />);
-    fireEvent.click(screen.getByRole('button', { name: 'Open menu' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Site' }));
-
-    const dialog = screen.getByRole('dialog', { name: 'Mobile navigation' });
-    expect(within(dialog).getByRole('link', { name: 'Pricing' })).toBeTruthy();
-    expect(screen.queryByRole('heading', { name: 'Scope' })).toBeNull();
   });
 
   it('preserves page-level analytics for Docs links', () => {

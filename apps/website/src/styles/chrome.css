@@ -660,3 +660,66 @@
 .nav-bar > div {
   position: relative;
 }
+
+/* Mobile drill-in
+ *
+ * Rows are full-width and at least 44px tall — this is the whole surface on a
+ * phone, so nothing here gets denser than the desktop panel. */
+.nav-mobile-back {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  padding: 11px 10px 13px;
+  background: none;
+  border: none;
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.nav-mobile-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 13px 10px;
+  border-radius: 9px;
+  background: none;
+  border: none;
+  text-align: left;
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+.nav-mobile-row svg {
+  margin-left: auto;
+  color: var(--color-text-muted);
+}
+.nav-mobile-panel {
+  animation: nav-level-in 0.18s ease-out;
+}
+.nav-mobile-group + .nav-mobile-group {
+  margin-top: 18px;
+}
+@keyframes nav-level-in {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-mobile-panel {
+    animation: none;
+  }
+}
