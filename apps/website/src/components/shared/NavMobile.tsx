@@ -208,15 +208,17 @@ export function NavMobile({
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.preventDefault();
-        // Escape pops a level the reader pushed, and dismisses the drawer
-        // from the level it opened at. Comparing against
-        // initialLevel(isDocsPage) — rather than hardcoding the docs case —
-        // is what makes this correct on a docs route: the drawer opens
-        // pre-pushed to the docs level there, so Escape has nothing to pop
-        // back to and closes instead. The protected test 'closes on Escape
-        // and restores focus to the sole trigger' runs on a docs route and
-        // depends on this falling through to closeMobileMenu().
-        if (!sameLevel(level, initialLevel(isDocsPage))) {
+        // Root always dismisses; a pushed level pops back to root; the level
+        // the drawer opened at dismisses. The `level.kind === 'panel'` guard
+        // matters on a docs route reached via Back: that root was never
+        // pushed from (the drawer opened pre-pushed to the docs level), so
+        // it is not sameLevel as initialLevel(isDocsPage) — without the
+        // guard this branch would try to "pop" a root that is already root,
+        // a no-op that leaves closeMobileMenu() unreached and Escape dead.
+        // The protected test 'closes on Escape and restores focus to the
+        // sole trigger' runs on a docs route and depends on this falling
+        // through to closeMobileMenu() at the opening level.
+        if (level.kind === 'panel' && !sameLevel(level, initialLevel(isDocsPage))) {
           setLevel(rootLevel);
           return;
         }

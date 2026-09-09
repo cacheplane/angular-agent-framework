@@ -296,6 +296,41 @@ describe('Docs mobile navigation', () => {
     await waitFor(() => expect(document.activeElement).toBe(trigger));
   });
 
+  it('Escape closes from the drawer root reached by going back on a docs route', async () => {
+    pathnameRef.current = '/docs/langgraph/guides/streaming';
+    render(<Nav />);
+    const trigger = screen.getByRole('button', { name: 'Open menu' });
+    fireEvent.click(trigger);
+    const dialog = screen.getByRole('dialog', { name: 'Mobile navigation' });
+
+    // The drawer opened pre-pushed to the docs level; walking back reaches a
+    // root the reader never pushed from. Escape must still dismiss there.
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Back to menu' }));
+    fireEvent.keyDown(document, { key: 'Escape' });
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    await waitFor(() => expect(document.activeElement).toBe(trigger));
+  });
+
+  it('Escape still pops a level pushed from that root on a docs route', async () => {
+    pathnameRef.current = '/docs/langgraph/guides/streaming';
+    render(<Nav />);
+    const trigger = screen.getByRole('button', { name: 'Open menu' });
+    fireEvent.click(trigger);
+    const dialog = screen.getByRole('dialog', { name: 'Mobile navigation' });
+
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Back to menu' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Libraries' }));
+    fireEvent.keyDown(document, { key: 'Escape' });
+
+    expect(screen.getByRole('dialog', { name: 'Mobile navigation' })).toBeTruthy();
+    expect(within(dialog).getByRole('button', { name: 'Libraries' })).toBeTruthy();
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    await waitFor(() => expect(document.activeElement).toBe(trigger));
+  });
+
   it('moves focus into the level it just pushed', () => {
     pathnameRef.current = '/';
     render(<Nav />);
