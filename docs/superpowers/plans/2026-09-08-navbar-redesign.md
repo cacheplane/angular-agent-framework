@@ -2173,5 +2173,27 @@ Before opening a PR, confirm each of these ran and passed — not that it should
 
 ## Known follow-ups, deliberately not in this plan
 
+These were all decided during implementation and left alone on purpose. Recorded so a
+later reader can tell a deferral from an oversight.
+
+- **The panel column/footer shape is written twice** — `NavDesktop.tsx`'s `Panel` and
+  `NavMobile.tsx`'s inline panel render both do column loop → optional heading → items →
+  optional footer-with-lead, differing only in the wrapper class. Per-item rendering
+  already funnels through the shared `NavPanelItem`, so drift is confined to the wrapper.
+  Not fixed here because a clarity refactor of working code is what produced this
+  branch's worst defect (the dead Escape key), and repeating it immediately before a
+  merge is a bad trade.
+- **`NavMobile.tsx` imports `NavPanelItem` from `NavDesktop.tsx`.** That import is what
+  keeps the two surfaces from drifting — the right behaviour through the wrong door. It
+  and the duplication above are the same fix: move `NavPanelItem` and the panel body to a
+  neutral module.
+- **`MobileLevel.id` is an untyped `string`**, so `{kind:'panel', id:'nonsense'}` type-checks.
+  Unreachable today — every call site passes a `trigger.id` from `NAV_TRIGGERS` or a
+  module constant — and it degrades gracefully rather than crashing (`mobilePanel()` and
+  the ref lookup both return `undefined`, so `?.focus()` no-ops and the level renders
+  empty). Constraining it needs `nav-config.ts`'s own `NavTrigger` to expose literal ids
+  first, which is pre-existing looseness this branch did not introduce.
+
+
 - Landing-page heroes for `/langgraph`, `/render`, `/chat`, `/ag-ui`, each adding its own route to `HERO_ROUTES` in the same change.
 - Any analytics dashboard or saved query filtering on `nav_demo_langgraph` / `nav_demo_ag_ui`. Those ids retire here; the demos are reached as `nav_docs_demo_langgraph` and `nav_docs_demo_ag_ui`.
