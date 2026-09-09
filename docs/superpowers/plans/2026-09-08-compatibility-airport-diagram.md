@@ -1231,14 +1231,16 @@ test('the compatibility band does not scroll sideways on a phone', async ({ page
 
 - [ ] **Step 2: Run the e2e to verify it passes**
 
-Run: `npx nx e2e website -- home-airport.spec.ts`
+Run: `npx playwright test --config=apps/website/playwright.config.ts e2e/home-airport.spec.ts`
+
+(Do NOT use `npx nx e2e website -- <spec>` — this Nx version mangles the `--` passthrough into `unknown option '--_=<spec>'`. Also free ports 4308/4399/4506 first; a failing run leaves orphaned servers and the next run dies on `already used`.)
 Expected: PASS, 3 tests.
 
 If the first test reports issues, **fix the geometry in `airport-diagram.ts`, not the assertion.** The whole point of this spec is that it is the arbiter.
 
 - [ ] **Step 3: Run the homepage spine e2e, which must be untouched**
 
-Run: `npx nx e2e website -- website.spec.ts`
+Run: `npx playwright test --config=apps/website/playwright.config.ts e2e/website.spec.ts`
 Expected: PASS. `compatibility-heading` must still appear between `proof-heading` and `architecture-heading`.
 
 - [ ] **Step 4: Commit**
