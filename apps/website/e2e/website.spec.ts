@@ -2,7 +2,12 @@ import { test, expect } from '@playwright/test';
 
 // Mirrored from apps/website/src/lib/growth/form-policy.ts, which is server-only
 // and therefore cannot be imported into a Playwright spec.
-const GROWTH_FORM_POLICY_VERSION = 'growth_v1.2026-09-01';
+// Hardcoded rather than imported: lib/growth/form-policy.ts is `server-only`
+// and cannot be pulled into a Playwright process. It must be updated whenever
+// GROWTH_FORM_POLICY_VERSION is bumped -- this literal is compared against what
+// the running app actually posts, so a stale copy fails the suite rather than
+// passing silently.
+const GROWTH_FORM_POLICY_VERSION = 'growth_v1.2026-09-09';
 const UUID_V4 =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
 
@@ -52,8 +57,8 @@ test('landing page renders the spine in order (live-stage spec §3)', async ({ p
     'proof-heading',
     'compatibility-heading',
     'architecture-heading',
-    'stage-heading',
     'open-source-heading',
+    'stage-heading',
     'field-report-heading',
     'faq-heading',
   ];
@@ -548,17 +553,21 @@ test('representative docs pages do not create page-level horizontal overflow', a
   }
 });
 
-test('marketing pages link to downloadable whitepaper PDFs', async ({ page }) => {
-  const expectedDownloads: Record<string, string> = {
+test('marketing pages gate the whitepaper PDFs behind the form', async ({ page }) => {
+  // These pages used to link their PDF directly. Every direct-download escape
+  // was removed on request, so the guide is now reachable only by submitting
+  // the form -- the files stay served (see the next test), they are just not
+  // linked. Asserted as absent so re-adding a link is a deliberate act.
+  const gated: Record<string, string> = {
     '/ag-ui': '/whitepaper.pdf',
     '/langgraph': '/whitepapers/angular.pdf',
     '/render': '/whitepapers/render.pdf',
     '/chat': '/whitepapers/chat.pdf',
   };
 
-  for (const [route, href] of Object.entries(expectedDownloads)) {
+  for (const [route, href] of Object.entries(gated)) {
     await page.goto(route);
-    await expect(page.locator(`a[href="${href}"]`).first(), `${route} links ${href}`).toBeVisible();
+    await expect(page.locator(`a[href="${href}"]`), `${route} still links ${href}`).toHaveCount(0);
   }
 });
 

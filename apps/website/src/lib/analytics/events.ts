@@ -82,7 +82,6 @@ export type CtaId =
   | 'hero_proof_pill'
   // Whitepaper block on home
   | 'home_whitepaper_direct'
-  | 'home_whitepaper_direct_inline'
   // Why this exists section
   | 'home_why_pilot_to_prod'
   // Pricing tier CTAs
@@ -95,7 +94,6 @@ export type CtaId =
   | 'footer_ag_ui'
   // Announcement toast
   | 'toast_get_guide'
-  | 'toast_direct_download'
   // Docs surfaces — copy buttons take a dynamic label fallback
   | 'copy_code'
   | 'copy_prompt'

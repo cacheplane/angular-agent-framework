@@ -1,9 +1,17 @@
 import 'server-only';
 
-export const GROWTH_FORM_POLICY_VERSION = 'growth_v1.2026-09-01';
+export const GROWTH_FORM_POLICY_VERSION = 'growth_v1.2026-09-09';
 
-export const WHITEPAPER_OUTREACH_DISCLOSURE =
-  'Send me the guide and a short, three-email follow-up from Brian about building with Threadplane. Unsubscribe anytime.';
+/**
+ * Deliberately no longer an outreach disclosure, hence the rename: it makes no
+ * statement about the follow-up sequence, which whitepaper signups are still
+ * enrolled into (`apps/lifecycle/src/campaign/send.ts` treats formKind
+ * 'whitepaper' as a campaign context). Changed on request; the policy version
+ * is bumped alongside it so consent captured under the previous wording stays
+ * distinguishable from consent captured under this one.
+ */
+export const WHITEPAPER_PRIVACY_ASSURANCE =
+  'We will never spam you or share your email address.';
 export const CONTACT_OUTREACH_DISCLOSURE =
   'By sending, you agree Brian may follow up by email about your request.';
 export const NEWSLETTER_OUTREACH_DISCLOSURE =
@@ -25,7 +33,7 @@ const GROWTH_V1_POLICY: PublicFormPolicy = Object.freeze({
   disclosures: Object.freeze({
     contact: CONTACT_OUTREACH_DISCLOSURE,
     newsletter: NEWSLETTER_OUTREACH_DISCLOSURE,
-    whitepaper: WHITEPAPER_OUTREACH_DISCLOSURE,
+    whitepaper: WHITEPAPER_PRIVACY_ASSURANCE,
   }),
 });
 

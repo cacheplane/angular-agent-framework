@@ -20,7 +20,7 @@ describe('TeamsBlock', () => {
   it('leads with the ask: eyebrow, heading, then the form', () => {
     const { container } = render(<TeamsBlock formPolicy={formPolicy} />);
     const heading = screen.getByRole('heading', { level: 2 });
-    expect(heading.textContent).toBe('What breaks between a demo and production.');
+    expect(heading.textContent).toBe('Free preflight briefing for agentic UI');
     expect(heading.id).toBe('field-report-heading');
     expect(container.querySelectorAll('form')).toHaveLength(1);
     expect(screen.getByLabelText('Work email')).toBeTruthy();
@@ -33,7 +33,7 @@ describe('TeamsBlock', () => {
     const { container } = render(<TeamsBlock formPolicy={formPolicy} />);
     const eyebrow = container.querySelector('[data-ui="eyebrow"]');
     expect(eyebrow?.textContent).toContain(`${FIELD_REPORT.pages} pages`);
-    expect(eyebrow?.textContent).toContain('Preflight briefing');
+    expect(eyebrow?.textContent).toContain('What breaks between a demo and production');
   });
 
   it('shows the briefing beside the ask', () => {

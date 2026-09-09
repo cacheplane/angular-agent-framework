@@ -15,7 +15,7 @@ const formPolicy: PublicFormPolicy = {
     contact: 'Contact disclosure',
     newsletter: 'Newsletter disclosure',
     whitepaper:
-      'Send me the guide and a short, three-email follow-up from Brian about building with Threadplane. Unsubscribe anytime.',
+      'We will never spam you or share your email address.',
   },
 };
 

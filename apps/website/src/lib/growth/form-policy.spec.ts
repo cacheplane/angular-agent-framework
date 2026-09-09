@@ -6,7 +6,7 @@ import {
   CONTACT_OUTREACH_DISCLOSURE,
   GROWTH_FORM_POLICY_VERSION,
   NEWSLETTER_OUTREACH_DISCLOSURE,
-  WHITEPAPER_OUTREACH_DISCLOSURE,
+  WHITEPAPER_PRIVACY_ASSURANCE,
   getFormPolicy,
   matchesSubmittedFormPolicy,
 } from './form-policy';
@@ -28,8 +28,8 @@ describe('server form policy', () => {
         contact: expect.any(String),
       }),
     });
-    expect(WHITEPAPER_OUTREACH_DISCLOSURE).toBe(
-      'Send me the guide and a short, three-email follow-up from Brian about building with Threadplane. Unsubscribe anytime.'
+    expect(WHITEPAPER_PRIVACY_ASSURANCE).toBe(
+      'We will never spam you or share your email address.'
     );
     expect(CONTACT_OUTREACH_DISCLOSURE).toBe(
       'By sending, you agree Brian may follow up by email about your request.'
