@@ -2140,12 +2140,22 @@
   letter-spacing: 0.1em;
   fill: var(--color-ink);
 }
+/* The package name sits on the concourse's 45-degree hatch, and the label's
+ * knockout plate only covers the line above it — hatch strokes ran straight
+ * through the glyphs. A painted-under halo cuts the hatch per-glyph, which
+ * beats widening the plate: the plate is sized by a font-metric estimate
+ * (6.6 * length), so anything that depends on it breaks silently when the
+ * type changes. This does not. */
 .ap-conc-pkg {
   font-family: var(--font-mono);
   font-size: 8px;
   font-weight: 700;
   letter-spacing: 0.06em;
   fill: rgba(10, 10, 10, 0.78);
+  paint-order: stroke;
+  stroke: var(--color-signal);
+  stroke-width: 3px;
+  stroke-linejoin: round;
 }
 
 /* Stands */
