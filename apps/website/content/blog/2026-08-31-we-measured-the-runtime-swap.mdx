@@ -86,7 +86,7 @@ It failed silently, which only means it took longer to notice.
 
 The fix was small once the cause was clear, and it landed in [#888](https://github.com/cacheplane/angular-agent-framework/pull/888).
 Both conventions are now recognized.
-Within one run the first signal to arrive wins, because Mastra emits both and a doubled interrupt helps nobody.
+Updated September 9, 2026: the adapter retains both forms in one session. Native batches take precedence in `auto` mode regardless of arrival order; the Mastra integration explicitly selects `mastra-command` so the resume includes its decision and suspended-tool correlation.
 
 I want to name the mistake precisely, because "we had a bug" is not the lesson.
 We built a protocol adapter and then tested it exclusively against one bridge implementation of that protocol.

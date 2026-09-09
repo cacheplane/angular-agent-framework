@@ -76,11 +76,23 @@ The app opens with three welcome suggestions, one per surface.
 1. **Start a packing list** submits *"Start a packing list titled 'Yosemite Weekend' with a tent (1) and two sleeping bags."* The agent writes the list into Mastra working memory, which reaches the frontend as a `STATE_SNAPSHOT` followed by real JSON-Patch `STATE_DELTA` events, and the side panel fills in as it is written.
 2. **Check trail conditions** submits *"What are the conditions at Yosemite Valley right now?"* and the agent calls the backend tool `check_conditions`, which returns a fixed forecast so the demo behaves the same on every run.
 3. **Reserve the campsite** submits *"Please reserve the North Pines campsite for 2 nights."* `reserve_campsite` calls Mastra's `suspend()` instead of booking anything, and an approval card shows the site, the number of nights, and the total.
-4. Approve or cancel the card. The run resumes from the snapshot persisted in LibSQL and the agent either confirms the reservation with a confirmation number or reports that nothing was booked.
+4. Approve or cancel the card for North Pines, two nights, $90. The run resumes from the snapshot persisted in LibSQL. Approve returns a synthetic confirmation; Cancel returns a backend tool result containing `Nothing was booked.` and a consistent assistant reply. This local tool does not contact an external reservation service. Both decisions were verified on 2026-09-09.
 5. For the subagent surface, ask for a forecast — for example *"What is the weather forecast for North Pines this weekend?"* The agent delegates to the `weather_forecaster` child agent rather than answering itself, and the child's answer streams into a subagent card while it is still being written.
 
 </Step>
 </Steps>
+
+## Configure the resume transport
+
+The example config selects the command transport explicitly. Use the same selection in your own application:
+
+```typescript
+import { provideAgent } from '@threadplane/ag-ui';
+
+provideAgent({ url: '/agent', interruptTransport: 'mastra-command' });
+```
+
+After an approval becomes pending, submit `{ resume: { approved: true } }` or `{ resume: { approved: false } }`. The adapter adds the observed tool-call and run IDs to the command.
 
 ## Running the service's own tests
 

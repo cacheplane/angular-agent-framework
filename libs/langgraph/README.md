@@ -99,7 +99,7 @@ const pending = chat.interrupt();       // runtime-neutral interrupt value
 const raw = chat.langGraphInterrupts(); // raw LangGraph Interrupt[]
 ```
 
-Resume by calling `chat.submit(response)`.
+Resume with `await chat.submit({ resume: response })`, where `response` matches the suspended tool's contract. LangGraph restores execution from its server checkpoint on the same thread. The shared `Agent` interface does not include AG-UI's browser persistence, interrupt session, or reconciliation extensions.
 
 ### Tool calls
 

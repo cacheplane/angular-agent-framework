@@ -24,6 +24,8 @@ const agent = toAgent(source, { telemetry: myTelemetrySink });
 
 | Option | Type | Description |
 |--------|------|-------------|
+| `interruptTransport` | `InterruptTransport` | `auto` (default), `protocol`, `legacy-command`, or `mastra-command`. Native batches take precedence in `auto`. |
+| `persistence` | `AgUiInterruptPersistence` | Application-owned durable storage and optional authoritative reconciliation. Requires a stable source `threadId` and scoped namespace. |
 | `telemetry` | `AgentRuntimeTelemetrySink \| false` | Optional app-owned sink. Supply one to receive runtime lifecycle events. |
 | `a2uiClientCapabilities` | `{ supportedCatalogIds: string[]; inlineCatalogs?: unknown[] }` | A2UI catalog negotiation to advertise to the agent. Seeded once into the AG-UI shared state under the `a2ui_client_capabilities` key, so every `RunAgentInput.state` carries it. Use `a2uiClientCapabilities()` from `@threadplane/chat` for the renderer's standard value. |
 
@@ -33,11 +35,17 @@ const agent = toAgent(source, { telemetry: myTelemetrySink });
 
 | Field | Type | Description |
 |-------|------|-------------|
+| `ready` | `Promise<void>` | Resolves after persisted state is hydrated; actions also wait for hydration. |
+| `interruptSession()` | `InterruptSessionSnapshot` | Current batch, generation, phase, and retained attempt. |
+| `reconcileInterrupt()` | `Promise<void>` | Applies authoritative recovery through the configured persistence reconciler. An unknown result leaves recovery blocked. |
+| `dispose()` | `void` | Stops local work and unsubscribes. Call when a directly created adapter is no longer needed; it does not cancel backend checkpoints. |
 | `customEvents()` | `Signal<CustomStreamEvent[]>` | Custom events accumulated during a run. Resets at the start of each new run. |
 | `clientTools` | `ClientToolsCapability` | Browser client-tool catalog, pending calls, and result resolution. The chat composition uses this when you pass `<chat [clientTools]>`. |
 | `subagents()` | `Signal<Map<string, Subagent>>` | Subagent runs from `SUBAGENT_*` events, keyed by `subagentRunId`, plus the `ACTIVITY_*` convention (`activityType: 'subagent'`, keyed by `messageId`), projected to the neutral subagent contract. |
 
 The standard `Agent` signals (`messages`, `status`, `isLoading`, `error`, `toolCalls`, `state`, `interrupt`) and actions (`submit`, `retry`, `stop`, `regenerate`) are all present.
+
+Capture `interruptSession().generation` when rendering a decision and pass it to `submit(input, { interruptGeneration })` to reject stale controls. A proven pre-dispatch failure retains the exact decision for `retry()`; uncertain delivery requires authoritative reconciliation first. These recovery extensions belong to `AgUiAgent`, not the neutral `Agent` contract.
 
 ## CustomStreamEvent
 

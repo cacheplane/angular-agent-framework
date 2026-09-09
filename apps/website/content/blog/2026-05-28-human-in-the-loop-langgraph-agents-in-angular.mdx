@@ -203,7 +203,7 @@ That distinction lives in the composition.
 9. The graph continues to `issue_refund` and finishes.
 
 It is one thread and one persisted state.
-If the operator closes the tab and returns later, the interrupt is still pending.
+If the operator returns to the same thread and its server checkpoint is retained, the interrupt can still be pending. Preserve the thread ID and use durable backend storage; closing the tab does not itself configure restoration.
 
 <figure>
   <img src="/blog/2026-05-28-human-in-the-loop-langgraph-agents-in-angular/3.png" alt="The chat after approval, showing the agent's draft summary and a confirmation: 'Refund of $47.50 issued to cus_a8x2k. Refund ID: re_demo__a8x2k.'" width="1280" height="800" />

@@ -212,3 +212,54 @@ describe('scripted AG-UI events', () => {
 ```
 
 `customEvents()` is the AG-UI-specific signal — `toAgent()` returns an `AgUiAgent`, so it is reachable directly here without a cast, exactly as it is through `injectAgent()`.
+
+## Verify Mastra approval and cancellation with aimock
+
+The Mastra browser suite checks each decision at three points: the outgoing command contains the decision and observed correlation IDs, the backend tool result matches that decision, and the visible assistant reply agrees with the tool result. A disappearing approval card alone is insufficient evidence of completion.
+
+Run the six scenarios from the repository root with deterministic aimock replay:
+
+```sh
+npx nx e2e cockpit-runtimes-mastra-angular
+```
+
+The application uses `provideAgent({ url: '/agent', interruptTransport: 'mastra-command' })`. Approval sends `command.resume: { approved: true }`; cancellation sends `{ approved: false }`. Both carry `command.interruptEvent: { toolCallId, runId }` under `forwardedProps`, using the suspended run's observed identifiers.
+
+Keep these continuation entries separate inside an aimock fixture's `fixtures` array:
+
+```json
+[
+  {
+    "match": {
+      "userMessage": "reserve",
+      "hasToolResult": true,
+      "toolResultContains": "Reserved North Pines"
+    },
+    "response": { "content": "North Pines is reserved for 2 nights — confirmation TP-0288." }
+  },
+  {
+    "match": {
+      "userMessage": "reserve",
+      "hasToolResult": true,
+      "toolResultContains": "Nothing was booked."
+    },
+    "response": { "content": "The reservation for the North Pines campsite was not booked." }
+  }
+]
+```
+
+The initial tool-call fixture must set `hasToolResult: false`. Matching a continuation only by the user prompt and presence of a tool result can replay an approval after cancellation. Match the backend outcome with `toolResultContains` so the two decisions cannot share a reply.
+
+For live-model verification, configure `OPENAI_API_KEY` in the environment and run each decision in a fresh process with a fresh capture directory:
+
+```sh
+# Use new directories for every verification session.
+AIMOCK_MODE=record AIMOCK_RECORD_DIR=/tmp/public-docs-approve-recordings \
+  npx nx e2e cockpit-runtimes-mastra-angular --grep='Approve sends'
+AIMOCK_MODE=record AIMOCK_RECORD_DIR=/tmp/public-docs-cancel-recordings \
+  npx nx e2e cockpit-runtimes-mastra-angular --grep='Cancel sends'
+```
+
+Aimock can reuse newly recorded matches within a process, and generated matchers do not distinguish the two tool-result payloads. Separate processes and unused capture directories prevent the second decision from reusing the first decision's response. Each test run also uses a fresh local database. Confirm new upstream captures for each decision before treating a passing run as live-model evidence; replay alone demonstrates deterministic integration behavior.
+
+The verified scenario is North Pines for two nights, totaling $90. The local tool returns a synthetic confirmation on approval or `Nothing was booked.` on cancellation; it never contacts an external reservation service. Check both the backend result and the visible reply. Live provider wording varies, while replay wording is deterministic. The cancellation continuation was captured from `gpt-4o-mini` through aimock record mode on 2026-09-09.

@@ -32,13 +32,13 @@ A tool declares `approval_mode="always_require"`, and the bridge finishes the ru
 }
 ```
 
-This matches AWS Strands and differs from the LangGraph bridge, which signals interrupts only through a `CUSTOM` event named `on_interrupt`. The adapter detects either convention; within a single run, the first signal it sees wins.
+This matches AWS Strands and differs from the LangGraph bridge, which signals interrupts only through a `CUSTOM` event named `on_interrupt`. The adapter retains both conventions in one session; native batches take precedence in `auto` mode regardless of arrival order.
 
 ## Resume must address every pending interrupt
 
-Like Strands, this runtime reads the protocol-standard top-level `resume` array of `{ interruptId, status, payload }` entries. Unlike Strands, it expects an entry for **every** pending interrupt, not only the one the user just answered.
+Like Strands, this runtime reads the protocol-standard top-level `resume` array of `{ interruptId, status, payload }` entries. The adapter requires an entry for **every** pending interrupt on either native backend. Cancelled entries must omit `payload`.
 
-Application code does not assemble that. You call the neutral `submit({ resume })`, and the adapter derives the wire shape, including the entries for interrupts still outstanding.
+For one pending interrupt, `submit({ resume: decision })` is shorthand for one resolved entry. For a batch, pass a `resume` array with a decision for every observed interrupt ID. The adapter validates correlation; it does not invent answers for outstanding interrupts.
 
 ## State streams predictively
 

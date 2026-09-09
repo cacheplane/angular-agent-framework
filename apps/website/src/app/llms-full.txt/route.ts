@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import { INTERRUPT_GUIDANCE } from '../../lib/interrupt-guidance';
 import a2uiApiDocs from '../../../content/docs/a2ui/api/api-docs.json';
 import langgraphApiDocs from '../../../content/docs/langgraph/api/api-docs.json';
 import agUiApiDocs from '../../../content/docs/ag-ui/api/api-docs.json';
@@ -49,6 +50,7 @@ export async function GET() {
     '# Threadplane — Full Reference\n\nSee /llms.txt for a compact summary.\n',
     '## API Reference (TypeDoc)\n\n' + loadApiDocs(),
     '## Prompt Recipes\n\n' + loadAllPrompts(),
+    INTERRUPT_GUIDANCE,
     [
       '## Common Gotchas',
       '',

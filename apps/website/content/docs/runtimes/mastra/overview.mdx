@@ -11,7 +11,7 @@ description: How the Mastra example is built, from the Node service that serves 
 
 The Run tab shows the prebuilt `<chat>` composition beside a panel that mirrors the agent's packing list. Three welcome suggestions set it up: "Start a packing list" seeds a titled list with a tent and two sleeping bags and the panel fills in as the agent writes it, "Check trail conditions" makes the agent call a backend tool, and "Reserve the campsite" asks for two nights at North Pines.
 
-The reservation is the interesting one. It suspends the run rather than booking anything, and an approval card appears with the campsite, the number of nights, and the total. Approve resumes the agent with a confirmation number, and Cancel resumes it with a refusal.
+The reservation pauses the run and displays North Pines, two nights, and a $90 total. Approve resumes with a synthetic confirmation; Cancel resumes with a tool result containing `Nothing was booked.` and an assistant reply agreeing with that result. Both paths were verified on 2026-09-09. The tool is local and does not make an external reservation.
 
 Ask for a weather forecast and the agent delegates to a second agent instead of answering itself. The child's answer streams into a subagent card in the transcript while it is still being written.
 
@@ -29,7 +29,7 @@ Nothing in this tool is protocol-aware; the bridge turns the call into `TOOL_CAL
 
 ### Pausing a run for approval
 
-A tool becomes a human-in-the-loop step by adding a `suspendSchema` and a `resumeSchema` to that same shape. The first call arrives with no resume data, so the body calls `suspend()` with the payload the approval card renders. The resumed call arrives with the operator's decision and either books the site or reports the refusal.
+A tool becomes a human-in-the-loop step by adding a `suspendSchema` and a `resumeSchema` to that same shape. The first call arrives with no resume data, so the body calls `suspend()` with the payload the approval card renders. The resumed call arrives with the operator's decision and returns a synthetic confirmation or decline.
 
 <ExampleCode file="agents.mjs" region="reserve-campsite-tool" title="agents.mjs — the tool that suspends" />
 
@@ -81,15 +81,18 @@ The agent handed to the bridge is wrapped first, which is what makes the subagen
 
 ### The agent provider
 
-`provideAgent()` registers the agent once for the whole application, and it is the only provider the `<chat>` composition requires. Nothing about it is Mastra-specific: this is the same config every AG-UI example uses. The example passes a factory because it resolves its endpoint at runtime from the host that serves the demo.
+`provideAgent()` registers the agent once for the whole application. Mastra requires `interruptTransport: 'mastra-command'` because its backend consumes a command even though it also emits native interrupt outcomes. The example passes a factory because it resolves its endpoint at runtime from the host that serves the demo.
 
 <ExampleCode file="app.config.ts" />
 
 Your own application passes the URL directly:
 
 ```typescript
+import { provideAgent } from '@threadplane/ag-ui';
+
 provideAgent({
   url: 'https://your-backend.example.com/agent',
+  interruptTransport: 'mastra-command',
 });
 ```
 
