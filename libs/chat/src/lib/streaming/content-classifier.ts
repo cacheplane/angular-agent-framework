@@ -46,6 +46,7 @@ export function createContentClassifier(): ContentClassifier {
   const errorsSignal = signal<string[]>([]);
 
   let processedLength = 0;
+  let previousContent = '';
   let store: ParseTreeStore | null = null;
   let jsonStartIndex = 0;
 
@@ -148,15 +149,13 @@ export function createContentClassifier(): ContentClassifier {
     // NG0600 forbids writing signals during change detection; untracked()
     // opts out of the reactive graph for this imperative push-based update.
     untracked(() => {
-      // If content shrunk vs. last seen length, the underlying message was
-      // replaced (e.g. via langgraph RemoveMessage / id-match content
-      // replacement followed by force-refresh-from-server). Reset state so
-      // the new content is classified fresh — otherwise the classifier
-      // keeps the streamed (pre-mutation) markdown/json type and the UI
-      // never updates.
-      if (content.length < processedLength) {
+      // A same-id replacement can be longer than its streamed introduction
+      // (e.g. the render tool replaces prose with an A2UI payload). Only
+      // append-only content can reuse the existing classification and parser.
+      if (!content.startsWith(previousContent)) {
         resetState();
       }
+      previousContent = content;
       const currentType = typeSignal();
 
       if (currentType === 'pending') {

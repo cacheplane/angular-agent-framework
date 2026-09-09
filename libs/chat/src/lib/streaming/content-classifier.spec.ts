@@ -125,6 +125,31 @@ describe('ContentClassifier', () => {
   });
 
   describe('type transitions', () => {
+    it('reclassifies a longer A2UI replacement after a streamed introduction', () => {
+      const c = setup();
+      c.update("I'll render a compact cleanup report UI now.");
+      expect(c.type()).toBe('markdown');
+
+      c.update('---a2ui_JSON---\n' + JSON.stringify({
+        version: 'v0.9',
+        createSurface: { surfaceId: 'cleanup', catalogId: 'https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json' },
+      }) + '\n' + JSON.stringify({
+        version: 'v0.9',
+        updateComponents: { surfaceId: 'cleanup', components: [{ id: 'root', component: 'Text', text: 'Cleanup report' }] },
+      }) + '\n');
+
+      expect(c.type()).toBe('a2ui');
+      expect(c.a2uiSurfaces().has('cleanup')).toBe(true);
+      expect(c.markdown()).toBe('');
+    });
+
+    it('reparses an equal-length JSON replacement instead of keeping stale elements', () => {
+      const c = setup();
+      c.update('{"root":"first","elements":{}}');
+      c.update('{"root":"other","elements":{}}');
+      expect(c.spec()?.root).toBe('other');
+    });
+
     it('never downgrades from markdown', () => {
       const c = setup();
       c.update('Hello');
