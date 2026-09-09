@@ -26,6 +26,7 @@ import {
   type GrowthJob,
   type GrowthTokenKey,
   type RecipientDeliveryPolicy,
+  type RecipientAttachment,
   type RecipientEmailInput,
   type RecipientSendResult,
   type SqlExecutor,
@@ -367,30 +368,34 @@ function enrichmentDrafts(context: LifecycleJobContext): CampaignDraft[] {
   });
 }
 
+interface RecipientMessage {
+  subject: string;
+  text: string;
+  html: string;
+  unsubscribeUrl: UnsubscribeActionUrl;
+  campaignTemplate?: CampaignTemplateId;
+  attachment?: RecipientAttachment;
+}
+
 async function dispatchRecipient(
   executor: SqlExecutor,
   job: GrowthJob,
-  subject: string,
-  text: string,
-  html: string,
-  unsubscribeUrl: UnsubscribeActionUrl,
+  message: RecipientMessage,
   signal: AbortSignal,
-  dependencies: LifecycleJobDependencies,
-  campaignTemplate?: CampaignTemplateId
+  dependencies: LifecycleJobDependencies
 ): Promise<GrowthDispatchResult> {
   const leaseToken = requireLease(job);
   signal.throwIfAborted();
+  const { campaignTemplate, attachment, ...parts } = message;
   const result = await dependencies.sendRecipient(
     executor,
     {
       jobId: job.id,
       leaseToken,
-      subject,
-      text,
-      html,
-      unsubscribeUrl,
+      ...parts,
       signal,
       ...(campaignTemplate === undefined ? {} : { campaignTemplate }),
+      ...(attachment === undefined ? {} : { attachments: [attachment] }),
     },
     dependencies.recipientPolicy
   );
@@ -469,10 +474,15 @@ export async function dispatchLifecycleAppOwnedJob(
     return dispatchRecipient(
       executor,
       job,
-      message.subject,
-      signedText(body, unsubscribeUrl),
-      signedHtml(body, unsubscribeUrl),
-      unsubscribeUrl,
+      {
+        subject: message.subject,
+        text: signedText(body, unsubscribeUrl),
+        html: signedHtml(body, unsubscribeUrl),
+        unsubscribeUrl,
+        ...(message.attachment === undefined
+          ? {}
+          : { attachment: message.attachment }),
+      },
       signal,
       dependencies
     );
@@ -491,13 +501,15 @@ export async function dispatchLifecycleAppOwnedJob(
     return dispatchRecipient(
       executor,
       job,
-      message.subject,
-      message.text,
-      message.html,
-      unsubscribeUrl,
+      {
+        subject: message.subject,
+        text: message.text,
+        html: message.html,
+        unsubscribeUrl,
+        campaignTemplate: message.template,
+      },
       signal,
-      dependencies,
-      message.template
+      dependencies
     );
   }
 
