@@ -22,7 +22,7 @@ describe('site positioning copy', () => {
     expect(LONG_SUBHEAD).toContain('open-source thread-plane for agents');
     expect(LONG_SUBHEAD).toContain('LangGraph and AG-UI');
     expect(HERO_SUBHEAD).toBe(
-      'Chat, durable threads, persistence, human approvals, and generative UI for Angular, on LangGraph and AG-UI. Your backend stays where it is.',
+      'Make agent work persistent, durable, visible, reviewable, and resumable.',
     );
     expect(POSITIONING_PROOF_POINTS.map((p) => p.label)).toEqual([
       'LangGraph + AG-UI',

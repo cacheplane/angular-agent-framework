@@ -50,7 +50,7 @@ describe('positioning: hero copy', () => {
     expect(HERO_EYEBROW).toBe('Angular · LangGraph & AG-UI');
     expect(HERO_H1).toBe('The open-source thread-plane for agents.');
     expect(HERO_SUBHEAD).toBe(
-      'Chat, durable threads, persistence, human approvals, and generative UI for Angular, on LangGraph and AG-UI. Your backend stays where it is.',
+      'Make agent work persistent, durable, visible, reviewable, and resumable.',
     );
     expect(HOME_TITLE).toBe('Threadplane — The open-source thread-plane for agents');
     expect(HOME_DESCRIPTION).toBe(
@@ -64,15 +64,15 @@ describe('positioning: hero copy', () => {
     expect(HERO_H1_LINES.join(' ')).toBe(HERO_H1);
   });
 
-  it('subhead segments join back to HERO_SUBHEAD, with exactly one highlight', () => {
-    // The segments exist only so Hero.tsx can marker-highlight one phrase.
-    // If they ever stop reassembling the source-of-truth string, the rendered
-    // subhead silently diverges from the copy every other surface quotes.
+  it('subhead segments preserve the copy and link each capability to its docs', () => {
     expect(HERO_SUBHEAD_SEGMENTS.map((s) => s.text).join('')).toBe(HERO_SUBHEAD);
-    expect(HERO_SUBHEAD_SEGMENTS.filter((s) => s.highlight)).toHaveLength(1);
-    expect(HERO_SUBHEAD_SEGMENTS.find((s) => s.highlight)?.text).toBe(
-      'Your backend stays where it is.',
-    );
+    expect(HERO_SUBHEAD_SEGMENTS.filter((s) => s.href)).toEqual([
+      { text: 'persistent', href: '/docs/langgraph/guides/persistence' },
+      { text: 'durable', href: '/docs/langgraph/guides/persistence#choosing-a-checkpointer' },
+      { text: 'visible', href: '/docs/chat/components/chat-tool-calls' },
+      { text: 'reviewable', href: '/docs/langgraph/guides/interrupts' },
+      { text: 'resumable', href: '/docs/langgraph/guides/persistence#checkpoint-recovery' },
+    ]);
   });
 
   it('pins the hero action labels and the secondary destination', () => {
