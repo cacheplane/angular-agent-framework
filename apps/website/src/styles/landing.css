@@ -2336,7 +2336,10 @@ a.preflight-row:hover .preflight-challenge {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 400px;
   gap: 64px;
-  align-items: center;
+  /* Top, not centre. The cover is taller than the ask, so centring pushed the
+   * form down by half the difference (measured: 43px) and made the position of
+   * the section's primary action depend on how many chapters the document has. */
+  align-items: start;
 }
 .teams-eyebrow {
   margin-bottom: 18px;
