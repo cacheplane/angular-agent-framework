@@ -247,6 +247,19 @@ describe('CI workflow', () => {
     );
   });
 
+  it('redeploys examples when their HTML preparation changes', async () => {
+    const deployJob = await readDeployJob();
+    const path = 'scripts/prepare-example-html.ts';
+    const preflight = deployJob.match(/grep -E '([^']+)' >\/dev\/null/);
+    assert.match(path, new RegExp(preflight?.[1] ?? '(?!)'));
+    const examplesDetection = deployJob.slice(
+      deployJob.indexOf('Check if examples changed'),
+      deployJob.indexOf('- uses: actions/setup-node')
+    );
+    assert.ok([...examplesDetection.matchAll(/grep -E '([^']+)'/g)]
+      .some((match) => new RegExp(match[1]).test(path)));
+  });
+
   it('isolates langgraph coverage before the remaining bounded library tests', async () => {
     const libraryJob = await readLibraryJob();
 
