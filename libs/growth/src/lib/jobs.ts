@@ -102,7 +102,8 @@ export type FinalSendAuthorization =
         | 'campaign_disabled'
         | 'delivery_disabled'
         | 'outside_send_window'
-        | 'mailbox_recovery_required';
+        | 'mailbox_recovery_required'
+        | 'reply_binding_pending';
       job: GrowthJob;
     };
 
@@ -118,6 +119,8 @@ interface SendContactRow extends Record<string, unknown> {
   fulfillment_deletion_blocked?: boolean;
   campaign_approval_valid?: boolean;
   campaign_enrollment_valid?: boolean;
+  reply_binding_pending?: boolean;
+  form_abuse_blocked?: boolean;
 }
 
 interface FinalSendAuthorizationRow extends Record<string, unknown> {
@@ -246,6 +249,16 @@ function installRuntimeApproval(alias: 'approval' | 'authoritative'): string {
     ))`;
 }
 
+function blockedFormJob(alias: string): string {
+  return `exists (select 1 from growth_activity form_assessment
+    where form_assessment.kind = 'form.abuse_assessed'
+      and form_assessment.contact_id = ${alias}.contact_id
+      and form_assessment.event_key in (
+        'form:' || (${alias}.payload->>'submission_id') || ':assessment',
+        regexp_replace(${alias}.payload->>'approval_event_key', ':accepted:outreach-approved$', ':assessment')
+      ) and form_assessment.data->'result'->>'deliverySuppressed' = 'true')`;
+}
+
 export async function materializeCampaignEnrollment(
   executor: SqlExecutor,
   input: MaterializeCampaignEnrollmentInput
@@ -317,6 +330,13 @@ export async function materializeCampaignEnrollment(
            from growth_activity approval
            where approval.contact_id = c.id
              and approval.occurred_at = c.outreach_approved_at
+             and not exists (
+               select 1 from growth_activity form_assessment
+               where form_assessment.kind = 'form.abuse_assessed'
+                 and form_assessment.contact_id = c.id
+                 and form_assessment.event_key = regexp_replace(approval.event_key, ':accepted:outreach-approved$', ':assessment')
+                 and form_assessment.data->'result'->>'deliverySuppressed' = 'true'
+             )
              and (
                (
                  approval.kind = 'form.outreach_approved'
@@ -516,6 +536,13 @@ export async function leaseDueJobs(
        select j.id
        from growth_jobs j
        where j.kind = any($1::text[])
+         and not ${blockedFormJob('j')}
+         and (j.kind <> 'send_step' or not exists (
+           select 1 from growth_jobs unbound
+           where unbound.contact_id = j.contact_id and unbound.id <> j.id
+             and unbound.kind in ('fulfill', 'send_step') and unbound.status = 'completed'
+             and unbound.provider_email_id is not null and unbound.rfc_message_id is null
+         ))
          and ($5::boolean or j.kind <> 'send_step')
          and (
            j.kind not in ('send_step', 'reply_reconcile')
@@ -787,6 +814,13 @@ export async function authorizeLeasedJobForSubmission(
               c.email_normalized,
               c.outreach_approved_at,
               c.deleted_at,
+              ${blockedFormJob('target')} as form_abuse_blocked,
+              exists (
+                select 1 from growth_jobs unbound
+                where unbound.contact_id = c.id and unbound.id <> target.id
+                  and unbound.kind in ('fulfill', 'send_step') and unbound.status = 'completed'
+                  and unbound.provider_email_id is not null and unbound.rfc_message_id is null
+              ) as reply_binding_pending,
               stop.kind as latest_hard_stop_kind,
               stop.occurred_at as latest_hard_stop_at,
               exists (
@@ -913,6 +947,12 @@ export async function authorizeLeasedJobForSubmission(
 
     if (contact.deleted_at !== null) {
       return { authorized: false, reason: 'contact_deleted', job };
+    }
+    if (contact.form_abuse_blocked === true) {
+      return { authorized: false, reason: 'contact_stopped', job };
+    }
+    if (job.kind === 'send_step' && contact.reply_binding_pending === true) {
+      return { authorized: false, reason: 'reply_binding_pending', job };
     }
     if (
       job.kind === 'fulfill' &&
@@ -1149,6 +1189,7 @@ export async function claimInternalNotificationSubmission(
        and j.status = 'leased'
        and j.lease_token = $2::uuid
        and j.lease_until > $3
+       and not ${blockedFormJob('j')}
      on conflict (event_key) do nothing
      returning event_key`,
     [jobId, leaseToken, now]

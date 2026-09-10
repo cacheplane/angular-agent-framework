@@ -9,6 +9,7 @@ import type {
 } from './database.ts';
 import {
   GoogleReplyReplayError,
+  bindProviderMessageId,
   parseGoogleMailboxEvent,
   processGoogleMailboxEvent,
   isGoogleMailboxRecoveryPaused,
@@ -2016,5 +2017,183 @@ describe('processGoogleMailboxEvent', () => {
       })
     );
     expect(harness.calls).toContain('complete-google-reconciled-reply');
+  });
+});
+
+describe('provider Message-ID binding', () => {
+  function bindingHarness(
+    overrides: TestRow = {},
+    pending: TestRow[] = [],
+    conflictingJobs: TestRow[] = []
+  ) {
+    const job = {
+      id: jobId,
+      kind: 'send_step',
+      contact_id: contactId,
+      status: 'completed',
+      provider_email_id: 'resend-email-1',
+      delivery_status: 'submitted',
+      rfc_message_id: null,
+      gmail_seed_message_id: null,
+      ...overrides,
+    };
+    const bind = vi
+      .fn<(parameters: readonly unknown[]) => SqlQueryResult<TestRow>>()
+      .mockReturnValue({ rows: [{ id: jobId }] });
+    const complete = vi.fn(() => ({ rows: [{ id: 'reconcile-1' }] }));
+    const revive = vi.fn(() => ({ rows: [{ id: 'reconcile-1' }] }));
+    const db = executorWith({
+      ...commonHandlers(),
+      'discover-provider-message-job': () => ({ rows: [job] }),
+      'lock-provider-message-contact': () => ({
+        rows: [{ id: contactId, deleted_at: null }],
+      }),
+      'lock-provider-message-job': () => ({ rows: [job] }),
+      'check-provider-message-conflicts': () => ({ rows: conflictingJobs }),
+      'bind-provider-message-id': bind,
+      'lock-google-reconcile-for-seed': (_parameters, sql) => ({
+        rows: pending.filter(
+          (row) =>
+            row['status'] !== 'failed' ||
+            (sql.includes("last_error_code = 'founder_review'") &&
+              row['last_error_code'] === 'founder_review')
+        ),
+      }),
+      'revive-exhausted-google-reconcile': revive,
+      'record-google-reconcile-candidate': () => ({
+        rows: [{ id: 'reconcile-1' }],
+      }),
+      'complete-google-reconciled-reply': complete,
+    });
+    const stopContact = vi
+      .fn()
+      .mockResolvedValue({ applied: true, effective: true });
+    return { ...db, bind, complete, revive, stopContact };
+  }
+  const input = {
+    providerEmailId: 'resend-email-1',
+    rfcMessageId: '<actual@resend.dev>',
+  };
+  function exhaustedReply(rank = 0, errorCode = 'founder_review'): TestRow {
+    return {
+      id: 'reconcile-1',
+      status: 'failed',
+      last_error_code: errorCode,
+      contact_id: null,
+      payload: {
+        gmail_message_id: 'reply-gmail',
+        occurred_at: now.toISOString(),
+        in_reply_to:
+          rank === 0 ? input.rfcMessageId : '<unresolved@resend.dev>',
+        references: [input.rfcMessageId],
+        ranked_candidates: [{ message_id: input.rfcMessageId, rank }],
+        resolved_candidates: [],
+      },
+    };
+  }
+  it('stops a direct reply that exhausted retries before its authenticated binding arrived', async () => {
+    const h = bindingHarness({}, [exhaustedReply()]);
+    await bindProviderMessageId(h.executor, input, {
+      stopContact: h.stopContact,
+    });
+    expect(h.revive).toHaveBeenCalledOnce();
+    expect(h.stopContact).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ contactId, reason: 'campaign.reply_received' })
+    );
+    expect(h.complete).toHaveBeenCalledOnce();
+  });
+  it('keeps an exhausted lower-ranked reply unresolved instead of opening its contact send gate', async () => {
+    const h = bindingHarness({}, [exhaustedReply(1)]);
+    await expect(
+      bindProviderMessageId(h.executor, input, { stopContact: h.stopContact })
+    ).rejects.toThrow(/reconciliation conflict/u);
+    expect(h.revive).not.toHaveBeenCalled();
+    expect(h.stopContact).not.toHaveBeenCalled();
+  });
+  it('does not reopen other terminal reply failures', async () => {
+    const h = bindingHarness({}, [
+      exhaustedReply(0, 'deterministic_job_poison'),
+    ]);
+    await bindProviderMessageId(h.executor, input, {
+      stopContact: h.stopContact,
+    });
+    expect(h.revive).not.toHaveBeenCalled();
+    expect(h.stopContact).not.toHaveBeenCalled();
+  });
+  it('rejects an RFC identifier already owned by another job', async () => {
+    const h = bindingHarness({}, [], [{ id: 'another-job' }]);
+    await expect(bindProviderMessageId(h.executor, input)).rejects.toThrow(
+      /binding conflict/u
+    );
+    expect(h.bind).not.toHaveBeenCalled();
+  });
+  it.each([
+    'provider-uuid',
+    '<bad\r\nheader@resend.dev>',
+    '<two..dots@resend.dev>',
+    '<one@resend.dev> <two@resend.dev>',
+  ])('rejects malformed RFC identifiers: %j', async (rfcMessageId) => {
+    const h = bindingHarness();
+    await expect(
+      bindProviderMessageId(h.executor, { ...input, rfcMessageId })
+    ).rejects.toThrow(/message_id/u);
+    expect(h.calls).toEqual([]);
+  });
+  it('binds the actual provider ID without inventing a Gmail seed', async () => {
+    const h = bindingHarness();
+    await bindProviderMessageId(h.executor, input, {
+      stopContact: h.stopContact,
+    });
+    expect(h.bind.mock.calls[0]?.[0]).toEqual([
+      jobId,
+      input.providerEmailId,
+      input.rfcMessageId,
+    ]);
+  });
+  it('preserves an existing compatible Gmail seed and makes repeats idempotent', async () => {
+    const h = bindingHarness({
+      rfc_message_id: input.rfcMessageId,
+      gmail_seed_message_id: 'legacy-gmail',
+    });
+    await bindProviderMessageId(h.executor, input, {
+      stopContact: h.stopContact,
+    });
+    expect(h.bind).not.toHaveBeenCalled();
+  });
+  it.each([
+    { rfc_message_id: '<conflict@example.com>' },
+    { provider_email_id: 'different-provider' },
+    { status: 'pending' },
+  ])('rejects conflicting or unaccepted bindings: %j', async (row) => {
+    const h = bindingHarness(row);
+    await expect(
+      bindProviderMessageId(h.executor, input, { stopContact: h.stopContact })
+    ).rejects.toThrow();
+    expect(h.bind).not.toHaveBeenCalled();
+  });
+  it('settles a reply that arrived before the provider binding', async () => {
+    const h = bindingHarness({}, [
+      {
+        id: 'reconcile-1',
+        status: 'pending',
+        contact_id: null,
+        payload: {
+          gmail_message_id: 'reply-gmail',
+          occurred_at: now.toISOString(),
+          in_reply_to: input.rfcMessageId,
+          references: [],
+          ranked_candidates: [{ message_id: input.rfcMessageId, rank: 0 }],
+        },
+      },
+    ]);
+    await bindProviderMessageId(h.executor, input, {
+      stopContact: h.stopContact,
+    });
+    expect(h.stopContact).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ contactId, reason: 'campaign.reply_received' })
+    );
+    expect(h.complete).toHaveBeenCalledOnce();
   });
 });

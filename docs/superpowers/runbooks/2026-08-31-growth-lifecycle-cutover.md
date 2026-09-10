@@ -277,13 +277,22 @@ Any legacy side effect, campaign job, scheduled provider follow-up, or missing d
 
 ### PRODUCTION LIVE — explicit authorization required: sender identity
 
+For the recipient-only delivery rollout, deploy website webhook Message-ID
+binding support first. Verify exact provider/job binding with existing accepted
+delivery records before deploying lifecycle BCC removal and its bounded lookup
+fallback. Keep campaign switches unchanged. An unresolved binding must defer
+only that contact's follow-ups; it must never trigger resending an accepted email.
+
 From one received allowlisted message, verify and record pass/fail without copying raw headers:
 
 - SPF alignment/pass, DKIM alignment/pass, and DMARC pass for `threadplane.ai`;
 - expected Return-Path;
 - `List-Unsubscribe` with the opaque HTTPS action URL;
 - `List-Unsubscribe-Post: List-Unsubscribe=One-Click`;
-- Brian BCC seed and `X-Threadplane-Job-ID` on the received copy;
+- no recipient BCC, and `X-Threadplane-Job-ID` on the received message;
+- the provider's actual RFC Message-ID bound to the exact accepted growth job,
+  including a matched reply stopping follow-ups and a missing binding delaying
+  only that contact's follow-ups;
 - `Reply-To` routes replies to Brian;
 - no open pixel and no click-link rewriting.
 

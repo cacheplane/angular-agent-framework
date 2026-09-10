@@ -6,6 +6,7 @@ import { approveContactFromFormInTransaction } from './contacts.ts';
 import type { EmailHmacKeyring } from './crypto.ts';
 import type { SqlExecutor, SqlTransaction } from './database.ts';
 import type { GrowthEmailClassification } from './models.ts';
+import { prepareFormAdmission, recordFormAdmission } from './form-admission.ts';
 
 const UUID_V4 =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
@@ -45,6 +46,8 @@ export interface AcceptFormSubmissionInput {
   occurredAt: Date;
   keyring: EmailHmacKeyring;
   serverEmailClassification?: GrowthEmailClassification;
+  honeypot?: string;
+  trustedClientIp?: string;
 }
 
 export interface AcceptFormSubmissionResult {
@@ -52,6 +55,7 @@ export interface AcceptFormSubmissionResult {
   approved: boolean;
   contactId: string;
   submissionId: string;
+  deliverySuppressed?: boolean;
 }
 
 interface AcceptFormSubmissionDependencies {
@@ -133,8 +137,12 @@ export async function acceptFormSubmission(
 ): Promise<AcceptFormSubmissionResult> {
   const submissionId = uuid('submissionId', input.submissionId);
   const facts = submittedFacts(input, submissionId);
+  input = { ...input, submissionId };
 
   return executor.transaction(async (transaction) => {
+    const admission = await prepareFormAdmission(transaction, input);
+    if (admission.replay) return admission.replay;
+    const blocked = admission.assessment.decision === 'blocked';
     const contact = await dependencies.approveContact(transaction, {
       email: input.email,
       displayName: input.displayName,
@@ -149,8 +157,27 @@ export async function acceptFormSubmission(
       keyring: input.keyring,
       serverEmailClassification: input.serverEmailClassification,
       submittedFacts: facts,
+      ...(blocked ? { serverFormBlocked: true } : {}),
     });
-    const approved = contact.formApprovalGranted;
+    const approved = !blocked && contact.formApprovalGranted;
+    if (
+      blocked ||
+      (contact.authorization === 'stopped' &&
+        contact.latestHardStop &&
+        !['unsubscribe', 'campaign.reply_received'].includes(
+          contact.latestHardStop.reason
+        ))
+    ) {
+      const result: AcceptFormSubmissionResult = {
+        accepted: true,
+        approved: false,
+        contactId: contact.contactId,
+        submissionId,
+        deliverySuppressed: true,
+      };
+      await recordFormAdmission(transaction, input, admission, result);
+      return result;
+    }
     const fulfillmentPayload = {
       form_kind: input.form.kind,
       ...(input.form.kind === 'whitepaper' ? { paper: input.form.paper } : {}),
@@ -211,11 +238,13 @@ export async function acceptFormSubmission(
       throw new Error(`Growth form job idempotency conflict: ${submissionId}`);
     }
 
-    return {
+    const result: AcceptFormSubmissionResult = {
       accepted: true,
       approved,
       contactId: contact.contactId,
       submissionId,
     };
+    await recordFormAdmission(transaction, input, admission, result);
+    return result;
   });
 }

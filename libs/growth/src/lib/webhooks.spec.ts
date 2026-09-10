@@ -229,11 +229,31 @@ function webhookHarness(
   const dependencies: ProcessResendWebhookDependencies = {
     databaseEnvironment: 'production',
     stopContact,
+    bindProviderMessageId: vi.fn().mockResolvedValue('bound'),
   };
   return { ...harness, stopContact, dependencies };
 }
 
 describe('processVerifiedResendWebhook', () => {
+  it('binds an authenticated provider Message-ID using the exact provider email ID', async () => {
+    const h = webhookHarness();
+    await processVerifiedResendWebhook(
+      h.executor,
+      {
+        providerEventId: 'msg_binding',
+        payload: event('email.sent', { message_id: '<actual@resend.dev>' }),
+      },
+      h.dependencies
+    );
+    expect(h.dependencies.bindProviderMessageId).toHaveBeenCalledWith(
+      expect.anything(),
+      {
+        providerEmailId,
+        rfcMessageId: '<actual@resend.dev>',
+      },
+      { stopContact: h.stopContact }
+    );
+  });
   it('keeps supported parser fixtures assignable to the pinned Resend webhook union', () => {
     expect(supportedSdkFixtures).toHaveLength(7);
   });
@@ -777,6 +797,37 @@ describe('processVerifiedResendWebhook', () => {
     expect(result).toEqual({ applied: false, reason: 'replay' });
     expect(harness.calls).not.toContain('update-resend-delivery-status');
     expect(harness.stopContact).not.toHaveBeenCalled();
+  });
+
+  it('revisits binding reconciliation on duplicate provider events without duplicating delivery activity', async () => {
+    const h = webhookHarness({
+      existingActivity: {
+        event_key: 'resend:msg_duplicate_binding',
+        contact_id: contactId,
+        project_id: null,
+        kind: 'delivery.sent',
+        occurred_at: now,
+        data: {
+          provider: 'resend',
+          provider_event_id: 'msg_duplicate_binding',
+          provider_email_id: providerEmailId,
+          event_type: 'email.sent',
+          category: 'sent',
+        },
+      },
+    });
+    await expect(
+      processVerifiedResendWebhook(
+        h.executor,
+        {
+          providerEventId: 'msg_duplicate_binding',
+          payload: event('email.sent', { message_id: '<actual@resend.dev>' }),
+        },
+        h.dependencies
+      )
+    ).resolves.toEqual({ applied: false, reason: 'replay' });
+    expect(h.dependencies.bindProviderMessageId).toHaveBeenCalledOnce();
+    expect(h.calls).not.toContain('insert-resend-webhook-activity');
   });
 
   it('fails conflicting reuse of a provider event ID before status mutation', async () => {

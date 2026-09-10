@@ -51,3 +51,7 @@ export {
   readGrowthFunnel,
   readContactJourney,
 } from './lib/observability/journey-report.ts';
+export { FormRateLimitError } from './lib/form-admission.ts';
+export { assessFormAbuse, FORM_ABUSE_THRESHOLD, FORM_ABUSE_VERSION, type FormAbuseAssessment } from './lib/form-abuse.ts';
+export { bindProviderMessageId } from './lib/replies.ts';
+export { reconcilePendingResendMessageIds } from './lib/resend.ts';

@@ -1,4 +1,5 @@
 'use client';
+import { Honeypot, readHoneypot } from '../form/Honeypot';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import type { PublicFormPolicy } from '../../lib/growth/form-policy';
@@ -42,7 +43,7 @@ export function WhitePaperForm({
   const pdf = PDF_PATHS[paper];
   const [email, setEmail] = useState('');
   const [emailMessage, setEmailMessage] = useState<string | null>(null);
-  const form = useGrowthForm<{ email: string; paper: WhitepaperId }>({
+  const form = useGrowthForm<{ website_url: string; email: string; paper: WhitepaperId }>({
     route: '/api/whitepaper-signup',
     formPolicy,
     events: {
@@ -71,7 +72,7 @@ export function WhitePaperForm({
     </a>
   );
 
-  const submit = (e: FormEvent) => {
+  const submit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const problem = emailError(email);
     setEmailMessage(problem);
@@ -79,7 +80,7 @@ export function WhitePaperForm({
       document.getElementById(inputId)?.focus();
       return;
     }
-    void form.submit({ email: email.trim(), paper });
+    void form.submit({ website_url: readHoneypot(e.currentTarget), email: email.trim(), paper });
   };
 
   if (form.status === 'sent') {
@@ -100,6 +101,7 @@ export function WhitePaperForm({
   }
   return (
     <form onSubmit={submit} className="wp-form" data-ui="form" noValidate>
+      <Honeypot />
       <Field id={inputId} label="Work email" error={emailMessage}>
         <div data-ui="form-row">
           <TextInput

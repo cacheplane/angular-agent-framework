@@ -1,4 +1,5 @@
 'use client';
+import { Honeypot, readHoneypot } from '../form/Honeypot';
 
 import React, { useState } from 'react';
 import { Button } from '../ui/Button';
@@ -88,6 +89,7 @@ export function ContactForm({ formPolicy, intent = 'contact', entryPoint }: Cont
       return;
     }
     void form.submit({
+      website_url: readHoneypot(e.currentTarget),
       form_kind: enterprise ? 'pricing' : 'contact',
       email: email.trim(),
       ...(name.trim() ? { name: name.trim() } : {}),
@@ -113,6 +115,7 @@ export function ContactForm({ formPolicy, intent = 'contact', entryPoint }: Cont
 
   return (
     <form onSubmit={handleSubmit} data-ui="form" noValidate>
+      <Honeypot />
       <Field id="contact-email" label="Work email" error={emailMessage}>
         <TextInput
           type="email"

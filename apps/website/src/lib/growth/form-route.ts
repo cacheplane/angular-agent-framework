@@ -1,15 +1,34 @@
 import 'server-only';
+import { isIP } from 'node:net';
 
 // The website intentionally consumes the growth library through its internal boundary.
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import {
   acceptFormSubmission,
+  FormRateLimitError,
   createDatabaseExecutor,
   type AcceptFormSubmissionInput,
   type AcceptFormSubmissionResult,
   type EmailHmacKeyring,
   type SqlExecutor,
 } from '@threadplane-internal/growth';
+
+export function trustedFormClientIp(request: Request): string | undefined {
+  // Only trust the platform-overwritten header inside Vercel. Never use an
+  // arbitrary forwarded-for header supplied to a local/custom-hosted server.
+  if (process.env['VERCEL'] !== '1') return undefined;
+  const ip = request.headers.get('x-vercel-forwarded-for')?.trim();
+  return ip && isIP(ip) ? ip.toLowerCase() : undefined;
+}
+
+export function formAdmissionError(error: unknown): Response | undefined {
+  if (!(error instanceof FormRateLimitError)) return undefined;
+  return jsonResponse(
+    { error: 'Please try again later', retryable: true },
+    429,
+    { 'Retry-After': String(error.retryAfterSec) }
+  );
+}
 
 import { readBoundedBody } from '../../app/api/_internal/read-bounded-body';
 import { loadEmailHmacKeyring } from './email-keyring';

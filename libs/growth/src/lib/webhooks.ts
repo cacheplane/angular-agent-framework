@@ -1,6 +1,7 @@
 import type { SqlExecutor, SqlTransaction } from './database.ts';
 import type { GrowthDeliveryStatus } from './models.ts';
 import { isCampaignTemplateId, type DeliveryEnvironment } from './resend.ts';
+import { bindProviderMessageId } from './replies.ts';
 import {
   stopContact,
   type CanonicalStopReason,
@@ -46,6 +47,7 @@ interface ParsedResendEvent {
   type: SupportedResendEventType;
   occurredAt: Date;
   providerEmailId: string;
+  rfcMessageId?: string;
   tags: Record<string, string>;
   bounceCategory?: 'permanent' | 'transient' | 'unknown';
 }
@@ -72,6 +74,7 @@ interface WebhookActivityRow extends Record<string, unknown> {
 
 export interface ProcessResendWebhookDependencies {
   databaseEnvironment: DeliveryEnvironment;
+  bindProviderMessageId?: typeof bindProviderMessageId;
   stopContact: (
     executor: SqlExecutor,
     input: StopContactInput
@@ -272,6 +275,9 @@ function parseSupportedEvent(payload: unknown): ParsedResendEvent | null {
     type,
     occurredAt,
     providerEmailId,
+    ...(data['message_id'] == null
+      ? {}
+      : { rfcMessageId: boundedText(data['message_id'], 998) }),
     tags,
     ...(type === 'email.bounced'
       ? { bounceCategory: validateClosedDetails(type, data) }
@@ -508,6 +514,21 @@ export async function processVerifiedResendWebhook(
   };
 
   return executor.transaction(async (transaction) => {
+    // Serialize with Gmail before acquiring contact/job locks. Replays also
+    // revisit reconciliation so a late reply cannot miss an existing binding.
+    if (
+      event.rfcMessageId &&
+      ['fulfill', 'send_step'].includes(event.tags['job_kind'] ?? '')
+    ) {
+      await (dependencies.bindProviderMessageId ?? bindProviderMessageId)(
+        transactionExecutor(transaction),
+        {
+          providerEmailId: event.providerEmailId,
+          rfcMessageId: event.rfcMessageId,
+        },
+        { stopContact: dependencies.stopContact }
+      );
+    }
     const existing = await transaction.execute<WebhookActivityRow>(
       `/* growth:read-resend-webhook-activity */
        select event_key, contact_id, project_id, kind, occurred_at, data

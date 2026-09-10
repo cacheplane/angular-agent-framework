@@ -69,7 +69,10 @@ describe('/api/webhooks/resend', () => {
     const body = rawPayload.replace('email.delivered', 'email.sent');
     test.verify.mockImplementationOnce(() => {
       test.order.push('verify');
-      return { type: 'email.sent', data: { email_id: 'resend-email-1' } };
+      return {
+        type: 'email.sent',
+        data: { email_id: 'resend-email-1', message_id: '<actual@resend.dev>' },
+      };
     });
 
     const response = await test.POST(request(body) as never);
@@ -90,7 +93,13 @@ describe('/api/webhooks/resend', () => {
       test.database,
       {
         providerEventId: 'msg_123',
-        payload: { type: 'email.sent', data: { email_id: 'resend-email-1' } },
+        payload: {
+          type: 'email.sent',
+          data: {
+            email_id: 'resend-email-1',
+            message_id: '<actual@resend.dev>',
+          },
+        },
       }
     );
     expect(test.database.close).toHaveBeenCalledTimes(1);
@@ -215,7 +224,9 @@ describe('/api/webhooks/resend', () => {
     const second = await test.POST(request() as never);
     const third = await test.POST(request() as never);
 
-    expect([first.status, second.status, third.status]).toEqual([503, 200, 200]);
+    expect([first.status, second.status, third.status]).toEqual([
+      503, 200, 200,
+    ]);
     expect(test.processVerifiedResendWebhook).toHaveBeenCalledTimes(3);
     expect(test.createDatabase).toHaveBeenCalledTimes(3);
     expect(test.database.close).toHaveBeenCalledTimes(3);

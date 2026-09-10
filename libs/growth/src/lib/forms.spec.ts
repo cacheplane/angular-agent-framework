@@ -93,6 +93,47 @@ const baseInput = {
 };
 
 describe('acceptFormSubmission', () => {
+  it('records high-confidence junk but creates no work or approval', async () => {
+    const harness = createHarness('stopped');
+    const result = await acceptFormSubmission(
+      harness.executor,
+      {
+        ...baseInput,
+        displayName: 'aBcDeFgHiJkLmNoP',
+        companyName: 'Zqxwy LLC',
+        form: { kind: 'contact', message: 'qRsTuVwXyZaBcDeF' },
+      },
+      { approveContact: harness.approveContact }
+    );
+    expect(harness.approveContact).toHaveBeenCalledWith(
+      harness.transaction,
+      expect.objectContaining({ serverFormBlocked: true })
+    );
+    expect(result).toMatchObject({ approved: false, deliverySuppressed: true });
+    expect(harness.insertedJobKeys).toEqual([]);
+    expect(
+      harness.queries.some((q) =>
+        q.sql.includes('growth:record-form-assessment')
+      )
+    ).toBe(true);
+  });
+
+  it('does not enqueue fulfillment for an operator-suppressed contact', async () => {
+    const harness = createHarness('stopped');
+    harness.approveContact.mockResolvedValue({
+      ...(await harness.approveContact()),
+      latestHardStop: {
+        reason: 'manual_suppression' as 'unsubscribe',
+        occurredAt,
+      },
+    });
+    const result = await acceptFormSubmission(harness.executor, baseInput, {
+      approveContact: harness.approveContact,
+    });
+    expect(result).toMatchObject({ approved: false, deliverySuppressed: true });
+    expect(harness.insertedJobKeys).toEqual([]);
+  });
+
   it('approves and enqueues fulfillment, enrichment, and notification in one transaction', async () => {
     const harness = createHarness();
 

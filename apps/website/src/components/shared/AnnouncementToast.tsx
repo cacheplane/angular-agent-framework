@@ -1,4 +1,5 @@
 'use client';
+import { Honeypot, readHoneypot } from '../form/Honeypot';
 import { useState, useEffect } from 'react';
 import type { PublicFormPolicy } from '../../lib/growth/form-policy';
 import { FORM_POLICY_REFRESH_MESSAGE } from '../../lib/growth/form-client';
@@ -36,7 +37,7 @@ export function AnnouncementToast({
   const [emailMessage, setEmailMessage] = useState<string | null>(null);
   const disclosureId = 'toast-whitepaper-growth-disclosure';
 
-  const form = useGrowthForm<{ email: string; paper: 'overview' }>({
+  const form = useGrowthForm<{ website_url: string; email: string; paper: 'overview' }>({
     route: '/api/whitepaper-signup',
     formPolicy,
     events: {
@@ -123,7 +124,7 @@ export function AnnouncementToast({
     // dismiss is stable for the component's lifetime; intentionally omitted.
   }, [form.status]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const problem = emailError(email);
     setEmailMessage(problem);
@@ -131,7 +132,7 @@ export function AnnouncementToast({
       document.getElementById('toast-email')?.focus();
       return;
     }
-    void form.submit({ email: email.trim(), paper: 'overview' });
+    void form.submit({ website_url: readHoneypot(e.currentTarget), email: email.trim(), paper: 'overview' });
   };
 
   if (!visible) return null;
@@ -200,6 +201,7 @@ export function AnnouncementToast({
           data-compact=""
           noValidate
         >
+          <Honeypot />
           <Field id="toast-email" label="Work email" error={emailMessage}>
             <TextInput
               compact

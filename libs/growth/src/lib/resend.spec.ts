@@ -11,6 +11,7 @@ import {
 import {
   RECIPIENT_EMAIL_SENDER,
   sendRecipientEmail,
+  reconcilePendingResendMessageIds,
   type RecipientDeliveryPolicy,
   type RecipientResendClient,
 } from './resend.ts';
@@ -165,7 +166,6 @@ describe('sendRecipientEmail', () => {
       {
         from: RECIPIENT_EMAIL_SENDER,
         to: 'developer@example.com',
-        bcc: RECIPIENT_EMAIL_SENDER,
         replyTo: RECIPIENT_EMAIL_SENDER,
         subject: message.subject,
         text: message.text,
@@ -827,7 +827,7 @@ describe('sendRecipientEmail', () => {
   });
 
   it.each(['preview', 'test'] as const)(
-    'requires the production BCC mailbox on the %s allowlist before authorization',
+    'allows %s recipient delivery without allowlisting an unused BCC mailbox',
     async (environment) => {
       const test = harness();
       const policy = productionPolicy({
@@ -839,9 +839,8 @@ describe('sendRecipientEmail', () => {
 
       await expect(
         sendRecipientEmail(test.database, message, policy, test.dependencies)
-      ).rejects.toThrow(/bcc|allowlist/iu);
-      expect(test.authorizeLeasedJobForSubmission).not.toHaveBeenCalled();
-      expect(test.send).not.toHaveBeenCalled();
+      ).resolves.toEqual({ accepted: true, providerEmailId });
+      expect(test.send.mock.calls[0]?.[0]).not.toHaveProperty('bcc');
     }
   );
 
@@ -969,5 +968,155 @@ describe('sendRecipientEmail', () => {
       )
     ).rejects.toThrow(/idempotency/iu);
     expect(test.send).not.toHaveBeenCalled();
+  });
+});
+
+describe('durable provider Message-ID lookup', () => {
+  function lookupHarness(
+    response: unknown = {
+      id: providerEmailId,
+      message_id: '<actual@resend.dev>',
+      tags: { environment: 'production' },
+    }
+  ) {
+    const database = executor();
+    const execute = vi
+      .fn()
+      .mockResolvedValue({ rows: [{ provider_email_id: providerEmailId }] });
+    database.execute = execute;
+    const fetch = vi
+      .fn()
+      .mockResolvedValue(new Response(JSON.stringify(response)));
+    const bindProviderMessageId = vi.fn().mockResolvedValue('bound');
+    return {
+      database,
+      execute,
+      fetch,
+      bindProviderMessageId,
+      dependencies: {
+        fetch,
+        bindProviderMessageId,
+        apiKey: 'test-key',
+        environment: 'production' as const,
+        databaseEnvironment: 'production' as const,
+      },
+    };
+  }
+  it('durably reserves a bounded retry before authenticated retrieval of the exact accepted ID', async () => {
+    const h = lookupHarness();
+    await reconcilePendingResendMessageIds(
+      h.database,
+      { now, signal: new AbortController().signal },
+      h.dependencies
+    );
+    expect(h.execute.mock.calls[0]?.[0]).toMatch(
+      /for update of job skip locked/iu
+    );
+    expect(h.execute.mock.calls[0]?.[0]).toMatch(/message_id_lookup_after/u);
+    expect(h.execute.mock.calls[0]?.[0]).toMatch(/rfc_message_id is null/u);
+    expect(h.fetch).toHaveBeenCalledWith(
+      `https://api.resend.com/emails/${providerEmailId}`,
+      expect.objectContaining({
+        method: 'GET',
+        headers: { Authorization: 'Bearer test-key' },
+        redirect: 'error',
+      })
+    );
+    expect(h.bindProviderMessageId).toHaveBeenCalledWith(h.database, {
+      providerEmailId,
+      rfcMessageId: '<actual@resend.dev>',
+    });
+  });
+  it.each([
+    {
+      id: 'different',
+      message_id: '<actual@resend.dev>',
+      tags: { environment: 'production' },
+    },
+    {
+      id: providerEmailId,
+      message_id: null,
+      tags: { environment: 'production' },
+    },
+    {
+      id: providerEmailId,
+      message_id: '<actual@resend.dev>',
+      tags: { environment: 'preview' },
+    },
+  ])(
+    'leaves a durable retry for mismatched or missing identity: %j',
+    async (response) => {
+      const h = lookupHarness(response);
+      await reconcilePendingResendMessageIds(
+        h.database,
+        { now, signal: new AbortController().signal },
+        h.dependencies
+      );
+      expect(h.bindProviderMessageId).not.toHaveBeenCalled();
+      expect(h.execute).toHaveBeenCalledOnce();
+    }
+  );
+  it('retains the retry when retrieval fails, without submitting email', async () => {
+    const h = lookupHarness();
+    h.fetch.mockRejectedValue(new Error('temporary'));
+    await expect(
+      reconcilePendingResendMessageIds(
+        h.database,
+        { now, signal: new AbortController().signal },
+        h.dependencies
+      )
+    ).resolves.toEqual({ attempted: 1, bound: 0 });
+    expect(h.bindProviderMessageId).not.toHaveBeenCalled();
+  });
+  it('accepts the provider GET tag array format', async () => {
+    const h = lookupHarness({
+      id: providerEmailId,
+      message_id: '<actual@resend.dev>',
+      tags: [{ name: 'environment', value: 'production' }],
+    });
+    await reconcilePendingResendMessageIds(
+      h.database,
+      { now, signal: new AbortController().signal },
+      h.dependencies
+    );
+    expect(h.bindProviderMessageId).toHaveBeenCalledOnce();
+  });
+  it('propagates database failures during binding while retaining the reserved retry', async () => {
+    const h = lookupHarness();
+    h.bindProviderMessageId.mockRejectedValue(
+      new Error('database unavailable')
+    );
+    await expect(
+      reconcilePendingResendMessageIds(
+        h.database,
+        { now, signal: new AbortController().signal },
+        h.dependencies
+      )
+    ).rejects.toThrow('database unavailable');
+    expect(h.execute).toHaveBeenCalledOnce();
+  });
+  it('rejects a database environment mismatch before reserving or fetching', async () => {
+    const h = lookupHarness();
+    await expect(
+      reconcilePendingResendMessageIds(
+        h.database,
+        { now, signal: new AbortController().signal },
+        { ...h.dependencies, databaseEnvironment: 'preview' }
+      )
+    ).rejects.toThrow(/matching environments/u);
+    expect(h.execute).not.toHaveBeenCalled();
+    expect(h.fetch).not.toHaveBeenCalled();
+  });
+  it('bounds the provider response and leaves a retry for oversized content', async () => {
+    const h = lookupHarness();
+    h.fetch.mockResolvedValue(new Response('x'.repeat(131_073)));
+    await expect(
+      reconcilePendingResendMessageIds(
+        h.database,
+        { now, signal: new AbortController().signal },
+        h.dependencies
+      )
+    ).resolves.toEqual({ attempted: 1, bound: 0 });
+    expect(h.bindProviderMessageId).not.toHaveBeenCalled();
   });
 });

@@ -106,7 +106,9 @@ export interface ProcessGoogleMailboxEventInput {
 }
 
 export interface ProcessGoogleMailboxEventDependencies {
-  stopContact: typeof canonicalStopContact;
+  stopContact: (
+    ...input: Parameters<typeof canonicalStopContact>
+  ) => Promise<unknown>;
 }
 
 export type GoogleMailboxRejectionReason =
@@ -1092,12 +1094,23 @@ async function processSeed(
     if (updated.rows.length !== 1) domainError('seed_binding_conflict');
   }
 
+  await reconcileBoundMessage(transaction, event, contactId, dependencies);
+  return 'seed_registered';
+}
+
+async function reconcileBoundMessage(
+  transaction: SqlTransaction,
+  event: { jobId: string; rfcMessageId: string },
+  contactId: string,
+  dependencies: ProcessGoogleMailboxEventDependencies
+): Promise<void> {
   const pending = await transaction.execute<ReconcileJobRow>(
     `/* growth:lock-google-reconcile-for-seed */
-     select id, contact_id, status, payload
+     select id, contact_id, status, payload, last_error_code
      from growth_jobs
      where kind = 'reply_reconcile'
-       and status in ('pending', 'leased')
+       and (status in ('pending', 'leased')
+         or (status = 'failed' and last_error_code = 'founder_review'))
        and (
          payload->>'in_reply_to' = $1
          or payload->'references' ? $1
@@ -1111,6 +1124,37 @@ async function processSeed(
   );
   for (const reconcile of pending.rows) {
     const rankedCandidates = rankedCandidatesFromPayload(reconcile.payload);
+    if (reconcile.status === 'failed') {
+      // A provider identity can arrive after the bounded reply lookup window.
+      // Recover only exhausted lookups with decisive direct-reply evidence.
+      // A lower reference remains ambiguous: roll back this binding so its
+      // contact cannot resume sending while that reply awaits resolution.
+      const direct = rankedCandidates
+        ? rankedCandidates.some(
+            (candidate) =>
+              candidate.message_id === event.rfcMessageId &&
+              candidate.rank === 0
+          )
+        : reconcile.payload['in_reply_to'] === event.rfcMessageId;
+      if (reconcile['last_error_code'] !== 'founder_review' || !direct)
+        domainError('reconcile_conflict');
+      const occurredAt = reconcile.payload['occurred_at'];
+      if (
+        typeof occurredAt !== 'string' ||
+        Number.isNaN(new Date(occurredAt).getTime())
+      )
+        domainError('reconcile_payload_invalid');
+      const revived = await transaction.execute<{ id: string }>(
+        `/* growth:revive-exhausted-google-reconcile */
+         update growth_jobs set status = 'pending', available_at = $2,
+           lease_until = null, lease_token = null, last_error_code = null
+         where id = $1 and kind = 'reply_reconcile'
+           and status = 'failed' and last_error_code = 'founder_review'
+         returning id`,
+        [reconcile.id, new Date(occurredAt)]
+      );
+      if (revived.rows.length !== 1) domainError('reconcile_conflict');
+    }
     if (rankedCandidates) {
       const candidate = rankedCandidates.find(
         (item) => item.message_id === event.rfcMessageId
@@ -1201,7 +1245,109 @@ async function processSeed(
       domainError('reconcile_conflict');
     }
   }
-  return 'seed_registered';
+}
+
+export class ProviderMessageIdBindingError extends Error {}
+
+/** Bind only provider-authenticated identifiers, never a fabricated Gmail seed. */
+export async function bindProviderMessageId(
+  executor: SqlExecutor,
+  input: { providerEmailId: string; rfcMessageId: string },
+  dependencies: ProcessGoogleMailboxEventDependencies = {
+    stopContact: canonicalStopContact,
+  }
+): Promise<'bound' | 'unmatched' | 'ignored_deleted'> {
+  let rfcMessageId: string;
+  try {
+    rfcMessageId = parseMessageId('message_id', input.rfcMessageId);
+  } catch {
+    throw new ProviderMessageIdBindingError('Invalid provider message_id');
+  }
+  if (!/^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$/u.test(input.providerEmailId)) {
+    throw new ProviderMessageIdBindingError('Invalid provider email ID');
+  }
+  return executor.transaction(async (transaction) => {
+    // Same lock order as Gmail reconciliation: advisory, contact, then job.
+    await transaction.execute(`/* growth:acquire-google-reconcile-advisory-lock */
+      select pg_advisory_xact_lock(hashtextextended('google-mailbox-reconciliation', 0))`);
+    const discovered = await transaction.execute<SeedJobRow>(
+      `/* growth:discover-provider-message-job */
+       select id, contact_id from growth_jobs where provider_email_id = $1`,
+      [input.providerEmailId]
+    );
+    const reference = discovered.rows[0];
+    if (!reference) return 'unmatched';
+    if (!reference.contact_id)
+      throw new ProviderMessageIdBindingError(
+        'Provider message contact is missing'
+      );
+    const contact = await transaction.execute<MailboxContactRow>(
+      `/* growth:lock-provider-message-contact */
+       select id, deleted_at from growth_contacts where id = $1 for update`,
+      [reference.contact_id]
+    );
+    const locked = await transaction.execute<SeedJobRow>(
+      `/* growth:lock-provider-message-job */
+       select id, kind, contact_id, status, provider_email_id, delivery_status,
+              rfc_message_id, gmail_seed_message_id
+       from growth_jobs where id = $1 for update`,
+      [reference.id]
+    );
+    const job = locked.rows[0];
+    if (
+      !contact.rows[0] ||
+      !job ||
+      job.id !== reference.id ||
+      job.contact_id !== reference.contact_id ||
+      job.provider_email_id !== input.providerEmailId ||
+      job.status !== 'completed' ||
+      !['fulfill', 'send_step'].includes(job.kind) ||
+      !ACCEPTED_BOUND_DELIVERY_STATUSES.has(job.delivery_status) ||
+      (job.rfc_message_id && job.rfc_message_id !== rfcMessageId)
+    ) {
+      throw new ProviderMessageIdBindingError(
+        'Provider Message-ID binding conflict'
+      );
+    }
+    if (contact.rows[0].deleted_at !== null) return 'ignored_deleted';
+    const conflicts = await transaction.execute<{ id: string }>(
+      `/* growth:check-provider-message-conflicts */
+       select id from growth_jobs where id <> $1 and rfc_message_id = $2 limit 1`,
+      [job.id, rfcMessageId]
+    );
+    if (conflicts.rows.length)
+      throw new ProviderMessageIdBindingError(
+        'Provider Message-ID binding conflict'
+      );
+    if (!job.rfc_message_id) {
+      const updated = await transaction.execute<{ id: string }>(
+        `/* growth:bind-provider-message-id */
+         update growth_jobs set rfc_message_id = $3
+         where id = $1 and provider_email_id = $2 and rfc_message_id is null
+         returning id`,
+        [job.id, input.providerEmailId, rfcMessageId]
+      );
+      if (updated.rows.length !== 1)
+        throw new ProviderMessageIdBindingError(
+          'Provider Message-ID binding conflict'
+        );
+    }
+    try {
+      await reconcileBoundMessage(
+        transaction,
+        { jobId: job.id, rfcMessageId },
+        reference.contact_id,
+        dependencies
+      );
+    } catch (error) {
+      if (error instanceof GoogleMailboxDomainError)
+        throw new ProviderMessageIdBindingError(
+          'Provider reply reconciliation conflict'
+        );
+      throw error;
+    }
+    return 'bound';
+  });
 }
 
 async function findReplyJob(

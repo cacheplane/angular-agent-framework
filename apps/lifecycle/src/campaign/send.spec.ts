@@ -504,6 +504,7 @@ describe('dispatchLifecycleAppOwnedJob', () => {
     'campaign_disabled',
     'delivery_disabled',
     'outside_send_window',
+    'reply_binding_pending',
   ] as const)(
     'keeps an install-runtime hello deferred while %s',
     async (reason) => {

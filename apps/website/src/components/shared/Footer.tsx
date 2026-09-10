@@ -1,4 +1,5 @@
 'use client';
+import { Honeypot, readHoneypot } from '../form/Honeypot';
 import { useState } from 'react';
 import Link from 'next/link';
 import type { PublicFormPolicy } from '../../lib/growth/form-policy';
@@ -26,7 +27,7 @@ function NpmIcon() {
 function NewsletterForm({ formPolicy }: { formPolicy: PublicFormPolicy }) {
   const [email, setEmail] = useState('');
   const [emailMessage, setEmailMessage] = useState<string | null>(null);
-  const form = useGrowthForm<{ email: string }>({
+  const form = useGrowthForm<{ website_url: string; email: string }>({
     route: '/api/newsletter',
     formPolicy,
     events: {
@@ -38,7 +39,7 @@ function NewsletterForm({ formPolicy }: { formPolicy: PublicFormPolicy }) {
   });
   const disclosureId = 'footer-newsletter-growth-disclosure';
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const problem = emailError(email);
     setEmailMessage(problem);
@@ -46,7 +47,7 @@ function NewsletterForm({ formPolicy }: { formPolicy: PublicFormPolicy }) {
       document.getElementById('footer-email')?.focus();
       return;
     }
-    void form.submit({ email: email.trim() });
+    void form.submit({ website_url: readHoneypot(e.currentTarget), email: email.trim() });
   };
 
   if (form.status === 'sent') {
@@ -71,6 +72,7 @@ function NewsletterForm({ formPolicy }: { formPolicy: PublicFormPolicy }) {
 
   return (
     <form onSubmit={handleSubmit} className="footer-newsletter" data-ui="form" data-compact="" noValidate>
+      <Honeypot />
       <Field id="footer-email" label="Email" error={emailMessage}>
         <div data-ui="form-row">
           <TextInput
