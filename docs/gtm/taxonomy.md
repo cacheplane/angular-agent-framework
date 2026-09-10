@@ -158,7 +158,35 @@ Browser events never fire unless the consumer explicitly opts in. See `libs/tele
 
 **Nav**
 
-- `nav_get_started` `nav_docs` `nav_pricing` `nav_github` `nav_npm` `nav_cockpit`
+The navbar was rebuilt on 2026-09-08 into four triggers, three of which open panels.
+Every panel destination is data in `apps/website/src/components/shared/nav-config.ts`,
+and `trackNavItem` prefixes each item's `ctaId` with the surface — so **every id below
+also exists with a `mobile_nav_` prefix**, emitted by the same items in the mobile
+drill-in drawer. Add a destination there and its id appears on both surfaces
+automatically; there is no second list to keep in sync.
+
+- Libraries panel — `nav_libraries_langgraph` `nav_libraries_ag_ui` `nav_libraries_chat`
+  `nav_libraries_render` `nav_libraries_choosing_an_adapter`
+- Docs panel — `nav_docs_documentation` `nav_docs_quick_start`
+  `nav_docs_choosing_an_adapter` `nav_docs_guides` `nav_docs_concepts`
+  `nav_docs_api_reference`
+- Docs panel, external demos — `nav_docs_demo_langgraph` `nav_docs_demo_ag_ui`
+  (derived from `DEMOS` in `lib/demos.ts`, so a new demo adds its own id)
+- Solutions panel — `nav_solutions_customer_support` `nav_solutions_analytics`
+  `nav_solutions_compliance` `nav_solutions_pilot_to_prod` `nav_solutions_blog`
+  `nav_solutions_about`
+- Bar itself — `nav_pricing` `nav_github` `nav_talk_to_us`
+- Mobile drawer only — `mobile_nav_docs_page` (any link inside the docs tree, with the
+  page title in `cta_text` and the library in `library`)
+
+- retired 2026-09-08: `nav_demo_langgraph` `nav_demo_ag_ui` (the hand-rolled `Demo ▾`
+  dropdown was absorbed into the Docs panel — the demos are now
+  `nav_docs_demo_langgraph` / `nav_docs_demo_ag_ui`); `nav_docs` (now
+  `nav_docs_documentation`); `nav_pilot_to_prod` (now `nav_solutions_pilot_to_prod`)
+- retired earlier, date unknown: `nav_get_started` `nav_npm` `nav_cockpit` — these were
+  already listed here but no longer emitted by the pre-redesign nav either, so this
+  section had drifted before the rebuild. Recorded rather than silently dropped, in case
+  a dashboard still filters them.
 
 **Footer**
 

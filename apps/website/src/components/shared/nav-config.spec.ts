@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -7,6 +7,11 @@ import { docsConfig } from '../../lib/docs-config';
 import { getAllSolutionSlugs } from '../../lib/solutions-data';
 
 const APP_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'app');
+const TAXONOMY = join(
+  dirname(fileURLToPath(import.meta.url)),
+  '..', '..', '..', '..', '..',
+  'docs', 'gtm', 'taxonomy.md',
+);
 
 /**
  * `/docs/:library/:section/:slug` is a dynamic route, so a page file cannot
@@ -87,5 +92,25 @@ describe('nav-config', () => {
       'Solutions',
       'Pricing',
     ]);
+  });
+
+  /**
+   * The GTM taxonomy is the register analytics work reads to know which
+   * `cta_id`s exist. It is hand-maintained prose, and it had silently drifted
+   * before the navbar rebuild — it still listed `nav_get_started`, `nav_npm`
+   * and `nav_cockpit`, none of which the nav emitted any more.
+   *
+   * The nav's ids are data, so the doc can be checked against them instead of
+   * trusted. Only the `nav_` surface is asserted: `mobile_nav_` is the same
+   * list with a different prefix, applied by `trackNavItem`, and the doc says
+   * so once rather than duplicating twenty entries.
+   */
+  it('documents every nav cta_id in the GTM taxonomy', () => {
+    const taxonomy = readFileSync(TAXONOMY, 'utf8');
+    const undocumented = navItems()
+      .map((item) => `nav_${item.ctaId}`)
+      .filter((id) => !taxonomy.includes(id));
+
+    expect(undocumented).toEqual([]);
   });
 });
