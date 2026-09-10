@@ -200,8 +200,11 @@ test.describe('Production: unified runtime embedding policy', () => {
       }
     }
     expect(policy).toContain(
-      "connect-src 'self' https: http://localhost:* http://127.0.0.1:* http://[::1]:*"
+      "connect-src 'self' https: http://localhost:* http://127.0.0.1:*"
     );
+    expect(policy).not.toContain('http://[::1]:*');
+    expect(policy).toContain("script-src 'self';");
+    expect(await response.text()).not.toContain('onload="this.media=');
     expect(frameAncestors).not.toContain('*');
     expect(frameAncestors).not.toContain('cockpit.threadplane.ai');
     expect(headers['referrer-policy']).toBe('origin');

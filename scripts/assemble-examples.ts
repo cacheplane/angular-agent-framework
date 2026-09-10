@@ -19,6 +19,7 @@ import {
 } from 'fs';
 import { resolve } from 'path';
 import { capabilities as registryCapabilities } from '@threadplane/cockpit-registry';
+import { prepareExampleHtml } from './prepare-example-html';
 import {
   GENERATED_RUNTIME_PARENT_ORIGINS_MODULE,
   generateRuntimeParentOriginPolicy,
@@ -97,10 +98,7 @@ for (const cap of capabilities) {
   const indexPath = resolve(dest, 'index.html');
   if (existsSync(indexPath)) {
     const html = readFileSync(indexPath, 'utf-8');
-    const fixed = html.replace(
-      '<base href="/">',
-      `<base href="/${cap.product}/${cap.topic}/">`
-    );
+    const fixed = prepareExampleHtml(html, cap.product, cap.topic);
     writeFileSync(indexPath, fixed);
   }
 

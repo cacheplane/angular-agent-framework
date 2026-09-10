@@ -8,7 +8,6 @@ const RUNTIME_CONNECT_SOURCES = [
   'https:',
   'http://localhost:*',
   'http://127.0.0.1:*',
-  'http://[::1]:*',
 ] as const;
 
 export interface RuntimeParentOriginPolicy {
