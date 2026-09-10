@@ -116,13 +116,16 @@ Shared state works on Strands, but it is snapshot-only and it is opt-in per tool
 AWS Strands and Microsoft Agent Framework signal an interrupt only through the protocol-standard `RUN_FINISHED` outcome, `{ type: 'interrupt', interrupts: [...] }`.
 The LangGraph bridge signals it only through a `CUSTOM` event named `on_interrupt`.
 Mastra emits both.
-The adapter detects either convention, and within a single run the first signal wins.
+The adapter retains both conventions in one interrupt session. In `auto` mode the native batch takes precedence regardless of arrival order.
 
 **Resume payloads are not portable, so the adapter shapes them per runtime.**
-Mastra reads `forwardedProps.command.interruptEvent`, carrying a tool-call id and a run id.
-AWS Strands and Microsoft Agent Framework both read the protocol-standard top-level `resume` array, one `{ interruptId, status, payload }` entry per interrupt; Microsoft additionally expects an entry for every pending interrupt.
+Mastra reads the decision from `forwardedProps.command.resume` and the suspended tool's identifiers from `command.interruptEvent`. Configure `interruptTransport: 'mastra-command'` for this integration because it also emits native outcomes.
+AWS Strands and Microsoft Agent Framework both read the protocol-standard top-level `resume` array. The adapter requires every pending interrupt ID exactly once. Resolved entries carry the decision as `payload`; cancelled entries omit it.
 The LangGraph bridge reads `forwardedProps.command.resume`.
-You pass one neutral `submit({ resume })`, and the adapter derives the wire shape from how the interrupt arrived.
+You pass one neutral `submit({ resume })`, and the adapter shapes the request using the observed batch and configured transport profile. The backend still defines what the decision payload means.
+
+**Recovery belongs to the adapter and backend.**
+AG-UI can restore client state through an application-owned `persistence` store with atomic compare-and-swap and authoritative reconciliation. The native LangGraph adapter uses LangGraph's thread and checkpoint APIs. Neither a shared Angular approval component nor a stored client record guarantees exactly-once server execution or recreates a lost checkpoint.
 
 **The Mastra row is hosted on its own lane.**
 Its cells come from a real Mastra server driven with live model calls, and its transcripts are committed and replayed like the others.

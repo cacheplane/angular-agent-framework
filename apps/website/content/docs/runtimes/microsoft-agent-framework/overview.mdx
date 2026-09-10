@@ -119,9 +119,9 @@ That is not true of every runtime. On AWS Strands shared state is snapshot-only 
 
 ## How the interrupt travels
 
-Microsoft Agent Framework signals an interrupt only through the protocol-standard `RUN_FINISHED` outcome, `{ type: 'interrupt', interrupts: [...] }`. It never uses the LangGraph bridge's `CUSTOM` event named `on_interrupt`. The adapter detects either convention, and within a single run the first signal wins.
+Microsoft Agent Framework signals an interrupt only through the protocol-standard `RUN_FINISHED` outcome, `{ type: 'interrupt', interrupts: [...] }`. It never uses the LangGraph bridge's `CUSTOM` event named `on_interrupt`. The adapter retains both conventions in one session; native batches take precedence in `auto` mode regardless of arrival order.
 
-The resume payload is shaped the same way. Because the interrupt arrived as an outcome, `submit({ resume })` goes out as the protocol-standard top-level `resume` array, one `{ interruptId, status, payload }` entry per pending interrupt — and this bridge expects an entry for every pending interrupt, not only the one the user answered. You pass one neutral resume value and the adapter builds that array.
+The resume payload is shaped the same way. Because the interrupt arrived as an outcome, `submit({ resume })` goes out as the protocol-standard top-level `resume` array, one `{ interruptId, status, payload }` entry per pending interrupt — and this bridge expects an entry for every pending interrupt, not only the one the user answered. A single value is shorthand only for a single pending interrupt. For multiple interrupts, supply an entry for each observed ID; the adapter does not invent the remaining decisions.
 
 ## What's Next
 

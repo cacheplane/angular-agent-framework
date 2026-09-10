@@ -74,8 +74,67 @@ The panel emits an `InterruptAction`, and the component turns the two actions it
 `submit({ resume })` continues the paused run instead of starting a new one, and whatever you put in `resume` is exactly what `interrupt()` returns on the server.
 
 <Callout type="info" title="The panel never resumes for you">
-`chat-interrupt-panel` emits the action and stops there. Leaving an action unhandled, as this example leaves Edit and Respond, means the run stays paused and the panel stays on screen. Handle every button you are willing to show, or wrap the panel in your own template so the unused ones never appear.
+`chat-interrupt-panel` emits the action and stops there. Leaving an action unhandled, as this example leaves Edit and Respond, means the run stays paused and the panel stays on screen. All four buttons always render; a wrapper does not hide individual actions. For a two-button UI, build custom controls with the lower level primitive below.
 </Callout>
+
+### A complete panel component
+
+This complete standalone Angular component uses the LangGraph provider configured above. The output binding is `(action)`. Accept and Ignore submit the flight tool's strings; Edit and Respond display an explanation and leave the run paused. The component hides the panel while submitting and displays rejected operations and agent errors.
+
+```typescript
+import { Component, signal } from '@angular/core';
+import { ChatInterruptPanelComponent, type InterruptAction } from '@threadplane/chat';
+import { injectAgent } from '@threadplane/langgraph';
+
+@Component({
+  selector: 'app-flight-decision',
+  standalone: true,
+  imports: [ChatInterruptPanelComponent],
+  template: `
+    @if (busy() || agent.isLoading()) {
+      <p role="status">Working…</p>
+    } @else {
+      <chat-interrupt-panel [agent]="agent" (action)="onAction($event)" />
+    }
+    @if (notice()) { <p>{{ notice() }}</p> }
+    @if (error() || agent.error()?.message; as message) {
+      <p role="alert">{{ message }}</p>
+    }
+  `,
+})
+export class FlightDecisionComponent {
+  readonly agent = injectAgent();
+  readonly busy = signal(false);
+  readonly error = signal('');
+  readonly notice = signal('');
+
+  async onAction(action: InterruptAction): Promise<void> {
+    if (this.busy() || this.agent.isLoading()) return;
+    this.notice.set('');
+    if (action === 'edit' || action === 'respond') {
+      this.notice.set('This example supports Accept and Ignore only.');
+      return;
+    }
+    this.busy.set(true);
+    this.error.set('');
+    try {
+      if (action === 'accept') {
+        await this.agent.submit({ resume: 'confirm' });
+      } else if (action === 'ignore') {
+        await this.agent.submit({ resume: 'cancel' });
+      }
+    } catch (error) {
+      this.error.set(error instanceof Error ? error.message : 'Decision failed');
+    } finally {
+      this.busy.set(false);
+    }
+  }
+}
+```
+
+`confirm` and `cancel` belong to this flight tool's backend contract. A refund or Mastra tool may instead expect `{ approved: true }` or `{ approved: false }`; the button label does not define the resume payload. A protocol-native AG-UI cancelled entry has no payload and must identify the pending interrupt.
+
+The panel accepts the runtime-neutral `Agent`, but it does not coordinate batches, retain a rendered generation, hydrate storage, or reconcile uncertain outcomes. Applications using AG-UI's `interruptSession()`, `interruptGeneration`, `ready`, or `reconcileInterrupt()` need adapter-aware controls. LangGraph restores pending interrupts from its server checkpoint. In either adapter, disappearance of the panel alone is not evidence that the backend completed the decision.
 
 ## Import
 

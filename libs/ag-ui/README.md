@@ -69,7 +69,7 @@ export class AppComponent {
 }
 ```
 
-Both `@threadplane/langgraph` and `@threadplane/ag-ui` expose `provideAgent`/`injectAgent` with the same shape — consumer code is identical regardless of which adapter is wired in.
+Both `@threadplane/langgraph` and `@threadplane/ag-ui` expose `provideAgent`/`injectAgent`. Components using the neutral `Agent` contract can share their UI; provider configuration and adapter-specific extensions differ.
 
 ---
 
@@ -93,15 +93,25 @@ Which capabilities populate depends on the events the AG-UI backend emits. `subm
 
 ### Interrupts (human-in-the-loop)
 
-`agent.interrupt()` is a `Signal<AgentInterrupt | undefined>` populated from AG-UI `CUSTOM` events with `name: 'on_interrupt'`. The reducer JSON-parses string-serialized `value` payloads automatically (e.g. `ag-ui-langgraph` ships interrupts via `dump_json_safe`), so consumers see the structured object directly.
+`agent.interrupt()` is a `Signal<AgentInterrupt | undefined>` projected from native `RUN_FINISHED` interrupt outcomes or compatibility `CUSTOM on_interrupt` events. Native batches take display precedence in `auto` and `protocol`; explicit command profiles display the compatibility interrupt. String-serialized compatibility values are JSON-parsed automatically.
 
-Resume with `agent.submit({ resume })` — this calls `runAgent({ forwardedProps: { command: { resume } } })`, and the server reads `forwarded_props.command.resume` (the `ag-ui-langgraph` convention).
+Resume with `agent.submit({ resume })`. Select `interruptTransport` in `provideAgent()` to match the backend:
 
-Pair with `<chat-approval-card>` from `@threadplane/chat` for the approve/reject/edit UX:
+| Profile | Resume transport |
+| --- | --- |
+| `auto` (default) | Prefers a native batch, including mixed native/compatibility delivery; otherwise detects Mastra correlation data or uses the legacy command. |
+| `protocol` | Top-level `resume` entries, one per native interrupt ID. |
+| `legacy-command` | `forwardedProps.command.resume`, as used by the LangGraph AG-UI bridge. |
+| `mastra-command` | `forwardedProps.command.resume` plus `command.interruptEvent` containing the observed tool-call and run IDs. |
+
+The current Mastra backend requires explicit `mastra-command`: it emits native and compatibility interrupts but consumes the command transport. Native cancellation uses `{ interruptId, status: 'cancelled' }` without a payload; an application's `{ approved: false }` is a resolved decision with backend-defined meaning.
+
+Pair with `<chat-approval-card>` from `@threadplane/chat` for Approve and Cancel controls. This single-decision example uses a backend that expects `{ approved: boolean }`:
 
 ```ts
 import { Component } from '@angular/core';
 import { ChatComponent, ChatApprovalCardComponent } from '@threadplane/chat';
+import type { ChatApprovalAction } from '@threadplane/chat';
 import { injectAgent } from '@threadplane/ag-ui';
 
 @Component({
@@ -116,13 +126,14 @@ import { injectAgent } from '@threadplane/ag-ui';
 })
 export class App {
   protected readonly agent = injectAgent();
-  onAction(a: 'approve' | 'cancel') {
-    void this.agent.submit({ resume: { approved: a === 'approve' } });
+  onAction(action: ChatApprovalAction) {
+    if (action === 'edit') return;
+    void this.agent.submit({ resume: { approved: action === 'approve' } });
   }
 }
 ```
 
-See `cockpit/ag-ui/interrupts` for a complete working example, and the [LangGraph interrupts guide](https://threadplane.ai/docs/langgraph/guides/interrupts) for the broader HITL contract — the same `Agent.interrupt` / `submit({ resume })` API works across both adapters.
+See `cockpit/ag-ui/interrupts` for a complete working example, and the [LangGraph interrupts guide](https://threadplane.ai/docs/langgraph/guides/interrupts) for that adapter's behavior. Both share `interrupt()` and `submit({ resume })`; AG-UI's `interruptSession`, `ready`, `reconcileInterrupt()`, `dispose()`, `persistence` configuration, and `interruptGeneration` submit option are adapter extensions. Browser persistence cannot restore a lost server checkpoint or prove backend completion.
 
 ### Citations
 

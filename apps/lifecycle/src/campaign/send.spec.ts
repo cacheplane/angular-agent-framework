@@ -568,6 +568,81 @@ describe('dispatchLifecycleAppOwnedJob', () => {
     expect(sent?.html).toContain(
       '<a href="https://threadplane.ai/whitepapers/chat.pdf">'
     );
+    expect(sent?.attachments).toEqual([
+      {
+        filename: 'angular-chat-guide.pdf',
+        path: 'https://threadplane.ai/whitepapers/chat.pdf',
+      },
+    ]);
+  });
+
+  it.each([
+    ['overview', 'angular-agent-readiness-guide.pdf', 'whitepaper.pdf'],
+    ['angular', 'angular-streaming-guide.pdf', 'whitepapers/angular.pdf'],
+    ['render', 'angular-genui-guide.pdf', 'whitepapers/render.pdf'],
+    ['chat', 'angular-chat-guide.pdf', 'whitepapers/chat.pdf'],
+  ] as const)(
+    'attaches the requested %s guide to the fulfillment message',
+    async (paper, filename, path) => {
+      const deps = dependencies();
+
+      await expect(
+        dispatchLifecycleAppOwnedJob(
+          {} as SqlExecutor,
+          job('fulfill', {
+            form_kind: 'whitepaper',
+            paper,
+            submission_id: '00000000-0000-4000-8000-000000000012',
+          }),
+          {},
+          deps
+        )
+      ).resolves.toBe('completed');
+
+      expect(
+        vi.mocked(deps.sendRecipient).mock.calls[0]?.[1].attachments
+      ).toEqual([{ filename, path: `https://threadplane.ai/${path}` }]);
+    }
+  );
+
+  it.each(['newsletter', 'contact', 'pricing'] as const)(
+    'attaches no file to a %s fulfillment',
+    async (formKind) => {
+      const deps = dependencies();
+
+      await expect(
+        dispatchLifecycleAppOwnedJob(
+          {} as SqlExecutor,
+          job('fulfill', {
+            form_kind: formKind,
+            submission_id: '00000000-0000-4000-8000-000000000012',
+          }),
+          {},
+          deps
+        )
+      ).resolves.toBe('completed');
+
+      expect(
+        vi.mocked(deps.sendRecipient).mock.calls[0]?.[1]
+      ).not.toHaveProperty('attachments');
+    }
+  );
+
+  it('never attaches a file to a campaign step', async () => {
+    const deps = dependencies();
+
+    await expect(
+      dispatchLifecycleAppOwnedJob(
+        {} as SqlExecutor,
+        job('send_step', { campaign_version: 'v1', step: 1 }),
+        {},
+        deps
+      )
+    ).resolves.toBe('completed');
+
+    expect(vi.mocked(deps.sendRecipient).mock.calls[0]?.[1]).not.toHaveProperty(
+      'attachments'
+    );
   });
 
   it('falls back to the generic greeting on fulfillment when the display name is unusable', async () => {

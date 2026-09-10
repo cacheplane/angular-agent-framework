@@ -1,11 +1,23 @@
 import { describe, expect, it } from 'vitest';
 
 import { campaignDraftViolations } from '../campaign/templates.js';
-import { renderFulfillmentTemplate } from './templates.js';
+import {
+  renderFulfillmentTemplate,
+  type RecipientTemplate,
+} from './templates.js';
 
 const URL_PATTERN = /https:\/\/[^\s]+/gu;
 const HTML_PATTERN = /<\/?[a-z][^>]*>/iu;
 const CONTRACTION_PATTERN = /\b\w+['’]\w+\b/u;
+
+/**
+ * The shared copy checks reject unknown fields, so they see the copy only.
+ * The attachment is checked separately, and again against the closed path
+ * registry in libs/growth before submission.
+ */
+function copyOf(message: RecipientTemplate) {
+  return { subject: message.subject, body: message.body };
+}
 
 function everyFulfillmentMessage() {
   return [
@@ -26,25 +38,29 @@ describe('renderFulfillmentTemplate', () => {
       'overview',
       'Your Angular agent readiness guide',
       'https://threadplane.ai/whitepaper.pdf',
+      'angular-agent-readiness-guide.pdf',
     ],
     [
       'angular',
       'Your Angular streaming guide',
       'https://threadplane.ai/whitepapers/angular.pdf',
+      'angular-streaming-guide.pdf',
     ],
     [
       'render',
       'Your Angular generative UI guide',
       'https://threadplane.ai/whitepapers/render.pdf',
+      'angular-genui-guide.pdf',
     ],
     [
       'chat',
       'Your Angular agent chat guide',
       'https://threadplane.ai/whitepapers/chat.pdf',
+      'angular-chat-guide.pdf',
     ],
   ] as const)(
     'fulfills the exact requested %s resource without broader state',
-    (paper, subject, url) => {
+    (paper, subject, url, filename) => {
       const message = renderFulfillmentTemplate({
         context: 'whitepaper',
         paper,
@@ -52,11 +68,24 @@ describe('renderFulfillmentTemplate', () => {
 
       expect(message.subject).toBe(subject);
       expect(
-        message.body.startsWith(`Here is the guide you requested:\n${url}\n\n`)
+        message.body.startsWith(
+          'Here is the guide you requested, attached to this message.\n\n'
+        )
       ).toBe(true);
+      // The link survives only as the stripped-attachment fallback.
+      expect(message.body).toContain(
+        `If the attachment does not come through, it is also here:\n${url}`
+      );
       expect(message.body.match(URL_PATTERN)).toEqual([url]);
+      expect(message.attachment).toEqual({ filename, path: url });
     }
   );
+
+  it('attaches no file to any non-whitepaper fulfillment', () => {
+    for (const message of everyFulfillmentMessage().slice(1)) {
+      expect(message.attachment).toBeUndefined();
+    }
+  });
 
   it('welcomes a newsletter signup without adding another request', () => {
     const message = renderFulfillmentTemplate({ context: 'newsletter' });
@@ -170,12 +199,12 @@ describe('renderFulfillmentTemplate', () => {
 
   it('stays inside the recipient-copy checks shared with the campaign', () => {
     for (const message of everyFulfillmentMessage()) {
-      expect(campaignDraftViolations(message)).toEqual([]);
+      expect(campaignDraftViolations(copyOf(message))).toEqual([]);
     }
     for (const paper of ['angular', 'render', 'chat'] as const) {
       expect(
         campaignDraftViolations(
-          renderFulfillmentTemplate({ context: 'whitepaper', paper })
+          copyOf(renderFulfillmentTemplate({ context: 'whitepaper', paper }))
         )
       ).toEqual([]);
     }

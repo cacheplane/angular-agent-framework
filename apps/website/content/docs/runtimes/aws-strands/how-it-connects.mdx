@@ -32,7 +32,7 @@ Strands signals an interrupt through the protocol-standard run outcome and never
 }
 ```
 
-This is the opposite of the LangGraph bridge, which signals interrupts only through a `CUSTOM` event named `on_interrupt` and never sets an outcome. The adapter detects either convention; within a single run, the first signal it sees wins.
+This is the opposite of the LangGraph bridge, which signals interrupts only through a `CUSTOM` event named `on_interrupt` and never sets an outcome. The adapter retains both conventions in one session; native batches take precedence in `auto` mode regardless of arrival order.
 
 The reducer originally keyed interrupts on `on_interrupt` alone, which meant a Strands run finalized as a success with a dangling approval call and an undefined `interrupt()`. That was an adapter defect, and it is fixed.
 
@@ -48,7 +48,7 @@ Strands reads resume data from the protocol-standard top-level `resume` array, o
 }
 ```
 
-Application code does not assemble that. You call the neutral `submit({ resume })`, and the adapter derives the wire shape from how the interrupt arrived. The same call against a Mastra backend produces `forwardedProps.command.interruptEvent` instead, and against the LangGraph bridge produces `forwardedProps.command.resume`.
+Application code does not assemble that. You call the neutral `submit({ resume })`, and the adapter derives the wire shape from how the interrupt arrived. For Mastra, explicitly select `mastra-command`: the decision goes in `forwardedProps.command.resume` alongside the correlation fields in `command.interruptEvent`. The LangGraph bridge uses `forwardedProps.command.resume`.
 
 ## State is snapshot-only
 

@@ -110,11 +110,29 @@ Custom content templates for message bubbles, tool call rows, and citation cards
 
 ### Human-in-the-loop (interrupts)
 
-`<chat-interrupt-panel>` surfaces the current `AgentInterrupt` from an agent and renders approve/reject controls. `<chat-approval-card>` composes as a dialog for explicit approval workflows. Both emit typed action results (`InterruptAction`, `ChatApprovalAction`) that the caller submits back to the agent.
+`<chat-interrupt-panel>` surfaces the current `AgentInterrupt` and emits `accept`, `edit`, `respond`, or `ignore` through its `action` output. `<chat-approval-card>` emits `approve`, `cancel`, or `edit` (when enabled) for explicit approval workflows. The caller maps these actions to the backend's resume payload.
 
 ```html
-<chat-interrupt-panel [agent]="agent" (interruptAction)="onAction($event)" />
+<chat-interrupt-panel [agent]="agent" (action)="onAction($event)" />
 ```
+
+```typescript
+import { injectAgent } from '@threadplane/langgraph';
+import type { InterruptAction } from '@threadplane/chat';
+
+// Component members; add ChatInterruptPanelComponent to component imports.
+readonly agent = injectAgent();
+
+async onAction(action: InterruptAction): Promise<void> {
+  if (action === 'accept') {
+    await this.agent.submit({ resume: 'confirm' });
+  } else if (action === 'ignore') {
+    await this.agent.submit({ resume: 'cancel' });
+  }
+}
+```
+
+This handler implements only Accept and Ignore; the panel still renders all four buttons. Use a custom template for a two-button UI. The strings above match the flight demo's backend contract. Other tools may expect `{ approved: boolean }`; a button label does not define a universal resume payload.
 
 ### Tool calls and subagents
 

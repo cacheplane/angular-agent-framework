@@ -81,11 +81,39 @@ export function isCampaignTemplateId(
   return typeof value === 'string' && CAMPAIGN_TEMPLATE_ID_SET.has(value);
 }
 
+/**
+ * Every file recipient mail may carry. Resend fetches the bytes from `path`
+ * itself, so the closed registry is the only thing standing between a caller
+ * and an arbitrary outbound fetch made under the Threadplane sender. Keep it
+ * to deployed threadplane.ai deliverables.
+ */
+export const APPROVED_ATTACHMENT_PATHS = [
+  'https://threadplane.ai/whitepaper.pdf',
+  'https://threadplane.ai/whitepapers/angular.pdf',
+  'https://threadplane.ai/whitepapers/render.pdf',
+  'https://threadplane.ai/whitepapers/chat.pdf',
+] as const;
+const APPROVED_ATTACHMENT_PATH_SET: ReadonlySet<string> = new Set(
+  APPROVED_ATTACHMENT_PATHS
+);
+const ATTACHMENT_FILENAME_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*\.pdf$/u;
+const ATTACHMENT_JOB_KINDS = new Set(['fulfill']);
+
+export interface RecipientAttachment {
+  filename: string;
+  path: string;
+}
+
 export interface RecipientEmailInput {
   jobId: string;
   leaseToken: string;
   subject: string;
   text: string;
+  /**
+   * Files to attach. Only `fulfill` jobs may carry one, at most one, and only
+   * from the approved path registry above.
+   */
+  attachments?: readonly RecipientAttachment[];
   /**
    * Which campaign template rendered this message. Required for send_step
    * jobs and forbidden otherwise; it is emitted as the bounded
@@ -114,6 +142,7 @@ export interface RecipientEmailProviderPayload {
   subject: string;
   text: string;
   html?: string;
+  attachments?: RecipientAttachment[];
   headers: {
     'List-Unsubscribe': string;
     'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click';
@@ -352,6 +381,40 @@ function campaignTags(
   return tags;
 }
 
+/**
+ * Resolve the attachments a leased job is allowed to submit. Like
+ * `campaignTags`, this runs after authorization because the rule depends on
+ * the authorized `job.kind`, and it throws rather than dropping a bad value
+ * so a mis-wired caller fails the job instead of silently sending nothing.
+ */
+function recipientAttachments(
+  kind: string,
+  attachments: readonly RecipientAttachment[] | undefined
+): RecipientAttachment[] | undefined {
+  if (attachments === undefined) return undefined;
+  if (!ATTACHMENT_JOB_KINDS.has(kind)) {
+    throw new Error('Only fulfill mail carries an attachment');
+  }
+  if (!Array.isArray(attachments) || attachments.length !== 1) {
+    throw new Error('Recipient mail carries exactly one attachment');
+  }
+  return attachments.map((attachment) => {
+    const filename = requiredBoundedText(
+      'attachment.filename',
+      attachment.filename,
+      100
+    );
+    if (!ATTACHMENT_FILENAME_PATTERN.test(filename)) {
+      throw new Error('attachment.filename must be a lowercase PDF name');
+    }
+    const path = requiredBoundedText('attachment.path', attachment.path, 200);
+    if (!APPROVED_ATTACHMENT_PATH_SET.has(path)) {
+      throw new Error('attachment.path must be an approved deliverable');
+    }
+    return { filename, path };
+  });
+}
+
 export async function sendRecipientEmail(
   executor: SqlExecutor,
   input: RecipientEmailInput,
@@ -426,6 +489,7 @@ export async function sendRecipientEmail(
     job.payload,
     input.campaignTemplate
   );
+  const attachments = recipientAttachments(job.kind, input.attachments);
 
   input.signal?.throwIfAborted();
   let response: ResendResponse;
@@ -441,6 +505,7 @@ export async function sendRecipientEmail(
         subject,
         text,
         ...(html === undefined ? {} : { html }),
+        ...(attachments === undefined ? {} : { attachments }),
         headers: {
           'List-Unsubscribe': `<${unsubscribeUrl}>`,
           'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
