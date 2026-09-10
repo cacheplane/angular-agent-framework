@@ -119,6 +119,8 @@ export interface FormApprovalControlState extends ContactControlState {
 }
 
 export interface ApproveContactFromFormInput {
+  /** Server-owned form admission; never accept this field from a request body. */
+  serverFormBlocked?: boolean;
   email: string;
   displayName?: string | null;
   companyName?: string | null;
@@ -639,6 +641,7 @@ function canonicalJson(value: unknown): string {
 }
 
 interface PreparedFormApproval {
+  formBlocked: boolean;
   activeLookup: ReturnType<typeof createEmailLookupCandidates>[number];
   candidates: ReturnType<typeof createEmailLookupCandidates>;
   companyDomain: string | null;
@@ -708,6 +711,7 @@ function prepareFormApproval(
   );
   const submittedFacts = input.submittedFacts ?? {};
   const formRequestData = {
+    ...(input.serverFormBlocked ? { form_abuse_blocked: true } : {}),
     company_domain: companyDomain,
     company_name: companyName,
     display_name: displayName,
@@ -722,6 +726,7 @@ function prepareFormApproval(
   };
 
   return {
+    formBlocked: input.serverFormBlocked === true,
     activeLookup,
     candidates,
     companyDomain,
@@ -743,6 +748,7 @@ async function approvePreparedContactFromForm(
   prepared: PreparedFormApproval
 ): Promise<FormApprovalControlState> {
   const {
+    formBlocked,
     activeLookup,
     candidates,
     companyDomain,
@@ -939,7 +945,7 @@ async function approvePreparedContactFromForm(
     latestHardStopAt !== null &&
     (approvedAt === null || latestHardStopAt.getTime() >= approvedAt.getTime());
   const currentlyAuthorized = currentlyApproved && !stoppedAfterApproval;
-  const approvalAllowed = currentlyAuthorized || latestHardStop == null;
+  const approvalAllowed = !formBlocked && (currentlyAuthorized || latestHardStop == null);
   const activityInserted = await insertActivityOnce(transaction, {
     eventKey,
     contactId: contact.id,
@@ -1009,7 +1015,7 @@ async function approvePreparedContactFromForm(
     );
   }
 
-  if (!currentlyApproved && latestHardStop == null) {
+  if (approvalAllowed && !currentlyApproved && latestHardStop == null) {
     await transaction.execute<ContactRow>(
       `/* growth:set-form-approval */
          update growth_contacts

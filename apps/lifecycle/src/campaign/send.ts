@@ -404,7 +404,8 @@ async function dispatchRecipient(
   if (
     result.reason === 'campaign_disabled' ||
     result.reason === 'delivery_disabled' ||
-    result.reason === 'outside_send_window'
+    result.reason === 'outside_send_window' ||
+    result.reason === 'reply_binding_pending'
   ) {
     const now = dependencies.now();
     await dependencies.deferJob(executor, {

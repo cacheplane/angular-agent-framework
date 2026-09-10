@@ -53,9 +53,59 @@ Repeat every protected health/stop/sender gate before following the same switch 
 
 ## Runtime invariants
 
+Provider binding uses Resend's documented sent-email `message_id` field
+([July 2026 provider update](https://resend.com/changelog/message-id-for-sent-emails)).
+The exact sent-email lookup also validates its environment tag before binding.
+
+Public growth forms record a server-owned `form.abuse_assessed` activity with
+rule version, score, category, and reasons. `form-abuse-v1` blocks at 80/100;
+borderline submissions proceed normally. A filled invisible honeypot scores 100.
+Repeated mixed-case gibberish across name/message and corroborating company or
+identity patterns contribute independently. Placeholder addresses alone do not
+cross the conservative threshold.
+
+Blocked submissions retain evidence without creating delivery, founder
+notification, enrichment, or campaign jobs. They do not overwrite an existing
+legitimate contact's profile or consent. There is no blocked-submission digest.
+Manual suppressions remain in force for later submissions from the same address.
+
+The shared database admits at most five new submissions per normalized email
+and twenty per trusted platform IP in each hourly window. Counter keys use HMAC;
+no raw IP is retained. Immutable submission retries consume no additional quota.
+A denied request returns 429 with Retry-After; a counter-storage failure rolls
+back its savepoint and continues local scoring, recording
+`limiter_unavailable=true` for operator review.
+
 Duplicate cron invocations are normal. Skip-locked leases, lease tokens, immutable activity keys, job idempotency keys, and Resend idempotency keys must yield at most one effect.
 
 An unmatched `mailbox.recovery_required` blocks `send_step` and `reply_reconcile` leasing and final submission. Recovery-safe non-mail work may continue. Work resumes only after the matching `mailbox.recovery_completed` event.
+
+Recipient-facing growth emails have no BCC. Separate internal notifications still
+target the configured founder, with the existing non-production allowlist check.
+The verified sender, Reply-To, unsubscribe headers, recipient allowlist, and
+provider idempotency requirements remain in effect.
+
+Reply matching uses the actual RFC Message-ID from a verified Resend webhook,
+matched to the exact accepted provider email ID and database environment. Existing
+Gmail seed bindings remain valid. Duplicate bindings revisit pending reply
+reconciliation; conflicting identifiers cannot replace an existing binding.
+
+Before leasing, the lifecycle dispatcher reserves at most five missing bindings
+for authenticated GET `/emails/:id` lookups. Each lookup has a five-second timeout
+and a 128 KiB response limit. Accepted jobs retain `message_id_lookup_attempts`
+and `message_id_lookup_after` in their payload; retries back off from two minutes
+to an hourly maximum. Missing or invalid identities and lookup failures leave the
+send completed and retryable for binding only. Never reopen or resubmit an
+accepted email to recover its Message-ID. Missing delivery configuration skips
+lookups so non-mail dispatch can continue; configured environment mismatches and
+database failures remain errors.
+
+A contact with an accepted but unbound prior recipient send must wait before a
+campaign follow-up; final authorization returns `reply_binding_pending` and the
+worker defers the follow-up. Other contacts continue under the existing campaign
+switches. Investigate persistent unbound jobs using their exact provider IDs,
+environment configuration, retry state, and webhook delivery history. Do not
+clear the binding gate or disable the whole campaign to bypass this condition.
 
 The worker checks cancellation after asynchronous preparation and before recipient submission, internal at-most-once claims, and provider calls. Once a provider call begins, settle its known/rejected/ambiguous outcome even if the request later aborts. Never automatically resubmit an expired lease with final authorization or a prior internal submission claim.
 

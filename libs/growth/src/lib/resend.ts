@@ -13,6 +13,10 @@ import {
   type UnsubscribeActionUrl,
 } from './tokens.ts';
 import { normalizeRecipientEmail } from './crypto.ts';
+import {
+  bindProviderMessageId,
+  ProviderMessageIdBindingError,
+} from './replies.ts';
 
 export const RECIPIENT_EMAIL_SENDER =
   'Brian at Threadplane <brian@threadplane.ai>';
@@ -21,7 +25,6 @@ const UUID_V4_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
 const OPAQUE_IDENTIFIER_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]*$/u;
 const RECIPIENT_JOB_KINDS = new Set(['fulfill', 'send_step']);
-const RECIPIENT_EMAIL_ADDRESS = 'brian@threadplane.ai';
 const AMBIGUOUS_PROVIDER_ERROR_NAMES = new Set([
   'concurrent_idempotent_requests',
   'invalid_idempotent_request',
@@ -135,7 +138,6 @@ type ResendResponse =
 export interface RecipientEmailProviderPayload {
   from: typeof RECIPIENT_EMAIL_SENDER;
   to: string;
-  bcc: typeof RECIPIENT_EMAIL_SENDER;
   replyTo: typeof RECIPIENT_EMAIL_SENDER;
   subject: string;
   text: string;
@@ -179,6 +181,7 @@ export type RecipientSendResult =
         | 'delivery_disabled'
         | 'outside_send_window'
         | 'mailbox_recovery_required'
+        | 'reply_binding_pending'
         | 'provider_rejected'
         | 'provider_outcome_unknown';
     };
@@ -314,11 +317,6 @@ export function assertRecipientDeliveryPolicy(
       validEmail('nonProductionRecipientAllowlist', email)
     )
   );
-  if (!allowlist.has(RECIPIENT_EMAIL_ADDRESS)) {
-    throw new Error(
-      'The recipient BCC mailbox must be on the non-production allowlist'
-    );
-  }
   if (policy.nonProductionRedirectTo !== undefined) {
     const redirect = validEmail(
       'nonProductionRedirectTo',
@@ -503,7 +501,6 @@ export async function sendRecipientEmail(
       {
         from: RECIPIENT_EMAIL_SENDER,
         to,
-        bcc: RECIPIENT_EMAIL_SENDER,
         replyTo: RECIPIENT_EMAIL_SENDER,
         subject,
         text,
@@ -594,4 +591,158 @@ export async function sendRecipientEmail(
     providerEmailId,
   });
   return { accepted: true, providerEmailId };
+}
+
+export interface ResendMessageIdLookupDependencies {
+  apiKey: string;
+  environment: DeliveryEnvironment;
+  databaseEnvironment: DeliveryEnvironment;
+  fetch: typeof globalThis.fetch;
+  bindProviderMessageId: typeof bindProviderMessageId;
+}
+
+function defaultMessageIdLookupDependencies(): ResendMessageIdLookupDependencies | null {
+  if (
+    !process.env['RESEND_API_KEY']?.trim() ||
+    !process.env['DELIVERY_ENVIRONMENT']?.trim() ||
+    !process.env['GROWTH_DATABASE_ENVIRONMENT']?.trim()
+  )
+    return null;
+  return {
+    apiKey: process.env['RESEND_API_KEY'] ?? '',
+    environment: process.env['DELIVERY_ENVIRONMENT'] as DeliveryEnvironment,
+    databaseEnvironment: process.env[
+      'GROWTH_DATABASE_ENVIRONMENT'
+    ] as DeliveryEnvironment,
+    fetch: globalThis.fetch,
+    bindProviderMessageId,
+  };
+}
+
+async function boundedProviderResponse(
+  response: Response
+): Promise<Record<string, unknown>> {
+  if (!response.ok || !response.body)
+    throw new Error('Provider lookup unavailable');
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let length = 0;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      length += value.byteLength;
+      if (length > 131_072) throw new Error('Provider lookup exceeds limit');
+      chunks.push(value);
+    }
+  } finally {
+    await reader.cancel();
+  }
+  const bytes = new Uint8Array(length);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  const value: unknown = JSON.parse(new TextDecoder().decode(bytes));
+  if (!value || typeof value !== 'object' || Array.isArray(value))
+    throw new Error('Invalid provider lookup');
+  return value as Record<string, unknown>;
+}
+
+/** Accepted sends themselves are the durable retry queue; this path can only GET. */
+export async function reconcilePendingResendMessageIds(
+  executor: SqlExecutor,
+  input: { now: Date; signal: AbortSignal },
+  dependencies: ResendMessageIdLookupDependencies | null = defaultMessageIdLookupDependencies()
+): Promise<{ attempted: number; bound: number }> {
+  input.signal.throwIfAborted();
+  // Non-mail dispatcher work remains available without delivery configuration.
+  // The final contact-specific send gate still requires every prior binding.
+  if (!dependencies) return { attempted: 0, bound: 0 };
+  if (
+    !['production', 'preview', 'test'].includes(dependencies.environment) ||
+    dependencies.environment !== dependencies.databaseEnvironment ||
+    !dependencies.apiKey.trim() ||
+    Number.isNaN(input.now.getTime())
+  ) {
+    throw new Error(
+      'Provider lookup requires matching environments and credentials'
+    );
+  }
+  // Reserve retries atomically before network I/O, including process crashes.
+  // A missing ID never reopens a completed send or changes its idempotency key.
+  const claimed = await executor.execute<{ provider_email_id: string }>(
+    `/* growth:claim-provider-message-lookups */
+     with due as (
+       select job.id from growth_jobs job
+       join growth_contacts contact on contact.id = job.contact_id
+       where job.kind in ('fulfill', 'send_step') and job.status = 'completed'
+         and job.provider_email_id is not null and job.rfc_message_id is null
+         and contact.deleted_at is null
+         and coalesce((job.payload->>'message_id_lookup_after')::timestamptz, job.updated_at) <= $1
+       order by coalesce((job.payload->>'message_id_lookup_after')::timestamptz, job.updated_at), job.id
+       limit 5 for update of job skip locked
+     )
+     update growth_jobs job set payload = job.payload || jsonb_build_object(
+       'message_id_lookup_attempts', least(16, coalesce((job.payload->>'message_id_lookup_attempts')::int, 0) + 1),
+       'message_id_lookup_after', $1::timestamptz + make_interval(mins => least(60, power(2,
+         least(6, coalesce((job.payload->>'message_id_lookup_attempts')::int, 0) + 1))::int))
+     ) from due where job.id = due.id returning job.provider_email_id`,
+    [input.now]
+  );
+  let bound = 0;
+  for (const row of claimed.rows) {
+    input.signal.throwIfAborted();
+    let binding: { providerEmailId: string; rfcMessageId: string };
+    try {
+      const providerEmailId = opaqueIdentifier(
+        'providerEmailId',
+        row.provider_email_id,
+        256
+      );
+      const response = await dependencies.fetch(
+        `https://api.resend.com/emails/${encodeURIComponent(providerEmailId)}`,
+        {
+          method: 'GET',
+          headers: { Authorization: `Bearer ${dependencies.apiKey}` },
+          redirect: 'error',
+          signal: AbortSignal.any([input.signal, AbortSignal.timeout(5_000)]),
+        }
+      );
+      const data = await boundedProviderResponse(response);
+      const tags = data['tags'];
+      const environment = Array.isArray(tags)
+        ? tags
+            .filter((tag) => tag && tag.name === 'environment')
+            .map((tag) => tag.value)
+        : tags && typeof tags === 'object'
+        ? [(tags as Record<string, unknown>)['environment']]
+        : [];
+      if (
+        data['id'] !== providerEmailId ||
+        environment.length !== 1 ||
+        environment[0] !== dependencies.environment ||
+        typeof data['message_id'] !== 'string'
+      )
+        continue;
+      binding = { providerEmailId, rfcMessageId: data['message_id'] };
+    } catch {
+      input.signal.throwIfAborted();
+      // The durable next-at reservation survives provider errors and timeouts.
+      continue;
+    }
+    try {
+      if (
+        (await dependencies.bindProviderMessageId(executor, binding)) ===
+        'bound'
+      )
+        bound += 1;
+    } catch (error) {
+      input.signal.throwIfAborted();
+      if (!(error instanceof ProviderMessageIdBindingError)) throw error;
+      // Malformed/conflicting identities remain unbound; database errors surface.
+    }
+  }
+  return { attempted: claimed.rows.length, bound };
 }

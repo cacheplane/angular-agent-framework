@@ -121,6 +121,82 @@ describeDatabase(
       return result.rows[0];
     }
 
+    it('retains blocked forms without mail jobs and cannot overwrite a legitimate identity', async () => {
+      const email = `form-abuse-${randomUUID()}@example.com`;
+      const now = new Date();
+      try {
+        const legitimate = await acceptFormSubmission(executor, {
+          ...submission(email, randomUUID(), 'chat', now),
+          displayName: 'Ada Lovelace',
+          companyName: 'Analytical Engines',
+        });
+        const junkId = randomUUID();
+        const input: AcceptFormSubmissionInput = {
+          ...submission(email, junkId, 'chat', now),
+          displayName: 'aBcDeFgHiJkLmNoP',
+          companyName: 'Zqxwy LLC',
+          form: { kind: 'contact', message: 'qRsTuVwXyZaBcDeF' },
+          sourceForm: 'contact',
+        };
+        const junk = await acceptFormSubmission(executor, input);
+        expect(junk).toMatchObject({
+          approved: false,
+          deliverySuppressed: true,
+          contactId: legitimate.contactId,
+        });
+        expect((await counts(email, junkId)).jobs).toBe('0');
+        expect(
+          await acceptFormSubmission(executor, {
+            ...input,
+            occurredAt: new Date(now.getTime() + 1000),
+          })
+        ).toEqual(junk);
+        const contact = await executor.execute<{
+          display_name: string;
+          company_name: string;
+          outreach_approved_at: Date;
+        }>(
+          'select display_name,company_name,outreach_approved_at from growth_contacts where id=$1',
+          [legitimate.contactId]
+        );
+        expect(contact.rows[0]).toMatchObject({
+          display_name: 'Ada Lovelace',
+          company_name: 'Analytical Engines',
+        });
+        expect(contact.rows[0].outreach_approved_at).not.toBeNull();
+      } finally {
+        await cleanup(email);
+      }
+    });
+
+    it('records a new honeypot contact without approval, fulfillment, or internal notification', async () => {
+      const email = `honeypot-${randomUUID()}@example.com`;
+      const id = randomUUID();
+      try {
+        const result = await acceptFormSubmission(executor, {
+          ...submission(email, id, 'chat', new Date()),
+          honeypot: 'https://trap.invalid',
+        });
+        expect(result).toMatchObject({
+          approved: false,
+          deliverySuppressed: true,
+        });
+        expect((await counts(email, id)).jobs).toBe('0');
+        const assessment = await executor.execute<{
+          data: Record<string, unknown>;
+        }>('select data from growth_activity where event_key=$1', [
+          `form:${id}:assessment`,
+        ]);
+        expect(assessment.rows[0].data['assessment']).toMatchObject({
+          category: 'honeypot',
+          score: 100,
+          decision: 'blocked',
+        });
+      } finally {
+        await cleanup(email);
+      }
+    });
+
     async function collisionCounts(
       emails: readonly string[],
       submissionId: string

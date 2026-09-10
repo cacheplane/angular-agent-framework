@@ -5,6 +5,8 @@ import { normalizeRecipientEmail } from '@threadplane-internal/growth';
 import { matchesSubmittedFormPolicy } from '../../../lib/growth/form-policy';
 import {
   defaultGrowthFormRouteDependencies,
+  formAdmissionError,
+  trustedFormClientIp,
   jsonResponse,
   readBoundedJsonObject,
   stalePolicyResponse,
@@ -30,6 +32,7 @@ export function createNewsletterRoute(
         return jsonResponse({ error: 'Unable to accept request' }, 503);
       }
 
+      let honeypot;
       let submissionId;
       let acquisitionSessionId;
       let email;
@@ -38,6 +41,7 @@ export function createNewsletterRoute(
         if (!matchesSubmittedFormPolicy(policy, policyVersion || undefined)) {
           return stalePolicyResponse(policy);
         }
+        honeypot = strictText(body, 'website_url', 200);
         submissionId = strictText(body, 'submission_id', 36);
         acquisitionSessionId = strictText(body, 'acquisition_session_id', 36);
         email = strictText(body, 'email', 254);
@@ -65,8 +69,13 @@ export function createNewsletterRoute(
       }
 
       let accepted = false;
+      const trustedClientIp = trustedFormClientIp(request);
+      let deliverySuppressed = false;
+      let admissionError: Response | undefined;
       try {
-        await dependencies.accept(database, {
+        const result = await dependencies.accept(database, {
+          ...(honeypot ? { honeypot } : {}),
+          ...(trustedClientIp ? { trustedClientIp } : {}),
           submissionId,
           email: normalizedEmail,
           form: { kind: 'newsletter' },
@@ -80,7 +89,9 @@ export function createNewsletterRoute(
           keyring,
         });
         accepted = true;
-      } catch {
+        deliverySuppressed = result.deliverySuppressed === true;
+      } catch (error) {
+        admissionError = formAdmissionError(error);
         // The response below reports the failure without echoing provider detail.
       }
 
@@ -89,7 +100,9 @@ export function createNewsletterRoute(
       } catch {
         return unableToAccept();
       }
+      if (admissionError) return admissionError;
       if (!accepted) return unableToAccept();
+      if (deliverySuppressed) return jsonResponse({ ok: true });
 
       // The durable jobs remain available to the scheduled dispatcher.
       await dependencies.nudge({ submissionId }).catch(() => undefined);

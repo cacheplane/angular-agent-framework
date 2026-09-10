@@ -499,6 +499,23 @@ describe('job leasing', () => {
 });
 
 describe('final fulfillment authorization', () => {
+  it.each([
+    ['reply_binding_pending', { reply_binding_pending: true }],
+    ['contact_stopped', { form_abuse_blocked: true }],
+  ])('denies submission when %s', async (reason, flags) => {
+    const harness = executorWith({
+      'acquire-google-reconcile-advisory-lock': () => ({ rows: [] }),
+      'lock-contact-for-send': () => ({ rows: [{ id: jobRow().contact_id,
+        email_normalized: 'reader@acme.com', outreach_approved_at: now, deleted_at: null,
+        latest_hard_stop_kind: null, latest_hard_stop_at: null,
+        campaign_approval_valid: true, campaign_enrollment_valid: true, ...flags }] }),
+      'lock-job-for-send': () => ({ rows: [jobRow()] }),
+    });
+    await expect(authorizeLeasedJobForSubmission(harness.executor, {
+      campaignEnabled: true, deliveryEnabled: true, jobId: String(jobRow().id), leaseToken, now,
+    })).resolves.toMatchObject({ authorized: false, reason });
+  });
+
   it('requires the exact allowlisted approval event and immutable enrollment provenance for campaign sends', async () => {
     const harness = executorWith({
       'acquire-google-reconcile-advisory-lock': () => ({ rows: [{}] }),

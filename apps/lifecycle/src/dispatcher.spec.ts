@@ -1,6 +1,7 @@
 import {
   createUnsubscribeActionUrl,
   dispatchGrowthLeasedJob,
+  reconcilePendingResendMessageIds,
   type GrowthJob,
   type SqlExecutor,
 } from '@threadplane-internal/growth';
@@ -63,6 +64,7 @@ function dependencies(
     createDatabase: vi.fn(() => executor),
     dispatchLeasedJob: vi.fn().mockResolvedValue('completed'),
     isRecoveryPaused: vi.fn().mockResolvedValue(false),
+    reconcileMessageIds: vi.fn().mockResolvedValue({ attempted: 0, bound: 0 }),
     leaseDueJobs: vi.fn().mockResolvedValue([]),
     loadEmailKeyring: vi.fn(() => EMAIL_KEYRING),
     processInstallRuntimeActivations: vi.fn().mockResolvedValue({
@@ -771,4 +773,51 @@ describe('dispatchLifecycleJobs', () => {
     expect(resumed.recoveryPaused).toBe(false);
     expect(dispatchLeasedJob).toHaveBeenCalledTimes(2);
   });
+});
+
+it('reconciles accepted send identities before leasing contact follow-ups', async () => {
+  const deps = dependencies();
+  await dispatchLifecycleJobs(
+    {
+      batchSize: 5,
+      campaignEnabled: true,
+      signal: new AbortController().signal,
+    },
+    deps
+  );
+  expect(deps.reconcileMessageIds).toHaveBeenCalledWith(expect.anything(), {
+    now: NOW,
+    signal: expect.any(AbortSignal),
+  });
+  expect(
+    deps.reconcileMessageIds &&
+      vi.mocked(deps.reconcileMessageIds).mock.invocationCallOrder[0]
+  ).toBeLessThan(vi.mocked(deps.leaseDueJobs).mock.invocationCallOrder[0] ?? 0);
+});
+
+it('continues enrichment-only dispatch when delivery configuration is absent', async () => {
+  vi.stubEnv('RESEND_API_KEY', undefined);
+  vi.stubEnv('DELIVERY_ENVIRONMENT', undefined);
+  vi.stubEnv('GROWTH_DATABASE_ENVIRONMENT', undefined);
+  try {
+    const deps = dependencies({
+      reconcileMessageIds: reconcilePendingResendMessageIds,
+      leaseDueJobs: vi
+        .fn()
+        .mockResolvedValue([leasedJob('enrich-1', 'enrich')]),
+    });
+    await expect(
+      dispatchLifecycleJobs(
+        {
+          batchSize: 5,
+          campaignEnabled: true,
+          signal: new AbortController().signal,
+        },
+        deps
+      )
+    ).resolves.toMatchObject({ dispatched: 1 });
+    expect(deps.dispatchLeasedJob).toHaveBeenCalledOnce();
+  } finally {
+    vi.unstubAllEnvs();
+  }
 });

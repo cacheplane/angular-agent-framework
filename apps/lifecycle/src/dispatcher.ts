@@ -6,6 +6,7 @@ import {
   leaseDueJobs,
   materializeCampaignEnrollment,
   processInstallRuntimeActivations,
+  reconcilePendingResendMessageIds,
   renewJobLease,
   type GrowthAppJobHandlers,
   type GrowthDispatchDependencies,
@@ -60,6 +61,7 @@ export interface LifecycleDispatcherDependencies {
   leaseDueJobs: typeof leaseDueJobs;
   materializeCampaignEnrollment: typeof materializeCampaignEnrollment;
   processInstallRuntimeActivations: typeof processInstallRuntimeActivations;
+  reconcileMessageIds?: typeof reconcilePendingResendMessageIds;
   loadEmailKeyring: typeof loadEmailHmacKeyring;
   now: () => Date;
   renewJobLease: typeof renewJobLease;
@@ -76,6 +78,7 @@ const defaultDependencies: LifecycleDispatcherDependencies = {
   leaseDueJobs,
   materializeCampaignEnrollment,
   processInstallRuntimeActivations,
+  reconcileMessageIds: reconcilePendingResendMessageIds,
   loadEmailKeyring: loadEmailHmacKeyring,
   now: () => new Date(),
   renewJobLease,
@@ -157,6 +160,11 @@ export async function dispatchLifecycleJobs(
   input.signal.throwIfAborted();
   const executor = dependencies.createDatabase();
   try {
+    await dependencies.reconcileMessageIds?.(executor, {
+      now: dependencies.now(),
+      signal: input.signal,
+    });
+    input.signal.throwIfAborted();
     if (input.campaignEnrollmentEnabled) {
       if (
         !(input.campaignEnrollmentStartAt instanceof Date) ||

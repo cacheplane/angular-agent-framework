@@ -11,3 +11,4 @@ export type {
   UseGrowthFormOptions,
   GrowthFormRoute,
 } from './use-growth-form';
+export { Honeypot, readHoneypot } from './Honeypot';
