@@ -24,6 +24,12 @@ export class CockpitTelemetryService {
       bootstrap: { distinctID: this.config.distinctId },
       autocapture: false,
       capture_pageview: false,
+      // This client only sends explicit lifecycle events. Optional downloaded
+      // features are unnecessary and conflict with the embedded runtime CSP.
+      advanced_disable_flags: true,
+      disable_surveys: true,
+      disable_session_recording: true,
+      disable_external_dependency_loading: true,
     });
 
     this.subscribeChat();

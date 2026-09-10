@@ -96,8 +96,10 @@ describe('generate runtime parent origins', () => {
       'Referrer-Policy': 'origin',
     });
     expect(policy.deploymentHeaders['Content-Security-Policy']).toContain(
-      "connect-src 'self' https: http://localhost:* http://127.0.0.1:* http://[::1]:*"
+      "connect-src 'self' https: http://localhost:* http://127.0.0.1:*"
     );
+    expect(policy.deploymentHeaders['Content-Security-Policy']).not.toContain('[::1]');
+    expect(policy.deploymentHeaders['Content-Security-Policy']).toContain("script-src 'self';");
     expect(JSON.stringify(policy)).not.toMatch(
       /apiKey|authorization|secret|token/i
     );

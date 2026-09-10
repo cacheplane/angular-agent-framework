@@ -1082,7 +1082,7 @@ jobs:
 
           changed_files="$(git diff --name-only "$base_sha" "$head_sha")"
           deploy_relevant=false
-          if printf '%s\n' "$changed_files" | grep -E '^(\.github/workflows/ci\.yml|runtime-parent-origins\.json|vercel\.(json|examples\.json)|apps/website/.*|cockpit/.*|examples/chat/.*|libs/.*|scripts/(assemble-examples|demo-middleware|generate-runtime-parent-origins|langgraph-proxy|rate-limit)\.ts|scripts/assemble-demo\.ts)$' >/dev/null; then
+          if printf '%s\n' "$changed_files" | grep -E '^(\.github/workflows/ci\.yml|runtime-parent-origins\.json|vercel\.(json|examples\.json)|apps/website/.*|cockpit/.*|examples/chat/.*|libs/.*|scripts/(assemble-examples|prepare-example-html|demo-middleware|generate-runtime-parent-origins|langgraph-proxy|rate-limit)\.ts|scripts/assemble-demo\.ts)$' >/dev/null; then
             deploy_relevant=true
           fi
 
@@ -1101,7 +1101,7 @@ jobs:
           if printf '%s\n' "$changed_files" | grep -E '^cockpit/.*/angular/' >/dev/null; then
             examples_changed=true
           fi
-          if printf '%s\n' "$changed_files" | grep -E '^(runtime-parent-origins\.json|vercel\.examples\.json|scripts/(assemble-examples|examples-middleware|generate-runtime-parent-origins|langgraph-proxy|upstash-rate-limit)\.ts)$' >/dev/null; then
+          if printf '%s\n' "$changed_files" | grep -E '^(runtime-parent-origins\.json|vercel\.examples\.json|scripts/(assemble-examples|prepare-example-html|examples-middleware|generate-runtime-parent-origins|langgraph-proxy|upstash-rate-limit)\.ts)$' >/dev/null; then
             examples_changed=true
           fi
           if printf '%s\n' "$changed_files" | grep -E '^(\.github/workflows/ci\.yml|vercel\.json|apps/website/.*)$' >/dev/null; then

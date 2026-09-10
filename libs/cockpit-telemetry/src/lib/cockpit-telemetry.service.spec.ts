@@ -82,6 +82,10 @@ describe('CockpitTelemetryService', () => {
         bootstrap: { distinctID: 'd1' },
         autocapture: false,
         capture_pageview: false,
+        advanced_disable_flags: true,
+        disable_surveys: true,
+        disable_session_recording: true,
+        disable_external_dependency_loading: true,
       }),
     );
   });
