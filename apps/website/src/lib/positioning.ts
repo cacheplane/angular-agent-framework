@@ -132,7 +132,7 @@ export const NO_RUNTIME_BAND = {
   },
   /** Read to assistive tech in place of the drawn flows. */
   figureCaption:
-    'The usual path runs from your users through the vendor’s runtime to your agent. With Threadplane your users reach your agent directly.',
+    "The usual path runs from your users through the vendor's runtime to your agent. With Threadplane your users reach your agent directly.",
 } as const;
 
 // The shared capability checklist and fallback still captions.

@@ -154,6 +154,7 @@ Browser events never fire unless the consumer explicitly opts in. See `libs/tele
 - `home_adapter_guide` — parity CTA → `/docs/choosing-an-adapter`
 - `home_coding_agent_prompt` — prompt copied (prompt text is never sent)
 - `home_coding_agent_link` — property `cta_text` names which link
+- `home_no_runtime_docs` — No-runtime band text link → `/docs/choosing-an-adapter`
 - retired 2026-09-04: `home_production_readiness_expand`, `home_yes_wall_docs` (the Yes wall was replaced by the reliability band)
 
 **Nav**

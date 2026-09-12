@@ -202,6 +202,10 @@ describe('NO_RUNTIME_BAND (spec 2026-09-11)', () => {
     expect(NO_RUNTIME_BAND.flows.usual.nodes).toEqual(['Your users', 'Their runtime', 'Your agent']);
     expect(NO_RUNTIME_BAND.flows.ours.nodes).toEqual(['Your users', 'Your agent']);
     expect(NO_RUNTIME_BAND.flows.usual.ghost).toBe('Their runtime');
+    expect(NO_RUNTIME_BAND.flows.usual.nodes).toContain(NO_RUNTIME_BAND.flows.usual.ghost);
+    expect(
+      NO_RUNTIME_BAND.flows.usual.nodes.filter((n) => n !== NO_RUNTIME_BAND.flows.usual.ghost)
+    ).toEqual([...NO_RUNTIME_BAND.flows.ours.nodes]);
   });
 });
 
