@@ -112,7 +112,7 @@ The diagram is plain HTML and CSS, not SVG: three boxes and two arrows do not ne
 
 - `NoRuntimeBand.spec.tsx`: renders the eyebrow, headline and body from `NO_RUNTIME_BAND`; exactly one `<a>` in the section; the section is `dark` with id `no-runtime`; the figure has a caption; the ghost node exists once and the "Threadplane" flow has no ghost; the runway is a sibling of the container, not inside it, mirroring the Fork-us guard.
 - `e2e/website.spec.ts`: the spine array gains `no-runtime-heading` between `architecture-heading` and `open-source-heading`.
-- A new `e2e/home-no-runtime.spec.ts`: at 1440px the two flow columns' node boxes share a left edge per column and no node text overflows its box; at 390px the flows stack and every node still fits its box. This follows the measure-not-eyeball rule the architecture e2e set.
+- A new `e2e/home-no-runtime.spec.ts`: at 1440px the two flow columns' node boxes share a centre line per column and no node text overflows its box; at 390px the flows stack and every node still fits its box. This follows the measure-not-eyeball rule the architecture e2e set.
 
 ## 4. Section 3: one FAQ entry
 
@@ -140,5 +140,5 @@ Two dark bands now sit back to back. Each dark section paints its own 1px yellow
 - `npx nx test website`, `npx nx lint website`, `npx nx build website`. Lint and test do not typecheck; only the build does, so the build is not optional.
 - `npx nx e2e website` with the spine test, the new No-runtime e2e, and the existing `#proof` assertions passing.
 - Every `href` in both sections resolves, including the four off-site registry links.
-- Measured, not eyeballed: the trust band's five boxes share one left edge and five responses share one right edge; the No-runtime nodes share edges per column at 1440px and stack cleanly at 390px.
+- Measured, not eyeballed: the trust band's five boxes share one left edge and five responses share one right edge; the No-runtime nodes share a centre line per column at 1440px and stack cleanly at 390px.
 - Rank and Scorecard figures re-read from the live pages on the day of the PR.
