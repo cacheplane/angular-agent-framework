@@ -3,7 +3,8 @@ import { Section } from '../ui/Section';
 import { Eyebrow } from '../ui/Eyebrow';
 import { FAQ, type FAQItem } from '../ui/FAQ';
 
-// Five questions the page above does not answer (live-stage spec §3; the runtime one from spec 2026-09-11). Copy here
+// Five questions the page above does not answer (live-stage spec §3; the
+// runtime one from spec 2026-09-11). Copy here
 // is scanned by lib/public-copy-contract.ts: absolute claims ("installation is
 // inert") and retired routes (/docs/telemetry/**) are barred — a previous FAQ
 // answer shipped both and only the production crawl caught it.

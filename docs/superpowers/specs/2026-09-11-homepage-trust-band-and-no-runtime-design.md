@@ -1,7 +1,7 @@
 # The trust band shrinks, and a No-runtime band lands after the architecture diagram
 
 **Date:** 2026-09-11
-**Status:** Approved in conversation, awaiting written review
+**Status:** Implemented on `blove/homepage-trust-no-runtime` (§2.2 figures and §3.1/§5 runway decision record what shipped)
 **Branch:** `blove/homepage-trust-no-runtime`
 **Supersedes:** the two-column checklist in `2026-09-08-preflight-checklist-design.md` §2 (the Airworthiness block survives; the Threadplane and Yours columns do not)
 

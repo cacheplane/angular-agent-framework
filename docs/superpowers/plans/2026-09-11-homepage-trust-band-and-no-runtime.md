@@ -4,7 +4,7 @@
 
 **Goal:** Shrink the homepage's dark proof band to the five third-party Airworthiness rows, and add a bold "No runtime." band (copy left, two vertical flow diagrams right) between the architecture diagram and the Fork-us band, plus one FAQ entry.
 
-**Architecture:** Section 1 is a deletion: the two checklist columns and three self-reported rows leave `lib/preflight-checklist.ts`, `PreflightChecklist.tsx`, and `landing.css`, and the guards shrink with them. Section 2 is a new client-free server component `NoRuntimeBand.tsx` that reads every string from a new `NO_RUNTIME_BAND` object in `lib/positioning.ts`, draws the flows in plain HTML/CSS, and is pinned by a unit spec, the spine e2e, and a new measuring e2e. Section 3 adds one FAQ item.
+**Architecture:** Section 1 is a deletion: the two checklist columns and three self-reported rows leave `lib/preflight-checklist.ts`, `PreflightChecklist.tsx`, and `landing.css`, and the guards shrink with them. Section 2 is a new `NoRuntimeBand.tsx` (`'use client'` only for the tracked link, like `OpenSourceStrip.tsx`) that reads every string from a new `NO_RUNTIME_BAND` object in `lib/positioning.ts`, draws the flows in plain HTML/CSS, and is pinned by a unit spec, the spine e2e, and a new measuring e2e. Section 3 adds one FAQ item.
 
 **Tech Stack:** Next.js app in `apps/website` (React server components, `'use client'` only where hooks are used), Vitest + Testing Library (jsdom), Playwright e2e, plain CSS in `apps/website/src/styles/landing.css`, Nx targets.
 

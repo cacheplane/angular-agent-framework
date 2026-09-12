@@ -585,6 +585,9 @@
  * there. Nodes share a min-width so the two columns line up. */
 .no-runtime-figure {
   margin: 0;
+  /* The hidden caption below is absolutely positioned; anchor it here so the
+     recipe does not depend on the section being positioned. */
+  position: relative;
 }
 .no-runtime-flows {
   display: grid;

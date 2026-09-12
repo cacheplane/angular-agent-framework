@@ -93,5 +93,10 @@ describe('NoRuntimeBand', () => {
     // marking stays on Fork us alone (spec §5 fallback).
     const { container } = render(<NoRuntimeBand />);
     expect(container.querySelector('.no-runtime-runway')).toBeNull();
+    // Structurally, not by class name: the section holds the container and
+    // nothing else, so no stripe can come back under another name.
+    const section = container.querySelector('[data-ui="section"]');
+    expect(section?.children).toHaveLength(1);
+    expect(section?.firstElementChild?.getAttribute('data-ui')).toBe('container');
   });
 });
