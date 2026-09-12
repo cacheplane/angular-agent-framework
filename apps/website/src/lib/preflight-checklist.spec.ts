@@ -39,10 +39,13 @@ describe('airworthiness rows', () => {
   });
 
   it('carries no self-reported rows', () => {
-    // Cloud, Signup and VC board were ours to say; the masthead and the FAQ
-    // say them. Only figures a third party published belong here.
+    // Cloud, Signup and VC board were ours to say and linked our own pages
+    // (/privacy, /docs/…, /about) — an on-site, relative href is what made
+    // them self-reported. A row that proves itself always links off-site.
     for (const row of AIRWORTHINESS) {
-      expect(row.response, row.challenge).not.toBe('NONE');
+      expect(row.href, row.challenge).toMatch(/^https?:\/\//);
+      const { hostname } = new URL(row.href);
+      expect(['threadplane.ai', 'www.threadplane.ai'], row.href).not.toContain(hostname);
     }
   });
 

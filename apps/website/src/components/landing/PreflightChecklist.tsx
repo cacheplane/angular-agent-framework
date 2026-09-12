@@ -55,7 +55,7 @@ function Row({ row, done }: { row: ChecklistRow; done: boolean }) {
  *
  * The tick sequence is decorative: `is-done` also changes the response colour,
  * so a reader who never sees the animation still sees the state. Under
- * reduced motion every row is done from the first paint.
+ * reduced motion every row is done as soon as the effect runs.
  *
  * This is a client component only because of the IntersectionObserver;
  * Reliability.tsx, which frames it, stays a server component.
@@ -65,13 +65,16 @@ export function PreflightChecklist() {
   const [ticked, setTicked] = useState(0);
 
   useEffect(() => {
-    const el = ref.current;
-    if (!el || typeof IntersectionObserver === 'undefined') return;
     const total = AIRWORTHINESS.length;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ) {
       setTicked(total);
       return;
     }
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
     const timers: ReturnType<typeof setTimeout>[] = [];
     const io = new IntersectionObserver(
       (entries) => {
@@ -92,8 +95,8 @@ export function PreflightChecklist() {
 
   return (
     <div className="preflight" ref={ref}>
-      <p className="preflight-col-head is-ours" id="preflight-air-label">Airworthiness</p>
-      <ul className="preflight-rows preflight-air" aria-labelledby="preflight-air-label">
+      <p className="preflight-col-head" id="preflight-air-label">Airworthiness</p>
+      <ul className="preflight-rows" aria-labelledby="preflight-air-label">
         {AIRWORTHINESS.map((row, i) => (
           <Row key={row.challenge} row={row} done={i < ticked} />
         ))}

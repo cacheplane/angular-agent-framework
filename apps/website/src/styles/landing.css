@@ -2190,8 +2190,6 @@
   text-transform: uppercase;
   margin: 0;
   padding-bottom: 12px;
-}
-.preflight-col-head.is-ours {
   color: var(--color-signal);
 }
 .preflight-rows {
@@ -2251,27 +2249,15 @@
 }
 .preflight-response {
   flex: 0 0 auto;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
   white-space: nowrap;
   color: var(--color-text-muted);
   transition: color 180ms ease;
 }
 .preflight-row.is-done .preflight-response {
-  color: var(--color-signal);
-}
-/* Airworthiness responses are figures, so they take the display face and a
- * larger size; the unit stays mono beside them. */
-.preflight-air .preflight-response {
-  font-family: var(--font-display);
-  font-size: 15px;
-  font-weight: 400;
-  letter-spacing: -0.01em;
-  color: var(--color-text-muted);
-}
-.preflight-air .preflight-row.is-done .preflight-response {
   color: var(--color-text-primary);
 }
 .preflight-unit {
@@ -2294,6 +2280,7 @@ a.preflight-row:hover .preflight-challenge {
     transition: none;
   }
 }
+
 /* For teams — components/landing/TeamsBlock.tsx.
  * Ask left, briefing right. The cover is a fixed 400px so the form column
  * keeps a comfortable measure rather than stretching across the section. */
