@@ -5,14 +5,15 @@ import { HERO_TRUST_LINE } from '../../lib/positioning';
 import { PreflightChecklist } from './PreflightChecklist';
 
 /**
- * The reliability section (homepage design spec §3, block 2): the sourced
- * proof band, now argued as a preflight checklist.
+ * The trust section (homepage design spec §3, block 2): the sourced proof
+ * band, reduced on 2026-09-11 to the five third-party figures.
  *
  * Replaces ProofStrip and LogoRibbon, both deleted with the homepage
- * restructure. The figure cards, the prose receipts and the pitch ladder came
- * out in favour of the checklist: every row states a challenge, the response
- * it gets, and links the page that proves it — and the unticked Yours column
- * is the half that makes the section honest.
+ * restructure, and the 27-row preflight checklist that followed them. The
+ * Threadplane and Yours columns of that checklist were self-reported; the
+ * airworthiness rows are not, and they are all that stays. The boundary
+ * argument the Yours column used to make now lives in the No-runtime band
+ * (NoRuntimeBand.tsx) and in the docs.
  *
  * The works-with line used to close this section. It now has its own LIGHT
  * section (Compatibility.tsx): the vendor marks are drawn for light grounds
@@ -45,7 +46,7 @@ export function Reliability() {
               eyebrow="Climb performance"
               heading="Audited, scored, published."
               headingId="proof-heading"
-              aside="Vx clears today’s obstacle; Vy gets you to altitude. Not self-reported — every number links to its source."
+              aside="Not self-reported. Every figure links to the body that published it."
             />
             <PreflightChecklist />
           </div>
