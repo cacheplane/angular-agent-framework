@@ -87,7 +87,7 @@ Nodes are mono, uppercase, 12px, bordered boxes with a fixed min-width so the tw
 
 The diagram is plain HTML and CSS, not SVG: three boxes and two arrows do not need the diagram kit, and HTML keeps the text selectable and the nodes measurable with `getBoundingClientRect`.
 
-**The runway stripe** runs along the foot of the band, the same 46px-on-92px marking as Fork-us, so the two dark bands rhyme.
+**No runway stripe.** The design had one, matching Fork-us; in the browser two stripes 450px apart made the two dark bands read as one tall block, so the §5 fallback was applied and the marking stays on Fork-us alone.
 
 **Under 820px** the columns stack: copy first, then the two flows side by side beneath it. **Under 480px** the flows themselves stack, "The usual" above "Threadplane." Node text never wraps.
 
@@ -110,7 +110,7 @@ The diagram is plain HTML and CSS, not SVG: three boxes and two arrows do not ne
 
 ### 3.5 Guards
 
-- `NoRuntimeBand.spec.tsx`: renders the eyebrow, headline and body from `NO_RUNTIME_BAND`; exactly one `<a>` in the section; the section is `dark` with id `no-runtime`; the figure has a caption; the ghost node exists once and the "Threadplane" flow has no ghost; the runway is a sibling of the container, not inside it, mirroring the Fork-us guard.
+- `NoRuntimeBand.spec.tsx`: renders the eyebrow, headline and body from `NO_RUNTIME_BAND`; exactly one `<a>` in the section; the section is `dark` with id `no-runtime`; the figure has a caption; the ghost node exists once and the "Threadplane" flow has no ghost; no runway element, so it cannot merge visually with Fork-us.
 - `e2e/website.spec.ts`: the spine array gains `no-runtime-heading` between `architecture-heading` and `open-source-heading`.
 - A new `e2e/home-no-runtime.spec.ts`: at 1440px the two flow columns' node boxes share a centre line per column and no node text overflows its box; at 390px the flows stack and every node still fits its box. This follows the measure-not-eyeball rule the architecture e2e set.
 
@@ -127,7 +127,7 @@ The diagram is plain HTML and CSS, not SVG: three boxes and two arrows do not ne
 
 hero → proof (trust band) → compatibility → architecture → **no-runtime** → open-source → stage → teams → FAQ → articles.
 
-Two dark bands now sit back to back. Each dark section paints its own 1px yellow seam at its top edge, and the No-runtime band has no button while Fork-us has one, so the boundary reads. This is a deliberate choice, recorded here so it is not mistaken for an accident. If it reads as one tall block in the browser, the fallback is to drop the runway stripe from the No-runtime band and keep it on Fork-us only.
+Two dark bands now sit back to back. Each dark section paints its own 1px yellow seam at its top edge, and the No-runtime band has no button while Fork-us has one, so the boundary reads. This is a deliberate choice, recorded here so it is not mistaken for an accident. It did read as one tall block in the browser with two runway stripes, so the fallback was applied: the No-runtime band has no runway and Fork-us keeps its own.
 
 ## 6. Known, accepted
 

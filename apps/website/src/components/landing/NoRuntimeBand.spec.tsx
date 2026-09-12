@@ -88,11 +88,10 @@ describe('NoRuntimeBand', () => {
     expect(figure?.querySelector('.no-runtime-flows')?.getAttribute('aria-hidden')).toBe('true');
   });
 
-  it('marks the runway decorative and puts it outside the container', () => {
+  it('carries no runway of its own, so it does not merge with Fork us below it', () => {
+    // Two stripes 450px apart read as one tall block in the browser; the
+    // marking stays on Fork us alone (spec §5 fallback).
     const { container } = render(<NoRuntimeBand />);
-    const runway = container.querySelector('.no-runtime-runway');
-    expect(runway?.getAttribute('aria-hidden')).toBe('true');
-    expect(runway?.closest('[data-ui="container"]')).toBeNull();
-    expect(runway?.parentElement?.getAttribute('data-ui')).toBe('section');
+    expect(container.querySelector('.no-runtime-runway')).toBeNull();
   });
 });

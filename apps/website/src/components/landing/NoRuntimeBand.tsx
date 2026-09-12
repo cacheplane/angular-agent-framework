@@ -11,6 +11,10 @@ import { NO_RUNTIME_BAND } from '../../lib/positioning';
  * flows right — the usual path with a vendor runtime in the middle, and ours
  * without it.
  *
+ * No runway stripe here, on purpose. It was in the design; in the browser two
+ * stripes 450px apart made this band and Fork us read as one tall block
+ * (spec §5 fallback). Fork us keeps the marking, so the page still has one.
+ *
  * Everything it says comes from NO_RUNTIME_BAND (positioning.ts). It names no
  * other product: the band states Threadplane's shape and leaves the
  * comparison to the reader.
@@ -58,8 +62,6 @@ export function NoRuntimeBand() {
           </figure>
         </div>
       </Container>
-      {/* Spans the section, not the container, like the Fork us runway. */}
-      <div className="no-runtime-runway" aria-hidden="true" />
     </Section>
   );
 }
