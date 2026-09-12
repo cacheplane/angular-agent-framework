@@ -1,39 +1,32 @@
 import { describe, it, expect, vi } from 'vitest';
-import {
-  PREFLIGHT_OURS,
-  PREFLIGHT_YOURS,
-  AIRWORTHINESS,
-} from './preflight-checklist';
+import { AIRWORTHINESS } from './preflight-checklist';
 
-describe('preflight checklist data', () => {
-  it('has the shape the section argues for', () => {
-    // The unticked half is the argument, not an oversight — if Yours ever
-    // empties out, the section stops making its point.
-    expect(PREFLIGHT_OURS).toHaveLength(11);
-    expect(PREFLIGHT_YOURS).toHaveLength(8);
-    expect(AIRWORTHINESS).toHaveLength(8);
+describe('airworthiness rows', () => {
+  it('lists exactly the five third-party figures', () => {
+    // A length pin, on purpose: the list is only as honest as its sources,
+    // and a row added without one is the failure mode this guard exists for.
+    expect(AIRWORTHINESS.map((r) => r.challenge)).toEqual([
+      'Framework rank',
+      'OpenSSF Scorecard',
+      'Supply-chain grade',
+      'Angular support',
+      'Release provenance',
+    ]);
   });
 
-  it('proves every claim it ticks', () => {
+  it('proves every row it ticks', () => {
     // "Not self-reported" is the section's own aside. A ticked row with no
     // link is a claim with no source.
-    for (const row of [...PREFLIGHT_OURS, ...AIRWORTHINESS]) {
+    for (const row of AIRWORTHINESS) {
       expect(row.href, row.challenge).toBeTruthy();
     }
   });
 
-  it('claims nothing in the Yours column', () => {
-    // Nothing proves that YOU set a cost ceiling, so these carry no link.
-    for (const row of PREFLIGHT_YOURS) {
-      expect(row.href, row.challenge).toBeNull();
-    }
-  });
-
   it('links pages a human can read, never a raw API', () => {
-    for (const row of [...PREFLIGHT_OURS, ...AIRWORTHINESS]) {
-      const { hostname, pathname } = new URL(row.href!, 'https://threadplane.ai');
-      expect(hostname.startsWith('api.'), row.href!).toBe(false);
-      expect(pathname.startsWith('/api/'), row.href!).toBe(false);
+    for (const row of AIRWORTHINESS) {
+      const { hostname, pathname } = new URL(row.href, 'https://threadplane.ai');
+      expect(hostname.startsWith('api.'), row.href).toBe(false);
+      expect(pathname.startsWith('/api/'), row.href).toBe(false);
     }
   });
 
@@ -45,11 +38,14 @@ describe('preflight checklist data', () => {
     expect(grade?.response).toBe('');
   });
 
-  it('gives every response an outcome, not a feature name', () => {
-    // Responses are states you could verify. Lowercase would mean someone
-    // wrote a sentence instead of a checklist response.
-    for (const row of [...PREFLIGHT_OURS, ...PREFLIGHT_YOURS]) {
-      expect(row.response, row.challenge).toBe(row.response.toUpperCase());
+  it('carries no self-reported rows', () => {
+    // Cloud, Signup and VC board were ours to say and linked our own pages
+    // (/privacy, /docs/…, /about) — an on-site, relative href is what made
+    // them self-reported. A row that proves itself always links off-site.
+    for (const row of AIRWORTHINESS) {
+      expect(row.href, row.challenge).toMatch(/^https?:\/\//);
+      const { hostname } = new URL(row.href);
+      expect(['threadplane.ai', 'www.threadplane.ai'], row.href).not.toContain(hostname);
     }
   });
 

@@ -1,21 +1,20 @@
 import { render } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import { PreflightChecklist } from './PreflightChecklist';
-import { PREFLIGHT_OURS, PREFLIGHT_YOURS, AIRWORTHINESS } from '../../lib/preflight-checklist';
+import { AIRWORTHINESS } from '../../lib/preflight-checklist';
 
 describe('PreflightChecklist', () => {
-  it('renders one row per data row', () => {
+  it('renders one row per data row and nothing else', () => {
     const { container } = render(<PreflightChecklist />);
-    expect(container.querySelectorAll('.preflight-row')).toHaveLength(
-      PREFLIGHT_OURS.length + PREFLIGHT_YOURS.length + AIRWORTHINESS.length,
-    );
+    expect(container.querySelectorAll('.preflight-row')).toHaveLength(AIRWORTHINESS.length);
+    // The two-column checklist is gone; nothing may bring its grid back.
+    expect(container.querySelector('.preflight-cols')).toBeNull();
+    expect(container.querySelector('.preflight-yours')).toBeNull();
   });
 
-  it('links every ticked row and none of the Yours rows', () => {
+  it('links every row', () => {
     const { container } = render(<PreflightChecklist />);
-    expect(container.querySelectorAll('a.preflight-row')).toHaveLength(
-      PREFLIGHT_OURS.length + AIRWORTHINESS.length,
-    );
+    expect(container.querySelectorAll('a.preflight-row')).toHaveLength(AIRWORTHINESS.length);
     for (const a of Array.from(container.querySelectorAll('a.preflight-row'))) {
       expect(a.getAttribute('href')).toBeTruthy();
     }
@@ -26,19 +25,15 @@ describe('PreflightChecklist', () => {
     // screen reader it can be toggled, which is a lie.
     const { container } = render(<PreflightChecklist />);
     expect(container.querySelectorAll('input')).toHaveLength(0);
-    expect(container.querySelectorAll('.preflight-box')).toHaveLength(
-      PREFLIGHT_OURS.length + PREFLIGHT_YOURS.length + AIRWORTHINESS.length,
-    );
+    expect(container.querySelectorAll('.preflight-box')).toHaveLength(AIRWORTHINESS.length);
   });
 
-  it('names each column list so two adjacent lists are distinguishable', () => {
+  it('names the list', () => {
     const { container } = render(<PreflightChecklist />);
     const lists = Array.from(container.querySelectorAll('ul[aria-labelledby]'));
-    expect(lists).toHaveLength(3);
-    for (const ul of lists) {
-      const label = container.querySelector(`#${ul.getAttribute('aria-labelledby')}`);
-      expect(label?.textContent).toBeTruthy();
-    }
+    expect(lists).toHaveLength(1);
+    const label = container.querySelector(`#${lists[0].getAttribute('aria-labelledby')}`);
+    expect(label?.textContent).toBe('Airworthiness');
   });
 
   it('keeps the HVTrust grade a live badge with real alt text', () => {

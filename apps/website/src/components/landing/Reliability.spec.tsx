@@ -32,12 +32,15 @@ describe('Reliability', () => {
     expect(container.textContent).not.toMatch(/trusted by|customers|our clients|powered by/i);
   });
 
-  it('carries the checklist and keeps the framing above it', () => {
+  it('frames the list as third-party proof', () => {
     const { container } = render(<Reliability />);
-    // The eyebrow and aside still frame the band; the checklist is what
-    // replaced the figure cards beneath them.
     expect(screen.getByText('Climb performance')).toBeTruthy();
+    expect(
+      screen.getByText('Not self-reported. Every figure links to the body that published it.'),
+    ).toBeTruthy();
     expect(container.querySelector('.preflight')).toBeTruthy();
+    // The two-column checklist and its predecessors are gone.
+    expect(container.querySelector('.preflight-cols')).toBeNull();
     expect(container.querySelector('.proof-ladder')).toBeNull();
     expect(container.querySelector('.proof-strip-cells')).toBeNull();
   });

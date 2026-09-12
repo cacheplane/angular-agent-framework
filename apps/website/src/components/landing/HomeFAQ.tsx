@@ -3,7 +3,8 @@ import { Section } from '../ui/Section';
 import { Eyebrow } from '../ui/Eyebrow';
 import { FAQ, type FAQItem } from '../ui/FAQ';
 
-// Four questions the page above does not answer (live-stage spec §3). Copy here
+// Five questions the page above does not answer (live-stage spec §3; the
+// runtime one from spec 2026-09-11). Copy here
 // is scanned by lib/public-copy-contract.ts: absolute claims ("installation is
 // inert") and retired routes (/docs/telemetry/**) are barred — a previous FAQ
 // answer shipped both and only the production crawl caught it.
@@ -43,6 +44,16 @@ const ITEMS: FAQItem[] = [
       <>
         No. Every package is MIT and runs inside your Angular application against a backend you
         host. <a href="/pricing">Pricing</a>
+      </>
+    ),
+  },
+  {
+    q: 'Does Threadplane have a runtime I need to deploy?',
+    a: (
+      <>
+        No. The adapters call your LangGraph or AG-UI server from the browser. There is no
+        Threadplane server in the request path, no key, and no production tier.{' '}
+        <a href="/docs/choosing-an-adapter">How it is wired</a>
       </>
     ),
   },

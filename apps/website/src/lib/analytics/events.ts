@@ -76,6 +76,7 @@ export type CtaId =
   | 'home_adapter_guide'
   | 'home_coding_agent_prompt'
   | 'home_coding_agent_link'
+  | 'home_no_runtime_docs'
   // retired 2026-09-02, remove after 90 days
   | 'hero_demo_open_workspace'
   | 'hero_demo_open_workspace_caption'

@@ -6,6 +6,7 @@ import { Stage } from '../components/landing/Stage';
 import { TeamsBlock } from '../components/landing/TeamsBlock';
 import { HomeFAQ } from '../components/landing/HomeFAQ';
 import { OpenSourceStrip } from '../components/landing/OpenSourceStrip';
+import { NoRuntimeBand } from '../components/landing/NoRuntimeBand';
 import { RecentArticles } from '../components/landing/RecentArticles';
 // The homepage must stay statically rendered (no cookies()/headers()/dynamic):
 // the proof lines are read from the demo recording at build time, and the file
@@ -34,6 +35,12 @@ export default function HomePage() {
       <Reliability />
       <Compatibility />
       <EnterpriseArchitecture />
+
+      {/* No runtime: the diagram above shows Threadplane reaching your agent
+          directly; this band says so in two words. Copy lives in
+          NO_RUNTIME_BAND (positioning.ts). Deliberately dark-on-dark with the
+          band below; each dark section paints its own seam (spec §5). */}
+      <NoRuntimeBand />
 
       {/* The open-source full stop: a loud dark band with one fork CTA. Copy
           lives in OPEN_SOURCE_STRIP (positioning.ts). */}
