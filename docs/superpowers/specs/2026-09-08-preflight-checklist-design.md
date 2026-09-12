@@ -4,6 +4,7 @@
 **Status:** Approved, ready for planning
 **Branch:** `blove/reliability-dark-redesign`
 **Supersedes:** the pitch-ladder device in `2026-09-08-reliability-scope-redesign-design.md` §4.4
+**Superseded on 2026-09-11** by `2026-09-11-homepage-trust-band-and-no-runtime-design.md`: the Threadplane and Yours columns and the three self-reported Airworthiness rows were removed; the five third-party rows remain.
 
 ## 1. Why
 
