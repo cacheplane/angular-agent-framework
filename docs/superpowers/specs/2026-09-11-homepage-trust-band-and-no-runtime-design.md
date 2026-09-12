@@ -36,8 +36,8 @@ A single list of five rows, one column, every row linked to its source, in this 
 
 | Challenge | Response | Source |
 | --- | --- | --- |
-| Framework rank | #8 OF 119 | hvtracker.net categories |
-| OpenSSF Scorecard | 8.2 / 10 | scorecard.dev |
+| Framework rank | #11 OF 122 (live value on 2026-09-11; drifts) | hvtracker.net categories |
+| OpenSSF Scorecard | 8.3 / 10 (live value on 2026-09-11; drifts) | scorecard.dev |
 | Supply-chain grade | live HVTrust badge | hvtracker.net/agents |
 | Angular support | 20–22 CI-TESTED (derived) | npmjs.com |
 | Release provenance | SIGNED · OIDC · SLSA | npmjs.com |
