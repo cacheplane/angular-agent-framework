@@ -172,6 +172,39 @@ describe('homepage restructure copy (live-stage spec §3)', () => {
   });
 });
 
+describe('NO_RUNTIME_BAND (spec 2026-09-11)', () => {
+  it('argues in two words over an aviation eyebrow, like Fork us', async () => {
+    const { NO_RUNTIME_BAND } = await import('./positioning');
+    expect(NO_RUNTIME_BAND.eyebrow).toBe('Cleared direct');
+    expect(NO_RUNTIME_BAND.headline).toBe('No runtime.');
+    // The same budgets as OPEN_SOURCE_STRIP: one line at 116px, one-line eyebrow.
+    expect(NO_RUNTIME_BAND.headline.length).toBeLessThanOrEqual(12);
+    expect(NO_RUNTIME_BAND.eyebrow.length).toBeLessThanOrEqual(14);
+  });
+
+  it('says no cloud, never no proxy', async () => {
+    // The docs tell readers to put their agent behind their own proxy, so
+    // "no proxy" would be false. "No cloud" is true and matches the masthead.
+    const { NO_RUNTIME_BAND } = await import('./positioning');
+    expect(NO_RUNTIME_BAND.body).toMatch(/no cloud/i);
+    expect(NO_RUNTIME_BAND.body).not.toMatch(/proxy/i);
+    expect(NO_RUNTIME_BAND.figureCaption).not.toMatch(/proxy/i);
+  });
+
+  it('links the page that already states the adapters call your server directly', async () => {
+    const { NO_RUNTIME_BAND } = await import('./positioning');
+    expect(NO_RUNTIME_BAND.link.href).toBe('/docs/choosing-an-adapter');
+    expect(NO_RUNTIME_BAND.link.label).toBe('How it is wired');
+  });
+
+  it('draws the usual path with one more hop than ours, both starting at your users', async () => {
+    const { NO_RUNTIME_BAND } = await import('./positioning');
+    expect(NO_RUNTIME_BAND.flows.usual.nodes).toEqual(['Your users', 'Their runtime', 'Your agent']);
+    expect(NO_RUNTIME_BAND.flows.ours.nodes).toEqual(['Your users', 'Your agent']);
+    expect(NO_RUNTIME_BAND.flows.usual.ghost).toBe('Their runtime');
+  });
+});
+
 describe('STAGE_RAIL', () => {
   it('has one entry per beat in the beat map order, each a short claim with one docs link', () => {
     expect(STAGE_RAIL.map((b) => b.beat)).toEqual([...STAGE_BEATS]);

@@ -90,6 +90,51 @@ export const OPEN_SOURCE_STRIP = {
   cta: 'Fork on GitHub',
 } as const;
 
+// ── The No-runtime band (dark, between the architecture diagram and Fork us;
+// spec 2026-09-11). Threadplane's adapters call your LangGraph or AG-UI server
+// from the browser: there is no server of ours in the request path, no key,
+// no dev-only flag, no production tier. Other agent UI kits ship a "runtime"
+// that sits between the two; this band states our shape and names nobody. ──
+export const NO_RUNTIME_BAND = {
+  /**
+   * Controller phraseology for a clearance straight to a fix, skipping the
+   * intermediate ones. Texture, like "Squawk 1200": the headline carries the
+   * meaning, so a reader who does not fly loses nothing.
+   */
+  eyebrow: 'Cleared direct',
+  /** Two words at up to 116px. */
+  headline: 'No runtime.',
+  /**
+   * "No cloud", not "no proxy": the docs tell you to put your agent behind
+   * your own proxy, so "no proxy" would be false.
+   */
+  body:
+    'Your users reach your LangGraph or AG-UI server from your Angular app. Nothing of ours in between: no cloud, no key, no dev-only flag.',
+  link: {
+    label: 'How it is wired',
+    href: '/docs/choosing-an-adapter',
+  },
+  /**
+   * The two vertical flows. `ghost` is the node drawn dashed and struck
+   * through: the hop that is not there with Threadplane. "Your users" echoes
+   * the first column label of the architecture diagram above the band.
+   */
+  flows: {
+    usual: {
+      label: 'The usual',
+      nodes: ['Your users', 'Their runtime', 'Your agent'],
+      ghost: 'Their runtime',
+    },
+    ours: {
+      label: 'Threadplane',
+      nodes: ['Your users', 'Your agent'],
+    },
+  },
+  /** Read to assistive tech in place of the drawn flows. */
+  figureCaption:
+    'The usual path runs from your users through the vendor’s runtime to your agent. With Threadplane your users reach your agent directly.',
+} as const;
+
 // The shared capability checklist and fallback still captions.
 export type StageBeatKey = StageBeat;
 export interface StageRailBeat {
