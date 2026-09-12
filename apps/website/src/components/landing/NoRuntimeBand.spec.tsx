@@ -65,6 +65,13 @@ describe('NoRuntimeBand', () => {
       NO_RUNTIME_BAND.flows.usual.ghost,
     );
     expect(ours!.querySelector('.is-ghost')).toBeNull();
+    // The direct arrow spans the hop that is not there: one in ours, none in usual.
+    const oursArrows = ours!.querySelectorAll('.no-runtime-arrow');
+    expect(oursArrows).toHaveLength(1);
+    expect(oursArrows[0].classList.contains('is-direct')).toBe(true);
+    const usualArrows = usual!.querySelectorAll('.no-runtime-arrow');
+    expect(usualArrows).toHaveLength(2);
+    expect(usual!.querySelector('.no-runtime-arrow.is-direct')).toBeNull();
   });
 
   it('gives the flows a prose caption and hides the arrows from assistive tech', () => {
@@ -72,6 +79,11 @@ describe('NoRuntimeBand', () => {
     const figure = container.querySelector('figure.no-runtime-figure');
     expect(figure).toBeTruthy();
     expect(figure?.querySelector('figcaption')?.textContent).toBe(NO_RUNTIME_BAND.figureCaption);
+    // getByRole skips hidden subtrees, so aria-hiding the figure fails here.
+    // (jsdom's accessible-name computation gives a figure no name from its
+    // figcaption, so the name is not queried; the caption is checked below.)
+    expect(screen.getByRole('figure')).toBe(figure);
+    expect(figure?.querySelector('figcaption')?.closest('[aria-hidden="true"]')).toBeNull();
     // The drawn flows duplicate the caption, so they are hidden as a unit.
     expect(figure?.querySelector('.no-runtime-flows')?.getAttribute('aria-hidden')).toBe('true');
   });
