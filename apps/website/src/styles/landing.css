@@ -2173,19 +2173,14 @@
   object-fit: contain;
 }
 
-/* Preflight checklist.
+/* Airworthiness list — components/landing/PreflightChecklist.tsx.
  *
- * Plain flex rows: every row starts at its column's left edge and its first
+ * Plain flex rows: every row starts at the list's left edge and its first
  * child is a fixed 16px box, so the boxes share one edge by construction. Do
- * NOT reach for `display: contents` here — it breaks the moment one row is an
- * <li> rather than an <a>, and it weakens the link's semantics. */
+ * NOT reach for `display: contents` here — it weakens the link's semantics
+ * and, in the two-column version this replaced, broke alignment. */
 .preflight {
   margin-top: 26px;
-}
-.preflight-cols {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0 48px;
 }
 .preflight-col-head {
   font-family: var(--font-mono);
@@ -2199,20 +2194,10 @@
 .preflight-col-head.is-ours {
   color: var(--color-signal);
 }
-.preflight-col-head.is-yours {
-  color: var(--color-text-muted);
-}
 .preflight-rows {
   list-style: none;
   margin: 0;
   padding: 0;
-}
-/* The Airworthiness heading follows the two columns, so it — not its list —
- * is what needs the separation. Putting the margin on the list instead left
- * the heading butted flat against the last Threadplane row (measured: 0px)
- * while pushing it away from the rows it labels. */
-.preflight-cols + .preflight-col-head {
-  margin-top: 38px;
 }
 .preflight-row {
   display: flex;
@@ -2226,9 +2211,8 @@
   height: 16px;
   box-sizing: border-box;
   /* Deliberately NOT var(--color-border-strong): that resolves to
-   * rgba(255,255,255,.2) in the dark scope, and the empty Yours boxes are the
-   * section's whole argument — they cannot be the faintest thing on the band.
-   * .35 is the value the approved prototype was reviewed at. */
+   * rgba(255,255,255,.2) in the dark scope and an unticked box would be the
+   * faintest thing on the band before the sequence reaches it. */
   border: 1.5px solid rgba(255, 255, 255, 0.35);
   border-radius: 3px;
   display: grid;
@@ -2278,9 +2262,6 @@
 .preflight-row.is-done .preflight-response {
   color: var(--color-signal);
 }
-.preflight-yours .preflight-response {
-  font-weight: 400;
-}
 /* Airworthiness responses are figures, so they take the display face and a
  * larger size; the unit stays mono beside them. */
 .preflight-air .preflight-response {
@@ -2313,13 +2294,6 @@ a.preflight-row:hover .preflight-challenge {
     transition: none;
   }
 }
-@media (max-width: 820px) {
-  .preflight-cols {
-    grid-template-columns: 1fr;
-    gap: 24px;
-  }
-}
-
 /* For teams — components/landing/TeamsBlock.tsx.
  * Ask left, briefing right. The cover is a fixed 400px so the form column
  * keeps a comfortable measure rather than stretching across the section. */
