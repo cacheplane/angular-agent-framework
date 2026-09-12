@@ -57,6 +57,7 @@ test('landing page renders the spine in order (live-stage spec §3)', async ({ p
     'proof-heading',
     'compatibility-heading',
     'architecture-heading',
+    'no-runtime-heading',
     'open-source-heading',
     'stage-heading',
     'field-report-heading',
